@@ -3,6 +3,7 @@ import DocsSection from '../ui/DocsSection.jcr'
 import Button from '@jacare/ui/components/Button.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
 import { previousNext } from '../nav-data.js'
+import { goDocs } from '../navigate.js'
 
 const navLinks = previousNext('/tokens')
 
@@ -94,11 +95,6 @@ function swatchStyle(item) {
   return `--docs-token-fill:var(${name})`
 }
 
-function go(path) {
-  history.pushState({}, '', path)
-  window.dispatchEvent(new PopStateEvent('popstate'))
-}
-
 export <view>
   <article class="docs-page">
     <DocsHero
@@ -112,7 +108,7 @@ export <view>
     </p>
 
     <div class="docs-hero-actions" style="margin-bottom:0.5rem">
-      <Button :variant=${'secondary'} :size=${'sm'} on-press=${() => go('/theme-editor')}>Open Theme Editor</Button>
+      <Button :variant=${'secondary'} :size=${'sm'} on-press=${() => goDocs('/theme-editor')}>Open Theme Editor</Button>
     </div>
 
     <DocsSection :id=${'brand'} :title=${'Brand colors'}>

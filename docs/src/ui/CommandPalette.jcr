@@ -1,5 +1,6 @@
 import { pulse, derive } from '@jacare/core'
 import { flatNavLinks } from '../nav-data.js'
+import { docsHref } from '../navigate.js'
 
 export <contract>
   props: {
@@ -67,7 +68,7 @@ export <view>
               query.set('')
               active.set(0)
               emit('close')
-              history.pushState({}, '', href)
+              history.pushState({}, '', docsHref(href))
               window.dispatchEvent(new PopStateEvent('popstate'))
             }
           }

@@ -4,14 +4,10 @@ import DocsSection from '../ui/DocsSection.jcr'
 import CodeBlock from '../ui/CodeBlock.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
 import { previousNext } from '../nav-data.js'
+import { goDocs } from '../navigate.js'
 import { themeBoot, overrideTokens, semanticAliases, applyModes } from '../examples/theme.js'
 
 const navLinks = previousNext('/theme')
-
-function go(path) {
-  history.pushState({}, '', path)
-  window.dispatchEvent(new PopStateEvent('popstate'))
-}
 
 export <view>
   <article class="docs-page">
@@ -49,8 +45,8 @@ export <view>
         Use the Theme Editor to draft token changes and export CSS, or open the Token reference for the full <code>--j-*</code> catalog.
       </p>
       <div class="docs-hero-actions">
-        <Button :variant=${'primary'} on-press=${() => go('/theme-editor')}>Open Theme Editor</Button>
-        <Button :variant=${'secondary'} on-press=${() => go('/tokens')}>Token reference</Button>
+        <Button :variant=${'primary'} on-press=${() => goDocs('/theme-editor')}>Open Theme Editor</Button>
+        <Button :variant=${'secondary'} on-press=${() => goDocs('/tokens')}>Token reference</Button>
       </div>
     </DocsSection>
 

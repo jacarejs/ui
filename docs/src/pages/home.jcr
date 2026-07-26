@@ -1,13 +1,9 @@
 import Button from '@jacare/ui/components/Button.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
 import { previousNext, docsSiteUrl } from '../nav-data.js'
+import { goDocs } from '../navigate.js'
 
 const navLinks = previousNext('/')
-
-function go(path) {
-  history.pushState({}, '', path)
-  window.dispatchEvent(new PopStateEvent('popstate'))
-}
 
 export <view>
   <article class="docs-page">
@@ -22,9 +18,9 @@ export <view>
         <a href=${docsSiteUrl} target="_blank" rel="noreferrer">${docsSiteUrl}</a>
       </p>
       <div class="docs-hero-actions">
-        <Button :variant=${'primary'} on-press=${() => go('/quick-start')}>Quick start</Button>
-        <Button :variant=${'secondary'} on-press=${() => go('/install')}>Installation</Button>
-        <Button :variant=${'ghost'} on-press=${() => go('/components')}>Browse components</Button>
+        <Button :variant=${'primary'} on-press=${() => goDocs('/quick-start')}>Quick start</Button>
+        <Button :variant=${'secondary'} on-press=${() => goDocs('/install')}>Installation</Button>
+        <Button :variant=${'ghost'} on-press=${() => goDocs('/components')}>Browse components</Button>
       </div>
     </section>
 
@@ -51,8 +47,8 @@ export <view>
         <li>applyTheme, ThemeToggle, and ThemeScope for light / dark / system</li>
       </ul>
       <div class="docs-hero-actions" style="margin-top:1rem">
-        <Button :variant=${'secondary'} :size=${'sm'} on-press=${() => go('/changelog')}>Changelog</Button>
-        <Button :variant=${'ghost'} :size=${'sm'} on-press=${() => go('/theme-editor')}>Theme Editor</Button>
+        <Button :variant=${'secondary'} :size=${'sm'} on-press=${() => goDocs('/changelog')}>Changelog</Button>
+        <Button :variant=${'ghost'} :size=${'sm'} on-press=${() => goDocs('/theme-editor')}>Theme Editor</Button>
       </div>
     </section>
 

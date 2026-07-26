@@ -40,15 +40,18 @@ jobs:
           JACARE_BASE: /ui/
         run: yarn docs:build
 
-      - name: Prepare Pages artifact
+      - name: Prepare Pages artifact from docs/dist
         run: |
           mkdir -p site
           cp -r docs/dist/. site/
+          # SPA fallback: refresh/deep links must serve the app shell
           cp site/index.html site/404.html
           touch site/.nojekyll
           test -f site/index.html
           test -f site/404.html
-          echo "Pages artifact:"
+          grep -q '/ui/assets/' site/index.html
+          grep -q '/ui/assets/' site/404.html
+          echo "Pages artifact (docs site):"
           find site -maxdepth 2 -type f | sort | head -40
 
       - name: Upload Pages artifact
