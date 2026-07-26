@@ -32,6 +32,7 @@ const playHint = pulse('We never share your email')
 const playError = pulse('')
 const playRequired = pulse(false)
 const playDisabled = pulse(false)
+const playDisabledValue = pulse('Locked value')
 const typeOptions = ['text', 'email', 'password', 'search', 'url', 'tel']
 
 const a11y = [
@@ -101,7 +102,7 @@ export <view>
         </div>
 
         <div class="docs-alert-play__preview">
-          <div class="docs-panel" style="width:min(22rem,100%)">
+          <div class="docs-panel">
             <Field
               :label=${playLabel}
               :type=${playType}
@@ -163,7 +164,7 @@ export <view>
         <div style="width:min(20rem,100%)">
           <Stack :gap=${'md'}>
             <Field :label=${'Required'} :required=${true} bind-value=${playValue} />
-            <Field :label=${'Disabled'} :disabled=${true} :value=${'Locked value'} />
+            <Field :label=${'Disabled'} :disabled=${true} bind-value=${playDisabledValue} />
           </Stack>
         </div>
       </Demo>
