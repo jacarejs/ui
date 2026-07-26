@@ -1,6 +1,8 @@
 import DocsHero from '../ui/DocsHero.jcr'
-import { shippedComponents, componentHref } from '../nav-data.js'
+import PreviousNext from '../ui/PreviousNext.jcr'
+import { shippedComponents, componentHref, previousNext } from '../nav-data.js'
 
+const navLinks = previousNext('/components')
 const catalog = shippedComponents.filter(
   (item) => !['ThemeScope', 'ThemeToggle', 'VisuallyHidden'].includes(item.name),
 )
@@ -10,7 +12,7 @@ export <view>
     <DocsHero
       :kicker=${'Components'}
       :title=${'Catalog'}
-      :description=${'Browse every shipped primitive in @jacare/ui. Each card opens a page with a live demo, always-visible source, generated API from the .jcr contract, and previous/next navigation.'}
+      :description=${'Browse every shipped primitive in @jacare/ui. Each card opens a page with a playground, live demos, Jacaré source, generated API from the .jcr contract, and previous/next navigation.'}
     />
 
     <div class="docs-card-grid">
@@ -21,5 +23,7 @@ export <view>
         </a>
       #end
     </div>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
   </article>
 </view>

@@ -1,4 +1,8 @@
 import Button from '@jacare/ui/components/Button.jcr'
+import PreviousNext from '../ui/PreviousNext.jcr'
+import { previousNext } from '../nav-data.js'
+
+const navLinks = previousNext('/')
 
 function go(path) {
   history.pushState({}, '', path)
@@ -11,11 +15,12 @@ export <view>
       <p class="docs-kicker">@jacare/ui</p>
       <h1 class="docs-title">Official UI for Jacaré</h1>
       <p class="docs-lead">
-        Official component library for Jacaré apps: accessible, themeable primitives powered by pulses — no virtual DOM. Every docs page shows a live demo beside the full source, including imports.
+        Accessible, themeable primitives powered by pulses — no virtual DOM. Every docs page shows a live demo beside Jacaré source, including imports.
       </p>
       <div class="docs-hero-actions">
         <Button :variant=${'primary'} on-press=${() => go('/quick-start')}>Quick start</Button>
-        <Button :variant=${'secondary'} on-press=${() => go('/components')}>Browse components</Button>
+        <Button :variant=${'secondary'} on-press=${() => go('/install')}>Installation</Button>
+        <Button :variant=${'ghost'} on-press=${() => go('/components')}>Browse components</Button>
       </div>
     </section>
 
@@ -33,5 +38,20 @@ export <view>
         <p>Updates come from Jacaré pulses — fine-grained and predictable. Live demos on every page use the same runtime as your app.</p>
       </div>
     </div>
+
+    <section class="docs-panel" style="padding:1.25rem">
+      <h2 class="docs-section-title" style="margin-top:0">In 0.1.0</h2>
+      <ul class="docs-checklist">
+        <li>14 primitives with playgrounds, demos, and accessibility notes</li>
+        <li>Theme Editor for live token drafts and CSS export</li>
+        <li>applyTheme, ThemeToggle, and ThemeScope for light / dark / system</li>
+      </ul>
+      <div class="docs-hero-actions" style="margin-top:1rem">
+        <Button :variant=${'secondary'} :size=${'sm'} on-press=${() => go('/changelog')}>Changelog</Button>
+        <Button :variant=${'ghost'} :size=${'sm'} on-press=${() => go('/theme-editor')}>Theme Editor</Button>
+      </div>
+    </section>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
   </article>
 </view>

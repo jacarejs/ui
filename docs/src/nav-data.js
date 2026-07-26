@@ -27,16 +27,16 @@ export const docsNav = [
     title: 'Getting started',
     items: [
       { href: '/', label: 'Introduction', blurb: 'What @jacare/ui is and why it exists' },
-      { href: '/install', label: 'Installation', blurb: 'Add packages and import theme.css' },
-      { href: '/quick-start', label: 'Quick start', blurb: 'First Button with live code' },
+      { href: '/install', label: 'Installation', blurb: 'Packages, Vite plugin, and theme.css' },
+      { href: '/quick-start', label: 'Quick start', blurb: 'Install, configure, and render a Button' },
     ],
   },
   {
     title: 'Foundations',
     items: [
-      { href: '/theme', label: 'Theme', blurb: 'Tokens, semantic aliases, applyTheme' },
-      { href: '/dark-mode', label: 'Dark mode', blurb: 'data-j-theme and ThemeScope' },
-      { href: '/tokens', label: 'Token reference', blurb: 'Full --j-* color and shape catalog' },
+      { href: '/theme', label: 'Theme', blurb: 'Tokens, overrides, applyTheme' },
+      { href: '/dark-mode', label: 'Dark mode', blurb: 'ThemeToggle, ThemeScope, data-j-theme' },
+      { href: '/tokens', label: 'Token reference', blurb: 'Brand, semantic, space, and motion' },
       { href: '/accessibility', label: 'Accessibility', blurb: 'Focus, keyboard, ARIA baseline' },
     ],
   },
