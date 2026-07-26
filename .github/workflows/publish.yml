@@ -14,6 +14,9 @@ on:
 
 permissions:
   contents: write
+  actions: write
+  id-token: write
+  pages: write
 
 concurrency:
   group: publish-npm
@@ -83,3 +86,11 @@ jobs:
             --verify-tag \
             --title "@jacare/ui v${{ steps.version.outputs.version }}" \
             --generate-notes
+
+  deploy-pages:
+    needs: publish
+    uses: ./.github/workflows/pages.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
