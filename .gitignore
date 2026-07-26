@@ -8,3 +8,4 @@ playground/dist/
 playground/node_modules/
 *.tgz
 private/
+.gitacc.json
