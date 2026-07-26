@@ -63,9 +63,12 @@ export <view>
             event.preventDefault()
             const item = list[active()]
             if (item) {
+              const href = item.href
               query.set('')
               active.set(0)
               emit('close')
+              history.pushState({}, '', href)
+              window.dispatchEvent(new PopStateEvent('popstate'))
             }
           }
         }}
