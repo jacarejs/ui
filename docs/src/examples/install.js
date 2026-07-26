@@ -25,10 +25,24 @@ export const managers = [
   },
 ]
 
-export const imports = `import '@jacare/ui/theme.css'
-import { Button } from '@jacare/ui'`
+export const themeImport = `import '@jacare/ui/theme.css'
+import { applyTheme } from '@jacare/ui/theme'
 
-export const vitePlugin = `npm install -D @jacare/vite-plugin @jacare/compiler`
-export const vitePluginYarn = `yarn add -D @jacare/vite-plugin @jacare/compiler`
-export const vitePluginPnpm = `pnpm add -D @jacare/vite-plugin @jacare/compiler`
-export const vitePluginBun = `bun add -d @jacare/vite-plugin @jacare/compiler`
+applyTheme('system')`
+
+export const componentImports = `// Preferred deep import (matches every docs demo)
+import Button from '@jacare/ui/Button'
+import Field from '@jacare/ui/Field'
+
+// Named barrel also works
+import { Button, Field } from '@jacare/ui'`
+
+export const viteConfig = `import { defineConfig } from 'vite'
+import { jacare } from '@jacare/vite-plugin'
+
+export default defineConfig({
+  plugins: [jacare()],
+})`
+
+export const peerNote = `@jacare/ui peers @jacare/core ^0.1.12
+Install both packages together so pulses and mount APIs resolve.`

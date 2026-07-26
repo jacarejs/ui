@@ -4,7 +4,7 @@ import DocsSection from '../ui/DocsSection.jcr'
 import CodeBlock from '../ui/CodeBlock.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
 import { previousNext } from '../nav-data.js'
-import { managers, imports } from '../examples/install.js'
+import { managers, themeImport, componentImports, viteConfig } from '../examples/install.js'
 
 const navLinks = previousNext('/install')
 const active = pulse('npm')
@@ -25,13 +25,13 @@ export <view>
     <DocsHero
       :kicker=${'Getting started'}
       :title=${'Installation'}
-      :description=${'Install @jacare/ui alongside @jacare/core, then import the theme stylesheet once at the root of your app. Components compile from .jcr and work with Vite via @jacare/vite-plugin.'}
+      :description=${'Install @jacare/ui alongside @jacare/core, add the Vite plugin for .jcr compilation, import theme.css once, then deep-import components the same way every docs demo does.'}
     />
 
     <DocsSection :id=${'package'} :title=${'Package'}>
       <p class="docs-lead">
         Pick your package manager. All of these install the UI library and its peer dependency
-        <code>@jacare/core</code>.
+        <code>@jacare/core</code> (^0.1.12).
       </p>
 
       <div class="docs-pkg-tabs" role="tablist" aria-label="Package manager">
@@ -58,13 +58,21 @@ export <view>
         as development dependencies.
       </p>
       <CodeBlock :code=${toolsCode} :filename=${installFile} :language=${'bash'} />
+      <CodeBlock :code=${viteConfig} :filename=${'vite.config.js'} :language=${'javascript'} />
     </DocsSection>
 
-    <DocsSection :id=${'import'} :title=${'Import the theme'}>
+    <DocsSection :id=${'theme'} :title=${'Import the theme'}>
       <p class="docs-lead">
-        Import the theme once at your app entry, then use components from <code>@jacare/ui</code>.
+        Import the theme once at your app entry, then call <code>applyTheme</code> so light, dark, and system modes resolve before the first paint.
       </p>
-      <CodeBlock :code=${imports} :filename=${'app.js'} :language=${'javascript'} />
+      <CodeBlock :code=${themeImport} :filename=${'main.js'} :language=${'javascript'} />
+    </DocsSection>
+
+    <DocsSection :id=${'imports'} :title=${'Import components'}>
+      <p class="docs-lead">
+        Prefer deep imports like <code>@jacare/ui/Button</code> — that is the canonical path used across the docs. The package barrel also exports named members if you prefer a single import site.
+      </p>
+      <CodeBlock :code=${componentImports} :filename=${'app.jcr'} :language=${'javascript'} />
     </DocsSection>
 
     <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
