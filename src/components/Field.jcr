@@ -20,30 +20,30 @@ function read(value) {
 export <view>
   <label
     class="jui-field"
-    class-has-error=${!!read(error)}
-    class-is-disabled=${!!read(disabled)}
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
   >
     <span class="jui-field__label">
-      ${label}
+      ${() => read(label)}
       #if read(required)
         <span class="jui-field__req" aria-hidden="true">*</span>
       #end
     </span>
     <input
       class="jui-field__control"
-      type=${type}
-      name=${name}
-      autocomplete=${autocomplete}
-      placeholder=${placeholder}
-      disabled=${!!read(disabled)}
-      required=${!!read(required)}
-      aria-invalid=${!!read(error)}
+      type=${() => read(type) || 'text'}
+      name=${() => read(name) || ''}
+      autocomplete=${() => read(autocomplete) || ''}
+      placeholder=${() => read(placeholder) || ''}
+      disabled=${() => !!read(disabled)}
+      required=${() => !!read(required)}
+      aria-invalid=${() => !!read(error)}
       bind-value=${value}
     />
     #if read(error)
-      <span class="jui-field__error" role="alert">${error}</span>
+      <span class="jui-field__error" role="alert">${() => read(error)}</span>
     #elif read(hint)
-      <span class="jui-field__hint">${hint}</span>
+      <span class="jui-field__hint">${() => read(hint)}</span>
     #end
   </label>
 </view>
