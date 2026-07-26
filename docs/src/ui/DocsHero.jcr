@@ -1,0 +1,27 @@
+export <contract>
+  props: {
+    kicker: { type: 'string', default: '' }
+    title: { type: 'string', required: true }
+    description: { type: 'string', default: '' }
+    status: { type: 'string', default: '' }
+  }
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+export <view>
+  <header class="docs-hero">
+    #if read(kicker)
+      <p class="docs-kicker">${kicker}</p>
+    #end
+    <h1 class="docs-title">${title}</h1>
+    #if read(description)
+      <p class="docs-lead">${description}</p>
+    #end
+    #if read(status)
+      <span class="docs-status">${status}</span>
+    #end
+  </header>
+</view>

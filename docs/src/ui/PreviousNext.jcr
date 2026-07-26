@@ -1,0 +1,40 @@
+export <contract>
+  props: {
+    previous: { type: 'object', default: null }
+    next: { type: 'object', default: null }
+  }
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function linkHref(value) {
+  const item = read(value)
+  return item?.href || '#'
+}
+
+function linkLabel(value) {
+  const item = read(value)
+  return item?.label || ''
+}
+
+export <view>
+  <nav class="docs-prevnext" aria-label="Previous and next">
+    #if read(previous)
+      <a jacare-go=${linkHref(previous)} href=${linkHref(previous)}>
+        <span>Previous</span>
+        <strong>${linkLabel(previous)}</strong>
+      </a>
+    #else
+      <span></span>
+    #end
+
+    #if read(next)
+      <a class="is-next" jacare-go=${linkHref(next)} href=${linkHref(next)}>
+        <span>Next</span>
+        <strong>${linkLabel(next)}</strong>
+      </a>
+    #end
+  </nav>
+</view>

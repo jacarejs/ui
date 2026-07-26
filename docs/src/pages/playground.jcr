@@ -1,0 +1,21 @@
+import DocsHero from '../ui/DocsHero.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+
+export <view>
+  <article class="docs-page">
+    <DocsHero
+      :kicker=${'Tools'}
+      :title=${'Playground'}
+      :description=${'The package ships a local Vite playground for quick experiments without the docs shell. Run yarn playground:dev from the repo root and iterate on components against the real theme.'}
+    />
+
+    <p class="docs-lead">From the package root:</p>
+    <pre class="docs-code-pre docs-panel" style="padding:1rem">yarn playground:dev</pre>
+
+    <div class="docs-hero-actions" style="margin-top:1rem">
+      <a href="https://github.com/jacarejs/ui" target="_blank" rel="noreferrer">
+        <Button :variant=${'secondary'}>Open repository</Button>
+      </a>
+    </div>
+  </article>
+</view>

@@ -1,0 +1,21 @@
+import DocsHero from '../ui/DocsHero.jcr'
+
+export <view>
+  <article class="docs-page">
+    <DocsHero
+      :kicker=${'Tools'}
+      :title=${'Changelog'}
+      :description=${'Release notes for @jacare/ui — new components, theme changes, breaking API updates, and docs improvements. Start here when upgrading between versions.'}
+    />
+
+    <div class="docs-panel" style="padding:1.25rem">
+      <h2 class="docs-section-title">0.1.0</h2>
+      <ul class="docs-checklist">
+        <li>Initial component set (Alert → VisuallyHidden)</li>
+        <li>Light + canopy dark theme tokens</li>
+        <li>applyTheme / ThemeToggle / ThemeScope</li>
+        <li>Docs site with live demos and Theme Editor</li>
+      </ul>
+    </div>
+  </article>
+</view>

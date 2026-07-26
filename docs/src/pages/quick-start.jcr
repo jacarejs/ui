@@ -1,0 +1,24 @@
+import Button from '@jacare/ui/components/Button.jcr'
+import DocsHero from '../ui/DocsHero.jcr'
+import Demo from '../ui/Demo.jcr'
+import PreviousNext from '../ui/PreviousNext.jcr'
+import { previousNext } from '../nav-data.js'
+import { firstComponent } from '../examples/quick-start.js'
+
+const navLinks = previousNext('/quick-start')
+
+export <view>
+  <article class="docs-page">
+    <DocsHero
+      :kicker=${'Getting started'}
+      :title=${'Quick start'}
+      :description=${'Get a Button on screen in minutes: import the theme, mount a .jcr view, and pass pulse-friendly props. This walkthrough uses the same patterns as every other component page.'}
+    />
+
+    <Demo :id=${'first'} :title=${'Your first component'} :code=${firstComponent} :filename=${'app.jcr'}>
+      <Button :variant=${'primary'}>Continue</Button>
+    </Demo>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

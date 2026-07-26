@@ -1,0 +1,29 @@
+import ThemeScope from '@jacare/ui/components/ThemeScope.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import DocsHero from '../ui/DocsHero.jcr'
+import Demo from '../ui/Demo.jcr'
+import PreviousNext from '../ui/PreviousNext.jcr'
+import { previousNext } from '../nav-data.js'
+import { themeScope } from '../examples/dark-mode.js'
+
+const navLinks = previousNext('/dark-mode')
+
+export <view>
+  <article class="docs-page">
+    <DocsHero
+      :kicker=${'Foundations'}
+      :title=${'Dark mode'}
+      :description=${'Dark mode flips tokens through data-j-theme on the page root — or a scoped island. Use applyTheme for the whole app, or wrap a preview with ThemeScope when you need an isolated light/dark surface.'}
+    />
+
+    <Demo :id=${'scope'} :title=${'ThemeScope'} :code=${themeScope} :filename=${'dark.jcr'}>
+      <ThemeScope :mode=${'dark'}>
+        <div style="padding:1rem;border-radius:12px;background:var(--j-surface)">
+          <Button :variant=${'primary'}>Scoped dark</Button>
+        </div>
+      </ThemeScope>
+    </Demo>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

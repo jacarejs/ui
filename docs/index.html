@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jacaré UI</title>
+    <link rel="icon" href="/jacare-logo.png" type="image/png" />
+    <script>
+      ;(function () {
+        try {
+          var k = 'j-theme'
+          var s = localStorage.getItem(k)
+          var d = matchMedia('(prefers-color-scheme: dark)').matches
+          var t = s === 'light' || s === 'dark' ? s : d ? 'dark' : 'light'
+          document.documentElement.dataset.jTheme = t
+        } catch (e) {}
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/boot.js"></script>
+  </body>
+</html>

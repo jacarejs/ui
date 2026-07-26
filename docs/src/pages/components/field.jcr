@@ -1,0 +1,43 @@
+import Field from '@jacare/ui/components/Field.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { pulse } from '@jacare/core'
+import { basic } from '../../examples/field.js'
+
+const contract = getContract('Field')
+const navLinks = previousNext('/components/field')
+const value = pulse('')
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Field</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'Field'}
+      :description=${'Labeled text input with room for hint and error copy. Bind value to a pulse, set placeholder and type as needed, and surface validation messages beside the control.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'field-basic.jcr'}>
+      <div style="width:min(20rem,100%)">
+        <Field :label=${'Email'} :placeholder=${'you@jacare.dev'} bind-value=${value} />
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

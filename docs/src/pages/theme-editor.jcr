@@ -1,0 +1,152 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Alert from '@jacare/ui/components/Alert.jcr'
+import Badge from '@jacare/ui/components/Badge.jcr'
+import Card from '@jacare/ui/components/Card.jcr'
+import ColorPicker from '@jacare/ui/components/ColorPicker.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import ThemeScope from '@jacare/ui/components/ThemeScope.jcr'
+import DocsHero from '../ui/DocsHero.jcr'
+import { themePresets, lightDefaults, darkDefaults } from '../theme-presets.js'
+
+const mode = pulse('light')
+const presetId = pulse('jacare')
+const email = pulse('')
+const enabled = pulse(true)
+
+const lightDraft = pulse({ ...lightDefaults })
+const darkDraft = pulse({ ...darkDefaults })
+
+function draftPulse() {
+  return mode() === 'dark' ? darkDraft : lightDraft
+}
+
+function draft() {
+  return draftPulse()()
+}
+
+function setToken(key, next) {
+  draftPulse().update((current) => ({ ...current, [key]: next }))
+}
+
+function styleVars() {
+  const vars = Object.entries(draft())
+    .map(([key, value]) => `${key}:${value}`)
+    .join(';')
+  return `${vars};--j-bg:var(--j-surface);--j-bg-elevated:var(--j-surface-2);--j-fg:var(--j-text);--j-fg-muted:var(--j-muted);--j-accent:var(--j-primary);color:var(--j-text);background:var(--j-surface)`
+}
+
+function exportCss() {
+  const body = Object.entries(draft())
+    .map(([key, value]) => `  ${key}: ${value};`)
+    .join('\n')
+  const selector = mode() === 'dark' ? "[data-j-theme='dark']" : ':root'
+  const css = `${selector} {\n${body}\n}\n`
+  navigator.clipboard?.writeText(css)
+}
+
+function entries() {
+  return Object.entries(draft()).map(([key, value]) => ({ key, value }))
+}
+
+function setMode(next) {
+  mode.set(next)
+}
+
+function applyPreset(id) {
+  const preset = themePresets.find((item) => item.id === id) || themePresets[0]
+  presetId.set(preset.id)
+  lightDraft.set({ ...preset.light })
+  darkDraft.set({ ...preset.dark })
+}
+
+function presetSwatch(preset) {
+  return `background:${preset.light['--j-primary']}`
+}
+
+export <view>
+  <article class="docs-page">
+    <DocsHero
+      :kicker=${'Tools'}
+      :title=${'Theme Editor'}
+      :description=${'Live token lab for @jacare/ui. Start from a ready-made theme, flip light/dark, tune colors, watch components update, then export CSS when the mix looks right.'}
+    />
+
+    <div class="docs-editor">
+      <div class="docs-editor-panel docs-panel">
+        <div class="docs-hero-actions">
+          <Button
+            :size=${'sm'}
+            :variant=${() => (mode() === 'light' ? 'primary' : 'secondary')}
+            on-press=${() => setMode('light')}
+          >Light</Button>
+          <Button
+            :size=${'sm'}
+            :variant=${() => (mode() === 'dark' ? 'primary' : 'secondary')}
+            on-press=${() => setMode('dark')}
+          >Dark</Button>
+          <Button :size=${'sm'} :variant=${'ghost'} on-press=${exportCss}>Export CSS</Button>
+        </div>
+
+        <div class="docs-theme-presets">
+          <p class="docs-alert-play__label">Ready-made themes</p>
+          <div class="docs-theme-preset-grid">
+            #for themePresets as theme
+              <button
+                type="button"
+                class="docs-theme-preset"
+                class-is-active=${() => presetId() === theme.id}
+                on-click=${() => applyPreset(theme.id)}
+              >
+                <span class="docs-theme-preset__swatch" :style=${() => presetSwatch(theme)}></span>
+                <span class="docs-theme-preset__copy">
+                  <strong>${theme.label}</strong>
+                  <span>${theme.blurb}</span>
+                </span>
+              </button>
+            #end
+          </div>
+        </div>
+
+        <p class="docs-demo-lead">
+          Editing ${() => (mode() === 'dark' ? 'dark' : 'light')} tokens ·
+          ${() => (themePresets.find((item) => item.id === presetId()) || themePresets[0]).label}
+        </p>
+
+        #for entries() as token
+          <ColorPicker
+            :label=${token.key}
+            :size=${'sm'}
+            :value=${() => draft()[token.key]}
+            on-change=${(hex) => setToken(token.key, hex)}
+          />
+        #end
+      </div>
+
+      <ThemeScope :mode=${mode}>
+        <div class="docs-gallery docs-panel" :style=${() => styleVars()}>
+          <div class="docs-gallery-row">
+            <Button :variant=${'primary'}>Primary</Button>
+            <Button :variant=${'secondary'}>Secondary</Button>
+            <Button :variant=${'ghost'}>Ghost</Button>
+            <Badge :text=${'Live'} :tone=${'success'} />
+          </div>
+          <Alert :tone=${'info'} :title=${'Theme preview'}>
+            Gallery updates as you edit tokens.
+          </Alert>
+          <Alert :tone=${'success'} :title=${'Success'}>Saved with the current palette.</Alert>
+          <Card>
+            <Field :label=${'Email'} :placeholder=${'you@jacare.dev'} bind-value=${email} />
+            <div style="height:0.75rem"></div>
+            <Switch :label=${'Enable notifications'} bind-checked=${enabled} />
+            <div style="height:0.75rem"></div>
+            <p class="docs-demo-lead" style="color:var(--j-text);margin:0">
+              Body text uses --j-text and stays readable in both modes.
+            </p>
+          </Card>
+        </div>
+      </ThemeScope>
+    </div>
+  </article>
+</view>

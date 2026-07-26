@@ -1,0 +1,103 @@
+import { pulse, derive } from '@jacare/core'
+import { flatNavLinks } from '../nav-data.js'
+
+export <contract>
+  props: {
+    open: { type: 'any', default: false }
+  }
+  emits: ['close']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+const query = pulse('')
+const active = pulse(0)
+
+const results = derive(() => {
+  const q = query().trim().toLowerCase()
+  const links = flatNavLinks()
+  if (!q) return links.slice(0, 8)
+  return links
+    .filter((item) => {
+      const hay = `${item.label} ${item.blurb || ''} ${item.href}`.toLowerCase()
+      return hay.includes(q)
+    })
+    .slice(0, 12)
+})
+
+export <view>
+  #if read(open)
+    <div
+      class="docs-cmd"
+      on-click=${() => {
+        query.set('')
+        active.set(0)
+        emit('close')
+      }}
+    >
+      <div
+        class="docs-cmd-panel docs-panel"
+        on-click=${(e) => e.stopPropagation()}
+        on-keydown=${(event) => {
+          const list = results()
+          if (event.key === 'Escape') {
+            event.preventDefault()
+            query.set('')
+            active.set(0)
+            emit('close')
+            return
+          }
+          if (event.key === 'ArrowDown') {
+            event.preventDefault()
+            active.update((i) => Math.min(i + 1, Math.max(list.length - 1, 0)))
+            return
+          }
+          if (event.key === 'ArrowUp') {
+            event.preventDefault()
+            active.update((i) => Math.max(i - 1, 0))
+            return
+          }
+          if (event.key === 'Enter') {
+            event.preventDefault()
+            const item = list[active()]
+            if (item) {
+              query.set('')
+              active.set(0)
+              emit('close')
+            }
+          }
+        }}
+      >
+        <input
+          class="docs-cmd-input"
+          type="search"
+          placeholder="Search components, pages, tokens…"
+          value=${query}
+          on-input=${(e) => query.set(e.target.value)}
+        />
+        <ul class="docs-cmd-list">
+          #for results() as item (item.href)
+            <li>
+              <a
+                class="docs-cmd-item"
+                class-is-active=${results().indexOf(item) === active()}
+                jacare-go=${item.href}
+                href=${item.href}
+                on-click=${() => {
+                  query.set('')
+                  active.set(0)
+                  emit('close')
+                }}
+              >
+                <strong>${item.label}</strong>
+                <span class="docs-cmd-meta">${item.blurb || item.href}</span>
+              </a>
+            </li>
+          #end
+        </ul>
+      </div>
+    </div>
+  #end
+</view>

@@ -1,0 +1,22 @@
+export <contract>
+  props: {
+    items: { type: 'object', default: [] }
+  }
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function listOf(value) {
+  const items = read(value)
+  return Array.isArray(items) ? items : []
+}
+
+export <view>
+  <ul class="docs-checklist">
+    #for listOf(items) as item (item)
+      <li>${item}</li>
+    #end
+  </ul>
+</view>

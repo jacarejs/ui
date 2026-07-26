@@ -1,0 +1,39 @@
+import Avatar from '@jacare/ui/components/Avatar.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic } from '../../examples/avatar.js'
+
+const contract = getContract('Avatar')
+const navLinks = previousNext('/components/avatar')
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Avatar</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'Avatar'}
+      :description=${'Compact mark for a person or entity. Pass a name to derive initials, or an image src when you have a photo. Sizes keep avatars aligned in lists, nav, and cards.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'avatar-basic.jcr'}>
+      <Avatar :name=${'Jacaré UI'} />
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

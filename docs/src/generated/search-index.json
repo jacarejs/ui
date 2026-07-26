@@ -1,0 +1,209 @@
+[
+  {
+    "title": "Alert",
+    "section": "Components",
+    "href": "/components/alert",
+    "keywords": [
+      "alert",
+      "tone",
+      "title",
+      "dismissible",
+      "open",
+      "duration",
+      "role",
+      "compact"
+    ]
+  },
+  {
+    "title": "Avatar",
+    "section": "Components",
+    "href": "/components/avatar",
+    "keywords": [
+      "avatar",
+      "name",
+      "src",
+      "size",
+      "alt"
+    ]
+  },
+  {
+    "title": "Badge",
+    "section": "Components",
+    "href": "/components/badge",
+    "keywords": [
+      "badge",
+      "text",
+      "tone",
+      "soft"
+    ]
+  },
+  {
+    "title": "Button",
+    "section": "Components",
+    "href": "/components/button",
+    "keywords": [
+      "button",
+      "variant",
+      "size",
+      "type",
+      "disabled",
+      "loading",
+      "block"
+    ]
+  },
+  {
+    "title": "Card",
+    "section": "Components",
+    "href": "/components/card",
+    "keywords": [
+      "card",
+      "title",
+      "subtitle",
+      "padding"
+    ]
+  },
+  {
+    "title": "Checkbox",
+    "section": "Components",
+    "href": "/components/checkbox",
+    "keywords": [
+      "checkbox",
+      "label",
+      "checked",
+      "disabled",
+      "name"
+    ]
+  },
+  {
+    "title": "ColorPicker",
+    "section": "Components",
+    "href": "/components/color-picker",
+    "keywords": [
+      "colorpicker",
+      "label",
+      "value",
+      "name",
+      "hint",
+      "error",
+      "disabled",
+      "size",
+      "showInput",
+      "presets"
+    ]
+  },
+  {
+    "title": "Divider",
+    "section": "Components",
+    "href": "/components/divider",
+    "keywords": [
+      "divider",
+      "label",
+      "vertical"
+    ]
+  },
+  {
+    "title": "Field",
+    "section": "Components",
+    "href": "/components/field",
+    "keywords": [
+      "field",
+      "label",
+      "value",
+      "type",
+      "placeholder",
+      "hint",
+      "error",
+      "disabled",
+      "required",
+      "name",
+      "autocomplete"
+    ]
+  },
+  {
+    "title": "Progress",
+    "section": "Components",
+    "href": "/components/progress",
+    "keywords": [
+      "progress",
+      "value",
+      "max",
+      "label",
+      "showValue",
+      "tone"
+    ]
+  },
+  {
+    "title": "Spinner",
+    "section": "Components",
+    "href": "/components/spinner",
+    "keywords": [
+      "spinner",
+      "size",
+      "label"
+    ]
+  },
+  {
+    "title": "Stack",
+    "section": "Components",
+    "href": "/components/stack",
+    "keywords": [
+      "stack",
+      "gap",
+      "align",
+      "justify",
+      "wrap",
+      "direction"
+    ]
+  },
+  {
+    "title": "Switch",
+    "section": "Components",
+    "href": "/components/switch",
+    "keywords": [
+      "switch",
+      "label",
+      "checked",
+      "disabled",
+      "name"
+    ]
+  },
+  {
+    "title": "Text",
+    "section": "Components",
+    "href": "/components/text",
+    "keywords": [
+      "text",
+      "as",
+      "size",
+      "tone",
+      "weight"
+    ]
+  },
+  {
+    "title": "ThemeScope",
+    "section": "Components",
+    "href": "/components/theme-scope",
+    "keywords": [
+      "themescope",
+      "mode"
+    ]
+  },
+  {
+    "title": "ThemeToggle",
+    "section": "Components",
+    "href": "/components/theme-toggle",
+    "keywords": [
+      "themetoggle",
+      "mode",
+      "labels"
+    ]
+  },
+  {
+    "title": "VisuallyHidden",
+    "section": "Components",
+    "href": "/components/visually-hidden",
+    "keywords": [
+      "visuallyhidden"
+    ]
+  }
+]

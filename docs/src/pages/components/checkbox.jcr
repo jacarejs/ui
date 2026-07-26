@@ -1,0 +1,41 @@
+import Checkbox from '@jacare/ui/components/Checkbox.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { pulse } from '@jacare/core'
+import { basic } from '../../examples/checkbox.js'
+
+const contract = getContract('Checkbox')
+const navLinks = previousNext('/components/checkbox')
+const checked = pulse(true)
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Checkbox</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'Checkbox'}
+      :description=${'Boolean choice for forms and filters. Bind checked to a pulse for two-way updates, supply a label prop or slot text, and disable when the field should not change.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'checkbox-basic.jcr'}>
+      <Checkbox :label=${'Accept terms'} bind-checked=${checked} />
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

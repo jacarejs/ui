@@ -1,0 +1,43 @@
+import Badge from '@jacare/ui/components/Badge.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic } from '../../examples/badge.js'
+
+const contract = getContract('Badge')
+const navLinks = previousNext('/components/badge')
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Badge</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'Badge'}
+      :description=${'Small status pill for tags, counts, and labels. Use tone for meaning — success, warn, danger, info — and soft for a lighter surface that sits well on dense layouts.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'badge-basic.jcr'}>
+      <Stack :direction=${'row'} :gap=${'lg'} :align=${'center'} :justify=${'center'} :wrap=${true}>
+        <Badge :text=${'New'} :tone=${'success'} />
+        <Badge :text=${'Beta'} :tone=${'info'} :soft=${true} />
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

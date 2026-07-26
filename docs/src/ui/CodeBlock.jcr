@@ -1,0 +1,41 @@
+import { pulse } from '@jacare/core'
+
+export <contract>
+  props: {
+    code: { type: 'string', required: true }
+    filename: { type: 'string', default: '' }
+    language: { type: 'string', default: 'jacare' }
+  }
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+const copied = pulse(false)
+
+async function copyText(value) {
+  const text = String(read(value) ?? '')
+  try {
+    await navigator.clipboard.writeText(text)
+    copied.set(true)
+    setTimeout(() => copied.set(false), 1200)
+  } catch {
+    copied.set(false)
+  }
+}
+
+export <view>
+  <div class="docs-code docs-panel">
+    <div class="docs-code-bar">
+      #if read(filename)
+        <span class="docs-code-file">${filename}</span>
+      #end
+      <span class="docs-code-lang">${language}</span>
+      <button type="button" class="docs-code-copy" on-click=${() => copyText(code)}>
+        ${copied() ? 'Copied' : 'Copy'}
+      </button>
+    </div>
+    <pre class="docs-code-pre"><code>${code}</code></pre>
+  </div>
+</view>

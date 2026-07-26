@@ -1,0 +1,52 @@
+export <contract>
+  props: {
+    contract: { type: 'object', default: null }
+  }
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function rowsOf(data) {
+  const props = (read(data) || {}).props || {}
+  return Object.keys(props)
+    .sort()
+    .map((name) => {
+      const def = props[name] || {}
+      return {
+        name,
+        type: def.type || 'unknown',
+        defaultValue: def.default === undefined ? '—' : String(def.default),
+        model: def.model ? '✓' : '—',
+        required: def.required ? 'yes' : 'no',
+      }
+    })
+}
+
+export <view>
+  <div class="docs-table-wrap">
+    <table class="docs-table">
+      <thead>
+        <tr>
+          <th>Prop</th>
+          <th>Type</th>
+          <th>Default</th>
+          <th>Model</th>
+          <th>Required</th>
+        </tr>
+      </thead>
+      <tbody>
+        #for rowsOf(contract) as row (row.name)
+          <tr>
+            <td><code>${row.name}</code></td>
+            <td><code>${row.type}</code></td>
+            <td><code>${row.defaultValue}</code></td>
+            <td>${row.model}</td>
+            <td>${row.required}</td>
+          </tr>
+        #end
+      </tbody>
+    </table>
+  </div>
+</view>

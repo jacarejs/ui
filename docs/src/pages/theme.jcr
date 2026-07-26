@@ -1,0 +1,26 @@
+import DocsHero from '../ui/DocsHero.jcr'
+import FrameworkCode from '../ui/FrameworkCode.jcr'
+import PreviousNext from '../ui/PreviousNext.jcr'
+import { previousNext } from '../nav-data.js'
+import { themeBoot } from '../examples/theme.js'
+
+const navLinks = previousNext('/theme')
+
+export <view>
+  <article class="docs-page">
+    <DocsHero
+      :kicker=${'Foundations'}
+      :title=${'Theme'}
+      :description=${'Jacaré UI is driven by CSS custom properties on --j-* tokens. Import theme.css once, then use applyTheme to switch light, dark, or system. Semantic aliases like --j-bg and --j-accent keep component styles consistent.'}
+    />
+
+    <p class="docs-lead">
+      Import <code>@jacare/ui/theme.css</code> once. Tokens live on <code>:root</code> and
+      <code>[data-j-theme="dark"]</code>.
+    </p>
+
+    <FrameworkCode :code=${themeBoot} :filename=${'theme.js'} />
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

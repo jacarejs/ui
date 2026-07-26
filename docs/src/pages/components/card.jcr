@@ -1,0 +1,42 @@
+import Card from '@jacare/ui/components/Card.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic } from '../../examples/card.js'
+
+const contract = getContract('Card')
+const navLinks = previousNext('/components/card')
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Card</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'Card'}
+      :description=${'Elevated content surface for grouping related UI — forms, summaries, or media. Use the default slot for body content and compose with Text, Stack, and actions inside.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'card-basic.jcr'}>
+      <Card>
+        <Text>Card body</Text>
+      </Card>
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

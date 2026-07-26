@@ -1,0 +1,41 @@
+import Switch from '@jacare/ui/components/Switch.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { pulse } from '@jacare/core'
+import { basic } from '../../examples/switch.js'
+
+const contract = getContract('Switch')
+const navLinks = previousNext('/components/switch')
+const checked = pulse(true)
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Switch</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'Switch'}
+      :description=${'Toggle for on/off settings. Prefer Switch over Checkbox when the change applies immediately. Bind checked to a pulse and provide a clear label for the setting.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'switch-basic.jcr'}>
+      <Switch :label=${'Notifications'} bind-checked=${checked} />
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

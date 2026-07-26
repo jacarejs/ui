@@ -1,0 +1,84 @@
+import Button from '@jacare/ui/components/Button.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import { basic, variants, sizes, states } from '../../examples/button.js'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+
+const contract = getContract('Button')
+const navLinks = previousNext('/components/button')
+const a11y = [
+  'Has visible focus ring',
+  'Disabled removes pointer interaction',
+  'Loading sets aria-busy',
+  'Label comes from children or aria-label',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Button</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Actions'}
+      :title=${'Button'}
+      :description=${'Primary way to trigger an action or submit a form. Supports visual variants, sizes, loading and disabled states, and pulse-friendly props so labels and flags stay reactive.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'button-basic.jcr'}>
+      <Button :variant=${'primary'}>Continue</Button>
+    </Demo>
+
+    <DocsSection :id=${'variants'} :title=${'Variants'}>
+      <Demo :id=${'variants-demo'} :title=${'All variants'} :code=${variants} :filename=${'button-variants.jcr'}>
+        <Stack :direction=${'row'} :gap=${'xl'} :align=${'center'} :justify=${'center'} :wrap=${true}>
+          <Button :variant=${'primary'}>Primary</Button>
+          <Button :variant=${'secondary'}>Secondary</Button>
+          <Button :variant=${'ghost'}>Ghost</Button>
+          <Button :variant=${'danger'}>Danger</Button>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'sizes'} :title=${'Sizes'}>
+      <Demo :id=${'sizes-demo'} :title=${'Size scale'} :code=${sizes} :filename=${'button-sizes.jcr'}>
+        <Stack :direction=${'row'} :gap=${'xl'} :align=${'center'} :justify=${'center'} :wrap=${true}>
+          <Button :size=${'sm'}>Small</Button>
+          <Button :size=${'md'}>Medium</Button>
+          <Button :size=${'lg'}>Large</Button>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'states'} :title=${'States'}>
+      <Demo :id=${'states-demo'} :title=${'Loading, disabled, block'} :code=${states} :filename=${'button-states.jcr'}>
+        <Stack :direction=${'row'} :gap=${'xl'} :align=${'center'} :justify=${'center'} :wrap=${true}>
+          <Button :loading=${true}>Saving</Button>
+          <Button :disabled=${true}>Disabled</Button>
+        </Stack>
+        <div style="width:min(20rem,100%);margin-top:1rem">
+          <Button :block=${true}>Full width</Button>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

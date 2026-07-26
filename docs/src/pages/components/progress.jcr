@@ -1,0 +1,41 @@
+import Progress from '@jacare/ui/components/Progress.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic } from '../../examples/progress.js'
+
+const contract = getContract('Progress')
+const navLinks = previousNext('/components/progress')
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Progress</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Feedback'}
+      :title=${'Progress'}
+      :description=${'Determinate completion meter for uploads, wizards, and long tasks. Pass a numeric value from 0–100 and the bar fills with the current theme accent.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'progress-basic.jcr'}>
+      <div style="width:min(20rem,100%)">
+        <Progress :value=${64} />
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

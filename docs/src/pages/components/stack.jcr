@@ -1,0 +1,43 @@
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic } from '../../examples/stack.js'
+
+const contract = getContract('Stack')
+const navLinks = previousNext('/components/stack')
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Stack</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Layout'}
+      :title=${'Stack'}
+      :description=${'Flex layout helper that spaces children with a consistent gap. Switch direction between column and row, wrap when needed, and align or justify groups without ad-hoc CSS.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'stack-basic.jcr'}>
+      <Stack :gap=${'md'}>
+        <Button>One</Button>
+        <Button :variant=${'secondary'}>Two</Button>
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

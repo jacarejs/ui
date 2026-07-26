@@ -1,0 +1,37 @@
+import Button from '@jacare/ui/components/Button.jcr'
+
+function go(path) {
+  history.pushState({}, '', path)
+  window.dispatchEvent(new PopStateEvent('popstate'))
+}
+
+export <view>
+  <article class="docs-page">
+    <section class="docs-home-hero docs-panel">
+      <p class="docs-kicker">@jacare/ui</p>
+      <h1 class="docs-title">Official UI for Jacaré</h1>
+      <p class="docs-lead">
+        Official component library for Jacaré apps: accessible, themeable primitives powered by pulses — no virtual DOM. Every docs page shows a live demo beside the full source, including imports.
+      </p>
+      <div class="docs-hero-actions">
+        <Button :variant=${'primary'} on-press=${() => go('/quick-start')}>Quick start</Button>
+        <Button :variant=${'secondary'} on-press=${() => go('/components')}>Browse components</Button>
+      </div>
+    </section>
+
+    <div class="docs-feature-grid">
+      <div class="docs-feature docs-panel">
+        <h3>Theme tokens</h3>
+        <p>Light and canopy dark themes share one --j-* token sheet. Semantic aliases keep backgrounds, text, and accents aligned across every component.</p>
+      </div>
+      <div class="docs-feature docs-panel">
+        <h3>Contracts first</h3>
+        <p>Each .jcr file declares props, slots, and emits up front. Docs generate the API table from that contract so the page stays honest.</p>
+      </div>
+      <div class="docs-feature docs-panel">
+        <h3>No virtual DOM</h3>
+        <p>Updates come from Jacaré pulses — fine-grained and predictable. Live demos on every page use the same runtime as your app.</p>
+      </div>
+    </div>
+  </article>
+</view>

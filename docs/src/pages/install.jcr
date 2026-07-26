@@ -1,0 +1,73 @@
+import { pulse, derive } from '@jacare/core'
+import DocsHero from '../ui/DocsHero.jcr'
+import DocsSection from '../ui/DocsSection.jcr'
+import CodeBlock from '../ui/CodeBlock.jcr'
+import FrameworkCode from '../ui/FrameworkCode.jcr'
+import PreviousNext from '../ui/PreviousNext.jcr'
+import { previousNext } from '../nav-data.js'
+import { managers, imports } from '../examples/install.js'
+
+const navLinks = previousNext('/install')
+const active = pulse('npm')
+
+const selected = derive(() => managers.find((item) => item.id === active()) || managers[0])
+const installCode = derive(() => selected().code)
+const installFile = derive(() => selected().filename)
+const toolsCode = derive(() => {
+  const id = active()
+  if (id === 'yarn') return `yarn add -D @jacare/vite-plugin @jacare/compiler`
+  if (id === 'pnpm') return `pnpm add -D @jacare/vite-plugin @jacare/compiler`
+  if (id === 'bun') return `bun add -d @jacare/vite-plugin @jacare/compiler`
+  return `npm install -D @jacare/vite-plugin @jacare/compiler`
+})
+
+export <view>
+  <article class="docs-page">
+    <DocsHero
+      :kicker=${'Getting started'}
+      :title=${'Installation'}
+      :description=${'Install @jacare/ui alongside @jacare/core, then import the theme stylesheet once at the root of your app. Components compile from .jcr and work with Vite via @jacare/vite-plugin.'}
+    />
+
+    <DocsSection :id=${'package'} :title=${'Package'}>
+      <p class="docs-lead">
+        Pick your package manager. All of these install the UI library and its peer dependency
+        <code>@jacare/core</code>.
+      </p>
+
+      <div class="docs-pkg-tabs" role="tablist" aria-label="Package manager">
+        #for managers as manager (manager.id)
+          <button
+            type="button"
+            class="docs-pkg-tab"
+            class-is-active=${active() === manager.id}
+            role="tab"
+            aria-selected=${active() === manager.id}
+            on-click=${() => active.set(manager.id)}
+          >
+            ${manager.label}
+          </button>
+        #end
+      </div>
+
+      <CodeBlock :code=${installCode} :filename=${installFile} :language=${'bash'} />
+    </DocsSection>
+
+    <DocsSection :id=${'tooling'} :title=${'Compiler tooling'}>
+      <p class="docs-lead">
+        For Vite apps that compile <code>.jcr</code> files, also add the Jacaré Vite plugin and compiler
+        as development dependencies.
+      </p>
+      <CodeBlock :code=${toolsCode} :filename=${installFile} :language=${'bash'} />
+    </DocsSection>
+
+    <DocsSection :id=${'import'} :title=${'Import the theme'}>
+      <p class="docs-lead">
+        Import the theme once at your app entry, then use components from <code>@jacare/ui</code>.
+      </p>
+      <FrameworkCode :code=${imports} :filename=${'app.js'} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -1,0 +1,431 @@
+{
+  "Alert": {
+    "props": {
+      "tone": {
+        "type": "string",
+        "default": "info"
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "dismissible": {
+        "type": "boolean",
+        "default": false
+      },
+      "open": {
+        "type": "boolean",
+        "model": true,
+        "default": true
+      },
+      "duration": {
+        "type": "number",
+        "default": 0
+      },
+      "role": {
+        "type": "string",
+        "default": ""
+      },
+      "compact": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "dismiss"
+    ]
+  },
+  "Avatar": {
+    "props": {
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "src": {
+        "type": "string",
+        "default": ""
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "alt": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": []
+  },
+  "Badge": {
+    "props": {
+      "text": {
+        "type": "string",
+        "required": true
+      },
+      "tone": {
+        "type": "string",
+        "default": "default"
+      },
+      "soft": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": []
+  },
+  "Button": {
+    "props": {
+      "variant": {
+        "type": "string",
+        "default": "primary"
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "type": {
+        "type": "string",
+        "default": "button"
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "loading": {
+        "type": "boolean",
+        "default": false
+      },
+      "block": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "press"
+    ]
+  },
+  "Card": {
+    "props": {
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "subtitle": {
+        "type": "string",
+        "default": ""
+      },
+      "padding": {
+        "type": "string",
+        "default": "md"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "Checkbox": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "checked": {
+        "type": "boolean",
+        "model": true
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "ColorPicker": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "string",
+        "model": true
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "showInput": {
+        "type": "boolean",
+        "default": true
+      },
+      "presets": {
+        "type": "object",
+        "default": null
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "Divider": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "vertical": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": []
+  },
+  "Field": {
+    "props": {
+      "label": {
+        "type": "string",
+        "required": true
+      },
+      "value": {
+        "type": "string",
+        "model": true
+      },
+      "type": {
+        "type": "string",
+        "default": "text"
+      },
+      "placeholder": {
+        "type": "string",
+        "default": ""
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "required": {
+        "type": "boolean",
+        "default": false
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "autocomplete": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": []
+  },
+  "Progress": {
+    "props": {
+      "value": {
+        "type": "number",
+        "required": true
+      },
+      "max": {
+        "type": "number",
+        "default": 100
+      },
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "showValue": {
+        "type": "boolean",
+        "default": true
+      },
+      "tone": {
+        "type": "string",
+        "default": "primary"
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": []
+  },
+  "Spinner": {
+    "props": {
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "label": {
+        "type": "string",
+        "default": "Loading"
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": []
+  },
+  "Stack": {
+    "props": {
+      "gap": {
+        "type": "string",
+        "default": "md"
+      },
+      "align": {
+        "type": "string",
+        "default": "stretch"
+      },
+      "justify": {
+        "type": "string",
+        "default": "start"
+      },
+      "wrap": {
+        "type": "boolean",
+        "default": false
+      },
+      "direction": {
+        "type": "string",
+        "default": "column"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "Switch": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "checked": {
+        "type": "boolean",
+        "model": true
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "Text": {
+    "props": {
+      "as": {
+        "type": "string",
+        "default": "p"
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "tone": {
+        "type": "string",
+        "default": "default"
+      },
+      "weight": {
+        "type": "string",
+        "default": "regular"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "ThemeScope": {
+    "props": {
+      "mode": {
+        "type": "string",
+        "default": "system"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "ThemeToggle": {
+    "props": {
+      "mode": {
+        "type": "string",
+        "default": "system"
+      },
+      "labels": {
+        "type": "object",
+        "default": null
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "VisuallyHidden": {
+    "props": {},
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  }
+}

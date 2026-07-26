@@ -1,0 +1,15 @@
+import Button from '@jacare/ui/components/Button.jcr'
+
+function goHome() {
+  history.pushState({}, '', '/')
+  window.dispatchEvent(new PopStateEvent('popstate'))
+}
+
+export <view>
+  <article class="docs-page">
+    <p class="docs-kicker">404</p>
+    <h1 class="docs-title">Page not found</h1>
+    <p class="docs-lead">That route is not part of the Jacaré UI docs yet.</p>
+    <Button :variant=${'primary'} on-press=${goHome}>Back home</Button>
+  </article>
+</view>

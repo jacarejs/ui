@@ -1,0 +1,49 @@
+import { pulse } from '@jacare/core'
+import CodeBlock from './CodeBlock.jcr'
+import { frameworkList } from '../frameworks.js'
+
+export <contract>
+  props: {
+    code: { type: 'string', required: true }
+    filename: { type: 'string', default: 'example.jcr' }
+  }
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+const active = pulse('jacare')
+
+function select(id) {
+  active.set(id)
+}
+
+function pick(list) {
+  return list.find((entry) => entry.id === active()) || list[0]
+}
+
+export <view>
+  <div class="docs-fw">
+    <div class="docs-pkg-tabs" role="tablist" aria-label="Framework">
+      #for frameworkList(read(code), read(filename)) as item
+        <button
+          type="button"
+          class="docs-pkg-tab"
+          class-is-active=${() => active() === item.id}
+          role="tab"
+          aria-selected=${() => active() === item.id}
+          on-click=${() => select(item.id)}
+        >
+          ${item.label}
+        </button>
+      #end
+    </div>
+
+    <CodeBlock
+      :code=${() => pick(frameworkList(read(code), read(filename))).code}
+      :filename=${() => pick(frameworkList(read(code), read(filename))).filename}
+      :language=${() => pick(frameworkList(read(code), read(filename))).language}
+    />
+  </div>
+</view>

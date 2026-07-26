@@ -1,0 +1,39 @@
+import Spinner from '@jacare/ui/components/Spinner.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic } from '../../examples/spinner.js'
+
+const contract = getContract('Spinner')
+const navLinks = previousNext('/components/spinner')
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Spinner</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Feedback'}
+      :title=${'Spinner'}
+      :description=${'Indeterminate loading indicator for pending work. Pair with a short label for screen readers and keep it near the action or region that is waiting.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'spinner-basic.jcr'}>
+      <Spinner :label=${'Loading'} />
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

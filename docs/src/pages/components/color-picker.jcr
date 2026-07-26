@@ -1,0 +1,84 @@
+import { pulse } from '@jacare/core'
+import ColorPicker from '@jacare/ui/components/ColorPicker.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, presets } from '../../examples/color-picker.js'
+
+const contract = getContract('ColorPicker')
+const navLinks = previousNext('/components/color-picker')
+const color = pulse('#189030')
+const brand = pulse('#30a830')
+const brandPresets = [
+  '#189030',
+  '#30a830',
+  '#1f6feb',
+  '#7c4dff',
+  '#c62828',
+  '#e65100',
+  '#c47a00',
+  '#00897b',
+  '#5d4037',
+  '#001818',
+]
+const a11y = [
+  'Native color input remains keyboard accessible',
+  'Hex field exposes aria-invalid when error is set',
+  'Preset swatches have aria-label with the hex value',
+  'Disabled state removes pointer interaction',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ColorPicker</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'ColorPicker'}
+      :description=${'Pick a color with a visual swatch and hex field. Bind value to a pulse for theme tokens, brand settings, or any color-driven UI. Optional presets speed up common choices.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'color-picker-basic.jcr'}>
+      <div style="width:min(22rem,100%)">
+        <ColorPicker
+          :label=${'Primary'}
+          :hint=${'Used for buttons and focus rings'}
+          :presets=${brandPresets}
+          bind-value=${color}
+        />
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'presets'} :title=${'Presets'}>
+      <Demo :id=${'presets-demo'} :title=${'Brand swatches'} :code=${presets} :filename=${'color-picker-presets.jcr'}>
+        <div style="width:min(22rem,100%)">
+          <ColorPicker
+            :label=${'Brand color'}
+            :presets=${brandPresets}
+            bind-value=${brand}
+          />
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

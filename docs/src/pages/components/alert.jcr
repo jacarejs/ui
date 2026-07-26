@@ -1,0 +1,247 @@
+import { pulse } from '@jacare/core'
+import Alert from '@jacare/ui/components/Alert.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import FrameworkCode from '../../ui/FrameworkCode.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  tones,
+  titleOnly,
+  bodyOnly,
+  compact,
+  dismissible,
+  timer,
+  roles,
+  playgroundCode as buildPlaygroundCode,
+} from '../../examples/alert.js'
+
+const contract = getContract('Alert')
+const navLinks = previousNext('/components/alert')
+
+const playTone = pulse('info')
+const playTitle = pulse('Live preview')
+const playBody = pulse('Tune tone, title, compact, dismiss, role, and auto-hide duration.')
+const playDismissible = pulse(true)
+const playCompact = pulse(false)
+const playDuration = pulse('0')
+const playRole = pulse('auto')
+const playOpen = pulse(true)
+
+const a11y = [
+  'Default role is status for info/success and alert for warn/danger',
+  'role can be forced to status or alert',
+  'Dismiss control is a button with an accessible name',
+  'Focus ring uses --j-focus on the close control',
+]
+
+const toneOptions = ['info', 'success', 'warn', 'danger']
+const roleOptions = ['auto', 'status', 'alert']
+
+function setTone(next) {
+  playTone.set(next)
+}
+
+function setRole(next) {
+  playRole.set(next)
+}
+
+function roleProp() {
+  return playRole() === 'auto' ? '' : playRole()
+}
+
+function durationMs() {
+  const n = Number(playDuration())
+  return Number.isFinite(n) && n > 0 ? n : 0
+}
+
+function showPlayground() {
+  playOpen.set(true)
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    tone: playTone(),
+    title: playTitle(),
+    body: playBody(),
+    dismissible: playDismissible(),
+    compact: playCompact(),
+    duration: durationMs(),
+    role: roleProp(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Alert</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Feedback'}
+      :title=${'Alert'}
+      :description=${'Inline status for feedback that should stay in context. Pick a tone, optional title, dismiss control, auto-hide timer, compact density, and ARIA role — then copy the generated usage from the playground.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Tone</span>
+            <div class="docs-hero-actions">
+              #for toneOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playTone() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setTone(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Role</span>
+            <div class="docs-hero-actions">
+              #for roleOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playRole() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setRole(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <Field :label=${'Title'} bind-value=${playTitle} />
+          <Field :label=${'Body'} bind-value=${playBody} />
+          <Field
+            :label=${'Duration ms'}
+            :hint=${'0 keeps it open. Try 3000 for a 3s auto-hide.'}
+            bind-value=${playDuration}
+          />
+
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Dismissible'} bind-checked=${playDismissible} />
+            <Switch :label=${'Compact'} bind-checked=${playCompact} />
+          </Stack>
+
+          <Button :size=${'sm'} :variant=${'secondary'} on-press=${showPlayground}>
+            Show alert again
+          </Button>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel docs-alert-play__stage">
+            <Alert
+              :tone=${playTone}
+              :title=${playTitle}
+              :dismissible=${playDismissible}
+              :compact=${playCompact}
+              :duration=${() => durationMs()}
+              :role=${() => roleProp()}
+              bind-open=${playOpen}
+            >${() => playBody()}</Alert>
+          </div>
+          <FrameworkCode :code=${() => playgroundCode()} :filename=${'alert-playground.jcr'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'alert-basic.jcr'}>
+      <Alert :tone=${'info'} :title=${'Heads up'}>Something useful happened.</Alert>
+    </Demo>
+
+    <DocsSection :id=${'tones'} :title=${'Tones'}>
+      <Demo :id=${'tones-demo'} :title=${'All tones'} :code=${tones} :filename=${'alert-tones.jcr'}>
+        <Stack :gap=${'md'}>
+          <Alert :tone=${'info'} :title=${'Info'}>Neutral status update.</Alert>
+          <Alert :tone=${'success'} :title=${'Success'}>Saved successfully.</Alert>
+          <Alert :tone=${'warn'} :title=${'Warning'}>Check this before continuing.</Alert>
+          <Alert :tone=${'danger'} :title=${'Danger'}>Something needs attention now.</Alert>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'content'} :title=${'Content modes'}>
+      <Demo :id=${'title-only'} :title=${'Title only'} :code=${titleOnly} :filename=${'alert-title.jcr'}>
+        <Alert :tone=${'success'} :title=${'Profile updated'}></Alert>
+      </Demo>
+      <Demo :id=${'body-only'} :title=${'Body only'} :code=${bodyOnly} :filename=${'alert-body.jcr'}>
+        <Alert :tone=${'info'}>Inline tip without a title — good for short helpers.</Alert>
+      </Demo>
+      <Demo :id=${'compact-demo'} :title=${'Compact'} :code=${compact} :filename=${'alert-compact.jcr'}>
+        <Alert :tone=${'warn'} :compact=${true} :title=${'Compact'}>
+          Denser padding for tight layouts and toolbars.
+        </Alert>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'dismiss'} :title=${'Dismiss and timer'}>
+      <Demo
+        :id=${'dismiss-demo'}
+        :title=${'Dismissible'}
+        :lead=${'bind-open keeps visibility in a pulse. on-dismiss fires when the user closes it.'}
+        :code=${dismissible}
+        :filename=${'alert-dismiss.jcr'}
+      >
+        <Alert :tone=${'info'} :title=${'Dismissible'} :dismissible=${true}>
+          Click the × to hide this alert.
+        </Alert>
+      </Demo>
+      <Demo
+        :id=${'timer-demo'}
+        :title=${'Auto dismiss'}
+        :lead=${'duration is milliseconds. Combine with dismissible so users can close early.'}
+        :code=${timer}
+        :filename=${'alert-timer.jcr'}
+      >
+        <Stack :gap=${'md'}>
+          <Alert
+            :tone=${'success'}
+            :title=${'Auto dismiss'}
+            :dismissible=${true}
+            :duration=${4000}
+          >
+            This alert hides after 4 seconds.
+          </Alert>
+          <p class="docs-demo-lead">Use Show alert again in the playground to re-open timed alerts.</p>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'roles'} :title=${'ARIA roles'}>
+      <Demo :id=${'roles-demo'} :title=${'status vs alert'} :code=${roles} :filename=${'alert-roles.jcr'}>
+        <Stack :gap=${'md'}>
+          <Alert :tone=${'info'} :role=${'status'} :title=${'Status'}>
+            Polite live region for non-critical updates.
+          </Alert>
+          <Alert :tone=${'danger'} :role=${'alert'} :title=${'Alert'}>
+            Assertive role for urgent messages.
+          </Alert>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -1,0 +1,37 @@
+import FrameworkCode from './FrameworkCode.jcr'
+
+export <contract>
+  props: {
+    id: { type: 'string', default: '' }
+    title: { type: 'string', required: true }
+    lead: { type: 'string', default: '' }
+    code: { type: 'string', required: true }
+    filename: { type: 'string', default: 'example.jcr' }
+  }
+  slots: ['default']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+export <view>
+  <section class="docs-demo" id=${id}>
+    <header class="docs-demo-head">
+      <div>
+        <h3 class="docs-demo-title">${title}</h3>
+        #if read(lead)
+          <p class="docs-demo-lead">${lead}</p>
+        #end
+      </div>
+    </header>
+
+    <div class="docs-demo-grid">
+      <div class="docs-demo-live docs-panel">
+        <div class="docs-demo-live-inner"><slot /></div>
+      </div>
+
+      <FrameworkCode :code=${code} :filename=${filename} />
+    </div>
+  </section>
+</view>

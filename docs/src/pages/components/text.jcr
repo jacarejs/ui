@@ -1,0 +1,39 @@
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic } from '../../examples/text.js'
+
+const contract = getContract('Text')
+const navLinks = previousNext('/components/text')
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Text</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'Text'}
+      :description=${'Typographic primitive for headings and body copy. Control size, tone, and weight through props so text stays on-token with the rest of the design system.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'text-basic.jcr'}>
+      <Text :tone=${'muted'}>Readable body copy</Text>
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

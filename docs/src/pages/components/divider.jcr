@@ -1,0 +1,43 @@
+import Divider from '@jacare/ui/components/Divider.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic } from '../../examples/divider.js'
+
+const contract = getContract('Divider')
+const navLinks = previousNext('/components/divider')
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Divider</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Layout'}
+      :title=${'Divider'}
+      :description=${'Visual separator between sections of content. Keeps hierarchy clear without introducing extra cards or heavy borders — useful inside Stack, Card, and sidebar lists.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'divider-basic.jcr'}>
+      <div style="width:min(20rem,100%)">
+        <p>Above</p>
+        <Divider />
+        <p>Below</p>
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

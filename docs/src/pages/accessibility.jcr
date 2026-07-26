@@ -1,0 +1,122 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import ThemeToggle from '@jacare/ui/components/ThemeToggle.jcr'
+import VisuallyHidden from '@jacare/ui/components/VisuallyHidden.jcr'
+import DocsHero from '../ui/DocsHero.jcr'
+import DocsSection from '../ui/DocsSection.jcr'
+import Demo from '../ui/Demo.jcr'
+import AccessibilityChecklist from '../ui/AccessibilityChecklist.jcr'
+import PreviousNext from '../ui/PreviousNext.jcr'
+import { previousNext } from '../nav-data.js'
+import { focus, visuallyHidden, themeToggle, states } from '../examples/accessibility.js'
+
+const navLinks = previousNext('/accessibility')
+const email = pulse('')
+const name = pulse('')
+const items = [
+  'Visible :focus-visible rings via --j-focus / --j-ring',
+  'Skip link on every docs page',
+  'Theme toggle exposes aria-pressed',
+  'Loading buttons set aria-busy',
+  'Fields with errors set aria-invalid',
+  'Prefer labels from children, VisuallyHidden, or aria-label',
+]
+
+export <view>
+  <article class="docs-page">
+    <DocsHero
+      :kicker=${'Foundations'}
+      :title=${'Accessibility'}
+      :description=${'Accessibility is part of the contract: visible focus rings, keyboard paths, ARIA where it matters, and reduced-motion respect. Use the live examples below when you ship a new component or review a docs page.'}
+    />
+
+    <DocsSection :id=${'focus'} :title=${'Focus'}>
+      <Demo
+        :id=${'focus-demo'}
+        :title=${'Keyboard focus rings'}
+        :lead=${'Tab through the controls. Focus rings come from --j-focus so every primitive stays consistent.'}
+        :code=${focus}
+        :filename=${'a11y-focus.jcr'}
+      >
+        <Stack :gap=${'md'}>
+          <p class="docs-demo-lead">Press Tab to move focus across these controls.</p>
+          <div style="width:min(22rem,100%)">
+            <Field :label=${'Email'} :placeholder=${'you@jacare.dev'} bind-value=${email} />
+          </div>
+          <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+            <Button :variant=${'primary'}>Continue</Button>
+            <Button :variant=${'secondary'}>Cancel</Button>
+            <Button :variant=${'ghost'}>Learn more</Button>
+          </Stack>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'labels'} :title=${'Labels for AT'}>
+      <Demo
+        :id=${'vh-demo'}
+        :title=${'VisuallyHidden'}
+        :lead=${'Keep a text label for assistive tech when the visible UI is icon-only.'}
+        :code=${visuallyHidden}
+        :filename=${'a11y-visually-hidden.jcr'}
+      >
+        <Stack :direction=${'row'} :gap=${'md'} :align=${'center'} :wrap=${true}>
+          <Button :variant=${'ghost'} :size=${'sm'}>
+            <span aria-hidden="true">✕</span>
+            <VisuallyHidden>Close dialog</VisuallyHidden>
+          </Button>
+          <Button :variant=${'secondary'} :size=${'sm'}>
+            <span aria-hidden="true">☰</span>
+            <VisuallyHidden>Open menu</VisuallyHidden>
+          </Button>
+          <p class="docs-demo-lead">Sighted users see the icon; screen readers hear the hidden label.</p>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'theme'} :title=${'Theme control'}>
+      <Demo
+        :id=${'theme-demo'}
+        :title=${'ThemeToggle'}
+        :lead=${'Each option is a toggle button with aria-pressed reflecting the active mode.'}
+        :code=${themeToggle}
+        :filename=${'a11y-theme-toggle.jcr'}
+      >
+        <ThemeToggle />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'states'} :title=${'Busy and invalid'}>
+      <Demo
+        :id=${'states-demo'}
+        :title=${'aria-busy and aria-invalid'}
+        :lead=${'Loading buttons advertise busy state. Fields with errors set aria-invalid and announce the message.'}
+        :code=${states}
+        :filename=${'a11y-states.jcr'}
+      >
+        <Stack :gap=${'md'}>
+          <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+            <Button :loading=${true}>Saving</Button>
+            <Button :disabled=${true}>Disabled</Button>
+          </Stack>
+          <div style="width:min(22rem,100%)">
+            <Field
+              :label=${'Display name'}
+              :error=${'Enter at least 2 characters'}
+              :placeholder=${'Jacaré'}
+              bind-value=${name}
+            />
+          </div>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'checklist'} :title=${'Checklist'}>
+      <AccessibilityChecklist :items=${items} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

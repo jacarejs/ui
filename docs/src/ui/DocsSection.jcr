@@ -1,0 +1,14 @@
+export <contract>
+  props: {
+    id: { type: 'string', default: '' }
+    title: { type: 'string', required: true }
+  }
+  slots: ['default']
+</contract>
+
+export <view>
+  <section class="docs-section" id=${id}>
+    <h2 class="docs-section-title">${title}</h2>
+    <slot />
+  </section>
+</view>
