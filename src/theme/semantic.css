@@ -1,0 +1,12 @@
+:root,
+[data-j-theme] {
+  --j-bg: var(--j-surface);
+  --j-bg-elevated: var(--j-surface-2);
+  --j-fg: var(--j-text);
+  --j-fg-muted: var(--j-muted);
+  --j-accent: var(--j-primary);
+  --j-accent-hover: var(--j-leaf);
+  --j-ring: var(--j-focus);
+  --j-error: var(--j-danger);
+  --j-warning: var(--j-warn);
+}

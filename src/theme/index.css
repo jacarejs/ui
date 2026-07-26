@@ -1,0 +1,33 @@
+@import './tokens.css';
+@import './tokens.dark.css';
+@import './semantic.css';
+
+:root {
+  color: var(--j-fg);
+  background: var(--j-bg);
+  font-family: var(--j-font);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--j-ring);
+}

@@ -1,0 +1,42 @@
+:root {
+  --j-deep: #001818;
+  --j-forest: #003030;
+  --j-primary: #189030;
+  --j-leaf: #30a830;
+  --j-bright: #60a818;
+  --j-lime: #78c018;
+  --j-mint: #d8f3dc;
+  --j-surface: #f4fbf6;
+  --j-surface-2: #ffffff;
+  --j-border: #b8e0c4;
+  --j-text: #001818;
+  --j-muted: #3d6b52;
+  --j-danger: #c62828;
+  --j-warn: #c47a00;
+  --j-info: #1f6feb;
+  --j-success: #189030;
+  --j-radius: 12px;
+  --j-radius-sm: 8px;
+  --j-radius-pill: 999px;
+  --j-shadow: 0 12px 40px rgba(0, 24, 24, 0.12);
+  --j-shadow-sm: 0 4px 16px rgba(0, 24, 24, 0.08);
+  --j-focus: 0 0 0 3px rgba(24, 144, 48, 0.28);
+  --j-font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --j-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --j-space-1: 0.25rem;
+  --j-space-2: 0.5rem;
+  --j-space-3: 0.75rem;
+  --j-space-4: 1rem;
+  --j-space-5: 1.5rem;
+  --j-space-6: 2rem;
+  --j-duration-fast: 120ms;
+  --j-duration-normal: 200ms;
+  --j-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --j-duration-fast: 0ms;
+    --j-duration-normal: 0ms;
+  }
+}
