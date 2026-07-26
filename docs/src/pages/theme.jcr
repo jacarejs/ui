@@ -1,25 +1,58 @@
+import Button from '@jacare/ui/components/Button.jcr'
 import DocsHero from '../ui/DocsHero.jcr'
+import DocsSection from '../ui/DocsSection.jcr'
 import CodeBlock from '../ui/CodeBlock.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
 import { previousNext } from '../nav-data.js'
-import { themeBoot } from '../examples/theme.js'
+import { themeBoot, overrideTokens, semanticAliases, applyModes } from '../examples/theme.js'
 
 const navLinks = previousNext('/theme')
+
+function go(path) {
+  history.pushState({}, '', path)
+  window.dispatchEvent(new PopStateEvent('popstate'))
+}
 
 export <view>
   <article class="docs-page">
     <DocsHero
       :kicker=${'Foundations'}
       :title=${'Theme'}
-      :description=${'Jacaré UI is driven by CSS custom properties on --j-* tokens. Import theme.css once, then use applyTheme to switch light, dark, or system. Semantic aliases like --j-bg and --j-accent keep component styles consistent.'}
+      :description=${'Jacaré UI is driven by CSS custom properties on --j-* tokens. Import theme.css once, override brand colors when needed, and use applyTheme for light, dark, or system. Semantic aliases keep every component aligned.'}
     />
 
-    <p class="docs-lead">
-      Import <code>@jacare/ui/theme.css</code> once. Tokens live on <code>:root</code> and
-      <code>[data-j-theme="dark"]</code>.
-    </p>
+    <DocsSection :id=${'boot'} :title=${'Boot the theme'}>
+      <p class="docs-lead">
+        Import <code>@jacare/ui/theme.css</code> once. Tokens live on <code>:root</code> and
+        <code>[data-j-theme="dark"]</code>. Call <code>applyTheme</code> early so the first paint matches the stored preference.
+      </p>
+      <CodeBlock :code=${themeBoot} :filename=${'theme.js'} :language=${'javascript'} />
+      <CodeBlock :code=${applyModes} :filename=${'modes.js'} :language=${'javascript'} />
+    </DocsSection>
 
-    <CodeBlock :code=${themeBoot} :filename=${'theme.js'} :language=${'javascript'} />
+    <DocsSection :id=${'override'} :title=${'Override brand tokens'}>
+      <p class="docs-lead">
+        Change a few root tokens and every component that references them updates. Prefer overriding brand tokens (<code>--j-primary</code>, <code>--j-leaf</code>) rather than restyling each primitive.
+      </p>
+      <CodeBlock :code=${overrideTokens} :filename=${'app.css'} :language=${'css'} />
+    </DocsSection>
+
+    <DocsSection :id=${'semantic'} :title=${'Semantic aliases'}>
+      <p class="docs-lead">
+        Semantic aliases map brand tokens to roles like background, foreground, and accent. Components read the roles so your brand sheet stays the single source of truth.
+      </p>
+      <CodeBlock :code=${semanticAliases} :filename=${'semantic.css'} :language=${'css'} />
+    </DocsSection>
+
+    <DocsSection :id=${'tools'} :title=${'Tune live'}>
+      <p class="docs-lead">
+        Use the Theme Editor to draft token changes and export CSS, or open the Token reference for the full <code>--j-*</code> catalog.
+      </p>
+      <div class="docs-hero-actions">
+        <Button :variant=${'primary'} on-press=${() => go('/theme-editor')}>Open Theme Editor</Button>
+        <Button :variant=${'secondary'} on-press=${() => go('/tokens')}>Token reference</Button>
+      </div>
+    </DocsSection>
 
     <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
   </article>

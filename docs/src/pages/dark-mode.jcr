@@ -1,10 +1,14 @@
 import ThemeScope from '@jacare/ui/components/ThemeScope.jcr'
+import ThemeToggle from '@jacare/ui/components/ThemeToggle.jcr'
 import Button from '@jacare/ui/components/Button.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
 import DocsHero from '../ui/DocsHero.jcr'
+import DocsSection from '../ui/DocsSection.jcr'
 import Demo from '../ui/Demo.jcr'
+import CodeBlock from '../ui/CodeBlock.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
 import { previousNext } from '../nav-data.js'
-import { themeScope } from '../examples/dark-mode.js'
+import { themeScope, themeToggle, applyThemeBoot } from '../examples/dark-mode.js'
 
 const navLinks = previousNext('/dark-mode')
 
@@ -13,16 +17,50 @@ export <view>
     <DocsHero
       :kicker=${'Foundations'}
       :title=${'Dark mode'}
-      :description=${'Dark mode flips tokens through data-j-theme on the page root — or a scoped island. Use applyTheme for the whole app, or wrap a preview with ThemeScope when you need an isolated light/dark surface.'}
+      :description=${'Dark mode flips tokens through data-j-theme on the page root — or a scoped island. Use applyTheme for the whole app, ThemeToggle for a control, or ThemeScope when a preview needs an isolated light/dark surface.'}
     />
 
-    <Demo :id=${'scope'} :title=${'ThemeScope'} :code=${themeScope} :filename=${'dark.jcr'}>
-      <ThemeScope :mode=${'dark'}>
-        <div style="padding:1rem;border-radius:12px;background:var(--j-surface)">
-          <Button :variant=${'primary'}>Scoped dark</Button>
-        </div>
-      </ThemeScope>
-    </Demo>
+    <DocsSection :id=${'boot'} :title=${'Persist preference'}>
+      <p class="docs-lead">
+        <code>applyTheme</code> writes <code>data-j-theme</code> and stores light, dark, or system in <code>localStorage</code>. Read the stored value on boot so reloads keep the user’s choice.
+      </p>
+      <CodeBlock :code=${applyThemeBoot} :filename=${'boot.js'} :language=${'javascript'} />
+    </DocsSection>
+
+    <DocsSection :id=${'toggle'} :title=${'ThemeToggle'}>
+      <Demo
+        :id=${'toggle-demo'}
+        :title=${'Light, dark, and system'}
+        :lead=${'Drop ThemeToggle in a header or settings panel. It applies the mode and emits change for analytics or custom storage.'}
+        :code=${themeToggle}
+        :filename=${'theme-toggle.jcr'}
+      >
+        <ThemeToggle />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'scope'} :title=${'ThemeScope'}>
+      <Demo
+        :id=${'scope-demo'}
+        :title=${'Isolated light and dark islands'}
+        :lead=${'Wrap a preview or marketing block when the rest of the page should stay on another mode.'}
+        :code=${themeScope}
+        :filename=${'theme-scope.jcr'}
+      >
+        <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+          <ThemeScope :mode=${'light'}>
+            <div style="padding:1rem;border-radius:12px;background:var(--j-surface);border:1px solid var(--j-border)">
+              <Button :variant=${'primary'}>Light island</Button>
+            </div>
+          </ThemeScope>
+          <ThemeScope :mode=${'dark'}>
+            <div style="padding:1rem;border-radius:12px;background:var(--j-surface);border:1px solid var(--j-border)">
+              <Button :variant=${'primary'}>Dark island</Button>
+            </div>
+          </ThemeScope>
+        </Stack>
+      </Demo>
+    </DocsSection>
 
     <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
   </article>

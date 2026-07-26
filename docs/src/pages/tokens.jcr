@@ -1,24 +1,72 @@
 import DocsHero from '../ui/DocsHero.jcr'
+import DocsSection from '../ui/DocsSection.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
 import { previousNext } from '../nav-data.js'
 
 const navLinks = previousNext('/tokens')
 
-const tokens = [
+const brand = [
+  { name: '--j-deep', kind: 'color' },
+  { name: '--j-forest', kind: 'color' },
   { name: '--j-primary', kind: 'color' },
   { name: '--j-leaf', kind: 'color' },
+  { name: '--j-bright', kind: 'color' },
+  { name: '--j-lime', kind: 'color' },
+  { name: '--j-mint', kind: 'color' },
+]
+
+const surfaces = [
   { name: '--j-surface', kind: 'color' },
   { name: '--j-surface-2', kind: 'color' },
+  { name: '--j-border', kind: 'color' },
   { name: '--j-text', kind: 'color' },
   { name: '--j-muted', kind: 'color' },
-  { name: '--j-border', kind: 'color' },
+]
+
+const status = [
   { name: '--j-danger', kind: 'color' },
+  { name: '--j-warn', kind: 'color' },
+  { name: '--j-info', kind: 'color' },
+  { name: '--j-success', kind: 'color' },
+]
+
+const semantic = [
   { name: '--j-bg', kind: 'color' },
+  { name: '--j-bg-elevated', kind: 'color' },
   { name: '--j-fg', kind: 'color' },
+  { name: '--j-fg-muted', kind: 'color' },
   { name: '--j-accent', kind: 'color' },
+  { name: '--j-accent-hover', kind: 'color' },
+  { name: '--j-ring', kind: 'focus' },
+  { name: '--j-error', kind: 'color' },
+  { name: '--j-warning', kind: 'color' },
+]
+
+const shape = [
   { name: '--j-radius', kind: 'radius' },
+  { name: '--j-radius-sm', kind: 'radius' },
+  { name: '--j-radius-pill', kind: 'radius' },
   { name: '--j-shadow', kind: 'shadow' },
+  { name: '--j-shadow-sm', kind: 'shadow' },
   { name: '--j-focus', kind: 'focus' },
+]
+
+const space = [
+  { name: '--j-space-1', kind: 'space' },
+  { name: '--j-space-2', kind: 'space' },
+  { name: '--j-space-3', kind: 'space' },
+  { name: '--j-space-4', kind: 'space' },
+  { name: '--j-space-5', kind: 'space' },
+  { name: '--j-space-6', kind: 'space' },
+]
+
+const motion = [
+  { name: '--j-duration-fast', kind: 'motion' },
+  { name: '--j-duration-normal', kind: 'motion' },
+  { name: '--j-ease-out', kind: 'motion' },
+  { name: '--j-font', kind: 'font' },
+  { name: '--j-font-mono', kind: 'font' },
 ]
 
 function readToken(name) {
@@ -37,7 +85,18 @@ function swatchStyle(item) {
   if (item.kind === 'focus') {
     return `--docs-token-fill:var(--j-surface, #fff);box-shadow:var(${name})`
   }
+  if (item.kind === 'space') {
+    return `--docs-token-fill:var(--j-primary);width:var(${name});min-width:var(${name});height:0.75rem;border-radius:0.2rem`
+  }
+  if (item.kind === 'motion' || item.kind === 'font') {
+    return `--docs-token-fill:transparent;border:1px dashed var(--j-border)`
+  }
   return `--docs-token-fill:var(${name})`
+}
+
+function go(path) {
+  history.pushState({}, '', path)
+  window.dispatchEvent(new PopStateEvent('popstate'))
 }
 
 export <view>
@@ -45,38 +104,240 @@ export <view>
     <DocsHero
       :kicker=${'Foundations'}
       :title=${'Token reference'}
-      :description=${'Full catalog of color, radius, shadow, and semantic tokens used by @jacare/ui. Change a token once and every component that references it updates — including Theme Editor drafts.'}
+      :description=${'Catalog of brand, semantic, shape, space, and motion tokens used by @jacare/ui. Change a token once and every component that references it updates — including Theme Editor drafts.'}
     />
 
-    <div class="docs-table-wrap">
-      <table class="docs-table">
-        <thead>
-          <tr>
-            <th>Token</th>
-            <th>Kind</th>
-            <th>Swatch</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          #for tokens as item
-            <tr>
-              <td><code>${item.name}</code></td>
-              <td>${item.kind}</td>
-              <td>
-                <span
-                  class="docs-token-swatch"
-                  class-docs-token-swatch--shape=${item.kind !== 'color'}
-                  :style=${() => swatchStyle(item)}
-                  :title=${item.name}
-                ></span>
-              </td>
-              <td><code class="docs-token-value">${readToken(item.name)}</code></td>
-            </tr>
-          #end
-        </tbody>
-      </table>
+    <p class="docs-lead">
+      Values below are read live from the current document theme. Switch Light / Dark in the header to compare canopy dark tokens.
+    </p>
+
+    <div class="docs-hero-actions" style="margin-bottom:0.5rem">
+      <Button :variant=${'secondary'} :size=${'sm'} on-press=${() => go('/theme-editor')}>Open Theme Editor</Button>
     </div>
+
+    <DocsSection :id=${'brand'} :title=${'Brand colors'}>
+      <div class="docs-table-wrap">
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Kind</th>
+              <th>Swatch</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            #for brand as item
+              <tr>
+                <td><code>${item.name}</code></td>
+                <td>${item.kind}</td>
+                <td>
+                  <span
+                    class="docs-token-swatch"
+                    class-docs-token-swatch--shape=${item.kind !== 'color'}
+                    :style=${() => swatchStyle(item)}
+                    :title=${item.name}
+                  ></span>
+                </td>
+                <td><code class="docs-token-value">${readToken(item.name)}</code></td>
+              </tr>
+            #end
+          </tbody>
+        </table>
+      </div>
+    </DocsSection>
+
+    <DocsSection :id=${'surfaces'} :title=${'Surfaces and text'}>
+      <div class="docs-table-wrap">
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Kind</th>
+              <th>Swatch</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            #for surfaces as item
+              <tr>
+                <td><code>${item.name}</code></td>
+                <td>${item.kind}</td>
+                <td>
+                  <span
+                    class="docs-token-swatch"
+                    class-docs-token-swatch--shape=${item.kind !== 'color'}
+                    :style=${() => swatchStyle(item)}
+                    :title=${item.name}
+                  ></span>
+                </td>
+                <td><code class="docs-token-value">${readToken(item.name)}</code></td>
+              </tr>
+            #end
+          </tbody>
+        </table>
+      </div>
+    </DocsSection>
+
+    <DocsSection :id=${'status'} :title=${'Status colors'}>
+      <div class="docs-table-wrap">
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Kind</th>
+              <th>Swatch</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            #for status as item
+              <tr>
+                <td><code>${item.name}</code></td>
+                <td>${item.kind}</td>
+                <td>
+                  <span
+                    class="docs-token-swatch"
+                    class-docs-token-swatch--shape=${item.kind !== 'color'}
+                    :style=${() => swatchStyle(item)}
+                    :title=${item.name}
+                  ></span>
+                </td>
+                <td><code class="docs-token-value">${readToken(item.name)}</code></td>
+              </tr>
+            #end
+          </tbody>
+        </table>
+      </div>
+    </DocsSection>
+
+    <DocsSection :id=${'semantic'} :title=${'Semantic aliases'}>
+      <div class="docs-table-wrap">
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Kind</th>
+              <th>Swatch</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            #for semantic as item
+              <tr>
+                <td><code>${item.name}</code></td>
+                <td>${item.kind}</td>
+                <td>
+                  <span
+                    class="docs-token-swatch"
+                    class-docs-token-swatch--shape=${item.kind !== 'color'}
+                    :style=${() => swatchStyle(item)}
+                    :title=${item.name}
+                  ></span>
+                </td>
+                <td><code class="docs-token-value">${readToken(item.name)}</code></td>
+              </tr>
+            #end
+          </tbody>
+        </table>
+      </div>
+    </DocsSection>
+
+    <DocsSection :id=${'shape'} :title=${'Radius, shadow, focus'}>
+      <div class="docs-table-wrap">
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Kind</th>
+              <th>Swatch</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            #for shape as item
+              <tr>
+                <td><code>${item.name}</code></td>
+                <td>${item.kind}</td>
+                <td>
+                  <span
+                    class="docs-token-swatch"
+                    class-docs-token-swatch--shape=${item.kind !== 'color'}
+                    :style=${() => swatchStyle(item)}
+                    :title=${item.name}
+                  ></span>
+                </td>
+                <td><code class="docs-token-value">${readToken(item.name)}</code></td>
+              </tr>
+            #end
+          </tbody>
+        </table>
+      </div>
+    </DocsSection>
+
+    <DocsSection :id=${'space'} :title=${'Space'}>
+      <div class="docs-table-wrap">
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Kind</th>
+              <th>Swatch</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            #for space as item
+              <tr>
+                <td><code>${item.name}</code></td>
+                <td>${item.kind}</td>
+                <td>
+                  <span
+                    class="docs-token-swatch"
+                    class-docs-token-swatch--shape=${true}
+                    :style=${() => swatchStyle(item)}
+                    :title=${item.name}
+                  ></span>
+                </td>
+                <td><code class="docs-token-value">${readToken(item.name)}</code></td>
+              </tr>
+            #end
+          </tbody>
+        </table>
+      </div>
+    </DocsSection>
+
+    <DocsSection :id=${'motion'} :title=${'Motion and type'}>
+      <div class="docs-table-wrap">
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Kind</th>
+              <th>Swatch</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            #for motion as item
+              <tr>
+                <td><code>${item.name}</code></td>
+                <td>${item.kind}</td>
+                <td>
+                  <span
+                    class="docs-token-swatch"
+                    class-docs-token-swatch--shape=${true}
+                    :style=${() => swatchStyle(item)}
+                    :title=${item.name}
+                  ></span>
+                </td>
+                <td><code class="docs-token-value">${readToken(item.name)}</code></td>
+              </tr>
+            #end
+          </tbody>
+        </table>
+      </div>
+    </DocsSection>
 
     <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
   </article>
