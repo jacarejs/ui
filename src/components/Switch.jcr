@@ -1,0 +1,105 @@
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    checked: { type: 'boolean', model: true }
+    disabled: { type: 'boolean', default: false }
+    name: { type: 'string', default: '' }
+  }
+  slots: ['default']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+export <view>
+  <label class="jui-switch" class-is-disabled=${!!read(disabled)}>
+    <input
+      class="jui-switch__input"
+      type="checkbox"
+      role="switch"
+      name=${name}
+      disabled=${!!read(disabled)}
+      bind-checked=${checked}
+    />
+    <span class="jui-switch__track" aria-hidden="true">
+      <span class="jui-switch__thumb"></span>
+    </span>
+    <span class="jui-switch__label">
+      #if read(label)
+        <span>${label}</span>
+      #else
+        <slot />
+      #end
+    </span>
+  </label>
+</view>
+
+export <style>
+.jui-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.jui-switch.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.jui-switch__input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.jui-switch__track {
+  position: relative;
+  width: 2.6rem;
+  height: 1.45rem;
+  border-radius: var(--j-radius-pill);
+  background: #c7d9cc;
+  transition: background 140ms ease;
+  flex-shrink: 0;
+}
+
+.jui-switch__thumb {
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 24, 24, 0.18);
+  transition: transform 140ms ease;
+}
+
+.jui-switch__input:checked + .jui-switch__track {
+  background: var(--j-primary);
+}
+
+.jui-switch__input:checked + .jui-switch__track .jui-switch__thumb {
+  transform: translateX(1.15rem);
+}
+
+.jui-switch__input:focus-visible + .jui-switch__track {
+  box-shadow: var(--j-focus);
+}
+
+.jui-switch__label {
+  color: var(--j-text);
+  font-size: 0.95rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-switch__track,
+  .jui-switch__thumb {
+    transition: none;
+  }
+}
+</style>

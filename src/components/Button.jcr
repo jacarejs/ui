@@ -1,0 +1,154 @@
+export <contract>
+  props: {
+    variant: { type: 'string', default: 'primary' }
+    size: { type: 'string', default: 'md' }
+    type: { type: 'string', default: 'button' }
+    disabled: { type: 'boolean', default: false }
+    loading: { type: 'boolean', default: false }
+    block: { type: 'boolean', default: false }
+  }
+  slots: ['default']
+  emits: ['press']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+export <view>
+  <button
+    class="jui-btn"
+    class-jui-btn--primary=${read(variant) === 'primary'}
+    class-jui-btn--secondary=${read(variant) === 'secondary'}
+    class-jui-btn--ghost=${read(variant) === 'ghost'}
+    class-jui-btn--danger=${read(variant) === 'danger'}
+    class-jui-btn--sm=${read(size) === 'sm'}
+    class-jui-btn--lg=${read(size) === 'lg'}
+    class-jui-btn--block=${!!read(block)}
+    class-is-loading=${!!read(loading)}
+    type=${type}
+    disabled=${!!(read(disabled) || read(loading))}
+    aria-busy=${!!read(loading)}
+    on-click=${(event) => {
+      if (read(disabled) || read(loading)) {
+        event.preventDefault()
+        return
+      }
+      emit('press', event)
+    }}
+  >
+    #if read(loading)
+      <span class="jui-btn__spinner" aria-hidden="true"></span>
+    #end
+    <span class="jui-btn__label"><slot /></span>
+  </button>
+</view>
+
+export <style>
+.jui-btn {
+  --jui-btn-bg: var(--j-primary);
+  --jui-btn-fg: #ffffff;
+  --jui-btn-border: transparent;
+  --jui-btn-hover: var(--j-leaf);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0.65rem 1.15rem;
+  border: 1px solid var(--jui-btn-border);
+  border-radius: var(--j-radius-pill);
+  background: var(--jui-btn-bg);
+  color: var(--jui-btn-fg);
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease, border-color 120ms ease, opacity 120ms ease;
+  box-shadow: 0 8px 24px rgba(24, 144, 48, 0.22);
+  user-select: none;
+}
+
+.jui-btn:hover:not(:disabled) {
+  background: var(--jui-btn-hover);
+  transform: translateY(-1px);
+}
+
+.jui-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.jui-btn:disabled,
+.jui-btn.is-loading {
+  opacity: 0.62;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.jui-btn--secondary {
+  --jui-btn-bg: var(--j-surface);
+  --jui-btn-fg: var(--j-forest);
+  --jui-btn-border: var(--j-border);
+  --jui-btn-hover: var(--j-mint);
+  box-shadow: none;
+}
+
+.jui-btn--ghost {
+  --jui-btn-bg: transparent;
+  --jui-btn-fg: var(--j-forest);
+  --jui-btn-border: transparent;
+  --jui-btn-hover: rgba(24, 144, 48, 0.08);
+  box-shadow: none;
+}
+
+.jui-btn--danger {
+  --jui-btn-bg: var(--j-danger);
+  --jui-btn-fg: #ffffff;
+  --jui-btn-border: transparent;
+  --jui-btn-hover: #a81f1f;
+  box-shadow: 0 8px 24px rgba(198, 40, 40, 0.22);
+}
+
+.jui-btn--sm {
+  min-height: 2rem;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.875rem;
+}
+
+.jui-btn--lg {
+  min-height: 3rem;
+  padding: 0.85rem 1.4rem;
+  font-size: 1.05rem;
+}
+
+.jui-btn--block {
+  width: 100%;
+}
+
+.jui-btn__spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: jui-spin 0.7s linear infinite;
+}
+
+.jui-btn__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+@keyframes jui-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-btn,
+  .jui-btn__spinner {
+    transition: none;
+    animation: none;
+  }
+}
+</style>

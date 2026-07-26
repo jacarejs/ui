@@ -1,0 +1,113 @@
+export <contract>
+  props: {
+    label: { type: 'string', required: true }
+    value: { type: 'string', model: true }
+    type: { type: 'string', default: 'text' }
+    placeholder: { type: 'string', default: '' }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+    required: { type: 'boolean', default: false }
+    name: { type: 'string', default: '' }
+    autocomplete: { type: 'string', default: '' }
+  }
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+export <view>
+  <label
+    class="jui-field"
+    class-has-error=${!!read(error)}
+    class-is-disabled=${!!read(disabled)}
+  >
+    <span class="jui-field__label">
+      ${label}
+      #if read(required)
+        <span class="jui-field__req" aria-hidden="true">*</span>
+      #end
+    </span>
+    <input
+      class="jui-field__control"
+      type=${type}
+      name=${name}
+      autocomplete=${autocomplete}
+      placeholder=${placeholder}
+      disabled=${!!read(disabled)}
+      required=${!!read(required)}
+      aria-invalid=${!!read(error)}
+      bind-value=${value}
+    />
+    #if read(error)
+      <span class="jui-field__error" role="alert">${error}</span>
+    #elif read(hint)
+      <span class="jui-field__hint">${hint}</span>
+    #end
+  </label>
+</view>
+
+export <style>
+.jui-field {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-field__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-field__req {
+  color: var(--j-danger);
+}
+
+.jui-field__control {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-field__control::placeholder {
+  color: color-mix(in srgb, var(--j-muted) 75%, white);
+}
+
+.jui-field__control:focus {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+  outline: none;
+}
+
+.jui-field.has-error .jui-field__control {
+  border-color: var(--j-danger);
+}
+
+.jui-field.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-field__hint,
+.jui-field__error {
+  font-size: 0.8rem;
+}
+
+.jui-field__hint {
+  color: var(--j-muted);
+}
+
+.jui-field__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

@@ -1,0 +1,296 @@
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'string', model: true }
+    name: { type: 'string', default: '' }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+    size: { type: 'string', default: 'md' }
+    showInput: { type: 'boolean', default: true }
+    presets: { type: 'object', default: null }
+  }
+  emits: ['change']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function normalizeHex(raw, fallback = '#189030') {
+  const text = String(raw ?? '').trim()
+  if (/^#[0-9a-fA-F]{6}$/.test(text)) return text.toLowerCase()
+  if (/^[0-9a-fA-F]{6}$/.test(text)) return `#${text.toLowerCase()}`
+  if (/^#[0-9a-fA-F]{3}$/.test(text)) {
+    const h = text.slice(1)
+    return `#${h[0]}${h[0]}${h[1]}${h[1]}${h[2]}${h[2]}`.toLowerCase()
+  }
+  if (/^[0-9a-fA-F]{3}$/.test(text)) {
+    return `#${text[0]}${text[0]}${text[1]}${text[1]}${text[2]}${text[2]}`.toLowerCase()
+  }
+  return fallback
+}
+
+function colorOf(current) {
+  return normalizeHex(read(current), '#189030')
+}
+
+function presetList(list) {
+  const items = read(list)
+  return Array.isArray(items) ? items.map((item) => normalizeHex(item)) : []
+}
+
+function hasPresets(list) {
+  return presetList(list).length > 0
+}
+
+function writeColor(model, next, emitFn) {
+  const hex = normalizeHex(next)
+  if (model && typeof model.set === 'function') {
+    model.set(hex)
+  }
+  emitFn('change', hex)
+  return hex
+}
+
+export <view>
+  <div
+    class="jui-color"
+    class-jui-color--sm=${read(size) === 'sm'}
+    class-jui-color--lg=${read(size) === 'lg'}
+    class-has-error=${!!read(error)}
+    class-is-disabled=${!!read(disabled)}
+  >
+    #if read(label)
+      <span class="jui-color__label">${label}</span>
+    #end
+
+    <div class="jui-color__row">
+      <label class="jui-color__swatch">
+        <input
+          class="jui-color__native"
+          type="color"
+          name=${name}
+          disabled=${!!read(disabled)}
+          value=${() => colorOf(value)}
+          aria-label=${read(label) || 'Color'}
+          on-input=${(event) => writeColor(value, event.target.value, emit)}
+        />
+        <span
+          class="jui-color__chip"
+          :style=${() => `background-color:${colorOf(value)}`}
+          aria-hidden="true"
+        ></span>
+      </label>
+
+      #if read(showInput)
+        <input
+          class="jui-color__hex"
+          type="text"
+          spellcheck="false"
+          autocomplete="off"
+          maxlength="7"
+          disabled=${!!read(disabled)}
+          value=${() => colorOf(value)}
+          aria-label=${read(label) ? `${read(label)} hex` : 'Hex color'}
+          aria-invalid=${!!read(error)}
+          on-input=${(event) => {
+            const raw = String(event.target.value || '').trim()
+            if (!/^#?[0-9a-fA-F]{0,6}$/.test(raw)) {
+              event.target.value = colorOf(value)
+              return
+            }
+            if (/^#?[0-9a-fA-F]{3}$/.test(raw) || /^#?[0-9a-fA-F]{6}$/.test(raw)) {
+              writeColor(value, raw, emit)
+            }
+          }}
+          on-blur=${(event) => {
+            const hex = writeColor(value, event.target.value, emit)
+            event.target.value = hex
+          }}
+        />
+      #end
+    </div>
+
+    #if hasPresets(presets)
+      <div class="jui-color__presets" role="list" aria-label="Color presets">
+        #for presetList(presets) as hex
+          <button
+            type="button"
+            class="jui-color__preset"
+            class-is-active=${() => colorOf(value) === hex}
+            role="listitem"
+            disabled=${!!read(disabled)}
+            aria-label=${hex}
+            :style=${() => `background-color:${hex}`}
+            on-click=${() => writeColor(value, hex, emit)}
+          ></button>
+        #end
+      </div>
+    #end
+
+    #if read(error)
+      <span class="jui-color__error" role="alert">${error}</span>
+    #elif read(hint)
+      <span class="jui-color__hint">${hint}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-color {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  color: var(--j-text);
+}
+
+.jui-color__label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest, var(--j-text));
+}
+
+.jui-color__row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.jui-color__swatch {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--j-radius-sm);
+  border: 1px solid var(--j-border);
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--j-surface-2, #fff);
+}
+
+.jui-color__native {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.jui-color__chip {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-color: var(--j-primary, #189030);
+}
+
+.jui-color__hex {
+  flex: 1;
+  min-width: 0;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2, var(--j-bg-elevated, #fff));
+  color: var(--j-text);
+  font-family: var(--j-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+}
+
+.jui-color__hex:focus,
+.jui-color__swatch:focus-within {
+  outline: none;
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-color__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.jui-color__preset {
+  appearance: none;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--j-border) 70%, #000);
+  padding: 0;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.jui-color__preset.is-active {
+  box-shadow: var(--j-focus);
+}
+
+.jui-color__preset:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-color--sm .jui-color__swatch,
+.jui-color--sm .jui-color__hex {
+  min-height: 2rem;
+  height: 2rem;
+  width: auto;
+}
+
+.jui-color--sm .jui-color__swatch {
+  width: 2rem;
+}
+
+.jui-color--sm .jui-color__hex {
+  font-size: 0.8125rem;
+  padding: 0.35rem 0.65rem;
+}
+
+.jui-color--lg .jui-color__swatch,
+.jui-color--lg .jui-color__hex {
+  min-height: 3rem;
+  height: 3rem;
+}
+
+.jui-color--lg .jui-color__swatch {
+  width: 3rem;
+}
+
+.jui-color--lg .jui-color__hex {
+  font-size: 1rem;
+  padding: 0.7rem 0.95rem;
+}
+
+.jui-color.has-error .jui-color__hex,
+.jui-color.has-error .jui-color__swatch {
+  border-color: var(--j-danger);
+}
+
+.jui-color.is-disabled {
+  opacity: 0.62;
+  pointer-events: none;
+}
+
+.jui-color__hint,
+.jui-color__error {
+  font-size: 0.8rem;
+}
+
+.jui-color__hint {
+  color: var(--j-muted);
+}
+
+.jui-color__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

@@ -1,0 +1,86 @@
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    checked: { type: 'boolean', model: true }
+    disabled: { type: 'boolean', default: false }
+    name: { type: 'string', default: '' }
+  }
+  slots: ['default']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+export <view>
+  <label class="jui-check" class-is-disabled=${!!read(disabled)}>
+    <input
+      class="jui-check__input"
+      type="checkbox"
+      name=${name}
+      disabled=${!!read(disabled)}
+      bind-checked=${checked}
+    />
+    <span class="jui-check__box" aria-hidden="true"></span>
+    <span class="jui-check__label">
+      #if read(label)
+        <span>${label}</span>
+      #else
+        <slot />
+      #end
+    </span>
+  </label>
+</view>
+
+export <style>
+.jui-check {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.jui-check.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.jui-check__input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.jui-check__box {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+  border: 1.5px solid var(--j-border);
+  border-radius: 0.35rem;
+  background: var(--j-surface-2);
+  transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-check__input:checked + .jui-check__box {
+  background: var(--j-primary);
+  border-color: var(--j-primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5 6.5 11.5 12.5 4.5'/%3E%3C/svg%3E");
+  background-size: 0.85rem;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.jui-check__input:focus-visible + .jui-check__box {
+  box-shadow: var(--j-focus);
+}
+
+.jui-check__label {
+  color: var(--j-text);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+</style>
