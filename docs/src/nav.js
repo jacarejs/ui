@@ -4,6 +4,7 @@ import Home from './pages/home.jcr'
 import NotFound from './pages/not-found.jcr'
 
 export const nav = createNav({
+  base: import.meta.env.BASE_URL,
   layout: Shell,
   screens: {
     '/': { use: screen(Home), title: 'Jacaré UI' },

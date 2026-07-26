@@ -5,9 +5,11 @@ import { fileURLToPath } from 'node:url'
 
 const docsRoot = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(docsRoot, '..')
+const base = process.env.JACARE_BASE || '/'
 
 export default defineConfig({
   root: docsRoot,
+  base,
   cacheDir: resolve(repoRoot, 'node_modules/.vite/ui-docs'),
   plugins: [jacare()],
   resolve: {
