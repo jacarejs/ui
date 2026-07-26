@@ -3,6 +3,7 @@ import Button from '@jacare/ui/components/Button.jcr'
 import Field from '@jacare/ui/components/Field.jcr'
 import Stack from '@jacare/ui/components/Stack.jcr'
 import Switch from '@jacare/ui/components/Switch.jcr'
+import VisuallyHidden from '@jacare/ui/components/VisuallyHidden.jcr'
 import Demo from '../../ui/Demo.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import DocsSection from '../../ui/DocsSection.jcr'
@@ -14,6 +15,11 @@ import {
   basic,
   colors,
   events,
+  iconEnd,
+  iconOnly,
+  iconStart,
+  icons,
+  menu,
   playgroundCode as buildPlaygroundCode,
   shapes,
   sizes,
@@ -31,7 +37,7 @@ const a11y = [
   'Has visible focus ring using --j-focus',
   'Disabled removes pointer interaction',
   'Loading sets aria-busy and blocks clicks',
-  'Label comes from children or aria-label',
+  'Icon-only buttons need VisuallyHidden or an accessible name',
 ]
 
 const playLabel = pulse('Button')
@@ -42,12 +48,15 @@ const playType = pulse('button')
 const playDisabled = pulse(false)
 const playLoading = pulse(false)
 const playBlock = pulse(false)
+const playIconMode = pulse('none')
 const pressCount = pulse(0)
+const menuOpen = pulse(false)
 
 const variantOptions = ['primary', 'secondary', 'ghost', 'outline', 'success', 'warn', 'danger', 'info']
 const sizeOptions = ['sm', 'md', 'lg']
 const shapeOptions = ['pill', 'rounded', 'circle']
 const typeOptions = ['button', 'submit', 'reset']
+const iconOptions = ['none', 'start', 'end', 'only', 'menu']
 
 function setVariant(next) {
   playVariant.set(next)
@@ -65,8 +74,19 @@ function setType(next) {
   playType.set(next)
 }
 
+function setIconMode(next) {
+  playIconMode.set(next)
+  if (next === 'only' || next === 'menu') {
+    playShape.set(next === 'menu' ? 'rounded' : 'circle')
+  }
+}
+
 function onPress() {
   pressCount.set(pressCount() + 1)
+}
+
+function toggleMenu() {
+  menuOpen.set(!menuOpen())
 }
 
 function playgroundCode() {
@@ -79,6 +99,7 @@ function playgroundCode() {
     disabled: playDisabled(),
     loading: playLoading(),
     block: playBlock(),
+    iconMode: playIconMode(),
   })
 }
 
@@ -93,7 +114,7 @@ export <view>
     <DocsHero
       :kicker=${'Actions'}
       :title=${'Button'}
-      :description=${'Primary way to trigger an action or submit a form. Choose a variant, color, size, shape, and button type, toggle loading/disabled/block, and react to the press event — all pulse-friendly.'}
+      :description=${'Primary way to trigger an action or submit a form. Choose a variant, color, size, shape, icons on the left or right, icon-only and menu buttons, and react to press — all pulse-friendly.'}
       :status=${'stable'}
     />
 
@@ -142,6 +163,19 @@ export <view>
           </div>
 
           <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Icon</span>
+            <div class="docs-hero-actions">
+              #for iconOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playIconMode() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setIconMode(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
             <span class="docs-alert-play__label">Type</span>
             <div class="docs-hero-actions">
               #for typeOptions as option
@@ -165,16 +199,88 @@ export <view>
 
         <div class="docs-alert-play__preview">
           <div class="docs-panel docs-avatar-play__stage">
-            <Button
-              :variant=${playVariant}
-              :size=${playSize}
-              :shape=${playShape}
-              :type=${playType}
-              :disabled=${playDisabled}
-              :loading=${playLoading}
-              :block=${playBlock}
-              on-press=${onPress}
-            >${() => playLabel()}</Button>
+            #if playIconMode() === 'start'
+              <Button
+                :variant=${playVariant}
+                :size=${playSize}
+                :shape=${playShape}
+                :type=${playType}
+                :disabled=${playDisabled}
+                :loading=${playLoading}
+                :block=${playBlock}
+                on-press=${onPress}
+              >
+                <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                ${() => playLabel()}
+              </Button>
+            #elif playIconMode() === 'end'
+              <Button
+                :variant=${playVariant}
+                :size=${playSize}
+                :shape=${playShape}
+                :type=${playType}
+                :disabled=${playDisabled}
+                :loading=${playLoading}
+                :block=${playBlock}
+                on-press=${onPress}
+              >
+                ${() => playLabel()}
+                <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </Button>
+            #elif playIconMode() === 'only'
+              <Button
+                :variant=${playVariant}
+                :size=${playSize}
+                :shape=${playShape}
+                :type=${playType}
+                :disabled=${playDisabled}
+                :loading=${playLoading}
+                :block=${playBlock}
+                :iconOnly=${true}
+                on-press=${onPress}
+              >
+                <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.5-3.5" />
+                </svg>
+                <VisuallyHidden>${() => playLabel() || 'Search'}</VisuallyHidden>
+              </Button>
+            #elif playIconMode() === 'menu'
+              <Button
+                :variant=${playVariant}
+                :size=${playSize}
+                :shape=${playShape}
+                :type=${playType}
+                :disabled=${playDisabled}
+                :loading=${playLoading}
+                :block=${playBlock}
+                :iconOnly=${true}
+                on-press=${toggleMenu}
+              >
+                <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
+                <VisuallyHidden>Open menu</VisuallyHidden>
+              </Button>
+            #else
+              <Button
+                :variant=${playVariant}
+                :size=${playSize}
+                :shape=${playShape}
+                :type=${playType}
+                :disabled=${playDisabled}
+                :loading=${playLoading}
+                :block=${playBlock}
+                on-press=${onPress}
+              >${() => playLabel()}</Button>
+            #end
+            #if playIconMode() === 'menu'
+              <p class="docs-demo-lead" style="margin:0.75rem 0 0">Menu ${() => (menuOpen() ? 'open' : 'closed')}</p>
+            #end
           </div>
           <CodeBlock :code=${() => playgroundCode()} :filename=${'button-playground.jcr'} :language=${'jacare'} />
         </div>
@@ -228,13 +334,120 @@ export <view>
       </Demo>
     </DocsSection>
 
+    <DocsSection :id=${'icons'} :title=${'Icons'}>
+      <Demo
+        :id=${'icons-overview'}
+        :title=${'Left, right, icon-only, and menu'}
+        :lead=${'Place an SVG with class jui-btn__icon before or after the label. Use iconOnly with VisuallyHidden for accessible icon buttons.'}
+        :code=${icons}
+        :filename=${'button-icons.jcr'}
+      >
+        <Stack :direction=${'row'} :gap=${'xl'} :align=${'center'} :justify=${'center'} :wrap=${true}>
+          <Button>
+            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Add item
+          </Button>
+          <Button :variant=${'secondary'}>
+            Continue
+            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </Button>
+          <Button :iconOnly=${true} :shape=${'circle'} :variant=${'outline'}>
+            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            <VisuallyHidden>Search</VisuallyHidden>
+          </Button>
+          <Button :iconOnly=${true} :variant=${'ghost'} on-press=${toggleMenu}>
+            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+            <VisuallyHidden>Open menu</VisuallyHidden>
+          </Button>
+        </Stack>
+      </Demo>
+
+      <Demo :id=${'icon-start'} :title=${'Icon on the left'} :code=${iconStart} :filename=${'button-icon-start.jcr'}>
+        <Button>
+          <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          Add item
+        </Button>
+      </Demo>
+
+      <Demo :id=${'icon-end'} :title=${'Icon on the right'} :code=${iconEnd} :filename=${'button-icon-end.jcr'}>
+        <Button :variant=${'secondary'}>
+          Continue
+          <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </Button>
+      </Demo>
+
+      <Demo :id=${'icon-only'} :title=${'Icon only'} :code=${iconOnly} :filename=${'button-icon-only.jcr'}>
+        <Stack :direction=${'row'} :gap=${'md'} :align=${'center'} :wrap=${true}>
+          <Button :iconOnly=${true} :shape=${'circle'} :variant=${'outline'}>
+            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            <VisuallyHidden>Search</VisuallyHidden>
+          </Button>
+          <Button :iconOnly=${true} :variant=${'secondary'}>
+            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            <VisuallyHidden>Add</VisuallyHidden>
+          </Button>
+          <Button :iconOnly=${true} :variant=${'danger'} :shape=${'rounded'}>
+            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
+            <VisuallyHidden>Close</VisuallyHidden>
+          </Button>
+        </Stack>
+      </Demo>
+
+      <Demo
+        :id=${'menu-button'}
+        :title=${'Menu'}
+        :lead=${'Use an icon-only hamburger control for navigation drawers and overflow menus.'}
+        :code=${menu}
+        :filename=${'button-menu.jcr'}
+      >
+        <Stack :direction=${'row'} :gap=${'md'} :align=${'center'}>
+          <Button :iconOnly=${true} :variant=${'ghost'} on-press=${toggleMenu}>
+            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+            <VisuallyHidden>Open menu</VisuallyHidden>
+          </Button>
+          <Button :variant=${'secondary'}>
+            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+            Menu
+            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </Button>
+          <span class="docs-demo-lead">Menu ${() => (menuOpen() ? 'open' : 'closed')}</span>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
     <DocsSection :id=${'states'} :title=${'States'}>
       <Demo :id=${'states-demo'} :title=${'Loading, disabled, block'} :code=${states} :filename=${'button-states.jcr'}>
         <Stack :direction=${'row'} :gap=${'xl'} :align=${'center'} :justify=${'center'} :wrap=${true}>
           <Button :loading=${true}>Saving</Button>
           <Button :disabled=${true}>Disabled</Button>
         </Stack>
-        <div style="width:min(20rem,100%);margin-top:1rem">
+        <div class="docs-demo-constrain" style="margin-top:1rem">
           <Button :block=${true}>Full width</Button>
         </div>
       </Demo>
