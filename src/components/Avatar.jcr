@@ -4,6 +4,11 @@ export <contract>
     src: { type: 'string', default: '' }
     size: { type: 'string', default: 'md' }
     alt: { type: 'string', default: '' }
+    shape: { type: 'string', default: 'circle' }
+    tone: { type: 'string', default: 'primary' }
+    color: { type: 'string', default: '' }
+    status: { type: 'string', default: '' }
+    bordered: { type: 'boolean', default: false }
   }
 </contract>
 
@@ -20,36 +25,83 @@ function initialsOf(name) {
   return `${first}${second}`.toUpperCase()
 }
 
+function customStyle(value) {
+  const next = String(read(value) || '').trim()
+  return next ? `--jui-avatar-color:${next}` : ''
+}
+
 export <view>
   <span
     class="jui-avatar"
+    class-jui-avatar--xs=${read(size) === 'xs'}
     class-jui-avatar--sm=${read(size) === 'sm'}
     class-jui-avatar--lg=${read(size) === 'lg'}
+    class-jui-avatar--xl=${read(size) === 'xl'}
+    class-jui-avatar--rounded=${read(shape) === 'rounded'}
+    class-jui-avatar--square=${read(shape) === 'square'}
+    class-jui-avatar--success=${read(tone) === 'success'}
+    class-jui-avatar--warn=${read(tone) === 'warn'}
+    class-jui-avatar--danger=${read(tone) === 'danger'}
+    class-jui-avatar--info=${read(tone) === 'info'}
+    class-jui-avatar--neutral=${read(tone) === 'neutral'}
+    class-jui-avatar--bordered=${!!read(bordered)}
+    :style=${() => customStyle(color)}
     aria-label=${alt || name || 'Avatar'}
   >
-    #if read(src)
-      <img class="jui-avatar__img" src=${src} alt=${alt || name || ''} />
-    #else
-      <span class="jui-avatar__fallback" aria-hidden="true">${() => initialsOf(name)}</span>
+    <span class="jui-avatar__media">
+      #if read(src)
+        <img class="jui-avatar__img" src=${src} alt=${alt || name || ''} />
+      #else
+        <span class="jui-avatar__fallback" aria-hidden="true">${() => initialsOf(name)}</span>
+      #end
+    </span>
+
+    #if read(status)
+      <span
+        class="jui-avatar__status"
+        class-jui-avatar__status--online=${read(status) === 'online'}
+        class-jui-avatar__status--away=${read(status) === 'away'}
+        class-jui-avatar__status--busy=${read(status) === 'busy'}
+        aria-label=${() => `Status: ${read(status)}`}
+        title=${() => read(status)}
+      ></span>
     #end
   </span>
 </view>
 
 export <style>
 .jui-avatar {
+  --jui-avatar-color: var(--j-primary);
+  --jui-avatar-color-end: var(--j-leaf);
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  overflow: hidden;
-  background: linear-gradient(135deg, var(--j-primary), var(--j-bright));
   color: #ffffff;
   font-weight: 800;
   letter-spacing: -0.02em;
   flex-shrink: 0;
   box-shadow: var(--j-shadow-sm);
+}
+
+.jui-avatar__media {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--jui-avatar-color), var(--jui-avatar-color-end));
+}
+
+.jui-avatar--xs {
+  width: 1.4rem;
+  height: 1.4rem;
+  font-size: 0.55rem;
 }
 
 .jui-avatar--sm {
@@ -64,6 +116,50 @@ export <style>
   font-size: 1.15rem;
 }
 
+.jui-avatar--xl {
+  width: 5rem;
+  height: 5rem;
+  font-size: 1.55rem;
+}
+
+.jui-avatar--rounded {
+  border-radius: var(--j-radius);
+}
+
+.jui-avatar--square {
+  border-radius: 0;
+}
+
+.jui-avatar--success {
+  --jui-avatar-color: var(--j-success, var(--j-primary));
+  --jui-avatar-color-end: var(--j-leaf);
+}
+
+.jui-avatar--warn {
+  --jui-avatar-color: var(--j-warn);
+  --jui-avatar-color-end: color-mix(in srgb, var(--j-warn) 72%, #ffffff);
+}
+
+.jui-avatar--danger {
+  --jui-avatar-color: var(--j-danger);
+  --jui-avatar-color-end: color-mix(in srgb, var(--j-danger) 72%, #ffffff);
+}
+
+.jui-avatar--info {
+  --jui-avatar-color: var(--j-info);
+  --jui-avatar-color-end: color-mix(in srgb, var(--j-info) 72%, #ffffff);
+}
+
+.jui-avatar--neutral {
+  --jui-avatar-color: var(--j-muted);
+  --jui-avatar-color-end: color-mix(in srgb, var(--j-muted) 68%, var(--j-text));
+}
+
+.jui-avatar--bordered {
+  outline: 2px solid var(--j-surface);
+  box-shadow: 0 0 0 3px var(--jui-avatar-color), var(--j-shadow-sm);
+}
+
 .jui-avatar__img {
   width: 100%;
   height: 100%;
@@ -72,6 +168,34 @@ export <style>
 }
 
 .jui-avatar__fallback {
+  position: relative;
   line-height: 1;
+}
+
+.jui-avatar__status {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  width: 28%;
+  height: 28%;
+  min-width: 0.5rem;
+  min-height: 0.5rem;
+  border: 2px solid var(--j-surface);
+  border-radius: 50%;
+  background: var(--j-muted);
+  box-shadow: var(--j-shadow-sm);
+}
+
+.jui-avatar__status--online {
+  background: var(--j-success, var(--j-primary));
+}
+
+.jui-avatar__status--away {
+  background: var(--j-warn);
+}
+
+.jui-avatar__status--busy {
+  background: var(--j-danger);
 }
 </style>
