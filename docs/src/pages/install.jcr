@@ -30,7 +30,7 @@ export <view>
 
     <p class="docs-lead">
       Full documentation:
-      <a href=${docsSiteUrl} target="_blank" rel="noreferrer">${docsSiteUrl}</a>
+      <a href=${() => docsSiteUrl} target="_blank" rel="noreferrer">${() => docsSiteUrl}</a>
     </p>
 
     <DocsSection :id=${'package'} :title=${'Package'}>

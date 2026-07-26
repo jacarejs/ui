@@ -29,7 +29,7 @@ export <view>
     <DocsSection :id=${'docs'} :title=${'Docs site'}>
       <p class="docs-lead">
         Live documentation on GitHub Pages:
-        <a href=${docsSiteUrl} target="_blank" rel="noreferrer">${docsSiteUrl}</a>
+        <a href=${() => docsSiteUrl} target="_blank" rel="noreferrer">${() => docsSiteUrl}</a>
       </p>
       <p class="docs-lead">
         For the documentation shell locally, run the docs Vite app:
@@ -39,7 +39,7 @@ export <view>
     </DocsSection>
 
     <div class="docs-hero-actions">
-      <a href=${docsSiteUrl} target="_blank" rel="noreferrer">
+      <a href=${() => docsSiteUrl} target="_blank" rel="noreferrer">
         <Button :variant=${'primary'}>Open hosted docs</Button>
       </a>
       <a href="https://github.com/jacarejs/ui" target="_blank" rel="noreferrer">

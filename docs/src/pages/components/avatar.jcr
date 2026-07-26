@@ -14,6 +14,7 @@ import CodeBlock from '../../ui/CodeBlock.jcr'
 import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
+import { assetUrl } from '../../navigate.js'
 import {
   basic,
   bordered,
@@ -27,6 +28,8 @@ import {
 
 const contract = getContract('Avatar')
 const navLinks = previousNext('/components/avatar')
+const logoSrc = assetUrl('jacare-logo.png')
+const logoHint = `Leave empty to generate initials. Try ${logoSrc}.`
 
 const playName = pulse('Jacaré UI')
 const playSrc = pulse('')
@@ -108,7 +111,7 @@ export <view>
           <Field :label=${'Name / initials'} bind-value=${playName} />
           <Field
             :label=${'Image source'}
-            :hint=${'Leave empty to generate initials. Try /jacare-logo.png.'}
+            :hint=${() => logoHint}
             bind-value=${playSrc}
           />
 
@@ -243,7 +246,7 @@ export <view>
           <Avatar :name=${'Jacaré UI'} :size=${'lg'} />
           <Avatar :name=${'Single'} :size=${'lg'} />
           <Avatar :size=${'lg'} />
-          <Avatar :name=${'Jacaré logo'} :src=${'/jacare-logo.png'} :alt=${'Jacaré logo'} :size=${'lg'} />
+          <Avatar :name=${'Jacaré logo'} :src=${() => logoSrc} :alt=${'Jacaré logo'} :size=${'lg'} />
         </Stack>
       </Demo>
     </DocsSection>

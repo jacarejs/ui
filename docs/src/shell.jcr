@@ -1,5 +1,6 @@
 import { pulse } from '@jacare/core'
 import { docsNav } from './nav-data.js'
+import { assetUrl, docsHref } from './navigate.js'
 import ThemeToggle from '@jacare/ui/components/ThemeToggle.jcr'
 import CommandPalette from './ui/CommandPalette.jcr'
 
@@ -36,8 +37,8 @@ export <view>
         Menu
       </button>
 
-      <a class="docs-brand docs-brand--top" jacare-go="/" href="/" aria-label="Jacaré UI home">
-        <img class="docs-brand__mark" src="/jacare-logo.png" alt="" width="40" height="40" />
+      <a class="docs-brand docs-brand--top" jacare-go="/" href=${docsHref('/')} aria-label="Jacaré UI home">
+        <img class="docs-brand__mark" src=${assetUrl('jacare-logo.png')} alt="" width="40" height="40" />
         <span class="docs-brand__copy">
           <span class="docs-brand__name">Jacaré <strong>UI</strong></span>
           <span class="docs-brand__tag">Build with pulse</span>

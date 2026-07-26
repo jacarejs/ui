@@ -7,6 +7,14 @@ export function docsHref(path = '/') {
   return `${prefix}${route}`
 }
 
+export function assetUrl(path = '') {
+  const base = import.meta.env.BASE_URL || '/'
+  const file = String(path).replace(/^\//, '')
+  if (!base || base === '/') return `/${file}`
+  const prefix = base.endsWith('/') ? base : `${base}/`
+  return `${prefix}${file}`
+}
+
 export function goDocs(path = '/') {
   history.pushState({}, '', docsHref(path))
   window.dispatchEvent(new PopStateEvent('popstate'))

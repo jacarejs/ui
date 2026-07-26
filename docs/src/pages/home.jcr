@@ -15,7 +15,7 @@ export <view>
       </p>
       <p class="docs-lead">
         Hosted docs:
-        <a href=${docsSiteUrl} target="_blank" rel="noreferrer">${docsSiteUrl}</a>
+        <a href=${() => docsSiteUrl} target="_blank" rel="noreferrer">${() => docsSiteUrl}</a>
       </p>
       <div class="docs-hero-actions">
         <Button :variant=${'primary'} on-press=${() => goDocs('/quick-start')}>Quick start</Button>
