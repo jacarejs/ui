@@ -23,8 +23,8 @@ export default defineConfig({
     ],
   },
   server: {
-    port: 5173,
-    strictPort: false,
+    port: 5181,
+    strictPort: true,
     fs: {
       allow: [repoRoot],
     },

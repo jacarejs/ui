@@ -106,7 +106,7 @@ yarn playground:dev
 | `yarn test` | Vitest + happy-dom component tests |
 | `yarn docs:dev` | Documentation site (local) |
 | `yarn docs:build` | Build docs for GitHub Pages |
-| `yarn playground:dev` | Interactive component gallery |
+| `yarn playground:dev` | Interactive component gallery (`http://localhost:5181`) |
 
 Live docs: [https://jacarejs.github.io/ui/](https://jacarejs.github.io/ui/)
 
