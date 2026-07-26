@@ -61,7 +61,8 @@
       "type",
       "disabled",
       "loading",
-      "block"
+      "block",
+      "iconOnly"
     ]
   },
   {

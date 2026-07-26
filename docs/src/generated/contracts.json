@@ -161,6 +161,10 @@
       "block": {
         "type": "boolean",
         "default": false
+      },
+      "iconOnly": {
+        "type": "boolean",
+        "default": false
       }
     },
     "pulses": {},
