@@ -1,0 +1,76 @@
+export <contract>
+  props: {
+    text: { type: 'string', required: true }
+    tone: { type: 'string', default: 'default' }
+    soft: { type: 'boolean', default: false }
+  }
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+export <view>
+  <span
+    class="jui-badge"
+    class-jui-badge--soft=${!!read(soft)}
+    class-jui-badge--success=${read(tone) === 'success'}
+    class-jui-badge--warn=${read(tone) === 'warn'}
+    class-jui-badge--danger=${read(tone) === 'danger'}
+    class-jui-badge--info=${read(tone) === 'info'}
+  >${text}</span>
+</view>
+
+export <style>
+.jui-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 1.5rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--j-radius-pill);
+  border: 1px solid transparent;
+  background: var(--j-forest);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.jui-badge--success { background: var(--j-primary); }
+.jui-badge--warn { background: var(--j-warn); }
+.jui-badge--danger { background: var(--j-danger); }
+.jui-badge--info { background: #1f6feb; }
+
+.jui-badge--soft {
+  background: var(--j-mint);
+  color: var(--j-forest);
+  border-color: var(--j-border);
+}
+
+.jui-badge--soft.jui-badge--success {
+  background: rgba(24, 144, 48, 0.12);
+  color: var(--j-primary);
+  border-color: rgba(24, 144, 48, 0.22);
+}
+
+.jui-badge--soft.jui-badge--warn {
+  background: rgba(196, 122, 0, 0.12);
+  color: var(--j-warn);
+  border-color: rgba(196, 122, 0, 0.24);
+}
+
+.jui-badge--soft.jui-badge--danger {
+  background: rgba(198, 40, 40, 0.1);
+  color: var(--j-danger);
+  border-color: rgba(198, 40, 40, 0.22);
+}
+
+.jui-badge--soft.jui-badge--info {
+  background: rgba(31, 111, 235, 0.1);
+  color: #1f6feb;
+  border-color: rgba(31, 111, 235, 0.22);
+}
+</style>

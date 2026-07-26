@@ -1,0 +1,77 @@
+export <contract>
+  props: {
+    name: { type: 'string', default: '' }
+    src: { type: 'string', default: '' }
+    size: { type: 'string', default: 'md' }
+    alt: { type: 'string', default: '' }
+  }
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function initialsOf(name) {
+  const raw = String(read(name) ?? '').trim()
+  if (!raw) return '?'
+  const parts = raw.split(/\s+/).filter(Boolean)
+  const first = parts[0]?.[0] ?? ''
+  const second = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? '' : parts[0]?.[1] ?? ''
+  return `${first}${second}`.toUpperCase()
+}
+
+export <view>
+  <span
+    class="jui-avatar"
+    class-jui-avatar--sm=${read(size) === 'sm'}
+    class-jui-avatar--lg=${read(size) === 'lg'}
+    aria-label=${alt || name || 'Avatar'}
+  >
+    #if read(src)
+      <img class="jui-avatar__img" src=${src} alt=${alt || name || ''} />
+    #else
+      <span class="jui-avatar__fallback" aria-hidden="true">${() => initialsOf(name)}</span>
+    #end
+  </span>
+</view>
+
+export <style>
+.jui-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--j-primary), var(--j-bright));
+  color: #ffffff;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+  box-shadow: var(--j-shadow-sm);
+}
+
+.jui-avatar--sm {
+  width: 1.85rem;
+  height: 1.85rem;
+  font-size: 0.7rem;
+}
+
+.jui-avatar--lg {
+  width: 3.5rem;
+  height: 3.5rem;
+  font-size: 1.15rem;
+}
+
+.jui-avatar__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.jui-avatar__fallback {
+  line-height: 1;
+}
+</style>

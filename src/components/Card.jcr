@@ -1,0 +1,70 @@
+export <contract>
+  props: {
+    title: { type: 'string', default: '' }
+    subtitle: { type: 'string', default: '' }
+    padding: { type: 'string', default: 'md' }
+  }
+  slots: ['default']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+export <view>
+  <section
+    class="jui-card"
+    class-jui-card--sm=${read(padding) === 'sm'}
+    class-jui-card--lg=${read(padding) === 'lg'}
+  >
+    #if read(title)
+      <header class="jui-card__header">
+        <h3 class="jui-card__title">${title}</h3>
+        #if read(subtitle)
+          <p class="jui-card__subtitle">${subtitle}</p>
+        #end
+      </header>
+    #end
+    <div class="jui-card__body"><slot /></div>
+  </section>
+</view>
+
+export <style>
+.jui-card {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.25rem;
+  border: 1px solid var(--j-border);
+  border-radius: calc(var(--j-radius) + 4px);
+  background: var(--j-surface-2);
+  box-shadow: var(--j-shadow-sm);
+}
+
+.jui-card--sm { padding: 0.85rem; }
+.jui-card--lg { padding: 1.75rem; }
+
+.jui-card__header {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.jui-card__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--j-forest);
+}
+
+.jui-card__subtitle {
+  margin: 0;
+  color: var(--j-muted);
+  font-size: 0.9rem;
+}
+
+.jui-card__body {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+</style>

@@ -1,0 +1,60 @@
+export <contract>
+  props: {
+    size: { type: 'string', default: 'md' }
+    label: { type: 'string', default: 'Loading' }
+  }
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+export <view>
+  <span
+    class="jui-spinner"
+    class-jui-spinner--sm=${read(size) === 'sm'}
+    class-jui-spinner--lg=${read(size) === 'lg'}
+    role="status"
+    aria-label=${label}
+  >
+    <span class="jui-spinner__dot" aria-hidden="true"></span>
+  </span>
+</view>
+
+export <style>
+.jui-spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--j-primary);
+}
+
+.jui-spinner--sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+.jui-spinner--lg {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.jui-spinner__dot {
+  width: 100%;
+  height: 100%;
+  border: 2.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: jui-spin 0.7s linear infinite;
+}
+
+@keyframes jui-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-spinner__dot { animation: none; border-right-color: currentColor; opacity: 0.5; }
+}
+</style>

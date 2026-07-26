@@ -1,0 +1,97 @@
+export <contract>
+  props: {
+    as: { type: 'string', default: 'p' }
+    size: { type: 'string', default: 'md' }
+    tone: { type: 'string', default: 'default' }
+    weight: { type: 'string', default: 'regular' }
+  }
+  slots: ['default']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+export <view>
+  #case read(as)
+  #when 'h1'
+    <h1
+      class="jui-text jui-text--h1"
+      class-jui-text--muted=${read(tone) === 'muted'}
+      class-jui-text--primary=${read(tone) === 'primary'}
+      class-jui-text--bold=${read(weight) === 'bold'}
+    ><slot /></h1>
+  #when 'h2'
+    <h2
+      class="jui-text jui-text--h2"
+      class-jui-text--muted=${read(tone) === 'muted'}
+      class-jui-text--primary=${read(tone) === 'primary'}
+      class-jui-text--bold=${read(weight) === 'bold'}
+    ><slot /></h2>
+  #when 'h3'
+    <h3
+      class="jui-text jui-text--h3"
+      class-jui-text--muted=${read(tone) === 'muted'}
+      class-jui-text--primary=${read(tone) === 'primary'}
+      class-jui-text--bold=${read(weight) === 'bold'}
+    ><slot /></h3>
+  #when 'span'
+    <span
+      class="jui-text"
+      class-jui-text--sm=${read(size) === 'sm'}
+      class-jui-text--lg=${read(size) === 'lg'}
+      class-jui-text--muted=${read(tone) === 'muted'}
+      class-jui-text--primary=${read(tone) === 'primary'}
+      class-jui-text--bold=${read(weight) === 'bold'}
+    ><slot /></span>
+  #else
+    <p
+      class="jui-text"
+      class-jui-text--sm=${read(size) === 'sm'}
+      class-jui-text--lg=${read(size) === 'lg'}
+      class-jui-text--muted=${read(tone) === 'muted'}
+      class-jui-text--primary=${read(tone) === 'primary'}
+      class-jui-text--bold=${read(weight) === 'bold'}
+    ><slot /></p>
+  #end
+</view>
+
+export <style>
+.jui-text {
+  margin: 0;
+  color: var(--j-text);
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.jui-text--sm { font-size: 0.875rem; }
+.jui-text--lg { font-size: 1.125rem; }
+.jui-text--muted { color: var(--j-muted); }
+.jui-text--primary { color: var(--j-primary); }
+.jui-text--bold { font-weight: 700; }
+
+.jui-text--h1 {
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--j-deep);
+}
+
+.jui-text--h2 {
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--j-forest);
+}
+
+.jui-text--h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  color: var(--j-forest);
+}
+</style>

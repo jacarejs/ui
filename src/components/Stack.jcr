@@ -1,0 +1,60 @@
+export <contract>
+  props: {
+    gap: { type: 'string', default: 'md' }
+    align: { type: 'string', default: 'stretch' }
+    justify: { type: 'string', default: 'start' }
+    wrap: { type: 'boolean', default: false }
+    direction: { type: 'string', default: 'column' }
+  }
+  slots: ['default']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+export <view>
+  <div
+    class="jui-stack"
+    class-jui-stack--row=${read(direction) === 'row'}
+    class-jui-stack--gap-sm=${read(gap) === 'sm'}
+    class-jui-stack--gap-lg=${read(gap) === 'lg'}
+    class-jui-stack--gap-xl=${read(gap) === 'xl'}
+    class-jui-stack--align-start=${read(align) === 'start'}
+    class-jui-stack--align-center=${read(align) === 'center'}
+    class-jui-stack--align-end=${read(align) === 'end'}
+    class-jui-stack--justify-center=${read(justify) === 'center'}
+    class-jui-stack--justify-between=${read(justify) === 'between'}
+    class-jui-stack--justify-end=${read(justify) === 'end'}
+    class-jui-stack--wrap=${!!read(wrap)}
+  >
+    <slot />
+  </div>
+</view>
+
+export <style>
+.jui-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: stretch;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.jui-stack > span {
+  display: contents;
+}
+
+.jui-stack--row { flex-direction: row; }
+.jui-stack--wrap { flex-wrap: wrap; }
+.jui-stack--gap-sm { gap: 0.5rem; }
+.jui-stack--gap-lg { gap: 1.5rem; }
+.jui-stack--gap-xl { gap: 2rem; }
+.jui-stack--align-start { align-items: flex-start; }
+.jui-stack--align-center { align-items: center; }
+.jui-stack--align-end { align-items: flex-end; }
+.jui-stack--justify-center { justify-content: center; }
+.jui-stack--justify-between { justify-content: space-between; }
+.jui-stack--justify-end { justify-content: flex-end; }
+</style>

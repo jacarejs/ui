@@ -1,0 +1,101 @@
+export <contract>
+  props: {
+    value: { type: 'number', required: true }
+    max: { type: 'number', default: 100 }
+    label: { type: 'string', default: '' }
+    showValue: { type: 'boolean', default: true }
+    tone: { type: 'string', default: 'primary' }
+  }
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function pctOf(value, max) {
+  const current = Number(read(value) ?? 0)
+  const ceiling = Number(read(max) ?? 100) || 100
+  return Math.max(0, Math.min(100, Math.round((current / ceiling) * 100)))
+}
+
+export <view>
+  <div
+    class="jui-progress"
+    class-jui-progress--success=${read(tone) === 'success'}
+    class-jui-progress--warn=${read(tone) === 'warn'}
+    class-jui-progress--danger=${read(tone) === 'danger'}
+  >
+    #if read(label) || read(showValue)
+      <div class="jui-progress__meta">
+        #if read(label)
+          <span class="jui-progress__label">${label}</span>
+        #end
+        #if read(showValue)
+          <strong class="jui-progress__value">${() => `${pctOf(value, max)}%`}</strong>
+        #end
+      </div>
+    #end
+    <div
+      class="jui-progress__track"
+      role="progressbar"
+      aria-valuemin="0"
+      aria-valuemax=${() => read(max)}
+      aria-valuenow=${() => read(value)}
+      aria-label=${label}
+      style---pct=${() => `${pctOf(value, max)}%`}
+    >
+      <div class="jui-progress__fill"></div>
+    </div>
+  </div>
+</view>
+
+export <style>
+.jui-progress {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.jui-progress__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--j-muted);
+}
+
+.jui-progress__value {
+  color: var(--j-forest);
+  font-variant-numeric: tabular-nums;
+}
+
+.jui-progress__track {
+  height: 0.65rem;
+  border-radius: var(--j-radius-pill);
+  background: var(--j-mint);
+  overflow: hidden;
+}
+
+.jui-progress__fill {
+  height: 100%;
+  width: var(--pct, 0%);
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--j-primary), var(--j-lime));
+  transition: width 0.25s ease;
+}
+
+.jui-progress--success .jui-progress__fill {
+  background: linear-gradient(90deg, var(--j-leaf), var(--j-lime));
+}
+
+.jui-progress--warn .jui-progress__fill {
+  background: linear-gradient(90deg, #d97706, #fbbf24);
+}
+
+.jui-progress--danger .jui-progress__fill {
+  background: linear-gradient(90deg, #b91c1c, #f87171);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-progress__fill { transition: none; }
+}
+</style>
