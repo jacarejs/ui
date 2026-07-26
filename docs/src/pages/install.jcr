@@ -70,7 +70,7 @@ export <view>
       <p class="docs-lead">
         Import the theme once at your app entry, then call <code>applyTheme</code> so light, dark, and system modes resolve before the first paint.
       </p>
-      <CodeBlock :code=${themeImport} :filename=${'main.js'} :language=${'javascript'} />
+      <CodeBlock :code=${themeImport} :filename=${'boot.js'} :language=${'javascript'} />
     </DocsSection>
 
     <DocsSection :id=${'imports'} :title=${'Import components'}>
