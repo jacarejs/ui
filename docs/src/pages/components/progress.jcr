@@ -101,7 +101,7 @@ export <view>
         </div>
 
         <div class="docs-alert-play__preview">
-          <div class="docs-panel" style="width:min(22rem,100%)">
+          <div class="docs-panel">
             <Progress
               :value=${() => valueNum()}
               :max=${() => maxNum()}

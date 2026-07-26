@@ -121,7 +121,7 @@ export <view>
         </div>
 
         <div class="docs-alert-play__preview">
-          <div class="docs-panel" style="width:min(22rem,100%)">
+          <div class="docs-panel">
             <ColorPicker
               :label=${playLabel}
               :hint=${playHint}
@@ -139,7 +139,7 @@ export <view>
     </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'color-picker-basic.jcr'}>
-      <div style="width:min(22rem,100%)">
+      <div class="docs-demo-constrain">
         <ColorPicker
           :label=${'Primary'}
           :hint=${'Used for buttons and focus rings'}
@@ -151,7 +151,7 @@ export <view>
 
     <DocsSection :id=${'presets'} :title=${'Presets'}>
       <Demo :id=${'presets-demo'} :title=${'Brand swatches'} :code=${presets} :filename=${'color-picker-presets.jcr'}>
-        <div style="width:min(22rem,100%)">
+        <div class="docs-demo-constrain">
           <ColorPicker
             :label=${'Brand color'}
             :presets=${brandPresets}
@@ -163,7 +163,7 @@ export <view>
 
     <DocsSection :id=${'sizes'} :title=${'Sizes'}>
       <Demo :id=${'all-sizes'} :title=${'Small, medium, and large'} :code=${sizes} :filename=${'color-picker-sizes.jcr'}>
-        <div style="width:min(22rem,100%)">
+        <div class="docs-demo-constrain">
           <Stack :gap=${'md'}>
             <ColorPicker :label=${'Small'} :size=${'sm'} bind-value=${sm} />
             <ColorPicker :label=${'Medium'} :size=${'md'} bind-value=${md} />
@@ -175,7 +175,7 @@ export <view>
 
     <DocsSection :id=${'states'} :title=${'States'}>
       <Demo :id=${'state-demos'} :title=${'Error, disabled, and swatch-only'} :code=${states} :filename=${'color-picker-states.jcr'}>
-        <div style="width:min(22rem,100%)">
+        <div class="docs-demo-constrain">
           <Stack :gap=${'md'}>
             <ColorPicker
               :label=${'With error'}

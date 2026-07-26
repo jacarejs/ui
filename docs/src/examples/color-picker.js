@@ -105,7 +105,11 @@ export function playgroundCode(state) {
     `const color = pulse('${quote(state.value)}')`,
   ]
   if (state.presets?.length) {
-    lines.push(`const presets = ${JSON.stringify(state.presets)}`, '')
+    lines.push('const presets = [')
+    for (const hex of state.presets) {
+      lines.push(`  '${quote(hex)}',`)
+    }
+    lines.push(']', '')
   } else {
     lines.push('')
   }

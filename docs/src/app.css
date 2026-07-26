@@ -102,12 +102,17 @@ a {
   display: grid;
   grid-template-columns: var(--docs-sidebar) minmax(0, 1fr);
   min-height: calc(100vh - var(--docs-header-h));
+  min-width: 0;
+  overflow-x: clip;
 }
 
 .docs-main {
   width: min(var(--docs-content-max), 100%);
+  max-width: 100%;
+  min-width: 0;
   margin-inline: auto;
   padding: 2rem var(--docs-gutter) 5rem;
+  overflow-x: clip;
 }
 
 .docs-sidebar {
@@ -259,6 +264,8 @@ a {
 .docs-page {
   display: grid;
   gap: 1.5rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .docs-breadcrumb {
@@ -336,6 +343,8 @@ a {
   display: grid;
   gap: 0.85rem;
   margin: 0 0 2rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .docs-demo-title {
@@ -352,9 +361,11 @@ a {
 
 .docs-demo-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 0.85rem;
   align-items: stretch;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .docs-demo-live {
@@ -378,7 +389,16 @@ a {
   display: contents;
 }
 
+.docs-demo-constrain {
+  display: block;
+  width: min(22rem, 100%);
+  max-width: 100%;
+  min-width: 0;
+}
+
 .docs-code {
+  max-width: 100%;
+  min-width: 0;
   overflow: hidden;
   background: var(--docs-code-bg);
   color: var(--docs-code-fg);
@@ -389,22 +409,29 @@ a {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
   padding: 0.55rem 0.75rem;
   border-bottom: 1px solid var(--docs-code-line);
   font-size: 0.78rem;
 }
 
 .docs-code-file {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-weight: 700;
 }
 
 .docs-code-lang {
+  flex-shrink: 0;
   margin-left: auto;
   opacity: 0.7;
 }
 
 .docs-code-copy {
   appearance: none;
+  flex-shrink: 0;
   border: 1px solid var(--docs-code-line);
   background: transparent;
   color: var(--docs-code-fg);
@@ -418,11 +445,22 @@ a {
 .docs-code-pre {
   margin: 0;
   padding: 1rem 0.9rem 1.15rem;
-  overflow: auto;
+  max-width: 100%;
+  overflow-x: auto;
   font-family: var(--docs-mono);
   font-size: 0.84rem;
   line-height: 1.55;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.docs-code-pre code {
+  display: block;
+  max-width: 100%;
+  white-space: inherit;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .docs-table-wrap {
@@ -498,16 +536,20 @@ a {
 
 .docs-alert-play {
   display: grid;
-  grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
   gap: 1rem;
   align-items: start;
   margin-bottom: 2rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .docs-alert-play__controls {
   display: grid;
   gap: 0.9rem;
   padding: 1rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .docs-alert-play__group {
@@ -529,8 +571,23 @@ a {
   min-width: 0;
 }
 
+.docs-alert-play__preview > .docs-panel {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 1.15rem;
+  box-sizing: border-box;
+}
+
+.docs-alert-play__preview > .docs-panel .jui-color,
+.docs-alert-play__preview > .docs-panel .jui-field,
+.docs-alert-play__preview > .docs-panel .jui-progress {
+  max-width: none;
+  width: 100%;
+}
+
 .docs-alert-play__stage {
-  padding: 1rem;
+  padding: 1.15rem;
   min-height: 6.5rem;
 }
 
@@ -541,7 +598,7 @@ a {
   padding: 1.5rem;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1100px) {
   .docs-alert-play {
     grid-template-columns: 1fr;
   }
@@ -650,6 +707,8 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .docs-pkg-tabs {
