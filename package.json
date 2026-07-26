@@ -1,0 +1,86 @@
+{
+  "name": "@jacare/ui",
+  "version": "0.1.0",
+  "description": "Official UI component library for Jacaré — accessible, themeable components powered by signals, with no virtual DOM",
+  "keywords": [
+    "jacare",
+    "jacarejs",
+    "ui",
+    "components",
+    "design-system",
+    "signals",
+    "no-vdom",
+    "jcr"
+  ],
+  "homepage": "https://github.com/jacarejs/ui#readme",
+  "bugs": {
+    "url": "https://github.com/jacarejs/ui/issues"
+  },
+  "license": "MIT",
+  "author": "Heber Almeida",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jacarejs/ui.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./theme.css": "./dist/theme.css",
+    "./theme": {
+      "types": "./dist/theme/index.d.ts",
+      "import": "./dist/theme/index.js"
+    },
+    "./package.json": "./package.json",
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "prebuild": "node scripts/check.mjs",
+    "verify": "node scripts/check.mjs",
+    "generate:contracts": "node scripts/generate-contracts.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "pretest": "yarn build",
+    "docs:dev": "yarn generate:contracts && vite --config docs/vite.config.js --configLoader runner",
+    "docs:build": "yarn generate:contracts && vite build --config docs/vite.config.js --configLoader runner",
+    "playground:dev": "vite --config vite.playground.config.js --configLoader runner",
+    "playground:build": "vite build --config vite.playground.config.js --configLoader runner",
+    "prepublishOnly": "yarn build"
+  },
+  "peerDependencies": {
+    "@jacare/core": "^0.1.12"
+  },
+  "devDependencies": {
+    "@jacare/compiler": "0.1.12",
+    "@jacare/core": "0.1.12",
+    "@jacare/vite-plugin": "0.1.12",
+    "happy-dom": "^15.11.7",
+    "vite": "^6.0.3",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "yarn@1.22.22"
+}
