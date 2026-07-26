@@ -1,5 +1,5 @@
 import DocsHero from '../ui/DocsHero.jcr'
-import FrameworkCode from '../ui/FrameworkCode.jcr'
+import CodeBlock from '../ui/CodeBlock.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
 import { previousNext } from '../nav-data.js'
 import { themeBoot } from '../examples/theme.js'
@@ -19,7 +19,7 @@ export <view>
       <code>[data-j-theme="dark"]</code>.
     </p>
 
-    <FrameworkCode :code=${themeBoot} :filename=${'theme.js'} />
+    <CodeBlock :code=${themeBoot} :filename=${'theme.js'} :language=${'javascript'} />
 
     <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
   </article>

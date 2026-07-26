@@ -2,7 +2,6 @@ import { pulse, derive } from '@jacare/core'
 import DocsHero from '../ui/DocsHero.jcr'
 import DocsSection from '../ui/DocsSection.jcr'
 import CodeBlock from '../ui/CodeBlock.jcr'
-import FrameworkCode from '../ui/FrameworkCode.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
 import { previousNext } from '../nav-data.js'
 import { managers, imports } from '../examples/install.js'
@@ -65,7 +64,7 @@ export <view>
       <p class="docs-lead">
         Import the theme once at your app entry, then use components from <code>@jacare/ui</code>.
       </p>
-      <FrameworkCode :code=${imports} :filename=${'app.js'} />
+      <CodeBlock :code=${imports} :filename=${'app.js'} :language=${'javascript'} />
     </DocsSection>
 
     <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />

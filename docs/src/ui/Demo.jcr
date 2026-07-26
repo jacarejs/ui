@@ -1,4 +1,4 @@
-import FrameworkCode from './FrameworkCode.jcr'
+import CodeBlock from './CodeBlock.jcr'
 
 export <contract>
   props: {
@@ -31,7 +31,7 @@ export <view>
         <div class="docs-demo-live-inner"><slot /></div>
       </div>
 
-      <FrameworkCode :code=${code} :filename=${filename} />
+      <CodeBlock :code=${code} :filename=${filename} :language=${'jacare'} />
     </div>
   </section>
 </view>

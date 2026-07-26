@@ -534,21 +534,17 @@ a {
   min-height: 6.5rem;
 }
 
+.docs-avatar-play__stage {
+  display: grid;
+  place-items: center;
+  min-height: 13rem;
+  padding: 1.5rem;
+}
+
 @media (max-width: 960px) {
   .docs-alert-play {
     grid-template-columns: 1fr;
   }
-}
-
-.docs-fw {
-  display: grid;
-  gap: 0.65rem;
-  min-width: 0;
-}
-
-.docs-fw .docs-pkg-tabs {
-  margin: 0;
-  width: 100%;
 }
 
 .docs-theme-presets {

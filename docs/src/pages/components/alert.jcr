@@ -10,7 +10,7 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
-import FrameworkCode from '../../ui/FrameworkCode.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
 import {
@@ -154,7 +154,7 @@ export <view>
               bind-open=${playOpen}
             >${() => playBody()}</Alert>
           </div>
-          <FrameworkCode :code=${() => playgroundCode()} :filename=${'alert-playground.jcr'} />
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'alert-playground.jcr'} :language=${'jacare'} />
         </div>
       </div>
     </DocsSection>
