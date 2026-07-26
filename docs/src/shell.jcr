@@ -36,9 +36,12 @@ export <view>
         Menu
       </button>
 
-      <a class="docs-brand docs-brand--compact" jacare-go="/" href="/">
-        <img src="/jacare-logo.png" alt="" width="40" height="40" />
-        <span>Jacaré <strong>UI</strong></span>
+      <a class="docs-brand docs-brand--top" jacare-go="/" href="/" aria-label="Jacaré UI home">
+        <img class="docs-brand__mark" src="/jacare-logo.png" alt="" width="40" height="40" />
+        <span class="docs-brand__copy">
+          <span class="docs-brand__name">Jacaré <strong>UI</strong></span>
+          <span class="docs-brand__tag">Build with pulse</span>
+        </span>
       </a>
 
       <button type="button" class="docs-search-pill" on-click=${openSearch}>
@@ -55,11 +58,6 @@ export <view>
 
     <div class="docs-body">
       <aside class="docs-sidebar" class-is-open=${menuOpen} aria-label="Documentation">
-        <a class="docs-brand" jacare-go="/" href="/" on-click=${closeMenu}>
-          <img src="/jacare-logo.png" alt="" width="40" height="40" />
-          <span class="docs-brand-text">Jacaré <strong>UI</strong></span>
-        </a>
-
         <button type="button" class="docs-search-trigger" on-click=${openSearch}>
           <span>Search docs</span>
           <kbd>⌘K</kbd>
