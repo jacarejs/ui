@@ -69,14 +69,79 @@ describe('@jacare/ui components', () => {
     expect(pressed).toBe(1)
   })
 
+  it('Button applies variant, shape, and type options', async () => {
+    const Button = await loadComponent('Button')
+    const host = document.createElement('div')
+
+    Button.mount(host, {
+      variant: 'outline',
+      size: 'lg',
+      shape: 'circle',
+      type: 'submit',
+      children: (target) => {
+        target.appendChild(document.createTextNode('Go'))
+      },
+    })
+
+    const btn = host.querySelector('button')
+    expect(btn.classList.contains('jui-btn--outline')).toBe(true)
+    expect(btn.classList.contains('jui-btn--lg')).toBe(true)
+    expect(btn.classList.contains('jui-btn--circle')).toBe(true)
+    expect(btn.getAttribute('type')).toBe('submit')
+  })
+
   it('Badge renders tone classes', async () => {
     const Badge = await loadComponent('Badge')
     const host = document.createElement('div')
     Badge.mount(host, { text: 'Live', tone: 'warn', soft: true })
     const el = host.querySelector('.jui-badge')
-    expect(el.textContent).toBe('Live')
+    expect(el.querySelector('.jui-badge__label').textContent).toBe('Live')
     expect(el.classList.contains('jui-badge--warn')).toBe(true)
     expect(el.classList.contains('jui-badge--soft')).toBe(true)
+  })
+
+  it('Badge supports variant, dot, and custom color options', async () => {
+    const Badge = await loadComponent('Badge')
+    const host = document.createElement('div')
+    Badge.mount(host, {
+      text: 'Custom',
+      tone: 'info',
+      variant: 'outline',
+      size: 'lg',
+      shape: 'rounded',
+      color: '#7c4dff',
+      dot: true,
+    })
+    const el = host.querySelector('.jui-badge')
+    expect(el.classList.contains('jui-badge--outline')).toBe(true)
+    expect(el.classList.contains('jui-badge--lg')).toBe(true)
+    expect(el.classList.contains('jui-badge--rounded')).toBe(true)
+    expect(el.style.getPropertyValue('--jui-badge-color')).toBe('#7c4dff')
+    expect(host.querySelector('.jui-badge__dot')).not.toBeNull()
+  })
+
+  it('Badge dismisses when close is pressed', async () => {
+    const Badge = await loadComponent('Badge')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const open = pulse(true)
+    let dismissed = 0
+
+    Badge.mount(host, {
+      text: 'Removable',
+      tone: 'success',
+      dismissible: true,
+      open,
+      dismiss: () => {
+        dismissed += 1
+      },
+    })
+
+    expect(host.querySelector('.jui-badge')).toBeTruthy()
+    host.querySelector('.jui-badge__close').click()
+    expect(open()).toBe(false)
+    expect(dismissed).toBe(1)
+    expect(host.querySelector('.jui-badge')).toBeNull()
   })
 
   it('Field binds a pulse two-way', async () => {
@@ -193,6 +258,31 @@ describe('@jacare/ui components', () => {
     host.querySelectorAll('.jui-color__preset')[0].click()
     expect(value()).toBe('#189030')
     expect(changed).toBe('#189030')
+  })
+
+  it('Avatar supports presentation options', async () => {
+    const Avatar = await loadComponent('Avatar')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+
+    Avatar.mount(host, {
+      name: 'Jacaré UI',
+      size: 'xl',
+      shape: 'rounded',
+      tone: 'info',
+      color: '#7c4dff',
+      status: 'online',
+      bordered: true,
+    })
+
+    const avatar = host.querySelector('.jui-avatar')
+    expect(avatar.textContent).toContain('JU')
+    expect(avatar.classList.contains('jui-avatar--xl')).toBe(true)
+    expect(avatar.classList.contains('jui-avatar--rounded')).toBe(true)
+    expect(avatar.classList.contains('jui-avatar--info')).toBe(true)
+    expect(avatar.classList.contains('jui-avatar--bordered')).toBe(true)
+    expect(avatar.style.getPropertyValue('--jui-avatar-color')).toBe('#7c4dff')
+    expect(host.querySelector('.jui-avatar__status--online')).not.toBeNull()
   })
 
   it('Alert dismisses and honors duration', async () => {

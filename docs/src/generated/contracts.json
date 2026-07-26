@@ -56,6 +56,26 @@
       "alt": {
         "type": "string",
         "default": ""
+      },
+      "shape": {
+        "type": "string",
+        "default": "circle"
+      },
+      "tone": {
+        "type": "string",
+        "default": "primary"
+      },
+      "color": {
+        "type": "string",
+        "default": ""
+      },
+      "status": {
+        "type": "string",
+        "default": ""
+      },
+      "bordered": {
+        "type": "boolean",
+        "default": false
       }
     },
     "pulses": {},
@@ -72,14 +92,45 @@
         "type": "string",
         "default": "default"
       },
+      "variant": {
+        "type": "string",
+        "default": ""
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "shape": {
+        "type": "string",
+        "default": "pill"
+      },
+      "color": {
+        "type": "string",
+        "default": ""
+      },
       "soft": {
         "type": "boolean",
         "default": false
+      },
+      "dot": {
+        "type": "boolean",
+        "default": false
+      },
+      "dismissible": {
+        "type": "boolean",
+        "default": false
+      },
+      "open": {
+        "type": "boolean",
+        "model": true,
+        "default": true
       }
     },
     "pulses": {},
     "slots": [],
-    "emits": []
+    "emits": [
+      "dismiss"
+    ]
   },
   "Button": {
     "props": {
@@ -90,6 +141,10 @@
       "size": {
         "type": "string",
         "default": "md"
+      },
+      "shape": {
+        "type": "string",
+        "default": "pill"
       },
       "type": {
         "type": "string",
