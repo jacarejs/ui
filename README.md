@@ -5,12 +5,16 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@jacare/ui"><img alt="npm" src="https://img.shields.io/npm/v/@jacare/ui?color=189030" /></a>
+  <a href="https://jacarejs.github.io/ui/"><img alt="docs" src="https://img.shields.io/badge/docs-GitHub%20Pages-78c018" /></a>
   <a href="https://github.com/jacarejs/ui/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/jacarejs/ui/ci.yml?branch=main&label=CI&color=78c018" /></a>
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-189030" /></a>
   <img alt="node" src="https://img.shields.io/badge/node-%3E%3D20-189030" />
 </p>
 
 Accessible, themeable Jacaré components powered by signals — no virtual DOM.
+
+**Docs:** [https://jacarejs.github.io/ui/](https://jacarejs.github.io/ui/)
+
 
 ## Description (GitHub)
 
@@ -100,7 +104,12 @@ yarn playground:dev
 | `yarn verify` | Compile every `.jcr` and validate contracts |
 | `yarn build` | Emit `dist/` ESM + typings + theme |
 | `yarn test` | Vitest + happy-dom component tests |
+| `yarn docs:dev` | Documentation site (local) |
+| `yarn docs:build` | Build docs for GitHub Pages |
 | `yarn playground:dev` | Interactive component gallery |
+
+Live docs: [https://jacarejs.github.io/ui/](https://jacarejs.github.io/ui/)
+
 
 ## Package layout
 
@@ -115,6 +124,7 @@ playground/          # local gallery app
 
 ## Related
 
+- [Documentation](https://jacarejs.github.io/ui/)
 - [Jacaré core](https://github.com/jacarejs/core)
 - [Showcase](https://jacarejs.github.io/core/showcase/)
 - [Lab](https://jacarejs.github.io/core/lab/)

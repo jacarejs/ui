@@ -3,14 +3,15 @@ import DocsSection from '../ui/DocsSection.jcr'
 import CodeBlock from '../ui/CodeBlock.jcr'
 import Button from '@jacare/ui/components/Button.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
-import { previousNext } from '../nav-data.js'
+import { previousNext, docsSiteUrl } from '../nav-data.js'
 
 const navLinks = previousNext('/playground')
 
 const playgroundDev = `yarn playground:dev`
 const docsDev = `yarn docs:dev`
 const tip = `# Playground — minimal Vite sandbox for experiments
-# Docs — full documentation shell with search and Theme Editor`
+# Docs — full documentation shell with search and Theme Editor
+# Live: ${docsSiteUrl}`
 
 export <view>
   <article class="docs-page">
@@ -27,13 +28,20 @@ export <view>
 
     <DocsSection :id=${'docs'} :title=${'Docs site'}>
       <p class="docs-lead">
-        For the documentation shell (this site), run the docs Vite app instead:
+        Live documentation on GitHub Pages:
+        <a href=${docsSiteUrl} target="_blank" rel="noreferrer">${docsSiteUrl}</a>
+      </p>
+      <p class="docs-lead">
+        For the documentation shell locally, run the docs Vite app:
       </p>
       <CodeBlock :code=${docsDev} :filename=${'terminal'} :language=${'bash'} />
       <CodeBlock :code=${tip} :filename=${'notes'} :language=${'bash'} />
     </DocsSection>
 
     <div class="docs-hero-actions">
+      <a href=${docsSiteUrl} target="_blank" rel="noreferrer">
+        <Button :variant=${'primary'}>Open hosted docs</Button>
+      </a>
       <a href="https://github.com/jacarejs/ui" target="_blank" rel="noreferrer">
         <Button :variant=${'secondary'}>Open repository</Button>
       </a>

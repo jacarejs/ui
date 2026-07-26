@@ -52,6 +52,7 @@ export <view>
       <div class="docs-topbar-actions">
         <span class="docs-version">v0.1.0</span>
         <ThemeToggle />
+        <a class="docs-github" href="https://jacarejs.github.io/ui/" target="_blank" rel="noreferrer">Docs</a>
         <a class="docs-github" href="https://github.com/jacarejs/ui" target="_blank" rel="noreferrer">GitHub</a>
       </div>
     </header>

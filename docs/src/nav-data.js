@@ -2,6 +2,9 @@ export function componentHref(name) {
   return `/components/${name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}`
 }
 
+export const docsSiteUrl = 'https://jacarejs.github.io/ui/'
+
+
 export const shippedComponents = [
   { name: 'Alert', group: 'Feedback', blurb: 'Inline status for info, success, warn, danger' },
   { name: 'Avatar', group: 'Data display', blurb: 'Initials or image for people and entities' },

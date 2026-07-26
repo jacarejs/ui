@@ -1,6 +1,6 @@
 import Button from '@jacare/ui/components/Button.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
-import { previousNext } from '../nav-data.js'
+import { previousNext, docsSiteUrl } from '../nav-data.js'
 
 const navLinks = previousNext('/')
 
@@ -16,6 +16,10 @@ export <view>
       <h1 class="docs-title">Official UI for Jacaré</h1>
       <p class="docs-lead">
         Accessible, themeable primitives powered by pulses — no virtual DOM. Every docs page shows a live demo beside Jacaré source, including imports.
+      </p>
+      <p class="docs-lead">
+        Hosted docs:
+        <a href=${docsSiteUrl} target="_blank" rel="noreferrer">${docsSiteUrl}</a>
       </p>
       <div class="docs-hero-actions">
         <Button :variant=${'primary'} on-press=${() => go('/quick-start')}>Quick start</Button>
