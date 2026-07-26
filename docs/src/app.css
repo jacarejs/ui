@@ -434,6 +434,12 @@ a {
   border-color: var(--docs-code-line);
 }
 
+.docs-section > span {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
 .docs-code-bar {
   display: flex;
   align-items: center;

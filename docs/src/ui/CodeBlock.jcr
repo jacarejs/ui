@@ -6,20 +6,29 @@ export <contract>
     filename: { type: 'string', default: '' }
     language: { type: 'string', default: 'jacare' }
   }
+  emits: ['copy']
 </contract>
 
 function read(value) {
   return typeof value === 'function' ? value() : value
 }
 
-const copied = pulse(false)
+function copiedState(emitFn) {
+  if (!emitFn.__docsCopied) {
+    emitFn.__docsCopied = pulse(false)
+  }
+  return emitFn.__docsCopied
+}
 
-async function copyText(value) {
+async function copyText(value, emitFn) {
   const text = String(read(value) ?? '')
+  const copied = copiedState(emitFn)
   try {
     await navigator.clipboard.writeText(text)
     copied.set(true)
-    setTimeout(() => copied.set(false), 1200)
+    emitFn('copy')
+    if (emitFn.__docsCopiedTimer) clearTimeout(emitFn.__docsCopiedTimer)
+    emitFn.__docsCopiedTimer = setTimeout(() => copied.set(false), 1200)
   } catch {
     copied.set(false)
   }
@@ -32,8 +41,8 @@ export <view>
         <span class="docs-code-file">${filename}</span>
       #end
       <span class="docs-code-lang">${language}</span>
-      <button type="button" class="docs-code-copy" on-click=${() => copyText(code)}>
-        ${copied() ? 'Copied' : 'Copy'}
+      <button type="button" class="docs-code-copy" on-click=${() => copyText(code, emit)}>
+        ${() => (copiedState(emit)() ? 'Copied' : 'Copy')}
       </button>
     </div>
     <pre class="docs-code-pre"><code>${code}</code></pre>
