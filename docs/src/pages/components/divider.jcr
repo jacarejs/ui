@@ -1,15 +1,45 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
 import Divider from '@jacare/ui/components/Divider.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
 import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic } from '../../examples/divider.js'
+import {
+  basic,
+  labeled,
+  playgroundCode as buildPlaygroundCode,
+  vertical,
+} from '../../examples/divider.js'
 
 const contract = getContract('Divider')
 const navLinks = previousNext('/components/divider')
+
+const playLabel = pulse('OR')
+const playVertical = pulse(false)
+
+const a11y = [
+  'Horizontal divider uses a semantic separator',
+  'Vertical divider sets aria-orientation=vertical',
+  'Labeled dividers keep text for screen readers',
+  'Use dividers to clarify structure, not as buttons',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    label: playLabel(),
+    vertical: playVertical(),
+  })
+}
 
 export <view>
   <article class="docs-page">
@@ -22,17 +52,79 @@ export <view>
     <DocsHero
       :kicker=${'Layout'}
       :title=${'Divider'}
-      :description=${'Visual separator between sections of content. Keeps hierarchy clear without introducing extra cards or heavy borders — useful inside Stack, Card, and sidebar lists.'}
+      :description=${'Visual separator between sections. Use a plain rule, an optional label, or a vertical divider inside action rows.'}
       :status=${'stable'}
     />
 
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field
+            :label=${'Label'}
+            :hint=${'Ignored when vertical is on'}
+            bind-value=${playLabel}
+          />
+          <Switch :label=${'Vertical'} bind-checked=${playVertical} />
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            #if playVertical()
+              <Stack :direction=${'row'} :align=${'center'} :gap=${'sm'}>
+                <Button :size=${'sm'}>Left</Button>
+                <Divider :vertical=${true} />
+                <Button :size=${'sm'} :variant=${'secondary'}>Right</Button>
+              </Stack>
+            #else
+              <Stack :gap=${'sm'}>
+                <Text>Above</Text>
+                <Divider :label=${playLabel} />
+                <Text>Below</Text>
+              </Stack>
+            #end
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'divider-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'divider-basic.jcr'}>
       <div style="width:min(20rem,100%)">
-        <p>Above</p>
-        <Divider />
-        <p>Below</p>
+        <Stack :gap=${'sm'}>
+          <Text>Above</Text>
+          <Divider />
+          <Text>Below</Text>
+        </Stack>
       </div>
     </Demo>
+
+    <DocsSection :id=${'labeled'} :title=${'Labeled'}>
+      <Demo :id=${'labeled-demo'} :title=${'Centered label'} :code=${labeled} :filename=${'divider-labeled.jcr'}>
+        <div style="width:min(22rem,100%)">
+          <Stack :gap=${'sm'}>
+            <Text>Account details</Text>
+            <Divider :label=${'OR'} />
+            <Text>Continue with SSO</Text>
+          </Stack>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'vertical'} :title=${'Vertical'}>
+      <Demo :id=${'vertical-demo'} :title=${'Inline action separator'} :code=${vertical} :filename=${'divider-vertical.jcr'}>
+        <Stack :direction=${'row'} :align=${'center'} :gap=${'sm'}>
+          <Button :size=${'sm'} :variant=${'ghost'}>Edit</Button>
+          <Divider :vertical=${true} />
+          <Button :size=${'sm'} :variant=${'ghost'}>Share</Button>
+          <Divider :vertical=${true} />
+          <Button :size=${'sm'} :variant=${'ghost'}>Delete</Button>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

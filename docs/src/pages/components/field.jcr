@@ -1,17 +1,62 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
 import Field from '@jacare/ui/components/Field.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
 import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { pulse } from '@jacare/core'
-import { basic } from '../../examples/field.js'
+import {
+  basic,
+  error,
+  hint,
+  playgroundCode as buildPlaygroundCode,
+  states,
+  types,
+} from '../../examples/field.js'
 
 const contract = getContract('Field')
 const navLinks = previousNext('/components/field')
-const value = pulse('')
+
+const playLabel = pulse('Email')
+const playValue = pulse('')
+const playType = pulse('email')
+const playPlaceholder = pulse('you@jacare.dev')
+const playHint = pulse('We never share your email')
+const playError = pulse('')
+const playRequired = pulse(false)
+const playDisabled = pulse(false)
+const typeOptions = ['text', 'email', 'password', 'search', 'url', 'tel']
+
+const a11y = [
+  'Label is associated with the native input',
+  'error sets aria-invalid and surfaces validation copy',
+  'required marks the control and shows a visual asterisk',
+  'disabled removes pointer interaction and dims the field',
+]
+
+function setType(next) {
+  playType.set(next)
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    label: playLabel(),
+    value: playValue(),
+    type: playType(),
+    placeholder: playPlaceholder(),
+    hint: playHint(),
+    error: playError(),
+    required: playRequired(),
+    disabled: playDisabled(),
+  })
+}
 
 export <view>
   <article class="docs-page">
@@ -24,15 +69,109 @@ export <view>
     <DocsHero
       :kicker=${'Forms'}
       :title=${'Field'}
-      :description=${'Labeled text input with room for hint and error copy. Bind value to a pulse, set placeholder and type as needed, and surface validation messages beside the control.'}
+      :description=${'Labeled text input with hint and error copy. Bind value to a pulse, choose an input type, and surface validation beside the control.'}
       :status=${'stable'}
     />
 
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label'} bind-value=${playLabel} />
+          <Field :label=${'Placeholder'} bind-value=${playPlaceholder} />
+          <Field :label=${'Hint'} bind-value=${playHint} />
+          <Field :label=${'Error'} :hint=${'Leave empty for a valid field'} bind-value=${playError} />
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Type</span>
+            <div class="docs-hero-actions">
+              #for typeOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playType() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setType(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Required'} bind-checked=${playRequired} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel" style="width:min(22rem,100%)">
+            <Field
+              :label=${playLabel}
+              :type=${playType}
+              :placeholder=${playPlaceholder}
+              :hint=${playHint}
+              :error=${playError}
+              :required=${playRequired}
+              :disabled=${playDisabled}
+              bind-value=${playValue}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'field-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'field-basic.jcr'}>
       <div style="width:min(20rem,100%)">
-        <Field :label=${'Email'} :placeholder=${'you@jacare.dev'} bind-value=${value} />
+        <Field :label=${'Email'} :placeholder=${'you@jacare.dev'} bind-value=${playValue} />
       </div>
     </Demo>
+
+    <DocsSection :id=${'types'} :title=${'Input types'}>
+      <Demo :id=${'all-types'} :title=${'Email, password, and search'} :code=${types} :filename=${'field-types.jcr'}>
+        <div style="width:min(22rem,100%)">
+          <Stack :gap=${'md'}>
+            <Field :label=${'Email'} :type=${'email'} bind-value=${playValue} />
+            <Field :label=${'Password'} :type=${'password'} bind-value=${playValue} />
+            <Field :label=${'Search'} :type=${'search'} bind-value=${playValue} />
+          </Stack>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'messages'} :title=${'Hint and error'}>
+      <Demo :id=${'hint-demo'} :title=${'Helper text'} :code=${hint} :filename=${'field-hint.jcr'}>
+        <div style="width:min(20rem,100%)">
+          <Field
+            :label=${'Username'}
+            :hint=${'Letters, numbers, and underscores'}
+            :placeholder=${'jacare'}
+            bind-value=${playValue}
+          />
+        </div>
+      </Demo>
+      <Demo :id=${'error-demo'} :title=${'Validation error'} :code=${error} :filename=${'field-error.jcr'}>
+        <div style="width:min(20rem,100%)">
+          <Field
+            :label=${'Email'}
+            :error=${'Enter a valid email address'}
+            bind-value=${playValue}
+          />
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'states'} :title=${'States'}>
+      <Demo :id=${'field-states'} :title=${'Required and disabled'} :code=${states} :filename=${'field-states.jcr'}>
+        <div style="width:min(20rem,100%)">
+          <Stack :gap=${'md'}>
+            <Field :label=${'Required'} :required=${true} bind-value=${playValue} />
+            <Field :label=${'Disabled'} :disabled=${true} :value=${'Locked value'} />
+          </Stack>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

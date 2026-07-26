@@ -1,16 +1,74 @@
-import Stack from '@jacare/ui/components/Stack.jcr'
+import { pulse } from '@jacare/core'
+import Avatar from '@jacare/ui/components/Avatar.jcr'
+import Badge from '@jacare/ui/components/Badge.jcr'
 import Button from '@jacare/ui/components/Button.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
 import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic } from '../../examples/stack.js'
+import {
+  align,
+  basic,
+  directions,
+  gaps,
+  playgroundCode as buildPlaygroundCode,
+  wrap,
+} from '../../examples/stack.js'
 
 const contract = getContract('Stack')
 const navLinks = previousNext('/components/stack')
+
+const playDirection = pulse('row')
+const playGap = pulse('md')
+const playAlign = pulse('center')
+const playJustify = pulse('start')
+const playWrap = pulse(true)
+
+const directionOptions = ['column', 'row']
+const gapOptions = ['sm', 'md', 'lg', 'xl']
+const alignOptions = ['stretch', 'start', 'center', 'end']
+const justifyOptions = ['start', 'center', 'between', 'end']
+
+const a11y = [
+  'Stack is a layout primitive — keep interactive children labeled',
+  'Prefer logical reading order when changing direction',
+  'Do not use Stack alone for landmark semantics',
+  'Wrapping rows should still keep a clear tab order',
+]
+
+function setDirection(next) {
+  playDirection.set(next)
+}
+
+function setGap(next) {
+  playGap.set(next)
+}
+
+function setAlign(next) {
+  playAlign.set(next)
+}
+
+function setJustify(next) {
+  playJustify.set(next)
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    direction: playDirection(),
+    gap: playGap(),
+    align: playAlign(),
+    justify: playJustify(),
+    wrap: playWrap(),
+  })
+}
 
 export <view>
   <article class="docs-page">
@@ -23,9 +81,86 @@ export <view>
     <DocsHero
       :kicker=${'Layout'}
       :title=${'Stack'}
-      :description=${'Flex layout helper that spaces children with a consistent gap. Switch direction between column and row, wrap when needed, and align or justify groups without ad-hoc CSS.'}
+      :description=${'Flex layout helper that spaces children with a consistent gap. Switch direction, wrap when needed, and align or justify groups without ad-hoc CSS.'}
       :status=${'stable'}
     />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Direction</span>
+            <div class="docs-hero-actions">
+              #for directionOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playDirection() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setDirection(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Gap</span>
+            <div class="docs-hero-actions">
+              #for gapOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playGap() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setGap(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Align</span>
+            <div class="docs-hero-actions">
+              #for alignOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playAlign() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setAlign(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Justify</span>
+            <div class="docs-hero-actions">
+              #for justifyOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playJustify() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setJustify(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <Switch :label=${'Wrap'} bind-checked=${playWrap} />
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <Stack
+              :direction=${playDirection}
+              :gap=${playGap}
+              :align=${playAlign}
+              :justify=${playJustify}
+              :wrap=${playWrap}
+            >
+              <Badge :text=${'One'} :tone=${'success'} />
+              <Badge :text=${'Two'} :tone=${'info'} />
+              <Badge :text=${'Three'} />
+            </Stack>
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'stack-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'stack-basic.jcr'}>
       <Stack :gap=${'md'}>
@@ -33,6 +168,70 @@ export <view>
         <Button :variant=${'secondary'}>Two</Button>
       </Stack>
     </Demo>
+
+    <DocsSection :id=${'direction'} :title=${'Direction'}>
+      <Demo :id=${'directions'} :title=${'Column and row'} :code=${directions} :filename=${'stack-directions.jcr'}>
+        <Stack :gap=${'lg'}>
+          <Stack :direction=${'column'} :gap=${'sm'}>
+            <Badge :text=${'Column'} :tone=${'info'} />
+            <Badge :text=${'A'} />
+            <Badge :text=${'B'} />
+          </Stack>
+          <Stack :direction=${'row'} :gap=${'sm'}>
+            <Badge :text=${'Row'} :tone=${'success'} />
+            <Badge :text=${'A'} />
+            <Badge :text=${'B'} />
+          </Stack>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'gap'} :title=${'Gaps'}>
+      <Demo :id=${'all-gaps'} :title=${'Spacing scale'} :code=${gaps} :filename=${'stack-gaps.jcr'}>
+        <Stack :gap=${'xl'}>
+          <Stack :direction=${'row'} :gap=${'sm'}>
+            <Button :size=${'sm'}>sm</Button>
+            <Button :size=${'sm'}>gap</Button>
+          </Stack>
+          <Stack :direction=${'row'} :gap=${'md'}>
+            <Button :size=${'sm'}>md</Button>
+            <Button :size=${'sm'}>gap</Button>
+          </Stack>
+          <Stack :direction=${'row'} :gap=${'lg'}>
+            <Button :size=${'sm'}>lg</Button>
+            <Button :size=${'sm'}>gap</Button>
+          </Stack>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'align'} :title=${'Alignment'}>
+      <Demo :id=${'align-demo'} :title=${'Row with centered items'} :code=${align} :filename=${'stack-align.jcr'}>
+        <Stack :direction=${'row'} :align=${'center'} :gap=${'md'}>
+          <Avatar :name=${'Jacaré UI'} :size=${'lg'} />
+          <Stack :gap=${'sm'}>
+            <Text :weight=${'bold'}>Centered row</Text>
+            <Text :tone=${'muted'} :size=${'sm'}>align center</Text>
+          </Stack>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'wrap'} :title=${'Wrap'}>
+      <Demo :id=${'wrap-demo'} :title=${'Wrapping row'} :code=${wrap} :filename=${'stack-wrap.jcr'}>
+        <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+          <Badge :text=${'Design'} />
+          <Badge :text=${'Docs'} :tone=${'info'} />
+          <Badge :text=${'Playground'} :tone=${'success'} />
+          <Badge :text=${'Theme'} :tone=${'warn'} />
+          <Badge :text=${'Tokens'} :tone=${'neutral'} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

@@ -1,16 +1,54 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
 import Card from '@jacare/ui/components/Card.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
 import Text from '@jacare/ui/components/Text.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
 import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic } from '../../examples/card.js'
+import {
+  basic,
+  composition,
+  paddings,
+  playgroundCode as buildPlaygroundCode,
+  titled,
+} from '../../examples/card.js'
 
 const contract = getContract('Card')
 const navLinks = previousNext('/components/card')
+
+const playTitle = pulse('Project')
+const playSubtitle = pulse('Jacaré UI kit')
+const playBody = pulse('Group related content with a clear header.')
+const playPadding = pulse('md')
+const paddingOptions = ['sm', 'md', 'lg']
+
+const a11y = [
+  'Card is a section surface — put headings inside when needed',
+  'title renders as an h3 for local structure',
+  'Keep interactive controls labeled inside the body',
+  'Do not nest interactive cards without clear labels',
+]
+
+function setPadding(next) {
+  playPadding.set(next)
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    title: playTitle(),
+    subtitle: playSubtitle(),
+    body: playBody(),
+    padding: playPadding(),
+  })
+}
 
 export <view>
   <article class="docs-page">
@@ -23,15 +61,91 @@ export <view>
     <DocsHero
       :kicker=${'Data display'}
       :title=${'Card'}
-      :description=${'Elevated content surface for grouping related UI — forms, summaries, or media. Use the default slot for body content and compose with Text, Stack, and actions inside.'}
+      :description=${'Elevated content surface for grouping related UI. Use title and subtitle for headers, padding for density, and compose body content with Text, Stack, and actions.'}
       :status=${'stable'}
     />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Title'} bind-value=${playTitle} />
+          <Field :label=${'Subtitle'} bind-value=${playSubtitle} />
+          <Field :label=${'Body'} bind-value=${playBody} />
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Padding</span>
+            <div class="docs-hero-actions">
+              #for paddingOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playPadding() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setPadding(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <Card
+              :title=${playTitle}
+              :subtitle=${playSubtitle}
+              :padding=${playPadding}
+            >
+              <Text>${playBody}</Text>
+            </Card>
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'card-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'card-basic.jcr'}>
       <Card>
         <Text>Card body</Text>
       </Card>
     </Demo>
+
+    <DocsSection :id=${'header'} :title=${'Header'}>
+      <Demo :id=${'titled'} :title=${'Title and subtitle'} :code=${titled} :filename=${'card-titled.jcr'}>
+        <Card :title=${'Project'} :subtitle=${'Jacaré UI kit'}>
+          <Text :tone=${'muted'}>Group related content with a clear header.</Text>
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'padding'} :title=${'Padding'}>
+      <Demo :id=${'all-paddings'} :title=${'Density scale'} :code=${paddings} :filename=${'card-paddings.jcr'}>
+        <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+          <Card :title=${'Small'} :padding=${'sm'}>
+            <Text :size=${'sm'}>Compact padding</Text>
+          </Card>
+          <Card :title=${'Medium'} :padding=${'md'}>
+            <Text :size=${'sm'}>Default padding</Text>
+          </Card>
+          <Card :title=${'Large'} :padding=${'lg'}>
+            <Text :size=${'sm'}>Roomy padding</Text>
+          </Card>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'composition'} :title=${'Composition'}>
+      <Demo :id=${'composed'} :title=${'Actions inside a card'} :code=${composition} :filename=${'card-composition.jcr'}>
+        <Card :title=${'Deploy'} :subtitle=${'Ready to publish'}>
+          <Text :tone=${'muted'}>Ship the package and refresh the docs site.</Text>
+          <Stack :direction=${'row'} :gap=${'sm'}>
+            <Button :size=${'sm'}>Publish</Button>
+            <Button :size=${'sm'} :variant=${'secondary'}>Cancel</Button>
+          </Stack>
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

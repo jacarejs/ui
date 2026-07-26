@@ -23,7 +23,12 @@
       "name",
       "src",
       "size",
-      "alt"
+      "alt",
+      "shape",
+      "tone",
+      "color",
+      "status",
+      "bordered"
     ]
   },
   {
@@ -34,7 +39,14 @@
       "badge",
       "text",
       "tone",
-      "soft"
+      "variant",
+      "size",
+      "shape",
+      "color",
+      "soft",
+      "dot",
+      "dismissible",
+      "open"
     ]
   },
   {
@@ -45,6 +57,7 @@
       "button",
       "variant",
       "size",
+      "shape",
       "type",
       "disabled",
       "loading",

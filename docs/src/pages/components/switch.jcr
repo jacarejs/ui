@@ -1,17 +1,52 @@
+import { pulse } from '@jacare/core'
+import Field from '@jacare/ui/components/Field.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
 import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
 import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { pulse } from '@jacare/core'
-import { basic } from '../../examples/switch.js'
+import {
+  basic,
+  disabled,
+  playgroundCode as buildPlaygroundCode,
+  settings,
+  slotLabel,
+} from '../../examples/switch.js'
 
 const contract = getContract('Switch')
 const navLinks = previousNext('/components/switch')
-const checked = pulse(true)
+
+const playLabel = pulse('Notifications')
+const playChecked = pulse(true)
+const playDisabled = pulse(false)
+const dark = pulse(true)
+const sync = pulse(false)
+const sound = pulse(true)
+const slotChecked = pulse(true)
+const disabledOn = pulse(true)
+const disabledOff = pulse(false)
+
+const a11y = [
+  'Uses role=switch on the native control',
+  'Label prop or slot text names the setting',
+  'Disabled removes pointer interaction',
+  'Prefer Switch when the change applies immediately',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    label: playLabel(),
+    checked: playChecked(),
+    disabled: playDisabled(),
+  })
+}
 
 export <view>
   <article class="docs-page">
@@ -24,13 +59,67 @@ export <view>
     <DocsHero
       :kicker=${'Forms'}
       :title=${'Switch'}
-      :description=${'Toggle for on/off settings. Prefer Switch over Checkbox when the change applies immediately. Bind checked to a pulse and provide a clear label for the setting.'}
+      :description=${'Toggle for on/off settings. Prefer Switch over Checkbox when the change applies immediately. Bind checked to a pulse and provide a clear label.'}
       :status=${'stable'}
     />
 
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label'} bind-value=${playLabel} />
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Checked'} bind-checked=${playChecked} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel docs-avatar-play__stage">
+            <Switch
+              :label=${playLabel}
+              :disabled=${playDisabled}
+              bind-checked=${playChecked}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'switch-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'switch-basic.jcr'}>
-      <Switch :label=${'Notifications'} bind-checked=${checked} />
+      <Switch :label=${'Notifications'} bind-checked=${playChecked} />
     </Demo>
+
+    <DocsSection :id=${'settings'} :title=${'Settings list'}>
+      <Demo :id=${'settings-demo'} :title=${'Immediate preferences'} :code=${settings} :filename=${'switch-settings.jcr'}>
+        <Stack :gap=${'md'}>
+          <Switch :label=${'Dark mode'} bind-checked=${dark} />
+          <Switch :label=${'Auto sync'} bind-checked=${sync} />
+          <Switch :label=${'Sound effects'} bind-checked=${sound} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'states'} :title=${'States'}>
+      <Demo :id=${'disabled-demo'} :title=${'Enabled and disabled'} :code=${disabled} :filename=${'switch-disabled.jcr'}>
+        <Stack :gap=${'md'}>
+          <Switch :label=${'Enabled'} bind-checked=${playChecked} />
+          <Switch :label=${'Disabled on'} :disabled=${true} bind-checked=${disabledOn} />
+          <Switch :label=${'Disabled off'} :disabled=${true} bind-checked=${disabledOff} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'slot'} :title=${'Slot label'}>
+      <Demo :id=${'slot-demo'} :title=${'Custom label content'} :code=${slotLabel} :filename=${'switch-slot.jcr'}>
+        <Switch bind-checked=${slotChecked}>
+          <Text :size=${'sm'}>Apply changes immediately</Text>
+        </Switch>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

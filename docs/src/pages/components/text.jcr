@@ -1,15 +1,72 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
 import Text from '@jacare/ui/components/Text.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
 import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic } from '../../examples/text.js'
+import {
+  basic,
+  headings,
+  playgroundCode as buildPlaygroundCode,
+  sizes,
+  tones,
+  weights,
+} from '../../examples/text.js'
 
 const contract = getContract('Text')
 const navLinks = previousNext('/components/text')
+
+const playContent = pulse('Readable body copy')
+const playAs = pulse('p')
+const playSize = pulse('md')
+const playTone = pulse('default')
+const playWeight = pulse('regular')
+
+const asOptions = ['p', 'span', 'h1', 'h2', 'h3']
+const sizeOptions = ['sm', 'md', 'lg']
+const toneOptions = ['default', 'muted', 'primary']
+const weightOptions = ['regular', 'bold']
+
+const a11y = [
+  'as chooses a semantic element (p, span, or heading)',
+  'Prefer real headings for document structure',
+  'Tone and weight are visual — do not rely on color alone',
+  'Keep body copy contrast above WCAG AA',
+]
+
+function setAs(next) {
+  playAs.set(next)
+}
+
+function setSize(next) {
+  playSize.set(next)
+}
+
+function setTone(next) {
+  playTone.set(next)
+}
+
+function setWeight(next) {
+  playWeight.set(next)
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    content: playContent(),
+    as: playAs(),
+    size: playSize(),
+    tone: playTone(),
+    weight: playWeight(),
+  })
+}
 
 export <view>
   <article class="docs-page">
@@ -22,13 +79,128 @@ export <view>
     <DocsHero
       :kicker=${'Data display'}
       :title=${'Text'}
-      :description=${'Typographic primitive for headings and body copy. Control size, tone, and weight through props so text stays on-token with the rest of the design system.'}
+      :description=${'Typographic primitive for headings and body copy. Control element, size, tone, and weight so text stays on-token with the design system.'}
       :status=${'stable'}
     />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Content'} bind-value=${playContent} />
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Element</span>
+            <div class="docs-hero-actions">
+              #for asOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playAs() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setAs(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Size</span>
+            <div class="docs-hero-actions">
+              #for sizeOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playSize() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setSize(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Tone</span>
+            <div class="docs-hero-actions">
+              #for toneOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playTone() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setTone(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Weight</span>
+            <div class="docs-hero-actions">
+              #for weightOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playWeight() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setWeight(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel docs-avatar-play__stage">
+            <Text
+              :as=${playAs}
+              :size=${playSize}
+              :tone=${playTone}
+              :weight=${playWeight}
+            >${playContent}</Text>
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'text-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'text-basic.jcr'}>
       <Text :tone=${'muted'}>Readable body copy</Text>
     </Demo>
+
+    <DocsSection :id=${'headings'} :title=${'Headings'}>
+      <Demo :id=${'heading-levels'} :title=${'h1, h2, and h3'} :code=${headings} :filename=${'text-headings.jcr'}>
+        <Stack :gap=${'sm'}>
+          <Text :as=${'h1'}>Heading one</Text>
+          <Text :as=${'h2'}>Heading two</Text>
+          <Text :as=${'h3'}>Heading three</Text>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'sizes'} :title=${'Sizes'}>
+      <Demo :id=${'all-sizes'} :title=${'Small, medium, and large'} :code=${sizes} :filename=${'text-sizes.jcr'}>
+        <Stack :gap=${'sm'}>
+          <Text :size=${'sm'}>Small body</Text>
+          <Text :size=${'md'}>Medium body</Text>
+          <Text :size=${'lg'}>Large body</Text>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'tones'} :title=${'Tones'}>
+      <Demo :id=${'all-tones'} :title=${'Default, muted, and primary'} :code=${tones} :filename=${'text-tones.jcr'}>
+        <Stack :gap=${'sm'}>
+          <Text :tone=${'default'}>Default tone</Text>
+          <Text :tone=${'muted'}>Muted tone</Text>
+          <Text :tone=${'primary'}>Primary tone</Text>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'weights'} :title=${'Weights'}>
+      <Demo :id=${'all-weights'} :title=${'Regular and bold'} :code=${weights} :filename=${'text-weights.jcr'}>
+        <Stack :gap=${'sm'}>
+          <Text :weight=${'regular'}>Regular weight</Text>
+          <Text :weight=${'bold'}>Bold weight</Text>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

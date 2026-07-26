@@ -1,19 +1,29 @@
 import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
 import ColorPicker from '@jacare/ui/components/ColorPicker.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
 import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, presets } from '../../examples/color-picker.js'
+import {
+  basic,
+  playgroundCode as buildPlaygroundCode,
+  presets,
+  sizes,
+  states,
+} from '../../examples/color-picker.js'
 
 const contract = getContract('ColorPicker')
 const navLinks = previousNext('/components/color-picker')
-const color = pulse('#189030')
-const brand = pulse('#30a830')
+
 const brandPresets = [
   '#189030',
   '#30a830',
@@ -26,12 +36,47 @@ const brandPresets = [
   '#5d4037',
   '#001818',
 ]
+
+const playLabel = pulse('Primary')
+const playHint = pulse('Used for buttons and focus rings')
+const playError = pulse('')
+const playValue = pulse('#189030')
+const playSize = pulse('md')
+const playShowInput = pulse(true)
+const playDisabled = pulse(false)
+const playPresets = pulse(true)
+const brand = pulse('#30a830')
+const sm = pulse('#1f6feb')
+const md = pulse('#189030')
+const lg = pulse('#7c4dff')
+const errorColor = pulse('#c62828')
+const disabledColor = pulse('#5d4037')
+const swatchOnly = pulse('#00897b')
+const sizeOptions = ['sm', 'md', 'lg']
+
 const a11y = [
   'Native color input remains keyboard accessible',
   'Hex field exposes aria-invalid when error is set',
   'Preset swatches have aria-label with the hex value',
   'Disabled state removes pointer interaction',
 ]
+
+function setSize(next) {
+  playSize.set(next)
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    label: playLabel(),
+    hint: playHint(),
+    error: playError(),
+    value: playValue(),
+    size: playSize(),
+    showInput: playShowInput(),
+    disabled: playDisabled(),
+    presets: playPresets() ? brandPresets : [],
+  })
+}
 
 export <view>
   <article class="docs-page">
@@ -44,9 +89,54 @@ export <view>
     <DocsHero
       :kicker=${'Forms'}
       :title=${'ColorPicker'}
-      :description=${'Pick a color with a visual swatch and hex field. Bind value to a pulse for theme tokens, brand settings, or any color-driven UI. Optional presets speed up common choices.'}
+      :description=${'Pick a color with a visual swatch and hex field. Bind value to a pulse for theme tokens or brand settings. Optional presets, sizes, hints, and validation states.'}
       :status=${'stable'}
     />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label'} bind-value=${playLabel} />
+          <Field :label=${'Hint'} bind-value=${playHint} />
+          <Field :label=${'Error'} :hint=${'Leave empty for a valid field'} bind-value=${playError} />
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Size</span>
+            <div class="docs-hero-actions">
+              #for sizeOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playSize() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setSize(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Show hex input'} bind-checked=${playShowInput} />
+            <Switch :label=${'Presets'} bind-checked=${playPresets} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel" style="width:min(22rem,100%)">
+            <ColorPicker
+              :label=${playLabel}
+              :hint=${playHint}
+              :error=${playError}
+              :size=${playSize}
+              :showInput=${playShowInput}
+              :disabled=${playDisabled}
+              :presets=${() => (playPresets() ? brandPresets : null)}
+              bind-value=${playValue}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'color-picker-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'color-picker-basic.jcr'}>
       <div style="width:min(22rem,100%)">
@@ -54,7 +144,7 @@ export <view>
           :label=${'Primary'}
           :hint=${'Used for buttons and focus rings'}
           :presets=${brandPresets}
-          bind-value=${color}
+          bind-value=${playValue}
         />
       </div>
     </Demo>
@@ -71,12 +161,48 @@ export <view>
       </Demo>
     </DocsSection>
 
-    <DocsSection :id=${'api'} :title=${'API'}>
-      <PropsTable :contract=${contract} />
+    <DocsSection :id=${'sizes'} :title=${'Sizes'}>
+      <Demo :id=${'all-sizes'} :title=${'Small, medium, and large'} :code=${sizes} :filename=${'color-picker-sizes.jcr'}>
+        <div style="width:min(22rem,100%)">
+          <Stack :gap=${'md'}>
+            <ColorPicker :label=${'Small'} :size=${'sm'} bind-value=${sm} />
+            <ColorPicker :label=${'Medium'} :size=${'md'} bind-value=${md} />
+            <ColorPicker :label=${'Large'} :size=${'lg'} bind-value=${lg} />
+          </Stack>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'states'} :title=${'States'}>
+      <Demo :id=${'state-demos'} :title=${'Error, disabled, and swatch-only'} :code=${states} :filename=${'color-picker-states.jcr'}>
+        <div style="width:min(22rem,100%)">
+          <Stack :gap=${'md'}>
+            <ColorPicker
+              :label=${'With error'}
+              :error=${'Pick a brand-safe green'}
+              bind-value=${errorColor}
+            />
+            <ColorPicker
+              :label=${'Disabled'}
+              :disabled=${true}
+              bind-value=${disabledColor}
+            />
+            <ColorPicker
+              :label=${'Swatch only'}
+              :showInput=${false}
+              bind-value=${swatchOnly}
+            />
+          </Stack>
+        </div>
+      </Demo>
     </DocsSection>
 
     <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
       <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
     </DocsSection>
 
     <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />

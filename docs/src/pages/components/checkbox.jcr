@@ -1,17 +1,53 @@
+import { pulse } from '@jacare/core'
 import Checkbox from '@jacare/ui/components/Checkbox.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
 import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { pulse } from '@jacare/core'
-import { basic } from '../../examples/checkbox.js'
+import {
+  basic,
+  disabled,
+  group,
+  playgroundCode as buildPlaygroundCode,
+  slotLabel,
+} from '../../examples/checkbox.js'
 
 const contract = getContract('Checkbox')
 const navLinks = previousNext('/components/checkbox')
-const checked = pulse(true)
+
+const playLabel = pulse('Accept terms')
+const playChecked = pulse(true)
+const playDisabled = pulse(false)
+const email = pulse(true)
+const sms = pulse(false)
+const push = pulse(true)
+const slotChecked = pulse(false)
+const disabledOn = pulse(true)
+const disabledOff = pulse(false)
+
+const a11y = [
+  'Native checkbox remains keyboard accessible',
+  'Label prop or slot text names the control',
+  'Disabled removes pointer interaction',
+  'Focus ring uses --j-focus on the visible box',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    label: playLabel(),
+    checked: playChecked(),
+    disabled: playDisabled(),
+  })
+}
 
 export <view>
   <article class="docs-page">
@@ -24,13 +60,67 @@ export <view>
     <DocsHero
       :kicker=${'Forms'}
       :title=${'Checkbox'}
-      :description=${'Boolean choice for forms and filters. Bind checked to a pulse for two-way updates, supply a label prop or slot text, and disable when the field should not change.'}
+      :description=${'Boolean choice for forms and filters. Bind checked to a pulse, supply a label prop or slot text, and disable when the field should not change.'}
       :status=${'stable'}
     />
 
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label'} bind-value=${playLabel} />
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Checked'} bind-checked=${playChecked} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel docs-avatar-play__stage">
+            <Checkbox
+              :label=${playLabel}
+              :disabled=${playDisabled}
+              bind-checked=${playChecked}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'checkbox-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'checkbox-basic.jcr'}>
-      <Checkbox :label=${'Accept terms'} bind-checked=${checked} />
+      <Checkbox :label=${'Accept terms'} bind-checked=${playChecked} />
     </Demo>
+
+    <DocsSection :id=${'group'} :title=${'Groups'}>
+      <Demo :id=${'group-demo'} :title=${'Multiple options'} :code=${group} :filename=${'checkbox-group.jcr'}>
+        <Stack :gap=${'sm'}>
+          <Checkbox :label=${'Email'} bind-checked=${email} />
+          <Checkbox :label=${'SMS'} bind-checked=${sms} />
+          <Checkbox :label=${'Push'} bind-checked=${push} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'states'} :title=${'States'}>
+      <Demo :id=${'disabled-demo'} :title=${'Enabled and disabled'} :code=${disabled} :filename=${'checkbox-disabled.jcr'}>
+        <Stack :gap=${'sm'}>
+          <Checkbox :label=${'Enabled'} bind-checked=${playChecked} />
+          <Checkbox :label=${'Disabled on'} :disabled=${true} bind-checked=${disabledOn} />
+          <Checkbox :label=${'Disabled off'} :disabled=${true} bind-checked=${disabledOff} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'slot'} :title=${'Slot label'}>
+      <Demo :id=${'slot-demo'} :title=${'Rich label content'} :code=${slotLabel} :filename=${'checkbox-slot.jcr'}>
+        <Checkbox bind-checked=${slotChecked}>
+          <Text :size=${'sm'}>I agree to the <strong>terms of service</strong></Text>
+        </Checkbox>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

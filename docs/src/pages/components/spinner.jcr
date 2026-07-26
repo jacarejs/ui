@@ -1,15 +1,48 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
 import Spinner from '@jacare/ui/components/Spinner.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
 import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic } from '../../examples/spinner.js'
+import {
+  basic,
+  playgroundCode as buildPlaygroundCode,
+  sizes,
+  withButton,
+} from '../../examples/spinner.js'
 
 const contract = getContract('Spinner')
 const navLinks = previousNext('/components/spinner')
+
+const playSize = pulse('md')
+const playLabel = pulse('Loading')
+const sizeOptions = ['sm', 'md', 'lg']
+
+const a11y = [
+  'Exposes role=status for assistive technology',
+  'label becomes the accessible name',
+  'Visual spinner is decorative; keep label meaningful',
+  'Respects prefers-reduced-motion',
+]
+
+function setSize(next) {
+  playSize.set(next)
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    size: playSize(),
+    label: playLabel(),
+  })
+}
 
 export <view>
   <article class="docs-page">
@@ -22,13 +55,64 @@ export <view>
     <DocsHero
       :kicker=${'Feedback'}
       :title=${'Spinner'}
-      :description=${'Indeterminate loading indicator for pending work. Pair with a short label for screen readers and keep it near the action or region that is waiting.'}
+      :description=${'Indeterminate loading indicator for pending work. Choose a size and pair it with a short accessible label near the waiting region.'}
       :status=${'stable'}
     />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Accessible label'} bind-value=${playLabel} />
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Size</span>
+            <div class="docs-hero-actions">
+              #for sizeOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playSize() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setSize(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel docs-avatar-play__stage">
+            <Spinner :size=${playSize} :label=${playLabel} />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'spinner-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'spinner-basic.jcr'}>
       <Spinner :label=${'Loading'} />
     </Demo>
+
+    <DocsSection :id=${'sizes'} :title=${'Sizes'}>
+      <Demo :id=${'all-sizes'} :title=${'Small, medium, and large'} :code=${sizes} :filename=${'spinner-sizes.jcr'}>
+        <Stack :direction=${'row'} :align=${'center'} :gap=${'lg'}>
+          <Spinner :size=${'sm'} :label=${'Small'} />
+          <Spinner :size=${'md'} :label=${'Medium'} />
+          <Spinner :size=${'lg'} :label=${'Large'} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'usage'} :title=${'Usage'}>
+      <Demo :id=${'with-button'} :title=${'Beside a loading action'} :code=${withButton} :filename=${'spinner-with-button.jcr'}>
+        <Stack :direction=${'row'} :align=${'center'} :gap=${'md'}>
+          <Button :loading=${true}>Saving</Button>
+          <Spinner :label=${'Still working'} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

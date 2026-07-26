@@ -1,15 +1,66 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
 import Progress from '@jacare/ui/components/Progress.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
 import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic } from '../../examples/progress.js'
+import {
+  basic,
+  hideValue,
+  labeled,
+  playgroundCode as buildPlaygroundCode,
+  tones,
+} from '../../examples/progress.js'
 
 const contract = getContract('Progress')
 const navLinks = previousNext('/components/progress')
+
+const playValue = pulse('64')
+const playMax = pulse('100')
+const playLabel = pulse('Upload')
+const playTone = pulse('primary')
+const playShowValue = pulse(true)
+const toneOptions = ['primary', 'success', 'warn', 'danger']
+
+const a11y = [
+  'Track exposes role=progressbar',
+  'aria-valuemin, aria-valuemax, and aria-valuenow stay in sync',
+  'label becomes the accessible name when provided',
+  'Visible percent can be hidden with showValue=false',
+]
+
+function setTone(next) {
+  playTone.set(next)
+}
+
+function valueNum() {
+  const next = Number(playValue())
+  return Number.isFinite(next) ? next : 0
+}
+
+function maxNum() {
+  const next = Number(playMax())
+  return Number.isFinite(next) && next > 0 ? next : 100
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    value: valueNum(),
+    max: maxNum(),
+    label: playLabel(),
+    tone: playTone(),
+    showValue: playShowValue(),
+  })
+}
 
 export <view>
   <article class="docs-page">
@@ -22,15 +73,83 @@ export <view>
     <DocsHero
       :kicker=${'Feedback'}
       :title=${'Progress'}
-      :description=${'Determinate completion meter for uploads, wizards, and long tasks. Pass a numeric value from 0–100 and the bar fills with the current theme accent.'}
+      :description=${'Determinate completion meter for uploads, wizards, and long tasks. Configure value, max, tone, optional label, and whether the percent is visible.'}
       :status=${'stable'}
     />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Value'} bind-value=${playValue} />
+          <Field :label=${'Max'} bind-value=${playMax} />
+          <Field :label=${'Label'} bind-value=${playLabel} />
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Tone</span>
+            <div class="docs-hero-actions">
+              #for toneOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playTone() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setTone(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <Switch :label=${'Show value'} bind-checked=${playShowValue} />
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel" style="width:min(22rem,100%)">
+            <Progress
+              :value=${() => valueNum()}
+              :max=${() => maxNum()}
+              :label=${playLabel}
+              :tone=${playTone}
+              :showValue=${playShowValue}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'progress-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'progress-basic.jcr'}>
       <div style="width:min(20rem,100%)">
         <Progress :value=${64} />
       </div>
     </Demo>
+
+    <DocsSection :id=${'tones'} :title=${'Tones'}>
+      <Demo :id=${'all-tones'} :title=${'Semantic colors'} :code=${tones} :filename=${'progress-tones.jcr'}>
+        <div style="width:min(22rem,100%)">
+          <Stack :gap=${'md'}>
+            <Progress :value=${40} :tone=${'primary'} :label=${'Primary'} />
+            <Progress :value=${72} :tone=${'success'} :label=${'Success'} />
+            <Progress :value=${55} :tone=${'warn'} :label=${'Warning'} />
+            <Progress :value=${28} :tone=${'danger'} :label=${'Danger'} />
+          </Stack>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'labeled'} :title=${'Label and max'}>
+      <Demo :id=${'labeled-demo'} :title=${'Custom scale'} :code=${labeled} :filename=${'progress-labeled.jcr'}>
+        <div style="width:min(20rem,100%)">
+          <Progress :value=${3} :max=${5} :label=${'Step 3 of 5'} />
+        </div>
+      </Demo>
+      <Demo :id=${'hide-value'} :title=${'Hidden percent'} :code=${hideValue} :filename=${'progress-hide-value.jcr'}>
+        <div style="width:min(20rem,100%)">
+          <Progress :value=${80} :label=${'Uploading'} :showValue=${false} />
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />
