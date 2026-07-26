@@ -1,16 +1,92 @@
+import { pulse } from '@jacare/core'
 import Badge from '@jacare/ui/components/Badge.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import ColorPicker from '@jacare/ui/components/ColorPicker.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
 import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
 import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic } from '../../examples/badge.js'
+import {
+  basic,
+  dismissible,
+  dot,
+  playgroundCode as buildPlaygroundCode,
+  shapes,
+  sizes,
+  tones,
+  variants,
+} from '../../examples/badge.js'
 
 const contract = getContract('Badge')
 const navLinks = previousNext('/components/badge')
+
+const playText = pulse('Badge')
+const playTone = pulse('success')
+const playVariant = pulse('solid')
+const playSize = pulse('md')
+const playShape = pulse('pill')
+const playColor = pulse('#189030')
+const playCustomColor = pulse(false)
+const playDot = pulse(false)
+const playDismissible = pulse(false)
+const playOpen = pulse(true)
+
+const toneOptions = ['default', 'success', 'warn', 'danger', 'info', 'neutral']
+const variantOptions = ['solid', 'soft', 'outline']
+const sizeOptions = ['sm', 'md', 'lg']
+const shapeOptions = ['pill', 'rounded']
+
+const a11y = [
+  'Badge text is real text content, readable by assistive technology',
+  'Dismiss control is a button with an accessible name',
+  'The status dot is decorative and hidden from assistive technology',
+  'Focus ring uses --j-focus on the dismiss control',
+]
+
+function setTone(next) {
+  playTone.set(next)
+}
+
+function setVariant(next) {
+  playVariant.set(next)
+}
+
+function setSize(next) {
+  playSize.set(next)
+}
+
+function setShape(next) {
+  playShape.set(next)
+}
+
+function customColor() {
+  return playCustomColor() ? playColor() : ''
+}
+
+function showPlayground() {
+  playOpen.set(true)
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    text: playText(),
+    tone: playTone(),
+    variant: playVariant(),
+    size: playSize(),
+    shape: playShape(),
+    color: customColor(),
+    dot: playDot(),
+    dismissible: playDismissible(),
+  })
+}
 
 export <view>
   <article class="docs-page">
@@ -23,9 +99,107 @@ export <view>
     <DocsHero
       :kicker=${'Data display'}
       :title=${'Badge'}
-      :description=${'Small status pill for tags, counts, and labels. Use tone for meaning — success, warn, danger, info — and soft for a lighter surface that sits well on dense layouts.'}
+      :description=${'Compact pill for tags, counts, and status. Choose a tone, solid/soft/outline variant, size, shape, optional status dot, custom color, and dismiss control.'}
       :status=${'stable'}
     />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Text'} bind-value=${playText} />
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Tone</span>
+            <div class="docs-hero-actions">
+              #for toneOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playTone() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setTone(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Variant</span>
+            <div class="docs-hero-actions">
+              #for variantOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playVariant() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setVariant(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Size</span>
+            <div class="docs-hero-actions">
+              #for sizeOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playSize() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setSize(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Shape</span>
+            <div class="docs-hero-actions">
+              #for shapeOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playShape() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setShape(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Status dot'} bind-checked=${playDot} />
+            <Switch :label=${'Dismissible'} bind-checked=${playDismissible} />
+            <Switch :label=${'Custom color'} bind-checked=${playCustomColor} />
+          </Stack>
+
+          #if playCustomColor()
+            <ColorPicker
+              :label=${'Badge color'}
+              :value=${playColor}
+              :presets=${['#189030', '#1f6feb', '#7c4dff', '#c45c26', '#c62828']}
+              bind-value=${playColor}
+            />
+          #end
+
+          #if playDismissible()
+            <Button :size=${'sm'} :variant=${'secondary'} on-press=${showPlayground}>
+              Show badge again
+            </Button>
+          #end
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel docs-avatar-play__stage">
+            <Badge
+              :text=${playText}
+              :tone=${playTone}
+              :variant=${playVariant}
+              :size=${playSize}
+              :shape=${playShape}
+              :color=${() => customColor()}
+              :dot=${playDot}
+              :dismissible=${playDismissible}
+              bind-open=${playOpen}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'badge-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'badge-basic.jcr'}>
       <Stack :direction=${'row'} :gap=${'lg'} :align=${'center'} :justify=${'center'} :wrap=${true}>
@@ -33,6 +207,69 @@ export <view>
         <Badge :text=${'Beta'} :tone=${'info'} :soft=${true} />
       </Stack>
     </Demo>
+
+    <DocsSection :id=${'variants'} :title=${'Variants'}>
+      <Demo :id=${'all-variants'} :title=${'Solid, soft, and outline'} :code=${variants} :filename=${'badge-variants.jcr'}>
+        <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+          <Badge :text=${'Solid'} :tone=${'success'} :variant=${'solid'} />
+          <Badge :text=${'Soft'} :tone=${'success'} :variant=${'soft'} />
+          <Badge :text=${'Outline'} :tone=${'success'} :variant=${'outline'} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'colors'} :title=${'Colors'}>
+      <Demo :id=${'all-tones'} :title=${'Semantic and custom colors'} :code=${tones} :filename=${'badge-colors.jcr'}>
+        <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+          <Badge :text=${'Default'} />
+          <Badge :text=${'Success'} :tone=${'success'} />
+          <Badge :text=${'Warning'} :tone=${'warn'} />
+          <Badge :text=${'Danger'} :tone=${'danger'} />
+          <Badge :text=${'Info'} :tone=${'info'} />
+          <Badge :text=${'Neutral'} :tone=${'neutral'} />
+          <Badge :text=${'Custom'} :color=${'#7c4dff'} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'sizes'} :title=${'Sizes'}>
+      <Demo :id=${'all-sizes'} :title=${'Small, medium, and large'} :code=${sizes} :filename=${'badge-sizes.jcr'}>
+        <Stack :direction=${'row'} :align=${'center'} :gap=${'md'} :wrap=${true}>
+          <Badge :text=${'Small'} :tone=${'info'} :size=${'sm'} />
+          <Badge :text=${'Medium'} :tone=${'info'} :size=${'md'} />
+          <Badge :text=${'Large'} :tone=${'info'} :size=${'lg'} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'shapes'} :title=${'Shapes'}>
+      <Demo :id=${'all-shapes'} :title=${'Pill and rounded'} :code=${shapes} :filename=${'badge-shapes.jcr'}>
+        <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+          <Badge :text=${'Pill'} :tone=${'success'} :shape=${'pill'} />
+          <Badge :text=${'Rounded'} :tone=${'success'} :shape=${'rounded'} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'dot'} :title=${'Status dot'}>
+      <Demo :id=${'with-dot'} :title=${'Presence-style dot'} :code=${dot} :filename=${'badge-dot.jcr'}>
+        <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+          <Badge :text=${'Online'} :tone=${'success'} :dot=${true} :variant=${'soft'} />
+          <Badge :text=${'Away'} :tone=${'warn'} :dot=${true} :variant=${'soft'} />
+          <Badge :text=${'Offline'} :tone=${'neutral'} :dot=${true} :variant=${'soft'} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'dismissible'} :title=${'Dismissible'}>
+      <Demo :id=${'dismiss'} :title=${'Removable badge'} :code=${dismissible} :filename=${'badge-dismissible.jcr'}>
+        <Badge :text=${'Dismissible'} :tone=${'info'} :dismissible=${true} />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

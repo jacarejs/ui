@@ -1,15 +1,91 @@
+import { pulse } from '@jacare/core'
 import Avatar from '@jacare/ui/components/Avatar.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import ColorPicker from '@jacare/ui/components/ColorPicker.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
 import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic } from '../../examples/avatar.js'
+import {
+  basic,
+  bordered,
+  contentTypes,
+  playgroundCode as buildPlaygroundCode,
+  shapes,
+  sizes,
+  statuses,
+  tones,
+} from '../../examples/avatar.js'
 
 const contract = getContract('Avatar')
 const navLinks = previousNext('/components/avatar')
+
+const playName = pulse('Jacaré UI')
+const playSrc = pulse('')
+const playSize = pulse('lg')
+const playShape = pulse('circle')
+const playTone = pulse('primary')
+const playColor = pulse('#189030')
+const playStatus = pulse('online')
+const playBordered = pulse(false)
+const playCustomColor = pulse(false)
+
+const sizeOptions = ['xs', 'sm', 'md', 'lg', 'xl']
+const shapeOptions = ['circle', 'rounded', 'square']
+const toneOptions = ['primary', 'success', 'warn', 'danger', 'info', 'neutral']
+const statusOptions = ['none', 'online', 'away', 'busy', 'offline']
+
+const a11y = [
+  'name is used as the accessible label and initials fallback',
+  'alt overrides the accessible label when the image needs different text',
+  'Decorative initials are hidden from assistive technology',
+  'Status indicators include an accessible status label',
+]
+
+function setSize(next) {
+  playSize.set(next)
+}
+
+function setShape(next) {
+  playShape.set(next)
+}
+
+function setTone(next) {
+  playTone.set(next)
+}
+
+function setStatus(next) {
+  playStatus.set(next)
+}
+
+function statusProp() {
+  return playStatus() === 'none' ? '' : playStatus()
+}
+
+function customColor() {
+  return playCustomColor() ? playColor() : ''
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    name: playName(),
+    src: playSrc(),
+    size: playSize(),
+    shape: playShape(),
+    tone: playTone(),
+    color: customColor(),
+    status: statusProp(),
+    bordered: playBordered(),
+  })
+}
 
 export <view>
   <article class="docs-page">
@@ -22,13 +98,176 @@ export <view>
     <DocsHero
       :kicker=${'Data display'}
       :title=${'Avatar'}
-      :description=${'Compact mark for a person or entity. Pass a name to derive initials, or an image src when you have a photo. Sizes keep avatars aligned in lists, nav, and cards.'}
+      :description=${'Represent people and entities with images or generated initials. Configure five sizes, three shapes, semantic or custom colors, presence status, and an emphasized border.'}
       :status=${'stable'}
     />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Name / initials'} bind-value=${playName} />
+          <Field
+            :label=${'Image source'}
+            :hint=${'Leave empty to generate initials. Try /jacare-logo.png.'}
+            bind-value=${playSrc}
+          />
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Size</span>
+            <div class="docs-hero-actions">
+              #for sizeOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playSize() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setSize(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Shape</span>
+            <div class="docs-hero-actions">
+              #for shapeOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playShape() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setShape(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Tone</span>
+            <div class="docs-hero-actions">
+              #for toneOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playTone() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setTone(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Presence status</span>
+            <div class="docs-hero-actions">
+              #for statusOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playStatus() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setStatus(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Bordered'} bind-checked=${playBordered} />
+            <Switch :label=${'Custom color'} bind-checked=${playCustomColor} />
+          </Stack>
+
+          #if playCustomColor()
+            <ColorPicker
+              :label=${'Avatar color'}
+              :value=${playColor}
+              :presets=${['#189030', '#1f6feb', '#7c4dff', '#c45c26', '#c62828']}
+              bind-value=${playColor}
+            />
+          #end
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel docs-avatar-play__stage">
+            <Avatar
+              :name=${playName}
+              :src=${playSrc}
+              :size=${playSize}
+              :shape=${playShape}
+              :tone=${playTone}
+              :color=${() => customColor()}
+              :status=${() => statusProp()}
+              :bordered=${playBordered}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'avatar-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'avatar-basic.jcr'}>
       <Avatar :name=${'Jacaré UI'} />
     </Demo>
+
+    <DocsSection :id=${'sizes'} :title=${'Sizes'}>
+      <Demo :id=${'all-sizes'} :title=${'Five-size scale'} :code=${sizes} :filename=${'avatar-sizes.jcr'}>
+        <Stack :direction=${'row'} :align=${'center'} :gap=${'md'} :wrap=${true}>
+          <Avatar :name=${'Extra Small'} :size=${'xs'} />
+          <Avatar :name=${'Small Avatar'} :size=${'sm'} />
+          <Avatar :name=${'Medium Avatar'} :size=${'md'} />
+          <Avatar :name=${'Large Avatar'} :size=${'lg'} />
+          <Avatar :name=${'Extra Large'} :size=${'xl'} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'shapes'} :title=${'Shapes'}>
+      <Demo :id=${'all-shapes'} :title=${'Circle, rounded, and square'} :code=${shapes} :filename=${'avatar-shapes.jcr'}>
+        <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+          <Avatar :name=${'Circle'} :shape=${'circle'} :size=${'lg'} />
+          <Avatar :name=${'Rounded'} :shape=${'rounded'} :size=${'lg'} />
+          <Avatar :name=${'Square'} :shape=${'square'} :size=${'lg'} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'colors'} :title=${'Colors'}>
+      <Demo :id=${'all-tones'} :title=${'Semantic and custom colors'} :code=${tones} :filename=${'avatar-colors.jcr'}>
+        <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+          <Avatar :name=${'Primary'} :tone=${'primary'} />
+          <Avatar :name=${'Success'} :tone=${'success'} />
+          <Avatar :name=${'Warning'} :tone=${'warn'} />
+          <Avatar :name=${'Danger'} :tone=${'danger'} />
+          <Avatar :name=${'Information'} :tone=${'info'} />
+          <Avatar :name=${'Neutral'} :tone=${'neutral'} />
+          <Avatar :name=${'Custom'} :color=${'#7c4dff'} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'content'} :title=${'Content types'}>
+      <Demo :id=${'content-types'} :title=${'Initials, fallback, and image'} :code=${contentTypes} :filename=${'avatar-content.jcr'}>
+        <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+          <Avatar :name=${'Jacaré UI'} :size=${'lg'} />
+          <Avatar :name=${'Single'} :size=${'lg'} />
+          <Avatar :size=${'lg'} />
+          <Avatar :name=${'Jacaré logo'} :src=${'/jacare-logo.png'} :alt=${'Jacaré logo'} :size=${'lg'} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'status'} :title=${'Presence status'}>
+      <Demo :id=${'presence'} :title=${'Online, away, busy, and offline'} :code=${statuses} :filename=${'avatar-status.jcr'}>
+        <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+          <Avatar :name=${'Online User'} :status=${'online'} :size=${'lg'} />
+          <Avatar :name=${'Away User'} :status=${'away'} :size=${'lg'} />
+          <Avatar :name=${'Busy User'} :status=${'busy'} :size=${'lg'} />
+          <Avatar :name=${'Offline User'} :status=${'offline'} :size=${'lg'} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'border'} :title=${'Border'}>
+      <Demo :id=${'bordered'} :title=${'Emphasized avatar'} :code=${bordered} :filename=${'avatar-bordered.jcr'}>
+        <Avatar :name=${'Featured User'} :tone=${'info'} :bordered=${true} :size=${'lg'} />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

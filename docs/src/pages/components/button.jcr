@@ -1,23 +1,86 @@
+import { pulse } from '@jacare/core'
 import Button from '@jacare/ui/components/Button.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
 import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
 import Demo from '../../ui/Demo.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
-import { basic, variants, sizes, states } from '../../examples/button.js'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import {
+  basic,
+  colors,
+  events,
+  playgroundCode as buildPlaygroundCode,
+  shapes,
+  sizes,
+  states,
+  types,
+  variants,
+} from '../../examples/button.js'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
 
 const contract = getContract('Button')
 const navLinks = previousNext('/components/button')
+
 const a11y = [
-  'Has visible focus ring',
+  'Has visible focus ring using --j-focus',
   'Disabled removes pointer interaction',
-  'Loading sets aria-busy',
+  'Loading sets aria-busy and blocks clicks',
   'Label comes from children or aria-label',
 ]
+
+const playLabel = pulse('Button')
+const playVariant = pulse('primary')
+const playSize = pulse('md')
+const playShape = pulse('pill')
+const playType = pulse('button')
+const playDisabled = pulse(false)
+const playLoading = pulse(false)
+const playBlock = pulse(false)
+const pressCount = pulse(0)
+
+const variantOptions = ['primary', 'secondary', 'ghost', 'outline', 'success', 'warn', 'danger', 'info']
+const sizeOptions = ['sm', 'md', 'lg']
+const shapeOptions = ['pill', 'rounded', 'circle']
+const typeOptions = ['button', 'submit', 'reset']
+
+function setVariant(next) {
+  playVariant.set(next)
+}
+
+function setSize(next) {
+  playSize.set(next)
+}
+
+function setShape(next) {
+  playShape.set(next)
+}
+
+function setType(next) {
+  playType.set(next)
+}
+
+function onPress() {
+  pressCount.set(pressCount() + 1)
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    label: playLabel(),
+    variant: playVariant(),
+    size: playSize(),
+    shape: playShape(),
+    type: playType(),
+    disabled: playDisabled(),
+    loading: playLoading(),
+    block: playBlock(),
+  })
+}
 
 export <view>
   <article class="docs-page">
@@ -30,21 +93,117 @@ export <view>
     <DocsHero
       :kicker=${'Actions'}
       :title=${'Button'}
-      :description=${'Primary way to trigger an action or submit a form. Supports visual variants, sizes, loading and disabled states, and pulse-friendly props so labels and flags stay reactive.'}
+      :description=${'Primary way to trigger an action or submit a form. Choose a variant, color, size, shape, and button type, toggle loading/disabled/block, and react to the press event — all pulse-friendly.'}
       :status=${'stable'}
     />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label'} bind-value=${playLabel} />
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Variant</span>
+            <div class="docs-hero-actions">
+              #for variantOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playVariant() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setVariant(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Size</span>
+            <div class="docs-hero-actions">
+              #for sizeOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playSize() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setSize(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Shape</span>
+            <div class="docs-hero-actions">
+              #for shapeOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playShape() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setShape(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Type</span>
+            <div class="docs-hero-actions">
+              #for typeOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playType() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setType(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+            <Switch :label=${'Loading'} bind-checked=${playLoading} />
+            <Switch :label=${'Block'} bind-checked=${playBlock} />
+          </Stack>
+
+          <p class="docs-demo-lead" style="margin:0">Presses: ${() => pressCount()}</p>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel docs-avatar-play__stage">
+            <Button
+              :variant=${playVariant}
+              :size=${playSize}
+              :shape=${playShape}
+              :type=${playType}
+              :disabled=${playDisabled}
+              :loading=${playLoading}
+              :block=${playBlock}
+              on-press=${onPress}
+            >${() => playLabel()}</Button>
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'button-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'button-basic.jcr'}>
       <Button :variant=${'primary'}>Continue</Button>
     </Demo>
 
     <DocsSection :id=${'variants'} :title=${'Variants'}>
-      <Demo :id=${'variants-demo'} :title=${'All variants'} :code=${variants} :filename=${'button-variants.jcr'}>
+      <Demo :id=${'variants-demo'} :title=${'Style variants'} :code=${variants} :filename=${'button-variants.jcr'}>
         <Stack :direction=${'row'} :gap=${'xl'} :align=${'center'} :justify=${'center'} :wrap=${true}>
           <Button :variant=${'primary'}>Primary</Button>
           <Button :variant=${'secondary'}>Secondary</Button>
           <Button :variant=${'ghost'}>Ghost</Button>
+          <Button :variant=${'outline'}>Outline</Button>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'colors'} :title=${'Colors'}>
+      <Demo :id=${'colors-demo'} :title=${'Semantic colors'} :code=${colors} :filename=${'button-colors.jcr'}>
+        <Stack :direction=${'row'} :gap=${'xl'} :align=${'center'} :justify=${'center'} :wrap=${true}>
+          <Button :variant=${'primary'}>Primary</Button>
+          <Button :variant=${'success'}>Success</Button>
+          <Button :variant=${'warn'}>Warning</Button>
           <Button :variant=${'danger'}>Danger</Button>
+          <Button :variant=${'info'}>Info</Button>
         </Stack>
       </Demo>
     </DocsSection>
@@ -59,6 +218,16 @@ export <view>
       </Demo>
     </DocsSection>
 
+    <DocsSection :id=${'shapes'} :title=${'Shapes'}>
+      <Demo :id=${'shapes-demo'} :title=${'Pill, rounded, and circle'} :code=${shapes} :filename=${'button-shapes.jcr'}>
+        <Stack :direction=${'row'} :gap=${'xl'} :align=${'center'} :justify=${'center'} :wrap=${true}>
+          <Button :shape=${'pill'}>Pill</Button>
+          <Button :shape=${'rounded'}>Rounded</Button>
+          <Button :shape=${'circle'}>+</Button>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
     <DocsSection :id=${'states'} :title=${'States'}>
       <Demo :id=${'states-demo'} :title=${'Loading, disabled, block'} :code=${states} :filename=${'button-states.jcr'}>
         <Stack :direction=${'row'} :gap=${'xl'} :align=${'center'} :justify=${'center'} :wrap=${true}>
@@ -68,6 +237,34 @@ export <view>
         <div style="width:min(20rem,100%);margin-top:1rem">
           <Button :block=${true}>Full width</Button>
         </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'types'} :title=${'Button types'}>
+      <Demo
+        :id=${'types-demo'}
+        :title=${'submit, reset, and button'}
+        :lead=${'Use type to control native form behavior.'}
+        :code=${types}
+        :filename=${'button-types.jcr'}
+      >
+        <Stack :direction=${'row'} :gap=${'xl'} :align=${'center'} :justify=${'center'} :wrap=${true}>
+          <Button :type=${'submit'} :variant=${'primary'}>Submit</Button>
+          <Button :type=${'reset'} :variant=${'secondary'}>Reset</Button>
+          <Button :type=${'button'} :variant=${'ghost'}>Button</Button>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'events'} :title=${'Press event'}>
+      <Demo
+        :id=${'events-demo'}
+        :title=${'Reacting to on-press'}
+        :lead=${'The press event only fires when the button is enabled and not loading.'}
+        :code=${events}
+        :filename=${'button-events.jcr'}
+      >
+        <Button on-press=${onPress}>Clicked ${() => pressCount()}</Button>
       </Demo>
     </DocsSection>
 
