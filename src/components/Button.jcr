@@ -2,6 +2,7 @@ export <contract>
   props: {
     variant: { type: 'string', default: 'primary' }
     size: { type: 'string', default: 'md' }
+    shape: { type: 'string', default: 'pill' }
     type: { type: 'string', default: 'button' }
     disabled: { type: 'boolean', default: false }
     loading: { type: 'boolean', default: false }
@@ -18,17 +19,23 @@ function read(value) {
 export <view>
   <button
     class="jui-btn"
-    class-jui-btn--primary=${read(variant) === 'primary'}
-    class-jui-btn--secondary=${read(variant) === 'secondary'}
-    class-jui-btn--ghost=${read(variant) === 'ghost'}
-    class-jui-btn--danger=${read(variant) === 'danger'}
-    class-jui-btn--sm=${read(size) === 'sm'}
-    class-jui-btn--lg=${read(size) === 'lg'}
-    class-jui-btn--block=${!!read(block)}
-    class-is-loading=${!!read(loading)}
+    class-jui-btn--primary=${() => read(variant) === 'primary'}
+    class-jui-btn--secondary=${() => read(variant) === 'secondary'}
+    class-jui-btn--ghost=${() => read(variant) === 'ghost'}
+    class-jui-btn--danger=${() => read(variant) === 'danger'}
+    class-jui-btn--success=${() => read(variant) === 'success'}
+    class-jui-btn--warn=${() => read(variant) === 'warn'}
+    class-jui-btn--info=${() => read(variant) === 'info'}
+    class-jui-btn--outline=${() => read(variant) === 'outline'}
+    class-jui-btn--sm=${() => read(size) === 'sm'}
+    class-jui-btn--lg=${() => read(size) === 'lg'}
+    class-jui-btn--rounded=${() => read(shape) === 'rounded'}
+    class-jui-btn--circle=${() => read(shape) === 'circle'}
+    class-jui-btn--block=${() => !!read(block)}
+    class-is-loading=${() => !!read(loading)}
     type=${type}
-    disabled=${!!(read(disabled) || read(loading))}
-    aria-busy=${!!read(loading)}
+    disabled=${() => !!(read(disabled) || read(loading))}
+    aria-busy=${() => !!read(loading)}
     on-click=${(event) => {
       if (read(disabled) || read(loading)) {
         event.preventDefault()
@@ -50,6 +57,7 @@ export <style>
   --jui-btn-fg: #ffffff;
   --jui-btn-border: transparent;
   --jui-btn-hover: var(--j-leaf);
+  --jui-btn-shadow: 0 8px 24px rgba(24, 144, 48, 0.22);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -64,7 +72,7 @@ export <style>
   line-height: 1.2;
   cursor: pointer;
   transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease, border-color 120ms ease, opacity 120ms ease;
-  box-shadow: 0 8px 24px rgba(24, 144, 48, 0.22);
+  box-shadow: var(--jui-btn-shadow);
   user-select: none;
 }
 
@@ -75,6 +83,11 @@ export <style>
 
 .jui-btn:active:not(:disabled) {
   transform: translateY(0);
+}
+
+.jui-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
 }
 
 .jui-btn:disabled,
@@ -90,7 +103,7 @@ export <style>
   --jui-btn-fg: var(--j-forest);
   --jui-btn-border: var(--j-border);
   --jui-btn-hover: var(--j-mint);
-  box-shadow: none;
+  --jui-btn-shadow: none;
 }
 
 .jui-btn--ghost {
@@ -98,15 +111,47 @@ export <style>
   --jui-btn-fg: var(--j-forest);
   --jui-btn-border: transparent;
   --jui-btn-hover: rgba(24, 144, 48, 0.08);
-  box-shadow: none;
+  --jui-btn-shadow: none;
 }
 
 .jui-btn--danger {
   --jui-btn-bg: var(--j-danger);
   --jui-btn-fg: #ffffff;
   --jui-btn-border: transparent;
-  --jui-btn-hover: #a81f1f;
-  box-shadow: 0 8px 24px rgba(198, 40, 40, 0.22);
+  --jui-btn-hover: color-mix(in srgb, var(--j-danger) 82%, #000000);
+  --jui-btn-shadow: 0 8px 24px rgba(198, 40, 40, 0.22);
+}
+
+.jui-btn--success {
+  --jui-btn-bg: var(--j-success, var(--j-primary));
+  --jui-btn-fg: #ffffff;
+  --jui-btn-border: transparent;
+  --jui-btn-hover: color-mix(in srgb, var(--j-success, var(--j-primary)) 82%, #000000);
+  --jui-btn-shadow: 0 8px 24px rgba(24, 144, 48, 0.22);
+}
+
+.jui-btn--warn {
+  --jui-btn-bg: var(--j-warn);
+  --jui-btn-fg: #1c1200;
+  --jui-btn-border: transparent;
+  --jui-btn-hover: color-mix(in srgb, var(--j-warn) 84%, #000000);
+  --jui-btn-shadow: 0 8px 24px rgba(196, 122, 0, 0.22);
+}
+
+.jui-btn--info {
+  --jui-btn-bg: var(--j-info, #1f6feb);
+  --jui-btn-fg: #ffffff;
+  --jui-btn-border: transparent;
+  --jui-btn-hover: color-mix(in srgb, var(--j-info, #1f6feb) 82%, #000000);
+  --jui-btn-shadow: 0 8px 24px rgba(31, 111, 235, 0.22);
+}
+
+.jui-btn--outline {
+  --jui-btn-bg: transparent;
+  --jui-btn-fg: var(--j-primary);
+  --jui-btn-border: color-mix(in srgb, var(--j-primary) 55%, transparent);
+  --jui-btn-hover: color-mix(in srgb, var(--j-primary) 10%, transparent);
+  --jui-btn-shadow: none;
 }
 
 .jui-btn--sm {
@@ -119,6 +164,28 @@ export <style>
   min-height: 3rem;
   padding: 0.85rem 1.4rem;
   font-size: 1.05rem;
+}
+
+.jui-btn--rounded {
+  border-radius: var(--j-radius, 0.65rem);
+}
+
+.jui-btn--circle {
+  border-radius: 50%;
+  padding: 0;
+  aspect-ratio: 1;
+}
+
+.jui-btn--circle.jui-btn--sm {
+  width: 2rem;
+}
+
+.jui-btn--circle {
+  width: 2.5rem;
+}
+
+.jui-btn--circle.jui-btn--lg {
+  width: 3rem;
 }
 
 .jui-btn--block {
