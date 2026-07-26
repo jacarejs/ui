@@ -1,0 +1,109 @@
+import { applyTheme, readStoredTheme } from '../theme/index.js'
+import { pulse } from '@jacare/core'
+
+export <contract>
+  props: {
+    mode: { type: 'string', default: 'system' }
+    labels: { type: 'object', default: null }
+  }
+  emits: ['change']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+const current = pulse(typeof document !== 'undefined' ? readStoredTheme('system') : 'system')
+
+if (typeof document !== 'undefined') {
+  applyTheme(current())
+}
+
+function modeLabel(map, key, fallback) {
+  const value = read(map)
+  if (value && typeof value === 'object' && value[key]) return value[key]
+  return fallback
+}
+
+export <view>
+  <div class="jui-theme-toggle" role="group" aria-label="Theme">
+    <button
+      type="button"
+      class="jui-theme-toggle__btn"
+      class-is-active=${current() === 'light'}
+      aria-pressed=${current() === 'light'}
+      on-click=${() => {
+        current.set('light')
+        applyTheme('light')
+        emit('change', 'light')
+      }}
+    >
+      ${modeLabel(labels, 'light', 'Light')}
+    </button>
+    <button
+      type="button"
+      class="jui-theme-toggle__btn"
+      class-is-active=${current() === 'dark'}
+      aria-pressed=${current() === 'dark'}
+      on-click=${() => {
+        current.set('dark')
+        applyTheme('dark')
+        emit('change', 'dark')
+      }}
+    >
+      ${modeLabel(labels, 'dark', 'Dark')}
+    </button>
+    <button
+      type="button"
+      class="jui-theme-toggle__btn"
+      class-is-active=${current() === 'system'}
+      aria-pressed=${current() === 'system'}
+      on-click=${() => {
+        current.set('system')
+        applyTheme('system')
+        emit('change', 'system')
+      }}
+    >
+      ${modeLabel(labels, 'system', 'System')}
+    </button>
+  </div>
+</view>
+
+export <style>
+.jui-theme-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--j-radius-pill);
+  border: 1px solid var(--j-border);
+  background: var(--j-bg-elevated, var(--j-surface-2));
+}
+
+.jui-theme-toggle__btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--j-fg-muted, var(--j-muted));
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--j-radius-pill);
+  cursor: pointer;
+  transition: background var(--j-duration-fast, 120ms) var(--j-ease-out, ease), color var(--j-duration-fast, 120ms) var(--j-ease-out, ease);
+}
+
+.jui-theme-toggle__btn:hover {
+  color: var(--j-fg, var(--j-text));
+}
+
+.jui-theme-toggle__btn.is-active {
+  background: var(--j-accent, var(--j-primary));
+  color: #fff;
+}
+
+.jui-theme-toggle__btn:focus-visible {
+  outline: none;
+  box-shadow: var(--j-ring, var(--j-focus));
+}
+</style>
