@@ -141,7 +141,10 @@ export <style>
 .jui-color {
   display: grid;
   gap: 0.45rem;
+  width: 100%;
+  max-width: 22rem;
   min-width: 0;
+  box-sizing: border-box;
   color: var(--j-text);
 }
 
@@ -192,7 +195,9 @@ export <style>
 }
 
 .jui-color__hex {
-  flex: 1;
+  flex: 1 1 8rem;
+  width: 8rem;
+  max-width: 12rem;
   min-width: 0;
   min-height: 2.5rem;
   padding: 0.55rem 0.8rem;
@@ -204,6 +209,7 @@ export <style>
   font-size: 0.9rem;
   letter-spacing: 0.02em;
   text-transform: lowercase;
+  box-sizing: border-box;
 }
 
 .jui-color__hex:focus,
@@ -243,7 +249,6 @@ export <style>
 .jui-color--sm .jui-color__hex {
   min-height: 2rem;
   height: 2rem;
-  width: auto;
 }
 
 .jui-color--sm .jui-color__swatch {
