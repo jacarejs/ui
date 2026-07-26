@@ -1,0 +1,227 @@
+import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { pathToFileURL, fileURLToPath } from 'node:url'
+import { afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { compile } from '@jacare/compiler'
+import { pulse } from '@jacare/core'
+import { readFileSync } from 'node:fs'
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..')
+const tmpDir = join(root, '.jacare', 'test-modules')
+
+beforeAll(() => {
+  rmSync(tmpDir, { recursive: true, force: true })
+  mkdirSync(tmpDir, { recursive: true })
+})
+
+afterEach(() => {
+  document.body.innerHTML = ''
+  document.head.querySelectorAll('style[data-jacare-s]').forEach((node) => node.remove())
+})
+
+async function loadComponent(name) {
+  const filename = join(root, 'src', 'components', `${name}.jcr`)
+  const source = readFileSync(filename, 'utf8')
+  const result = compile(source, {
+    filename,
+    mode: 'client',
+    cpw: true,
+    debug: false,
+  })
+  const outFile = join(tmpDir, `${name}.${Date.now()}.${Math.random().toString(16).slice(2)}.js`)
+  writeFileSync(outFile, result.code)
+  return import(pathToFileURL(outFile).href)
+}
+
+describe('@jacare/ui components', () => {
+  it('Button emits press and respects loading', async () => {
+    const Button = await loadComponent('Button')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+
+    const loading = pulse(false)
+    let pressed = 0
+
+    Button.mount(host, {
+      loading,
+      press: () => {
+        pressed += 1
+      },
+      children: (target) => {
+        target.appendChild(document.createTextNode('Save'))
+      },
+    })
+
+    const btn = host.querySelector('button')
+    expect(btn).toBeTruthy()
+    expect(btn.textContent).toContain('Save')
+    expect(btn.disabled).toBe(false)
+
+    btn.click()
+    expect(pressed).toBe(1)
+
+    loading.set(true)
+    expect(btn.classList.contains('is-loading')).toBe(true)
+    expect(btn.hasAttribute('disabled')).toBe(true)
+    expect(host.querySelector('.jui-btn__spinner')).not.toBeNull()
+
+    btn.click()
+    expect(pressed).toBe(1)
+  })
+
+  it('Badge renders tone classes', async () => {
+    const Badge = await loadComponent('Badge')
+    const host = document.createElement('div')
+    Badge.mount(host, { text: 'Live', tone: 'warn', soft: true })
+    const el = host.querySelector('.jui-badge')
+    expect(el.textContent).toBe('Live')
+    expect(el.classList.contains('jui-badge--warn')).toBe(true)
+    expect(el.classList.contains('jui-badge--soft')).toBe(true)
+  })
+
+  it('Field binds a pulse two-way', async () => {
+    const Field = await loadComponent('Field')
+    const host = document.createElement('div')
+    const value = pulse('hello')
+
+    Field.mount(host, {
+      label: 'Name',
+      value,
+      hint: 'Your display name',
+    })
+
+    const input = host.querySelector('input')
+    expect(input.value).toBe('hello')
+
+    value.set('Jacaré')
+    expect(input.value).toBe('Jacaré')
+
+    input.value = 'UI'
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    expect(value()).toBe('UI')
+  })
+
+  it('Progress updates fill width from a pulse', async () => {
+    const Progress = await loadComponent('Progress')
+    const host = document.createElement('div')
+    const value = pulse(25)
+
+    Progress.mount(host, {
+      label: 'Upload',
+      value,
+      max: 100,
+    })
+
+    const track = host.querySelector('.jui-progress__track')
+    expect(track.style.getPropertyValue('--pct')).toBe('25%')
+    expect(host.querySelector('.jui-progress__value').textContent).toBe('25%')
+
+    value.set(80)
+    expect(track.style.getPropertyValue('--pct')).toBe('80%')
+    expect(host.querySelector('.jui-progress__value').textContent).toBe('80%')
+  })
+
+  it('Card mounts default slot content', async () => {
+    const Card = await loadComponent('Card')
+    const host = document.createElement('div')
+
+    Card.mount(host, {
+      title: 'Hello',
+      subtitle: 'World',
+      children: (target) => {
+        const p = document.createElement('p')
+        p.textContent = 'Body'
+        target.appendChild(p)
+      },
+    })
+
+    expect(host.querySelector('.jui-card__title').textContent).toBe('Hello')
+    expect(host.querySelector('.jui-card__subtitle').textContent).toBe('World')
+    expect(host.querySelector('.jui-card__body').textContent).toContain('Body')
+  })
+
+  it('Checkbox mirrors a pulse', async () => {
+    const Checkbox = await loadComponent('Checkbox')
+    const host = document.createElement('div')
+    const checked = pulse(false)
+
+    Checkbox.mount(host, {
+      label: 'Accept',
+      checked,
+    })
+
+    const input = host.querySelector('input[type="checkbox"]')
+    expect(input.checked).toBe(false)
+
+    checked.set(true)
+    expect(input.checked).toBe(true)
+
+    input.checked = false
+    input.dispatchEvent(new Event('change', { bubbles: true }))
+    expect(checked()).toBe(false)
+  })
+
+  it('ColorPicker updates hex from native color input', async () => {
+    const ColorPicker = await loadComponent('ColorPicker')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const value = pulse('#189030')
+    let changed = ''
+
+    ColorPicker.mount(host, {
+      label: 'Primary',
+      value,
+      presets: ['#189030', '#c62828'],
+      change: (hex) => {
+        changed = hex
+      },
+    })
+
+    expect(host.querySelector('.jui-color__hex').value).toBe('#189030')
+    expect(host.querySelector('.jui-color__chip').getAttribute('style')).toContain('#189030')
+    expect(host.querySelectorAll('.jui-color__preset')).toHaveLength(2)
+
+    const native = host.querySelector('input[type="color"]')
+    native.value = '#c62828'
+    native.dispatchEvent(new Event('input', { bubbles: true }))
+
+    expect(value()).toBe('#c62828')
+    expect(changed).toBe('#c62828')
+    expect(host.querySelector('.jui-color__hex').value).toBe('#c62828')
+    expect(host.querySelector('.jui-color__chip').getAttribute('style')).toContain('#c62828')
+
+    host.querySelectorAll('.jui-color__preset')[0].click()
+    expect(value()).toBe('#189030')
+    expect(changed).toBe('#189030')
+  })
+
+  it('Alert dismisses and honors duration', async () => {
+    const Alert = await loadComponent('Alert')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const open = pulse(true)
+    let dismissed = 0
+
+    Alert.mount(host, {
+      tone: 'info',
+      title: 'Timed',
+      dismissible: true,
+      duration: 25,
+      open,
+      children: (target) => {
+        target.textContent = 'Bye soon'
+        return () => {}
+      },
+      dismiss: () => {
+        dismissed += 1
+      },
+    })
+
+    expect(host.querySelector('.jui-alert')).toBeTruthy()
+    expect(host.querySelector('.jui-alert').getAttribute('role')).toBe('status')
+    host.querySelector('.jui-alert__close').click()
+    expect(open()).toBe(false)
+    expect(dismissed).toBe(1)
+    expect(host.querySelector('.jui-alert')).toBeNull()
+  })
+})
