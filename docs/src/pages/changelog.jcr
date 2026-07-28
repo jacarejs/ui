@@ -13,6 +13,17 @@ export <view>
     />
 
     <div class="docs-panel" style="padding:1.25rem">
+      <h2 class="docs-section-title" style="margin-top:0">0.1.1</h2>
+      <p class="docs-lead" style="margin-top:0">Layout primitives and composition models on the canopy palette.</p>
+      <ul class="docs-checklist">
+        <li><code>Flex</code> — full flexbox positioning with reverse axes, justify, wrap, and inline</li>
+        <li><code>Grid</code> — CSS grid tracks (<code>1</code>–<code>12</code>, <code>auto</code>) with dense packing</li>
+        <li>Layouts docs — shell, sidebar, split, gallery, and toolbar recipes using canopy tokens</li>
+        <li>Docs fixes for Pages mounts, logo base path, CodeBlock spacing/copy state, and <code>boot.js</code> filenames</li>
+      </ul>
+    </div>
+
+    <div class="docs-panel" style="padding:1.25rem">
       <h2 class="docs-section-title" style="margin-top:0">0.1.0</h2>
       <p class="docs-lead" style="margin-top:0">Initial public release of the Jacaré UI package and docs site.</p>
       <ul class="docs-checklist">

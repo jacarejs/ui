@@ -7,6 +7,7 @@ export <contract>
     lead: { type: 'string', default: '' }
     code: { type: 'string', required: true }
     filename: { type: 'string', default: 'example.jcr' }
+    layout: { type: 'string', default: 'split' }
   }
   slots: ['default']
 </contract>
@@ -15,8 +16,20 @@ function read(value) {
   return typeof value === 'function' ? value() : value
 }
 
+function layoutOf(value) {
+  const next = read(value)
+  if (next === 'stack' || next === 'bleed' || next === 'rail') return next
+  return 'split'
+}
+
 export <view>
-  <section class="docs-demo" id=${id}>
+  <section
+    class="docs-demo"
+    class-docs-demo--stack=${() => layoutOf(layout) === 'stack'}
+    class-docs-demo--bleed=${() => layoutOf(layout) === 'bleed'}
+    class-docs-demo--rail=${() => layoutOf(layout) === 'rail'}
+    id=${id}
+  >
     <header class="docs-demo-head">
       <div>
         <h3 class="docs-demo-title">${title}</h3>

@@ -68,9 +68,11 @@ Components ship as precompiled ESM modules (`mount` / `render` / `resume`). Your
 | `Checkbox` | Two-way boolean control |
 | `Divider` | Horizontal / vertical rule |
 | `Field` | Labeled text input (`model` value) |
+| `Flex` | Full flexbox positioning |
+| `Grid` | CSS grid tracks for layout |
 | `Progress` | Signal-driven progress bar |
 | `Spinner` | Loading indicator |
-| `Stack` | Flex layout helper |
+| `Stack` | Simple flex gap helper |
 | `Switch` | Toggle control |
 | `Text` | Typography helper |
 

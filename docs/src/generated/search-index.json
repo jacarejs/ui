@@ -134,6 +134,33 @@
     ]
   },
   {
+    "title": "Flex",
+    "section": "Components",
+    "href": "/components/flex",
+    "keywords": [
+      "flex",
+      "direction",
+      "gap",
+      "align",
+      "justify",
+      "wrap",
+      "inline"
+    ]
+  },
+  {
+    "title": "Grid",
+    "section": "Components",
+    "href": "/components/grid",
+    "keywords": [
+      "grid",
+      "columns",
+      "gap",
+      "align",
+      "justify",
+      "dense"
+    ]
+  },
+  {
     "title": "Progress",
     "section": "Components",
     "href": "/components/progress",

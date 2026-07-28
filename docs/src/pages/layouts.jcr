@@ -1,0 +1,184 @@
+import Badge from '@jacare/ui/components/Badge.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import Card from '@jacare/ui/components/Card.jcr'
+import Flex from '@jacare/ui/components/Flex.jcr'
+import Grid from '@jacare/ui/components/Grid.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../ui/DocsHero.jcr'
+import CodeBlock from '../ui/CodeBlock.jcr'
+import DocsSection from '../ui/DocsSection.jcr'
+import PreviousNext from '../ui/PreviousNext.jcr'
+import { previousNext } from '../nav-data.js'
+import { goDocs } from '../navigate.js'
+import { gallery, shell, sidebar, split, toolbar } from '../examples/layouts.js'
+
+const navLinks = previousNext('/layouts')
+
+export <view>
+  <article class="docs-page">
+    <DocsHero
+      :kicker=${'Foundations'}
+      :title=${'Layouts'}
+      :description=${'Clean composition models on the canopy palette. Each recipe uses Flex or Grid once — copy the structure, then replace the placeholder content.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'palette'} :title=${'Palette'}>
+      <p class="docs-lead">Keep chrome on brand tokens. Quiet surfaces, one accent.</p>
+      <div class="docs-layout-swatches" aria-label="Canopy color swatches">
+        <div class="docs-layout-swatch" style="--docs-swatch: var(--j-primary)"><span>primary</span></div>
+        <div class="docs-layout-swatch" style="--docs-swatch: var(--j-leaf)"><span>leaf</span></div>
+        <div class="docs-layout-swatch" style="--docs-swatch: var(--j-mint)"><span>mint</span></div>
+        <div class="docs-layout-swatch" style="--docs-swatch: var(--j-surface)"><span>surface</span></div>
+        <div class="docs-layout-swatch" style="--docs-swatch: var(--j-forest)"><span>forest</span></div>
+      </div>
+      <div class="docs-hero-actions" style="margin-top:1rem">
+        <Button :variant=${'secondary'} :size=${'sm'} on-press=${() => goDocs('/components/flex')}>Flex</Button>
+        <Button :variant=${'secondary'} :size=${'sm'} on-press=${() => goDocs('/components/grid')}>Grid</Button>
+        <Button :variant=${'ghost'} :size=${'sm'} on-press=${() => goDocs('/tokens')}>Tokens</Button>
+      </div>
+    </DocsSection>
+
+    <DocsSection :id=${'models'} :title=${'Models'}>
+      <div class="docs-layout-catalog">
+        <article class="docs-layout-model" id="shell">
+          <header class="docs-layout-model__head">
+            <h3>1 · App shell</h3>
+            <p>Top bar and body on canopy surfaces.</p>
+            <div class="docs-layout-model__meta">
+              <span class="docs-layout-chip">Flex</span>
+              <span class="docs-layout-chip">surface</span>
+            </div>
+          </header>
+          <div class="docs-layout-model__body">
+            <div class="jui-layout-shell">
+              <div class="jui-layout-shell__bar">
+                <Flex :align=${'center'} :justify=${'between'} :gap=${'md'}>
+                  <Text :weight=${'bold'}>Jacaré UI</Text>
+                  <Text :tone=${'muted'} :size=${'sm'}>Build with pulse</Text>
+                </Flex>
+              </div>
+              <div class="jui-layout-shell__body">
+                <Text>Main content uses canopy surface tokens.</Text>
+              </div>
+            </div>
+            <div style="margin-top:0.85rem">
+              <CodeBlock :code=${shell} :filename=${'layout-shell.jcr'} :language=${'jacare'} />
+            </div>
+          </div>
+        </article>
+
+        <article class="docs-layout-model" id="sidebar">
+          <header class="docs-layout-model__head">
+            <h3>2 · Sidebar + main</h3>
+            <p>Navigation rail beside content.</p>
+            <div class="docs-layout-model__meta">
+              <span class="docs-layout-chip">Flex</span>
+              <span class="docs-layout-chip">nav</span>
+            </div>
+          </header>
+          <div class="docs-layout-model__body">
+            <div class="jui-layout-sidebar">
+              <Flex :gap=${'none'} :align=${'stretch'}>
+                <aside class="jui-layout-sidebar__nav">
+                  <Flex :direction=${'column'} :gap=${'sm'}>
+                    <Text :weight=${'bold'} :size=${'sm'}>Nav</Text>
+                    <Text :tone=${'muted'} :size=${'sm'}>Introduction</Text>
+                    <Text :tone=${'muted'} :size=${'sm'}>Layouts</Text>
+                  </Flex>
+                </aside>
+                <main class="jui-layout-sidebar__main">
+                  <Flex :direction=${'column'} :gap=${'sm'}>
+                    <Text :weight=${'bold'}>Content</Text>
+                    <Text :tone=${'muted'}>Sidebar + main split with Flex.</Text>
+                  </Flex>
+                </main>
+              </Flex>
+            </div>
+            <div style="margin-top:0.85rem">
+              <CodeBlock :code=${sidebar} :filename=${'layout-sidebar.jcr'} :language=${'jacare'} />
+            </div>
+          </div>
+        </article>
+
+        <article class="docs-layout-model" id="split">
+          <header class="docs-layout-model__head">
+            <h3>3 · Two-column split</h3>
+            <p>Paired cards on equal tracks.</p>
+            <div class="docs-layout-model__meta">
+              <span class="docs-layout-chip">Grid</span>
+              <span class="docs-layout-chip">2-up</span>
+            </div>
+          </header>
+          <div class="docs-layout-model__body">
+            <Grid :columns=${'2'} :gap=${'lg'}>
+              <Card :title=${'Brand'} :subtitle=${'Primary'}>
+                <Text :tone=${'muted'}>--j-primary / --j-leaf</Text>
+              </Card>
+              <Card :title=${'Surface'} :subtitle=${'Mint'}>
+                <Text :tone=${'muted'}>--j-surface / --j-mint</Text>
+              </Card>
+            </Grid>
+            <div style="margin-top:0.85rem">
+              <CodeBlock :code=${split} :filename=${'layout-split.jcr'} :language=${'jacare'} />
+            </div>
+          </div>
+        </article>
+
+        <article class="docs-layout-model" id="gallery">
+          <header class="docs-layout-model__head">
+            <h3>4 · Card gallery</h3>
+            <p>Auto-fit catalog without breakpoints.</p>
+            <div class="docs-layout-model__meta">
+              <span class="docs-layout-chip">Grid</span>
+              <span class="docs-layout-chip">auto</span>
+            </div>
+          </header>
+          <div class="docs-layout-model__body">
+            <Grid :columns=${'auto'} :gap=${'md'}>
+              <Card :title=${'Alert'} :subtitle=${'Feedback'}>
+                <Badge :text=${'Stable'} :tone=${'success'} />
+              </Card>
+              <Card :title=${'Flex'} :subtitle=${'Layout'}>
+                <Text :tone=${'muted'} :size=${'sm'}>Row / column positioning</Text>
+              </Card>
+              <Card :title=${'Grid'} :subtitle=${'Layout'}>
+                <Text :tone=${'muted'} :size=${'sm'}>Column tracks</Text>
+              </Card>
+            </Grid>
+            <div style="margin-top:0.85rem">
+              <CodeBlock :code=${gallery} :filename=${'layout-gallery.jcr'} :language=${'jacare'} />
+            </div>
+          </div>
+        </article>
+
+        <article class="docs-layout-model" id="toolbar">
+          <header class="docs-layout-model__head">
+            <h3>5 · Toolbar</h3>
+            <p>Title and actions with wrap.</p>
+            <div class="docs-layout-model__meta">
+              <span class="docs-layout-chip">Flex</span>
+              <span class="docs-layout-chip">justify</span>
+            </div>
+          </header>
+          <div class="docs-layout-model__body">
+            <div class="jui-layout-toolbar">
+              <Flex :align=${'center'} :justify=${'between'} :gap=${'md'} :wrap=${true}>
+                <Text :weight=${'bold'}>Projects</Text>
+                <Flex :gap=${'sm'} :wrap=${true}>
+                  <Button :variant=${'secondary'} :size=${'sm'}>Filter</Button>
+                  <Button :size=${'sm'}>New</Button>
+                </Flex>
+              </Flex>
+            </div>
+            <div style="margin-top:0.85rem">
+              <CodeBlock :code=${toolbar} :filename=${'layout-toolbar.jcr'} :language=${'jacare'} />
+            </div>
+          </div>
+        </article>
+      </div>
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -1,0 +1,325 @@
+import { pulse } from '@jacare/core'
+import Badge from '@jacare/ui/components/Badge.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import Card from '@jacare/ui/components/Card.jcr'
+import Grid from '@jacare/ui/components/Grid.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  align,
+  auto,
+  basic,
+  columns,
+  dense,
+  gaps,
+  playgroundCode as buildPlaygroundCode,
+} from '../../examples/grid.js'
+
+const contract = getContract('Grid')
+const navLinks = previousNext('/components/grid')
+
+const playColumns = pulse('3')
+const playGap = pulse('md')
+const playAlign = pulse('stretch')
+const playJustify = pulse('stretch')
+const playDense = pulse(false)
+
+const columnOptions = ['1', '2', '3', '4', '6', '12', 'auto']
+const gapOptions = ['none', 'sm', 'md', 'lg', 'xl']
+const alignOptions = ['stretch', 'start', 'center', 'end']
+const justifyOptions = ['stretch', 'start', 'center', 'end', 'between']
+
+const a11y = [
+  'Grid is a positioning primitive — keep interactive children labeled',
+  'Prefer a logical source order that still makes sense when columns collapse',
+  'Do not use Grid alone for landmark semantics',
+  'Dense packing can reorder visuals — verify reading order',
+]
+
+const propOrder = [
+  { name: 'columns', detail: 'Track count: 1–12 or auto-fit' },
+  { name: 'gap', detail: 'Row and column spacing via --j-space-*' },
+  { name: 'align', detail: 'Align items inside each cell' },
+  { name: 'justify', detail: 'Justify items or content across tracks' },
+  { name: 'dense', detail: 'Pack later items into earlier holes' },
+]
+
+function setColumns(next) {
+  playColumns.set(next)
+}
+
+function setGap(next) {
+  playGap.set(next)
+}
+
+function setAlign(next) {
+  playAlign.set(next)
+}
+
+function setJustify(next) {
+  playJustify.set(next)
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    columns: playColumns(),
+    gap: playGap(),
+    align: playAlign(),
+    justify: playJustify(),
+    dense: playDense(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Grid</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Layout'}
+      :title=${'Grid'}
+      :description=${'Place content on tracks. Pick a column count, space with token gaps, then refine alignment. Use auto for catalogs that reflow without breakpoints.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'anatomy'} :title=${'What it controls'}>
+      <p class="docs-lead">Props follow the same reading order as the playground and API table.</p>
+      <ul class="docs-spec">
+        #for propOrder as item (item.name)
+          <li class="docs-spec__row">
+            <p class="docs-spec__key">${item.name}</p>
+            <div class="docs-spec__value">
+              <Text :size=${'sm'}>${item.detail}</Text>
+            </div>
+          </li>
+        #end
+      </ul>
+    </DocsSection>
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">1 · Columns</span>
+            <div class="docs-hero-actions">
+              #for columnOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playColumns() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setColumns(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">2 · Gap</span>
+            <div class="docs-hero-actions">
+              #for gapOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playGap() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setGap(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">3 · Align</span>
+            <div class="docs-hero-actions">
+              #for alignOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playAlign() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setAlign(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">4 · Justify</span>
+            <div class="docs-hero-actions">
+              #for justifyOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playJustify() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setJustify(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <Switch :label=${'5 · Dense'} bind-checked=${playDense} />
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel docs-layout-stage">
+            <Grid
+              :columns=${playColumns}
+              :gap=${playGap}
+              :align=${playAlign}
+              :justify=${playJustify}
+              :dense=${playDense}
+            >
+              <div class="docs-cell">A</div>
+              <div class="docs-cell docs-cell--accent">B</div>
+              <div class="docs-cell">C</div>
+              <div class="docs-cell">D</div>
+            </Grid>
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'grid-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Three equal tracks — the default grid starting point.'}
+      :code=${basic}
+      :filename=${'grid-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Grid :columns=${'3'} :gap=${'md'}>
+        <div class="docs-cell">1</div>
+        <div class="docs-cell">2</div>
+        <div class="docs-cell">3</div>
+      </Grid>
+    </Demo>
+
+    <DocsSection :id=${'columns'} :title=${'Columns'}>
+      <p class="docs-lead">Fixed track counts for predictable structure.</p>
+      <Demo
+        :id=${'columns-demo'}
+        :title=${'Four-up matrix'}
+        :code=${columns}
+        :filename=${'grid-columns.jcr'}
+        :layout=${'bleed'}
+      >
+        <Grid :columns=${'4'} :gap=${'sm'}>
+          <div class="docs-cell">A</div>
+          <div class="docs-cell docs-cell--accent">B</div>
+          <div class="docs-cell">C</div>
+          <div class="docs-cell">D</div>
+        </Grid>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'gap'} :title=${'Gap'}>
+      <p class="docs-lead">Same cells, different spacing — read top to bottom.</p>
+      <Demo
+        :id=${'gaps'}
+        :title=${'Spacing contrast'}
+        :code=${gaps}
+        :filename=${'grid-gaps.jcr'}
+        :layout=${'stack'}
+      >
+        <ul class="docs-spec">
+          <li class="docs-spec__row">
+            <p class="docs-spec__key">sm</p>
+            <div class="docs-spec__value">
+              <Grid :columns=${'3'} :gap=${'sm'}>
+                <div class="docs-cell">1</div>
+                <div class="docs-cell">2</div>
+                <div class="docs-cell">3</div>
+              </Grid>
+            </div>
+          </li>
+          <li class="docs-spec__row">
+            <p class="docs-spec__key">lg</p>
+            <div class="docs-spec__value">
+              <Grid :columns=${'3'} :gap=${'lg'}>
+                <div class="docs-cell">1</div>
+                <div class="docs-cell">2</div>
+                <div class="docs-cell">3</div>
+              </Grid>
+            </div>
+          </li>
+        </ul>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'align'} :title=${'Align'}>
+      <p class="docs-lead">Cell content alignment when heights differ.</p>
+      <Demo
+        :id=${'align-demo'}
+        :title=${'Centered items'}
+        :code=${align}
+        :filename=${'grid-align.jcr'}
+        :layout=${'rail'}
+      >
+        <Grid :columns=${'3'} :gap=${'md'} :align=${'center'}>
+          <div class="docs-cell" style="min-height:4.5rem">Tall</div>
+          <div class="docs-cell">Mid</div>
+          <div class="docs-cell" style="min-height:2.5rem">Short</div>
+        </Grid>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'auto'} :title=${'Auto-fit'}>
+      <p class="docs-lead">Cards reflow with <code>columns="auto"</code> — no media queries.</p>
+      <Demo
+        :id=${'auto-demo'}
+        :title=${'Responsive catalog'}
+        :code=${auto}
+        :filename=${'grid-auto.jcr'}
+        :layout=${'bleed'}
+      >
+        <Grid :columns=${'auto'} :gap=${'md'}>
+          <Card :title=${'Tokens'} :subtitle=${'Foundations'}>
+            <Text :tone=${'muted'} :size=${'sm'}>Brand and semantic colors</Text>
+          </Card>
+          <Card :title=${'Flex'} :subtitle=${'Layout'}>
+            <Text :tone=${'muted'} :size=${'sm'}>Axis positioning</Text>
+          </Card>
+          <Card :title=${'Grid'} :subtitle=${'Layout'}>
+            <Text :tone=${'muted'} :size=${'sm'}>Track positioning</Text>
+          </Card>
+        </Grid>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'dense'} :title=${'Dense'}>
+      <p class="docs-lead">Later items fill earlier holes when packing is dense.</p>
+      <Demo
+        :id=${'dense-demo'}
+        :title=${'Packed tracks'}
+        :code=${dense}
+        :filename=${'grid-dense.jcr'}
+        :layout=${'stack'}
+      >
+        <Grid :columns=${'4'} :gap=${'sm'} :dense=${true}>
+          <div class="docs-cell docs-cell--accent" style="grid-column:span 2">Wide</div>
+          <div class="docs-cell">2</div>
+          <div class="docs-cell">3</div>
+          <div class="docs-cell">4</div>
+          <div class="docs-cell">5</div>
+        </Grid>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

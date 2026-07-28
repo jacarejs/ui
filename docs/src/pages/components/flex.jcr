@@ -1,0 +1,369 @@
+import { pulse } from '@jacare/core'
+import Avatar from '@jacare/ui/components/Avatar.jcr'
+import Badge from '@jacare/ui/components/Badge.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import Flex from '@jacare/ui/components/Flex.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  align,
+  basic,
+  directions,
+  gaps,
+  inline,
+  justify,
+  playgroundCode as buildPlaygroundCode,
+  wrap,
+} from '../../examples/flex.js'
+
+const contract = getContract('Flex')
+const navLinks = previousNext('/components/flex')
+
+const playDirection = pulse('row')
+const playGap = pulse('md')
+const playAlign = pulse('center')
+const playJustify = pulse('start')
+const playWrap = pulse(false)
+const playInline = pulse(false)
+
+const directionOptions = ['row', 'column', 'row-reverse', 'column-reverse']
+const gapOptions = ['none', 'sm', 'md', 'lg', 'xl']
+const alignOptions = ['stretch', 'start', 'center', 'end', 'baseline']
+const justifyOptions = ['start', 'center', 'end', 'between', 'around', 'evenly']
+
+const a11y = [
+  'Flex is a positioning primitive — keep interactive children labeled',
+  'Prefer logical reading order when using reverse directions',
+  'Do not use Flex alone for landmark semantics',
+  'Wrapping rows should keep a clear tab order',
+]
+
+const propOrder = [
+  { name: 'direction', detail: 'Main axis: row, column, or reverse' },
+  { name: 'gap', detail: 'Space between children via --j-space-*' },
+  { name: 'align', detail: 'Cross-axis alignment' },
+  { name: 'justify', detail: 'Main-axis distribution' },
+  { name: 'wrap', detail: 'Allow children to flow to the next line' },
+  { name: 'inline', detail: 'inline-flex for in-content clusters' },
+]
+
+function setDirection(next) {
+  playDirection.set(next)
+}
+
+function setGap(next) {
+  playGap.set(next)
+}
+
+function setAlign(next) {
+  playAlign.set(next)
+}
+
+function setJustify(next) {
+  playJustify.set(next)
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    direction: playDirection(),
+    gap: playGap(),
+    align: playAlign(),
+    justify: playJustify(),
+    wrap: playWrap(),
+    inline: playInline(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Flex</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Layout'}
+      :title=${'Flex'}
+      :description=${'Position children on a flex axis. Use Stack for simple lists; reach for Flex when you need reverse axes, distribution, wrap, or an inline cluster.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'anatomy'} :title=${'What it controls'}>
+      <p class="docs-lead">Props follow the same reading order as the playground and API table.</p>
+      <ul class="docs-spec">
+        #for propOrder as item (item.name)
+          <li class="docs-spec__row">
+            <p class="docs-spec__key">${item.name}</p>
+            <div class="docs-spec__value">
+              <Text :size=${'sm'}>${item.detail}</Text>
+            </div>
+          </li>
+        #end
+      </ul>
+    </DocsSection>
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">1 · Direction</span>
+            <div class="docs-hero-actions">
+              #for directionOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playDirection() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setDirection(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">2 · Gap</span>
+            <div class="docs-hero-actions">
+              #for gapOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playGap() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setGap(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">3 · Align</span>
+            <div class="docs-hero-actions">
+              #for alignOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playAlign() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setAlign(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">4 · Justify</span>
+            <div class="docs-hero-actions">
+              #for justifyOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playJustify() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setJustify(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <Flex :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'5 · Wrap'} bind-checked=${playWrap} />
+            <Switch :label=${'6 · Inline'} bind-checked=${playInline} />
+          </Flex>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel docs-axis">
+            <Flex
+              :direction=${playDirection}
+              :gap=${playGap}
+              :align=${playAlign}
+              :justify=${playJustify}
+              :wrap=${playWrap}
+              :inline=${playInline}
+            >
+              <Badge :text=${'One'} :tone=${'success'} />
+              <Badge :text=${'Two'} :tone=${'info'} />
+              <Badge :text=${'Three'} />
+            </Flex>
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'flex-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'A quiet row with token spacing — the default starting point.'}
+      :code=${basic}
+      :filename=${'flex-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Flex :gap=${'md'} :align=${'center'}>
+        <Badge :text=${'Design'} :tone=${'success'} />
+        <Badge :text=${'Docs'} :tone=${'info'} />
+        <Badge :text=${'Ship'} />
+      </Flex>
+    </Demo>
+
+    <DocsSection :id=${'direction'} :title=${'Direction'}>
+      <p class="docs-lead">Compare main-axis orientation side by side.</p>
+      <Demo
+        :id=${'directions'}
+        :title=${'Row and column'}
+        :code=${directions}
+        :filename=${'flex-directions.jcr'}
+        :layout=${'rail'}
+      >
+        <div class="docs-compare">
+          <div class="docs-compare__pane">
+            <p class="docs-compare__label">row</p>
+            <Flex :direction=${'row'} :gap=${'sm'}>
+              <Badge :text=${'A'} :tone=${'success'} />
+              <Badge :text=${'B'} />
+              <Badge :text=${'C'} :tone=${'info'} />
+            </Flex>
+          </div>
+          <div class="docs-compare__pane">
+            <p class="docs-compare__label">column</p>
+            <Flex :direction=${'column'} :gap=${'sm'}>
+              <Badge :text=${'A'} :tone=${'success'} />
+              <Badge :text=${'B'} />
+              <Badge :text=${'C'} :tone=${'info'} />
+            </Flex>
+          </div>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'gap'} :title=${'Gap'}>
+      <p class="docs-lead">Spacing scale mapped to <code>--j-space-*</code>.</p>
+      <Demo
+        :id=${'gaps'}
+        :title=${'Spacing scale'}
+        :code=${gaps}
+        :filename=${'flex-gaps.jcr'}
+        :layout=${'stack'}
+      >
+        <ul class="docs-spec">
+          <li class="docs-spec__row">
+            <p class="docs-spec__key">sm</p>
+            <div class="docs-spec__value">
+              <Flex :gap=${'sm'}><Badge :text=${'A'} /><Badge :text=${'B'} /></Flex>
+            </div>
+          </li>
+          <li class="docs-spec__row">
+            <p class="docs-spec__key">md</p>
+            <div class="docs-spec__value">
+              <Flex :gap=${'md'}><Badge :text=${'A'} /><Badge :text=${'B'} /></Flex>
+            </div>
+          </li>
+          <li class="docs-spec__row">
+            <p class="docs-spec__key">lg</p>
+            <div class="docs-spec__value">
+              <Flex :gap=${'lg'}><Badge :text=${'A'} /><Badge :text=${'B'} /></Flex>
+            </div>
+          </li>
+          <li class="docs-spec__row">
+            <p class="docs-spec__key">xl</p>
+            <div class="docs-spec__value">
+              <Flex :gap=${'xl'}><Badge :text=${'A'} /><Badge :text=${'B'} /></Flex>
+            </div>
+          </li>
+        </ul>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'align'} :title=${'Align'}>
+      <p class="docs-lead">Cross-axis alignment on a measured canvas.</p>
+      <Demo
+        :id=${'align-demo'}
+        :title=${'Center on the cross axis'}
+        :code=${align}
+        :filename=${'flex-align.jcr'}
+        :layout=${'bleed'}
+      >
+        <div class="docs-axis">
+          <Flex :align=${'center'} :gap=${'md'}>
+            <Avatar :name=${'Jacaré UI'} :size=${'lg'} />
+            <Flex :direction=${'column'} :gap=${'sm'}>
+              <Text :weight=${'bold'}>Centered on the cross axis</Text>
+              <Text :tone=${'muted'} :size=${'sm'}>align="center"</Text>
+            </Flex>
+          </Flex>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'justify'} :title=${'Justify'}>
+      <p class="docs-lead">Main-axis distribution for toolbars and footers.</p>
+      <Demo
+        :id=${'justify-demo'}
+        :title=${'Space between actions'}
+        :code=${justify}
+        :filename=${'flex-justify.jcr'}
+        :layout=${'bleed'}
+      >
+        <div class="jui-layout-toolbar">
+          <Flex :justify=${'between'} :align=${'center'} :gap=${'md'}>
+            <Button :variant=${'ghost'}>Cancel</Button>
+            <Button>Continue</Button>
+          </Flex>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'wrap'} :title=${'Wrap'}>
+      <p class="docs-lead">Constrained width so children reflow cleanly.</p>
+      <Demo
+        :id=${'wrap-demo'}
+        :title=${'Wrapping cluster'}
+        :code=${wrap}
+        :filename=${'flex-wrap.jcr'}
+        :layout=${'stack'}
+      >
+        <div class="docs-demo-constrain">
+          <Flex :gap=${'sm'} :wrap=${true}>
+            <Badge :text=${'Design'} />
+            <Badge :text=${'Docs'} :tone=${'info'} />
+            <Badge :text=${'Playground'} :tone=${'success'} />
+            <Badge :text=${'Theme'} :tone=${'warn'} />
+            <Badge :text=${'Tokens'} />
+            <Badge :text=${'Layouts'} :tone=${'info'} />
+          </Flex>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'inline'} :title=${'Inline'}>
+      <p class="docs-lead">Keep a cluster inside running text.</p>
+      <Demo
+        :id=${'inline-demo'}
+        :title=${'In-content cluster'}
+        :code=${inline}
+        :filename=${'flex-inline.jcr'}
+        :layout=${'rail'}
+      >
+        <p class="docs-layout-note" style="margin:0;font-size:1rem;color:var(--docs-ink)">
+          Status stays in the sentence
+          <Flex :inline=${true} :align=${'center'} :gap=${'sm'}>
+            <Badge :text=${'Live'} :tone=${'success'} :dot=${true} />
+          </Flex>
+          without breaking the line.
+        </p>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>
