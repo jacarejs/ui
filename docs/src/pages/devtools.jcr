@@ -1,0 +1,58 @@
+import DocsHero from '../ui/DocsHero.jcr'
+import DocsSection from '../ui/DocsSection.jcr'
+import CodeBlock from '../ui/CodeBlock.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import PreviousNext from '../ui/PreviousNext.jcr'
+import { previousNext } from '../nav-data.js'
+import { chromeStoreUrl, connectHook, viteNote } from '../examples/devtools.js'
+
+const navLinks = previousNext('/devtools')
+
+export <view>
+  <article class="docs-page">
+    <DocsHero
+      :kicker=${'Tools'}
+      :title=${'Jacaré Devtools'}
+      :description=${'Inspect live pulses, routes, .jcr screens, Mesh, and Scope from a Chrome DevTools panel. Pair the store extension with @jacare/devtools in DEV for the page hook.'}
+    />
+
+    <DocsSection :id=${'chrome'} :title=${'Chrome extension'}>
+      <p class="docs-lead">
+        Install <strong>Jacaré Devtools</strong> from the Chrome Web Store, open any Jacaré app in development, then open DevTools and select the <strong>Jacaré</strong> tab.
+      </p>
+      <ul class="docs-checklist">
+        <li>Route — createNav path, params, and search</li>
+        <li>State — reactive pulses with live values</li>
+        <li>Screens — .jcr sources linked to state</li>
+        <li>Mesh — pulse bags (@bag/key)</li>
+        <li>Scope — registerScope watch list</li>
+      </ul>
+      <div class="docs-hero-actions" style="margin-top:1rem">
+        <a href=${chromeStoreUrl} target="_blank" rel="noreferrer">
+          <Button :variant=${'primary'}>Install from Chrome Web Store</Button>
+        </a>
+      </div>
+      <p class="docs-lead" style="margin-top:1rem">
+        Store listing:
+        <a href=${chromeStoreUrl} target="_blank" rel="noreferrer">${chromeStoreUrl}</a>
+      </p>
+    </DocsSection>
+
+    <DocsSection :id=${'hook'} :title=${'Page hook in DEV'}>
+      <p class="docs-lead">
+        The extension talks to <code>window.__JACARE_DEVTOOLS_HOOK__</code> on the inspected page. In Vite apps, install <code>@jacare/devtools</code> and connect in development (or let the Vite plugin inject the hook).
+      </p>
+      <CodeBlock :code=${connectHook} :filename=${'boot.js'} :language=${'javascript'} />
+      <CodeBlock :code=${viteNote} :filename=${'vite.config.js'} :language=${'javascript'} />
+    </DocsSection>
+
+    <DocsSection :id=${'privacy'} :title=${'Privacy'}>
+      <ul class="docs-checklist">
+        <li>Talks only to the inspected page’s Jacaré hook</li>
+        <li>No analytics, no accounts, no remote telemetry</li>
+      </ul>
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

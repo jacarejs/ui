@@ -63,6 +63,7 @@ export const docsNav = [
     title: 'Tools',
     items: [
       { href: '/theme-editor', label: 'Theme Editor', blurb: 'Tune tokens and export CSS' },
+      { href: '/devtools', label: 'Jacaré Devtools', blurb: 'Chrome extension for pulses, Mesh, Scope' },
       { href: '/playground', label: 'Playground', blurb: 'Local Vite sandbox for experiments' },
       { href: '/changelog', label: 'Changelog', blurb: 'What changed between releases' },
     ],

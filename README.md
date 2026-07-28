@@ -127,6 +127,7 @@ playground/          # local gallery app
 ## Related
 
 - [Documentation](https://jacarejs.github.io/ui/)
+- [Jacaré Devtools (Chrome)](https://chromewebstore.google.com/detail/jacar%C3%A9-devtools/cjemkcfolgmpfkpkpiklmkijalpfmkcm)
 - [Jacaré core](https://github.com/jacarejs/core)
 - [Showcase](https://jacarejs.github.io/core/showcase/)
 - [Lab](https://jacarejs.github.io/core/lab/)

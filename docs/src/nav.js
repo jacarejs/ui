@@ -33,6 +33,7 @@ export const nav = createNav({
     '/components/switch': { use: lazy(() => import('./pages/components/switch.jcr')), title: 'Switch · Jacaré UI' },
     '/components/text': { use: lazy(() => import('./pages/components/text.jcr')), title: 'Text · Jacaré UI' },
     '/theme-editor': { use: lazy(() => import('./pages/theme-editor.jcr')), title: 'Theme Editor · Jacaré UI' },
+    '/devtools': { use: lazy(() => import('./pages/devtools.jcr')), title: 'Jacaré Devtools · Jacaré UI' },
     '/playground': { use: lazy(() => import('./pages/playground.jcr')), title: 'Playground · Jacaré UI' },
     '/changelog': { use: lazy(() => import('./pages/changelog.jcr')), title: 'Changelog · Jacaré UI' },
   },
