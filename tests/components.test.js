@@ -314,4 +314,48 @@ describe('@jacare/ui components', () => {
     expect(dismissed).toBe(1)
     expect(host.querySelector('.jui-alert')).toBeNull()
   })
+
+  it('Flex applies direction, gap, justify, and wrap', async () => {
+    const Flex = await loadComponent('Flex')
+    const host = document.createElement('div')
+
+    Flex.mount(host, {
+      direction: 'column',
+      gap: 'lg',
+      justify: 'between',
+      wrap: true,
+      children: (target) => {
+        target.appendChild(document.createTextNode('A'))
+        return () => {}
+      },
+    })
+
+    const el = host.querySelector('.jui-flex')
+    expect(el).toBeTruthy()
+    expect(el.classList.contains('jui-flex--column')).toBe(true)
+    expect(el.classList.contains('jui-flex--gap-lg')).toBe(true)
+    expect(el.classList.contains('jui-flex--justify-between')).toBe(true)
+    expect(el.classList.contains('jui-flex--wrap')).toBe(true)
+  })
+
+  it('Grid applies column tracks, gap, and dense packing', async () => {
+    const Grid = await loadComponent('Grid')
+    const host = document.createElement('div')
+
+    Grid.mount(host, {
+      columns: '3',
+      gap: 'sm',
+      dense: true,
+      children: (target) => {
+        target.appendChild(document.createTextNode('A'))
+        return () => {}
+      },
+    })
+
+    const el = host.querySelector('.jui-grid')
+    expect(el).toBeTruthy()
+    expect(el.classList.contains('jui-grid--cols-3')).toBe(true)
+    expect(el.classList.contains('jui-grid--gap-sm')).toBe(true)
+    expect(el.classList.contains('jui-grid--dense')).toBe(true)
+  })
 })

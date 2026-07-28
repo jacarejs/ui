@@ -328,6 +328,68 @@
     "slots": [],
     "emits": []
   },
+  "Flex": {
+    "props": {
+      "direction": {
+        "type": "string",
+        "default": "row"
+      },
+      "gap": {
+        "type": "string",
+        "default": "md"
+      },
+      "align": {
+        "type": "string",
+        "default": "stretch"
+      },
+      "justify": {
+        "type": "string",
+        "default": "start"
+      },
+      "wrap": {
+        "type": "boolean",
+        "default": false
+      },
+      "inline": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "Grid": {
+    "props": {
+      "columns": {
+        "type": "string",
+        "default": "2"
+      },
+      "gap": {
+        "type": "string",
+        "default": "md"
+      },
+      "align": {
+        "type": "string",
+        "default": "stretch"
+      },
+      "justify": {
+        "type": "string",
+        "default": "stretch"
+      },
+      "dense": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
   "Progress": {
     "props": {
       "value": {

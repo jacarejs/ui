@@ -1,0 +1,117 @@
+export <contract>
+  props: {
+    direction: { type: 'string', default: 'row' }
+    gap: { type: 'string', default: 'md' }
+    align: { type: 'string', default: 'stretch' }
+    justify: { type: 'string', default: 'start' }
+    wrap: { type: 'boolean', default: false }
+    inline: { type: 'boolean', default: false }
+  }
+  slots: ['default']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function directionOf(value) {
+  const next = read(value)
+  if (next === 'column' || next === 'row-reverse' || next === 'column-reverse') return next
+  return 'row'
+}
+
+function gapOf(value) {
+  const next = read(value)
+  if (next === 'none' || next === 'sm' || next === 'lg' || next === 'xl') return next
+  return 'md'
+}
+
+function alignOf(value) {
+  const next = read(value)
+  if (next === 'start' || next === 'center' || next === 'end' || next === 'baseline') return next
+  return 'stretch'
+}
+
+function justifyOf(value) {
+  const next = read(value)
+  if (
+    next === 'center' ||
+    next === 'end' ||
+    next === 'between' ||
+    next === 'around' ||
+    next === 'evenly'
+  ) {
+    return next
+  }
+  return 'start'
+}
+
+export <view>
+  <div
+    class="jui-flex"
+    class-jui-flex--inline=${() => !!read(inline)}
+    class-jui-flex--column=${() => directionOf(direction) === 'column'}
+    class-jui-flex--row-reverse=${() => directionOf(direction) === 'row-reverse'}
+    class-jui-flex--column-reverse=${() => directionOf(direction) === 'column-reverse'}
+    class-jui-flex--gap-none=${() => gapOf(gap) === 'none'}
+    class-jui-flex--gap-sm=${() => gapOf(gap) === 'sm'}
+    class-jui-flex--gap-lg=${() => gapOf(gap) === 'lg'}
+    class-jui-flex--gap-xl=${() => gapOf(gap) === 'xl'}
+    class-jui-flex--align-start=${() => alignOf(align) === 'start'}
+    class-jui-flex--align-center=${() => alignOf(align) === 'center'}
+    class-jui-flex--align-end=${() => alignOf(align) === 'end'}
+    class-jui-flex--align-baseline=${() => alignOf(align) === 'baseline'}
+    class-jui-flex--justify-center=${() => justifyOf(justify) === 'center'}
+    class-jui-flex--justify-end=${() => justifyOf(justify) === 'end'}
+    class-jui-flex--justify-between=${() => justifyOf(justify) === 'between'}
+    class-jui-flex--justify-around=${() => justifyOf(justify) === 'around'}
+    class-jui-flex--justify-evenly=${() => justifyOf(justify) === 'evenly'}
+    class-jui-flex--wrap=${() => !!read(wrap)}
+  >
+    <slot />
+  </div>
+</view>
+
+export <style>
+.jui-flex {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: var(--j-space-4);
+  min-width: 0;
+  min-height: 0;
+}
+
+.jui-flex > span {
+  display: contents;
+}
+
+.jui-flex--inline {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.jui-flex--column { flex-direction: column; }
+.jui-flex--row-reverse { flex-direction: row-reverse; }
+.jui-flex--column-reverse { flex-direction: column-reverse; }
+.jui-flex--wrap { flex-wrap: wrap; }
+
+.jui-flex--gap-none { gap: 0; }
+.jui-flex--gap-sm { gap: var(--j-space-2); }
+.jui-flex--gap-lg { gap: var(--j-space-5); }
+.jui-flex--gap-xl { gap: var(--j-space-6); }
+
+.jui-flex--align-start { align-items: flex-start; }
+.jui-flex--align-center { align-items: center; }
+.jui-flex--align-end { align-items: flex-end; }
+.jui-flex--align-baseline { align-items: baseline; }
+
+.jui-flex--justify-center { justify-content: center; }
+.jui-flex--justify-end { justify-content: flex-end; }
+.jui-flex--justify-between { justify-content: space-between; }
+.jui-flex--justify-around { justify-content: space-around; }
+.jui-flex--justify-evenly { justify-content: space-evenly; }
+</style>
