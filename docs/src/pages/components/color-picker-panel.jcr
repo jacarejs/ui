@@ -1,0 +1,83 @@
+import { pulse } from '@jacare/core'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import ColorPickerPanel from '@jacare/ui/components/ColorPickerPanel.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/color-picker-panel.js'
+
+const contract = getContract('ColorPickerPanel')
+const navLinks = previousNext('/components/color-picker-panel')
+
+const brandPresets = ['#189030', '#0f766e', '#2563eb', '#7c3aed', '#db2777', '#ea580c']
+
+const playValue = pulse('#189030')
+const playShowInput = pulse(true)
+const playDisabled = pulse(false)
+const playPresets = pulse(true)
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    value: playValue(),
+    showInput: playShowInput(),
+    disabled: playDisabled(),
+    presets: playPresets() ? brandPresets : undefined,
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ColorPickerPanel</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'ColorPickerPanel'}
+      :description=${'Inline color panel with a native swatch, optional hex input, and preset chips. Bind value to a hex string pulse.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Show input'} bind-checked=${playShowInput} />
+            <Switch :label=${'Presets'} bind-checked=${playPresets} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <ColorPickerPanel
+              :showInput=${playShowInput}
+              :presets=${() => (playPresets() ? brandPresets : null)}
+              :disabled=${playDisabled}
+              bind-value=${playValue}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'color-picker-panel-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'color-picker-panel-basic.jcr'}>
+      <ColorPickerPanel bind-value=${playValue} />
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

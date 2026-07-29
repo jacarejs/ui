@@ -1,0 +1,86 @@
+import { pulse } from '@jacare/core'
+import Field from '@jacare/ui/components/Field.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import TimePicker from '@jacare/ui/components/TimePicker.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/time-picker.js'
+
+const contract = getContract('TimePicker')
+const navLinks = previousNext('/components/time-picker')
+
+const playLabel = pulse('Start time')
+const playValue = pulse('09:30')
+const playClearable = pulse(true)
+const playArrowControl = pulse(false)
+const playDisabled = pulse(false)
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    label: playLabel(),
+    value: playValue(),
+    clearable: playClearable(),
+    arrowControl: playArrowControl(),
+    disabled: playDisabled(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>TimePicker</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'TimePicker'}
+      :description=${'Hour and minute picker that binds an HH:mm (or HH:mm:ss) string pulse, with optional arrow steppers.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label'} bind-value=${playLabel} />
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Clearable'} bind-checked=${playClearable} />
+            <Switch :label=${'Arrow control'} bind-checked=${playArrowControl} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <TimePicker
+              :label=${playLabel}
+              :clearable=${playClearable}
+              :arrowControl=${playArrowControl}
+              :disabled=${playDisabled}
+              bind-value=${playValue}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'time-picker-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'time-picker-basic.jcr'}>
+      <TimePicker :label=${'Start time'} bind-value=${playValue} />
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

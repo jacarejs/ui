@@ -1,0 +1,88 @@
+import { pulse } from '@jacare/core'
+import Field from '@jacare/ui/components/Field.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import SelectV2 from '@jacare/ui/components/SelectV2.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/select-v2.js'
+
+const contract = getContract('SelectV2')
+const navLinks = previousNext('/components/select-v2')
+
+const bigOptions = Array.from({ length: 200 }, (_, i) => ({
+  value: `option-${i + 1}`,
+  label: `Option ${i + 1}`,
+}))
+
+const playLabel = pulse('Large list')
+const playValue = pulse('')
+const playSearchable = pulse(true)
+const playDisabled = pulse(false)
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    label: playLabel(),
+    value: playValue(),
+    searchable: playSearchable(),
+    disabled: playDisabled(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>SelectV2</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'SelectV2'}
+      :description=${'Virtualized select for long option lists. Pass options, bind-value, and keep searchable on for fast filtering.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label'} bind-value=${playLabel} />
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Searchable'} bind-checked=${playSearchable} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <SelectV2
+              :label=${playLabel}
+              :options=${bigOptions}
+              :searchable=${playSearchable}
+              :disabled=${playDisabled}
+              bind-value=${playValue}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'select-v2-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'select-v2-basic.jcr'}>
+      <SelectV2 :label=${'Large list'} :options=${bigOptions} :searchable=${true} bind-value=${playValue} />
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

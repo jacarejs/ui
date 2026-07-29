@@ -1,0 +1,100 @@
+import { pulse } from '@jacare/core'
+import Field from '@jacare/ui/components/Field.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Input from '@jacare/ui/components/Input.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/input.js'
+
+const contract = getContract('Input')
+const navLinks = previousNext('/components/input')
+
+const playLabel = pulse('Name')
+const playValue = pulse('')
+const playPlaceholder = pulse('Jane Doe')
+const playHint = pulse('')
+const playError = pulse('')
+const playRequired = pulse(false)
+const playDisabled = pulse(false)
+const playClearable = pulse(true)
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    label: playLabel(),
+    value: playValue(),
+    placeholder: playPlaceholder(),
+    hint: playHint(),
+    error: playError(),
+    required: playRequired(),
+    disabled: playDisabled(),
+    clearable: playClearable(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Input</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'Input'}
+      :description=${'Text field with prefix and suffix slots, a clear button, and size variants. A richer sibling to Field.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label'} bind-value=${playLabel} />
+          <Field :label=${'Placeholder'} bind-value=${playPlaceholder} />
+          <Field :label=${'Hint'} bind-value=${playHint} />
+          <Field :label=${'Error'} :hint=${'Leave empty for a valid field'} bind-value=${playError} />
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Clearable'} bind-checked=${playClearable} />
+            <Switch :label=${'Required'} bind-checked=${playRequired} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <Input
+              :label=${playLabel}
+              :placeholder=${playPlaceholder}
+              :hint=${playHint}
+              :error=${playError}
+              :required=${playRequired}
+              :disabled=${playDisabled}
+              :clearable=${playClearable}
+              bind-value=${playValue}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'input-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'input-basic.jcr'} :layout=${'stack'}>
+      <div style="width:min(24rem,100%)">
+        <Input :label=${'Name'} :placeholder=${'Jane Doe'} bind-value=${playValue} />
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

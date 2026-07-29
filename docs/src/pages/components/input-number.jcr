@@ -1,0 +1,94 @@
+import { pulse } from '@jacare/core'
+import Field from '@jacare/ui/components/Field.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import InputNumber from '@jacare/ui/components/InputNumber.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/input-number.js'
+
+const contract = getContract('InputNumber')
+const navLinks = previousNext('/components/input-number')
+
+const playLabel = pulse('Quantity')
+const playValue = pulse(3)
+const playMin = pulse('0')
+const playMax = pulse('10')
+const playStep = pulse('1')
+const playControls = pulse(true)
+const playDisabled = pulse(false)
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    label: playLabel(),
+    value: playValue(),
+    min: playMin(),
+    max: playMax(),
+    step: playStep(),
+    controls: playControls(),
+    disabled: playDisabled(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>InputNumber</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'InputNumber'}
+      :description=${'Numeric field with increment and decrement controls, min/max clamping, and precision rounding.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label'} bind-value=${playLabel} />
+          <Field :label=${'Min'} :type=${'number'} bind-value=${playMin} />
+          <Field :label=${'Max'} :type=${'number'} bind-value=${playMax} />
+          <Field :label=${'Step'} :type=${'number'} bind-value=${playStep} />
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Controls'} bind-checked=${playControls} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <InputNumber
+              :label=${playLabel}
+              :min=${() => (playMin() === '' ? null : Number(playMin()))}
+              :max=${() => (playMax() === '' ? null : Number(playMax()))}
+              :step=${() => Number(playStep()) || 1}
+              :controls=${playControls}
+              :disabled=${playDisabled}
+              bind-value=${playValue}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'input-number-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'input-number-basic.jcr'}>
+      <InputNumber :label=${'Quantity'} :min=${0} :max=${10} bind-value=${playValue} />
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

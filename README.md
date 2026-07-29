@@ -69,16 +69,20 @@ Components ship as precompiled ESM modules (`mount` / `render` / `resume`). Your
 | `ColorPicker` | Hex + swatch color field |
 | `Confirm` | Modal confirmation dialog (`open` model) |
 | `DatePicker` | Typed or calendar date / range picker |
+| `Dialog` | General modal (`open` model, body/footer slots) |
 | `Divider` | Horizontal / vertical rule |
 | `Field` | Labeled text input (`model` value) |
 | `Flex` | Full flexbox positioning |
 | `Grid` | CSS grid tracks for layout |
+| `Icon` | Stroke icon set (`name`, sizes, tones) |
 | `Progress` | Signal-driven progress bar |
+| `RadioGroup` | Single-choice list or cards |
 | `Select` | Searchable single / multi select |
 | `Spinner` | Loading indicator |
 | `Stack` | Simple flex gap helper |
 | `Switch` | Toggle control |
 | `Text` | Typography helper |
+| `Textarea` | Multiline field with count and resize |
 
 ## Theme tokens
 
@@ -102,7 +106,7 @@ yarn install
 yarn verify
 yarn build
 yarn test
-yarn playground:dev
+yarn docs:dev
 ```
 
 | Script | Purpose |
@@ -112,7 +116,6 @@ yarn playground:dev
 | `yarn test` | Vitest + happy-dom component tests |
 | `yarn docs:dev` | Documentation site (local) |
 | `yarn docs:build` | Build docs for GitHub Pages |
-| `yarn playground:dev` | Interactive component gallery (`http://localhost:5181`) |
 
 Live docs: [https://jacarejs.github.io/ui/](https://jacarejs.github.io/ui/)
 
@@ -125,13 +128,12 @@ src/
   theme.css          # design tokens
   internal/utils.js  # shared helpers
 dist/                # published ESM build
-playground/          # local gallery app
+docs/                # documentation site
 ```
 
 ## Related
 
 - [Documentation](https://jacarejs.github.io/ui/)
-- [Jacaré Devtools (Chrome)](https://chromewebstore.google.com/detail/jacar%C3%A9-devtools/cjemkcfolgmpfkpkpiklmkijalpfmkcm)
 - [Jacaré core](https://github.com/jacarejs/core)
 - [Showcase](https://jacarejs.github.io/core/showcase/)
 - [Lab](https://jacarejs.github.io/core/lab/)

@@ -1,0 +1,124 @@
+import { pulse } from '@jacare/core'
+import Field from '@jacare/ui/components/Field.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import TreeSelect from '@jacare/ui/components/TreeSelect.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/tree-select.js'
+
+const contract = getContract('TreeSelect')
+const navLinks = previousNext('/components/tree-select')
+
+const data = [
+  {
+    value: 'docs',
+    label: 'Docs',
+    children: [
+      { value: 'guide', label: 'Guide' },
+      { value: 'api', label: 'API' },
+    ],
+  },
+  {
+    value: 'components',
+    label: 'Components',
+    children: [
+      {
+        value: 'form',
+        label: 'Form',
+        children: [
+          { value: 'input', label: 'Input' },
+          { value: 'select', label: 'Select' },
+        ],
+      },
+      { value: 'feedback', label: 'Feedback' },
+    ],
+  },
+]
+
+const playLabel = pulse('Page')
+const playValue = pulse('')
+const playValueMultiple = pulse([])
+const playMultiple = pulse(false)
+const playClearable = pulse(true)
+const playDisabled = pulse(false)
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    label: playLabel(),
+    value: playMultiple() ? '' : playValue(),
+    multiple: playMultiple(),
+    clearable: playClearable(),
+    disabled: playDisabled(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>TreeSelect</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'TreeSelect'}
+      :description=${'Select a node from a nested tree. Pass data with children and bind value to a pulse (string or array when multiple).'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label'} bind-value=${playLabel} />
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Multiple'} bind-checked=${playMultiple} />
+            <Switch :label=${'Clearable'} bind-checked=${playClearable} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            #if playMultiple()
+              <TreeSelect
+                :label=${playLabel}
+                :data=${data}
+                :multiple=${true}
+                :clearable=${playClearable}
+                :disabled=${playDisabled}
+                bind-value=${playValueMultiple}
+              />
+            #else
+              <TreeSelect
+                :label=${playLabel}
+                :data=${data}
+                :clearable=${playClearable}
+                :disabled=${playDisabled}
+                bind-value=${playValue}
+              />
+            #end
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'tree-select-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'tree-select-basic.jcr'}>
+      <TreeSelect :label=${'Page'} :data=${data} bind-value=${playValue} />
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

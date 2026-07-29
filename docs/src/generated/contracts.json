@@ -39,6 +39,53 @@
       "dismiss"
     ]
   },
+  "Autocomplete": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "suggestions": {
+        "type": "any",
+        "required": true
+      },
+      "placeholder": {
+        "type": "string",
+        "default": "Search..."
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "clearable": {
+        "type": "boolean",
+        "default": true
+      },
+      "debounce": {
+        "type": "number",
+        "default": 150
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change",
+      "select"
+    ]
+  },
   "Avatar": {
     "props": {
       "name": {
@@ -196,6 +243,52 @@
     ],
     "emits": []
   },
+  "Cascader": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "any",
+        "model": true,
+        "default": null
+      },
+      "options": {
+        "type": "any",
+        "required": true
+      },
+      "placeholder": {
+        "type": "string",
+        "default": "Select"
+      },
+      "clearable": {
+        "type": "boolean",
+        "default": true
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "separator": {
+        "type": "string",
+        "default": "/"
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
   "Checkbox": {
     "props": {
       "label": {
@@ -250,6 +343,35 @@
       "size": {
         "type": "string",
         "default": "md"
+      },
+      "showInput": {
+        "type": "boolean",
+        "default": true
+      },
+      "presets": {
+        "type": "object",
+        "default": null
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "ColorPickerPanel": {
+    "props": {
+      "value": {
+        "type": "string",
+        "model": true
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "showAlpha": {
+        "type": "boolean",
+        "default": false
       },
       "showInput": {
         "type": "boolean",
@@ -359,6 +481,106 @@
       "change"
     ]
   },
+  "DatePickerPanel": {
+    "props": {
+      "value": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "min": {
+        "type": "string",
+        "default": ""
+      },
+      "max": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "border": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "DateTimePicker": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "min": {
+        "type": "string",
+        "default": ""
+      },
+      "max": {
+        "type": "string",
+        "default": ""
+      },
+      "clearable": {
+        "type": "boolean",
+        "default": true
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "required": {
+        "type": "boolean",
+        "default": false
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "Dialog": {
+    "props": {
+      "open": {
+        "type": "boolean",
+        "model": true,
+        "default": false
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "close"
+    ]
+  },
   "Divider": {
     "props": {
       "label": {
@@ -454,6 +676,52 @@
     ],
     "emits": []
   },
+  "Form": {
+    "props": {
+      "labelPosition": {
+        "type": "string",
+        "default": "top"
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "gap": {
+        "type": "string",
+        "default": "md"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "FormItem": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      },
+      "required": {
+        "type": "boolean",
+        "default": false
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
   "Grid": {
     "props": {
       "columns": {
@@ -483,6 +751,295 @@
     ],
     "emits": []
   },
+  "Icon": {
+    "props": {
+      "name": {
+        "type": "string",
+        "required": true
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "tone": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": []
+  },
+  "Input": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "type": {
+        "type": "string",
+        "default": "text"
+      },
+      "placeholder": {
+        "type": "string",
+        "default": ""
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "required": {
+        "type": "boolean",
+        "default": false
+      },
+      "clearable": {
+        "type": "boolean",
+        "default": false
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "autocomplete": {
+        "type": "string",
+        "default": ""
+      },
+      "maxLength": {
+        "type": "number",
+        "default": 0
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "prefix",
+      "suffix"
+    ],
+    "emits": [
+      "change",
+      "clear"
+    ]
+  },
+  "InputNumber": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "number",
+        "model": true,
+        "default": 0
+      },
+      "min": {
+        "type": "number",
+        "default": null
+      },
+      "max": {
+        "type": "number",
+        "default": null
+      },
+      "step": {
+        "type": "number",
+        "default": 1
+      },
+      "precision": {
+        "type": "number",
+        "default": null
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "controls": {
+        "type": "boolean",
+        "default": true
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "placeholder": {
+        "type": "string",
+        "default": ""
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      },
+      "required": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "InputOtp": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "length": {
+        "type": "number",
+        "default": 6
+      },
+      "mask": {
+        "type": "boolean",
+        "default": false
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change",
+      "finish"
+    ]
+  },
+  "InputTag": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "object",
+        "model": true,
+        "default": []
+      },
+      "placeholder": {
+        "type": "string",
+        "default": "Add a tag"
+      },
+      "max": {
+        "type": "number",
+        "default": null
+      },
+      "clearable": {
+        "type": "boolean",
+        "default": true
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "delimiter": {
+        "type": "string",
+        "default": "Enter"
+      },
+      "required": {
+        "type": "boolean",
+        "default": false
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change",
+      "add-tag",
+      "remove-tag"
+    ]
+  },
+  "Mention": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "options": {
+        "type": "any",
+        "required": true
+      },
+      "prefix": {
+        "type": "string",
+        "default": "@"
+      },
+      "placeholder": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change",
+      "select"
+    ]
+  },
   "Progress": {
     "props": {
       "value": {
@@ -509,6 +1066,121 @@
     "pulses": {},
     "slots": [],
     "emits": []
+  },
+  "Radio": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "any",
+        "required": true
+      },
+      "modelValue": {
+        "type": "any",
+        "model": true,
+        "default": null
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "change"
+    ]
+  },
+  "RadioGroup": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "any",
+        "model": true
+      },
+      "options": {
+        "type": "object",
+        "default": []
+      },
+      "layout": {
+        "type": "string",
+        "default": "list"
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "required": {
+        "type": "boolean",
+        "default": false
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "Rate": {
+    "props": {
+      "value": {
+        "type": "number",
+        "model": true,
+        "default": 0
+      },
+      "max": {
+        "type": "number",
+        "default": 5
+      },
+      "allowHalf": {
+        "type": "boolean",
+        "default": false
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "clearable": {
+        "type": "boolean",
+        "default": true
+      },
+      "showText": {
+        "type": "boolean",
+        "default": false
+      },
+      "texts": {
+        "type": "object",
+        "default": null
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
   },
   "Select": {
     "props": {
@@ -562,6 +1234,103 @@
     "slots": [],
     "emits": [
       "change"
+    ]
+  },
+  "SelectV2": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "any",
+        "model": true,
+        "default": ""
+      },
+      "options": {
+        "type": "any",
+        "required": true
+      },
+      "placeholder": {
+        "type": "string",
+        "default": "Select"
+      },
+      "searchPlaceholder": {
+        "type": "string",
+        "default": "Search..."
+      },
+      "searchable": {
+        "type": "boolean",
+        "default": true
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "height": {
+        "type": "number",
+        "default": 274
+      },
+      "itemSize": {
+        "type": "number",
+        "default": 44
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "Slider": {
+    "props": {
+      "value": {
+        "type": "any",
+        "model": true,
+        "default": 0
+      },
+      "min": {
+        "type": "number",
+        "default": 0
+      },
+      "max": {
+        "type": "number",
+        "default": 100
+      },
+      "step": {
+        "type": "number",
+        "default": 1
+      },
+      "range": {
+        "type": "boolean",
+        "default": false
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "showTooltip": {
+        "type": "boolean",
+        "default": false
+      },
+      "vertical": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change",
+      "input"
     ]
   },
   "Spinner": {
@@ -658,6 +1427,61 @@
     ],
     "emits": []
   },
+  "Textarea": {
+    "props": {
+      "label": {
+        "type": "string",
+        "required": true
+      },
+      "value": {
+        "type": "string",
+        "model": true
+      },
+      "placeholder": {
+        "type": "string",
+        "default": ""
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "required": {
+        "type": "boolean",
+        "default": false
+      },
+      "rows": {
+        "type": "number",
+        "default": 4
+      },
+      "maxLength": {
+        "type": "number",
+        "default": 0
+      },
+      "showCount": {
+        "type": "boolean",
+        "default": false
+      },
+      "resize": {
+        "type": "string",
+        "default": "vertical"
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": []
+  },
   "ThemeScope": {
     "props": {
       "mode": {
@@ -686,6 +1510,226 @@
     "slots": [],
     "emits": [
       "change"
+    ]
+  },
+  "TimePicker": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "placeholder": {
+        "type": "string",
+        "default": "Select time"
+      },
+      "clearable": {
+        "type": "boolean",
+        "default": true
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "arrowControl": {
+        "type": "boolean",
+        "default": false
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "TimeSelect": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "start": {
+        "type": "string",
+        "default": "09:00"
+      },
+      "end": {
+        "type": "string",
+        "default": "18:00"
+      },
+      "step": {
+        "type": "string",
+        "default": "00:30"
+      },
+      "placeholder": {
+        "type": "string",
+        "default": "Select time"
+      },
+      "clearable": {
+        "type": "boolean",
+        "default": true
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "Transfer": {
+    "props": {
+      "value": {
+        "type": "object",
+        "model": true,
+        "default": []
+      },
+      "data": {
+        "type": "object",
+        "required": true
+      },
+      "filterable": {
+        "type": "boolean",
+        "default": false
+      },
+      "titles": {
+        "type": "object",
+        "default": [
+          "Source",
+          "Target"
+        ]
+      },
+      "buttonTexts": {
+        "type": "object",
+        "default": [
+          "To right",
+          "To left"
+        ]
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "TreeSelect": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "any",
+        "model": true,
+        "default": ""
+      },
+      "data": {
+        "type": "object",
+        "required": true
+      },
+      "placeholder": {
+        "type": "string",
+        "default": "Select"
+      },
+      "clearable": {
+        "type": "boolean",
+        "default": true
+      },
+      "multiple": {
+        "type": "boolean",
+        "default": false
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "checkStrictly": {
+        "type": "boolean",
+        "default": false
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "Upload": {
+    "props": {
+      "value": {
+        "type": "object",
+        "model": true,
+        "default": []
+      },
+      "accept": {
+        "type": "string",
+        "default": ""
+      },
+      "multiple": {
+        "type": "boolean",
+        "default": false
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "listType": {
+        "type": "string",
+        "default": "text"
+      },
+      "drag": {
+        "type": "boolean",
+        "default": false
+      },
+      "limit": {
+        "type": "number",
+        "default": 0
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "change",
+      "remove",
+      "exceed"
     ]
   },
   "VisuallyHidden": {

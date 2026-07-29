@@ -1,0 +1,100 @@
+import { pulse } from '@jacare/core'
+import Field from '@jacare/ui/components/Field.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import TimeSelect from '@jacare/ui/components/TimeSelect.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/time-select.js'
+
+const contract = getContract('TimeSelect')
+const navLinks = previousNext('/components/time-select')
+
+const playLabel = pulse('Appointment')
+const playValue = pulse('09:30')
+const playStart = pulse('09:00')
+const playEnd = pulse('18:00')
+const playStep = pulse('00:30')
+const playClearable = pulse(true)
+const playDisabled = pulse(false)
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    label: playLabel(),
+    value: playValue(),
+    start: playStart(),
+    end: playEnd(),
+    step: playStep(),
+    clearable: playClearable(),
+    disabled: playDisabled(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>TimeSelect</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'TimeSelect'}
+      :description=${'Dropdown of discrete time slots between start and end, stepped by an HH:mm interval. Bind value as a string pulse.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label'} bind-value=${playLabel} />
+          <Field :label=${'Start'} bind-value=${playStart} />
+          <Field :label=${'End'} bind-value=${playEnd} />
+          <Field :label=${'Step'} bind-value=${playStep} />
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Clearable'} bind-checked=${playClearable} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <TimeSelect
+              :label=${playLabel}
+              :start=${playStart}
+              :end=${playEnd}
+              :step=${playStep}
+              :clearable=${playClearable}
+              :disabled=${playDisabled}
+              bind-value=${playValue}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'time-select-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'time-select-basic.jcr'}>
+      <TimeSelect
+        :label=${'Appointment'}
+        :start=${'09:00'}
+        :end=${'18:00'}
+        :step=${'00:30'}
+        bind-value=${playValue}
+      />
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -15,6 +15,23 @@
     ]
   },
   {
+    "title": "Autocomplete",
+    "section": "Components",
+    "href": "/components/autocomplete",
+    "keywords": [
+      "autocomplete",
+      "label",
+      "value",
+      "suggestions",
+      "placeholder",
+      "disabled",
+      "clearable",
+      "debounce",
+      "hint",
+      "error"
+    ]
+  },
+  {
     "title": "Avatar",
     "section": "Components",
     "href": "/components/avatar",
@@ -77,6 +94,23 @@
     ]
   },
   {
+    "title": "Cascader",
+    "section": "Components",
+    "href": "/components/cascader",
+    "keywords": [
+      "cascader",
+      "label",
+      "value",
+      "options",
+      "placeholder",
+      "clearable",
+      "disabled",
+      "separator",
+      "hint",
+      "error"
+    ]
+  },
+  {
     "title": "Checkbox",
     "section": "Components",
     "href": "/components/checkbox",
@@ -101,6 +135,19 @@
       "error",
       "disabled",
       "size",
+      "showInput",
+      "presets"
+    ]
+  },
+  {
+    "title": "ColorPickerPanel",
+    "section": "Components",
+    "href": "/components/color-picker-panel",
+    "keywords": [
+      "colorpickerpanel",
+      "value",
+      "disabled",
+      "showAlpha",
       "showInput",
       "presets"
     ]
@@ -137,6 +184,47 @@
       "required",
       "disabled",
       "error"
+    ]
+  },
+  {
+    "title": "DatePickerPanel",
+    "section": "Components",
+    "href": "/components/date-picker-panel",
+    "keywords": [
+      "datepickerpanel",
+      "value",
+      "min",
+      "max",
+      "disabled",
+      "border"
+    ]
+  },
+  {
+    "title": "DateTimePicker",
+    "section": "Components",
+    "href": "/components/date-time-picker",
+    "keywords": [
+      "datetimepicker",
+      "label",
+      "value",
+      "min",
+      "max",
+      "clearable",
+      "disabled",
+      "required",
+      "hint",
+      "error"
+    ]
+  },
+  {
+    "title": "Dialog",
+    "section": "Components",
+    "href": "/components/dialog",
+    "keywords": [
+      "dialog",
+      "open",
+      "title",
+      "size"
     ]
   },
   {
@@ -182,6 +270,29 @@
     ]
   },
   {
+    "title": "Form",
+    "section": "Components",
+    "href": "/components/form",
+    "keywords": [
+      "form",
+      "labelPosition",
+      "disabled",
+      "gap"
+    ]
+  },
+  {
+    "title": "FormItem",
+    "section": "Components",
+    "href": "/components/form-item",
+    "keywords": [
+      "formitem",
+      "label",
+      "error",
+      "required",
+      "hint"
+    ]
+  },
+  {
     "title": "Grid",
     "section": "Components",
     "href": "/components/grid",
@@ -195,6 +306,110 @@
     ]
   },
   {
+    "title": "Icon",
+    "section": "Components",
+    "href": "/components/icon",
+    "keywords": [
+      "icon",
+      "name",
+      "size",
+      "label",
+      "tone"
+    ]
+  },
+  {
+    "title": "Input",
+    "section": "Components",
+    "href": "/components/input",
+    "keywords": [
+      "input",
+      "label",
+      "value",
+      "type",
+      "placeholder",
+      "hint",
+      "error",
+      "disabled",
+      "required",
+      "clearable",
+      "size",
+      "name",
+      "autocomplete",
+      "maxLength"
+    ]
+  },
+  {
+    "title": "InputNumber",
+    "section": "Components",
+    "href": "/components/input-number",
+    "keywords": [
+      "inputnumber",
+      "label",
+      "value",
+      "min",
+      "max",
+      "step",
+      "precision",
+      "disabled",
+      "controls",
+      "size",
+      "placeholder",
+      "hint",
+      "error",
+      "required"
+    ]
+  },
+  {
+    "title": "InputOtp",
+    "section": "Components",
+    "href": "/components/input-otp",
+    "keywords": [
+      "inputotp",
+      "label",
+      "value",
+      "length",
+      "mask",
+      "disabled",
+      "size",
+      "hint",
+      "error"
+    ]
+  },
+  {
+    "title": "InputTag",
+    "section": "Components",
+    "href": "/components/input-tag",
+    "keywords": [
+      "inputtag",
+      "label",
+      "value",
+      "placeholder",
+      "max",
+      "clearable",
+      "disabled",
+      "delimiter",
+      "required",
+      "hint",
+      "error"
+    ]
+  },
+  {
+    "title": "Mention",
+    "section": "Components",
+    "href": "/components/mention",
+    "keywords": [
+      "mention",
+      "label",
+      "value",
+      "options",
+      "prefix",
+      "placeholder",
+      "disabled",
+      "hint",
+      "error"
+    ]
+  },
+  {
     "title": "Progress",
     "section": "Components",
     "href": "/components/progress",
@@ -205,6 +420,51 @@
       "label",
       "showValue",
       "tone"
+    ]
+  },
+  {
+    "title": "Radio",
+    "section": "Components",
+    "href": "/components/radio",
+    "keywords": [
+      "radio",
+      "label",
+      "value",
+      "modelValue",
+      "name",
+      "disabled"
+    ]
+  },
+  {
+    "title": "RadioGroup",
+    "section": "Components",
+    "href": "/components/radio-group",
+    "keywords": [
+      "radiogroup",
+      "label",
+      "value",
+      "options",
+      "layout",
+      "name",
+      "disabled",
+      "required",
+      "hint",
+      "error"
+    ]
+  },
+  {
+    "title": "Rate",
+    "section": "Components",
+    "href": "/components/rate",
+    "keywords": [
+      "rate",
+      "value",
+      "max",
+      "allowHalf",
+      "disabled",
+      "clearable",
+      "showText",
+      "texts"
     ]
   },
   {
@@ -224,6 +484,41 @@
       "error",
       "disabled",
       "hint"
+    ]
+  },
+  {
+    "title": "SelectV2",
+    "section": "Components",
+    "href": "/components/select-v2",
+    "keywords": [
+      "selectv2",
+      "label",
+      "value",
+      "options",
+      "placeholder",
+      "searchPlaceholder",
+      "searchable",
+      "disabled",
+      "error",
+      "hint",
+      "height",
+      "itemSize"
+    ]
+  },
+  {
+    "title": "Slider",
+    "section": "Components",
+    "href": "/components/slider",
+    "keywords": [
+      "slider",
+      "value",
+      "min",
+      "max",
+      "step",
+      "range",
+      "disabled",
+      "showTooltip",
+      "vertical"
     ]
   },
   {
@@ -274,6 +569,26 @@
     ]
   },
   {
+    "title": "Textarea",
+    "section": "Components",
+    "href": "/components/textarea",
+    "keywords": [
+      "textarea",
+      "label",
+      "value",
+      "placeholder",
+      "hint",
+      "error",
+      "disabled",
+      "required",
+      "rows",
+      "maxLength",
+      "showCount",
+      "resize",
+      "name"
+    ]
+  },
+  {
     "title": "ThemeScope",
     "section": "Components",
     "href": "/components/theme-scope",
@@ -290,6 +605,86 @@
       "themetoggle",
       "mode",
       "labels"
+    ]
+  },
+  {
+    "title": "TimePicker",
+    "section": "Components",
+    "href": "/components/time-picker",
+    "keywords": [
+      "timepicker",
+      "label",
+      "value",
+      "placeholder",
+      "clearable",
+      "disabled",
+      "arrowControl",
+      "hint",
+      "error"
+    ]
+  },
+  {
+    "title": "TimeSelect",
+    "section": "Components",
+    "href": "/components/time-select",
+    "keywords": [
+      "timeselect",
+      "label",
+      "value",
+      "start",
+      "end",
+      "step",
+      "placeholder",
+      "clearable",
+      "disabled",
+      "hint",
+      "error"
+    ]
+  },
+  {
+    "title": "Transfer",
+    "section": "Components",
+    "href": "/components/transfer",
+    "keywords": [
+      "transfer",
+      "value",
+      "data",
+      "filterable",
+      "titles",
+      "buttonTexts",
+      "disabled"
+    ]
+  },
+  {
+    "title": "TreeSelect",
+    "section": "Components",
+    "href": "/components/tree-select",
+    "keywords": [
+      "treeselect",
+      "label",
+      "value",
+      "data",
+      "placeholder",
+      "clearable",
+      "multiple",
+      "disabled",
+      "checkStrictly",
+      "error"
+    ]
+  },
+  {
+    "title": "Upload",
+    "section": "Components",
+    "href": "/components/upload",
+    "keywords": [
+      "upload",
+      "value",
+      "accept",
+      "multiple",
+      "disabled",
+      "listType",
+      "drag",
+      "limit"
     ]
   },
   {

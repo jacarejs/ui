@@ -1,0 +1,78 @@
+import { pulse } from '@jacare/core'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Radio from '@jacare/ui/components/Radio.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/radio.js'
+
+const contract = getContract('Radio')
+const navLinks = previousNext('/components/radio')
+
+const playValue = pulse('pro')
+const playDisabled = pulse(false)
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    value: playValue(),
+    disabled: playDisabled(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Radio</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'Radio'}
+      :description=${'Single radio option. Share bind-modelValue across radios with the same name and different :value props.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+              <Radio :label=${'Free'} :value=${'free'} :name=${'plan-play'} :disabled=${playDisabled} bind-modelValue=${playValue} />
+              <Radio :label=${'Pro'} :value=${'pro'} :name=${'plan-play'} :disabled=${playDisabled} bind-modelValue=${playValue} />
+              <Radio :label=${'Team'} :value=${'team'} :name=${'plan-play'} :disabled=${playDisabled} bind-modelValue=${playValue} />
+            </Stack>
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'radio-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'radio-basic.jcr'}>
+      <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+        <Radio :label=${'Free'} :value=${'free'} :name=${'plan'} bind-modelValue=${playValue} />
+        <Radio :label=${'Pro'} :value=${'pro'} :name=${'plan'} bind-modelValue=${playValue} />
+        <Radio :label=${'Team'} :value=${'team'} :name=${'plan'} bind-modelValue=${playValue} />
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

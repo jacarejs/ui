@@ -1,0 +1,113 @@
+import { pulse } from '@jacare/core'
+import Field from '@jacare/ui/components/Field.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Slider from '@jacare/ui/components/Slider.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/slider.js'
+
+const contract = getContract('Slider')
+const navLinks = previousNext('/components/slider')
+
+const playSingle = pulse(40)
+const playRangeValue = pulse([20, 60])
+const playMin = pulse('0')
+const playMax = pulse('100')
+const playStep = pulse('1')
+const playRange = pulse(false)
+const playShowTooltip = pulse(true)
+const playVertical = pulse(false)
+const playDisabled = pulse(false)
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    range: playRange(),
+    value: playSingle(),
+    lo: playRangeValue()[0],
+    hi: playRangeValue()[1],
+    min: playMin(),
+    max: playMax(),
+    step: playStep(),
+    showTooltip: playShowTooltip(),
+    vertical: playVertical(),
+    disabled: playDisabled(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Slider</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'Slider'}
+      :description=${'Single or range value slider built on native range inputs, with an optional value tooltip.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Min'} :type=${'number'} bind-value=${playMin} />
+          <Field :label=${'Max'} :type=${'number'} bind-value=${playMax} />
+          <Field :label=${'Step'} :type=${'number'} bind-value=${playStep} />
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Range'} bind-checked=${playRange} />
+            <Switch :label=${'Tooltip'} bind-checked=${playShowTooltip} />
+            <Switch :label=${'Vertical'} bind-checked=${playVertical} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            #if playRange()
+              <Slider
+                :min=${() => Number(playMin()) || 0}
+                :max=${() => Number(playMax()) || 100}
+                :step=${() => Number(playStep()) || 1}
+                :range=${true}
+                :showTooltip=${playShowTooltip}
+                :vertical=${playVertical}
+                :disabled=${playDisabled}
+                bind-value=${playRangeValue}
+              />
+            #else
+              <Slider
+                :min=${() => Number(playMin()) || 0}
+                :max=${() => Number(playMax()) || 100}
+                :step=${() => Number(playStep()) || 1}
+                :showTooltip=${playShowTooltip}
+                :vertical=${playVertical}
+                :disabled=${playDisabled}
+                bind-value=${playSingle}
+              />
+            #end
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'slider-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'slider-basic.jcr'}>
+      <Slider :min=${0} :max=${100} bind-value=${playSingle} />
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -1,0 +1,89 @@
+import { pulse } from '@jacare/core'
+import Field from '@jacare/ui/components/Field.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Upload from '@jacare/ui/components/Upload.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/upload.js'
+
+const contract = getContract('Upload')
+const navLinks = previousNext('/components/upload')
+
+const playFiles = pulse([])
+const playMultiple = pulse(true)
+const playDrag = pulse(false)
+const playDisabled = pulse(false)
+const playLimit = pulse('0')
+const playAccept = pulse('')
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    multiple: playMultiple(),
+    drag: playDrag(),
+    disabled: playDisabled(),
+    limit: Number(playLimit()) || 0,
+    accept: playAccept(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Upload</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'Upload'}
+      :description=${'File picker that binds a pulse of file records. Supports multiple files, drag-and-drop, accept filters, and a max limit.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Accept'} :hint=${'e.g. image/*'} bind-value=${playAccept} />
+          <Field :label=${'Limit'} :type=${'number'} :hint=${'0 = unlimited'} bind-value=${playLimit} />
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Multiple'} bind-checked=${playMultiple} />
+            <Switch :label=${'Drag'} bind-checked=${playDrag} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <Upload
+              :multiple=${playMultiple}
+              :drag=${playDrag}
+              :disabled=${playDisabled}
+              :accept=${playAccept}
+              :limit=${() => Number(playLimit()) || 0}
+              bind-value=${playFiles}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'upload-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'upload-basic.jcr'}>
+      <Upload bind-value=${playFiles} />
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

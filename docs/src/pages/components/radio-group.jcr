@@ -1,0 +1,133 @@
+import { pulse } from '@jacare/core'
+import Field from '@jacare/ui/components/Field.jcr'
+import RadioGroup from '@jacare/ui/components/RadioGroup.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  cards,
+  playgroundCode as buildPlaygroundCode,
+  states,
+} from '../../examples/radio-group.js'
+
+const contract = getContract('RadioGroup')
+const navLinks = previousNext('/components/radio-group')
+
+const planOptions = [
+  { value: 'free', label: 'Free', description: 'For trying things out' },
+  { value: 'pro', label: 'Pro', description: 'For daily product work' },
+  { value: 'team', label: 'Team', description: 'For growing squads' },
+]
+
+const playLabel = pulse('Plan')
+const playValue = pulse('pro')
+const playHint = pulse('You can change this later')
+const playError = pulse('')
+const playRequired = pulse(false)
+const playDisabled = pulse(false)
+const playCards = pulse(false)
+
+const a11y = [
+  'Fieldset + legend provide the group name for assistive technologies',
+  'Each option is a native radio input with visible focus on the control',
+  'required and aria-invalid surface validation state on the radios',
+  'disabled dims the whole group and blocks pointer interaction',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    label: playLabel(),
+    value: playValue(),
+    layout: playCards() ? 'cards' : 'list',
+    required: playRequired(),
+    disabled: playDisabled(),
+    error: playError(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>RadioGroup</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'RadioGroup'}
+      :description=${'Single-choice group with list or card layouts. Bind value to a pulse and pass string or described options.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label'} bind-value=${playLabel} />
+          <Field :label=${'Hint'} bind-value=${playHint} />
+          <Field :label=${'Error'} :hint=${'Leave empty for a valid group'} bind-value=${playError} />
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Cards'} bind-checked=${playCards} />
+            <Switch :label=${'Required'} bind-checked=${playRequired} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <RadioGroup
+              :label=${playLabel}
+              :options=${planOptions}
+              :layout=${() => (playCards() ? 'cards' : 'list')}
+              :required=${playRequired}
+              :disabled=${playDisabled}
+              :hint=${playHint}
+              :error=${playError}
+              bind-value=${playValue}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'radio-group-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'radio-group-basic.jcr'} :layout=${'stack'}>
+      <RadioGroup :label=${'Plan'} :options=${planOptions} bind-value=${playValue} />
+    </Demo>
+
+    <DocsSection :id=${'cards'} :title=${'Card layout'}>
+      <Demo :id=${'cards-demo'} :title=${'Selectable cards'} :code=${cards} :filename=${'radio-group-cards.jcr'} :layout=${'bleed'}>
+        <RadioGroup :label=${'Plan'} :layout=${'cards'} :options=${planOptions} bind-value=${playValue} />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'states'} :title=${'States'}>
+      <Demo :id=${'radio-states'} :title=${'Required, error, and disabled'} :code=${states} :filename=${'radio-group-states.jcr'} :layout=${'stack'}>
+        <Stack :gap=${'md'}>
+          <RadioGroup :label=${'Required'} :required=${true} :options=${['One', 'Two']} bind-value=${playValue} />
+          <RadioGroup :label=${'Plan'} :error=${'Choose a plan to continue'} :options=${['free', 'pro']} bind-value=${playError} />
+          <RadioGroup :label=${'Locked'} :disabled=${true} :options=${['free', 'pro']} bind-value=${playValue} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

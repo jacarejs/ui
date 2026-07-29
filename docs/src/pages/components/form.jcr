@@ -1,0 +1,95 @@
+import { pulse } from '@jacare/core'
+import Field from '@jacare/ui/components/Field.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Form from '@jacare/ui/components/Form.jcr'
+import FormItem from '@jacare/ui/components/FormItem.jcr'
+import Input from '@jacare/ui/components/Input.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/form.js'
+
+const contract = getContract('Form')
+const navLinks = previousNext('/components/form')
+
+const playLabelPosition = pulse('top')
+const playDisabled = pulse(false)
+const playGap = pulse('md')
+const playName = pulse('')
+const playEmail = pulse('')
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    labelPosition: playLabelPosition(),
+    disabled: playDisabled(),
+    gap: playGap(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Form</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'Form'}
+      :description=${'Layout wrapper for form fields. Disables descendant controls natively and switches FormItem label position.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label position'} :hint=${'top or left'} bind-value=${playLabelPosition} />
+          <Field :label=${'Gap'} :hint=${'sm, md, or lg'} bind-value=${playGap} />
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <Form :labelPosition=${playLabelPosition} :disabled=${playDisabled} :gap=${playGap}>
+              <FormItem :label=${'Name'} :required=${true}>
+                <Input bind-value=${playName} />
+              </FormItem>
+              <FormItem :label=${'Email'} :hint=${'We will never share your email'}>
+                <Input :type=${'email'} bind-value=${playEmail} />
+              </FormItem>
+            </Form>
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'form-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'form-basic.jcr'} :layout=${'stack'}>
+      <div style="width:min(28rem,100%)">
+        <Form>
+          <FormItem :label=${'Name'} :required=${true}>
+            <Input bind-value=${playName} />
+          </FormItem>
+          <FormItem :label=${'Email'} :hint=${'We will never share your email'}>
+            <Input :type=${'email'} bind-value=${playEmail} />
+          </FormItem>
+        </Form>
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -1,0 +1,200 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Icon from '@jacare/ui/components/Icon.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  gallery,
+  playgroundCode as buildPlaygroundCode,
+  sizes,
+  tones,
+} from '../../examples/icon.js'
+
+const contract = getContract('Icon')
+const navLinks = previousNext('/components/icon')
+
+const iconNames = [
+  'check',
+  'close',
+  'chevron-down',
+  'chevron-right',
+  'search',
+  'calendar',
+  'alert',
+  'info',
+  'user',
+  'external-link',
+  'plus',
+  'minus',
+  'menu',
+]
+
+const playName = pulse('check')
+const playSize = pulse('md')
+const playTone = pulse('primary')
+const playLabel = pulse('Done')
+const sizeOptions = ['sm', 'md', 'lg']
+const toneOptions = ['', 'muted', 'primary', 'danger', 'success', 'warn', 'info']
+
+const a11y = [
+  'Pass label to expose role="img" and an accessible name for meaningful icons',
+  'Decorative icons omit label and set aria-hidden so assistive tech skips them',
+  'Icons use currentColor so they inherit contrast from surrounding text tokens',
+]
+
+function setName(next) {
+  playName.set(next)
+}
+
+function setSize(next) {
+  playSize.set(next)
+}
+
+function setTone(next) {
+  playTone.set(next)
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    name: playName(),
+    size: playSize(),
+    tone: playTone(),
+    label: playLabel(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Icon</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Foundations'}
+      :title=${'Icon'}
+      :description=${'Canopy stroke glyphs — geometric like Syne, square caps, currentColor, three sizes, optional labels. Unknown names fall back to info.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label'} bind-value=${playLabel} />
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Name</span>
+            <div class="docs-hero-actions">
+              #for iconNames as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playName() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setName(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Size</span>
+            <div class="docs-hero-actions">
+              #for sizeOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playSize() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setSize(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Tone</span>
+            <div class="docs-hero-actions">
+              #for toneOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playTone() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setTone(option)}
+                >${() => option || 'inherit'}</Button>
+              #end
+            </div>
+          </div>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel" style="display:grid;place-items:center;min-height:8rem">
+            <Icon :name=${playName} :size=${playSize} :tone=${playTone} :label=${playLabel} />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'icon-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'icon-basic.jcr'}>
+      <Icon :name=${'check'} :label=${'Done'} :tone=${'success'} :size=${'lg'} />
+    </Demo>
+
+    <DocsSection :id=${'sizes'} :title=${'Sizes'}>
+      <Demo :id=${'all-sizes'} :title=${'Small, medium, and large'} :code=${sizes} :filename=${'icon-sizes.jcr'}>
+        <Stack :direction=${'row'} :gap=${'md'} :align=${'center'}>
+          <Icon :name=${'search'} :size=${'sm'} :label=${'Search small'} />
+          <Icon :name=${'search'} :size=${'md'} :label=${'Search'} />
+          <Icon :name=${'search'} :size=${'lg'} :label=${'Search large'} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'tones'} :title=${'Tones'}>
+      <Demo :id=${'all-tones'} :title=${'Semantic colors'} :code=${tones} :filename=${'icon-tones.jcr'}>
+        <Stack :direction=${'row'} :gap=${'md'} :align=${'center'}>
+          <Icon :name=${'info'} :tone=${'info'} :label=${'Info'} />
+          <Icon :name=${'check'} :tone=${'success'} :label=${'Success'} />
+          <Icon :name=${'alert'} :tone=${'warn'} :label=${'Warn'} />
+          <Icon :name=${'close'} :tone=${'danger'} :label=${'Danger'} />
+          <Icon :name=${'user'} :tone=${'muted'} :label=${'User'} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'gallery'} :title=${'Icon set'}>
+      <Demo
+        :id=${'all-icons'}
+        :title=${'Canopy glyphs'}
+        :lead=${'Geometric stroke set aligned to Syne — square caps, 24×24 grid, currentColor.'}
+        :code=${gallery}
+        :filename=${'icon-gallery.jcr'}
+      >
+        <div class="docs-icon-gallery">
+          #for iconNames as name
+            <div class="docs-icon-tile">
+              <Icon :name=${name} :size=${'lg'} :label=${name} />
+              <span class="docs-icon-tile__name">${name}</span>
+            </div>
+          #end
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

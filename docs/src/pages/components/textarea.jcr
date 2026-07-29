@@ -1,0 +1,166 @@
+import { pulse } from '@jacare/core'
+import Field from '@jacare/ui/components/Field.jcr'
+import Textarea from '@jacare/ui/components/Textarea.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  count,
+  playgroundCode as buildPlaygroundCode,
+  resize,
+  states,
+} from '../../examples/textarea.js'
+
+const contract = getContract('Textarea')
+const navLinks = previousNext('/components/textarea')
+
+const playLabel = pulse('Biography')
+const playValue = pulse('')
+const playDisabledValue = pulse('Locked notes')
+const playPlaceholder = pulse('A short intro')
+const playHint = pulse('Shown on your public profile')
+const playError = pulse('')
+const playRequired = pulse(false)
+const playDisabled = pulse(false)
+const playShowCount = pulse(true)
+const playRows = pulse('4')
+const playMaxLength = pulse('280')
+const playResize = pulse('vertical')
+
+const a11y = [
+  'Label wraps the native textarea so the accessible name stays associated',
+  'error sets aria-invalid and surfaces validation copy with role="alert"',
+  'required marks the control and shows a visual asterisk',
+  'maxLength uses the native maxlength attribute when greater than zero',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    label: playLabel(),
+    value: playValue(),
+    placeholder: playPlaceholder(),
+    hint: playHint(),
+    error: playError(),
+    required: playRequired(),
+    disabled: playDisabled(),
+    showCount: playShowCount(),
+    rows: Number(playRows()) || 4,
+    maxLength: Number(playMaxLength()) || 0,
+    resize: playResize(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Textarea</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'Textarea'}
+      :description=${'Multiline field with hint, error, optional character count, and resize control. Bind value to a pulse like Field.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label'} bind-value=${playLabel} />
+          <Field :label=${'Placeholder'} bind-value=${playPlaceholder} />
+          <Field :label=${'Hint'} bind-value=${playHint} />
+          <Field :label=${'Error'} :hint=${'Leave empty for a valid field'} bind-value=${playError} />
+          <Field :label=${'Rows'} :type=${'number'} bind-value=${playRows} />
+          <Field :label=${'Max length'} :type=${'number'} :hint=${'0 disables the limit'} bind-value=${playMaxLength} />
+          <Field :label=${'Resize'} :hint=${'none, vertical, horizontal, or both'} bind-value=${playResize} />
+
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Required'} bind-checked=${playRequired} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+            <Switch :label=${'Show count'} bind-checked=${playShowCount} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <Textarea
+              :label=${playLabel}
+              :placeholder=${playPlaceholder}
+              :hint=${playHint}
+              :error=${playError}
+              :required=${playRequired}
+              :disabled=${playDisabled}
+              :showCount=${playShowCount}
+              :rows=${() => Number(playRows()) || 4}
+              :maxLength=${() => Number(playMaxLength()) || 0}
+              :resize=${playResize}
+              bind-value=${playValue}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'textarea-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'textarea-basic.jcr'} :layout=${'stack'}>
+      <div style="width:min(28rem,100%)">
+        <Textarea :label=${'Biography'} :placeholder=${'A short intro'} bind-value=${playValue} />
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'count'} :title=${'Character count'}>
+      <Demo :id=${'count-demo'} :title=${'Max length with counter'} :code=${count} :filename=${'textarea-count.jcr'} :layout=${'bleed'}>
+        <div style="width:min(28rem,100%)">
+          <Textarea
+            :label=${'Bio'}
+            :maxLength=${280}
+            :showCount=${true}
+            :hint=${'Keep it short'}
+            bind-value=${playValue}
+          />
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'resize'} :title=${'Resize'}>
+      <Demo :id=${'resize-demo'} :title=${'Fixed height'} :code=${resize} :filename=${'textarea-resize.jcr'} :layout=${'rail'}>
+        <div style="width:min(28rem,100%)">
+          <Textarea :label=${'Fixed height'} :resize=${'none'} :rows=${5} bind-value=${playValue} />
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'states'} :title=${'States'}>
+      <Demo :id=${'textarea-states'} :title=${'Required, error, and disabled'} :code=${states} :filename=${'textarea-states.jcr'} :layout=${'stack'}>
+        <div style="width:min(28rem,100%)">
+          <Stack :gap=${'md'}>
+            <Textarea :label=${'Required'} :required=${true} bind-value=${playValue} />
+            <Textarea :label=${'Notes'} :error=${'Add more detail'} bind-value=${playError} />
+            <Textarea :label=${'Locked'} :disabled=${true} bind-value=${playDisabledValue} />
+          </Stack>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

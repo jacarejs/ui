@@ -1,0 +1,90 @@
+import { pulse } from '@jacare/core'
+import Field from '@jacare/ui/components/Field.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import DateTimePicker from '@jacare/ui/components/DateTimePicker.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/date-time-picker.js'
+
+const contract = getContract('DateTimePicker')
+const navLinks = previousNext('/components/date-time-picker')
+
+const playLabel = pulse('Schedule')
+const playValue = pulse('')
+const playClearable = pulse(true)
+const playRequired = pulse(false)
+const playDisabled = pulse(false)
+const playError = pulse('')
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    label: playLabel(),
+    value: playValue(),
+    clearable: playClearable(),
+    required: playRequired(),
+    disabled: playDisabled(),
+    error: playError(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>DateTimePicker</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'DateTimePicker'}
+      :description=${'Combined date and time inputs that bind a single YYYY-MM-DDTHH:mm string pulse.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label'} bind-value=${playLabel} />
+          <Field :label=${'Error'} :hint=${'Leave empty for a valid value'} bind-value=${playError} />
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Clearable'} bind-checked=${playClearable} />
+            <Switch :label=${'Required'} bind-checked=${playRequired} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <DateTimePicker
+              :label=${playLabel}
+              :clearable=${playClearable}
+              :required=${playRequired}
+              :disabled=${playDisabled}
+              :error=${playError}
+              bind-value=${playValue}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'date-time-picker-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'date-time-picker-basic.jcr'}>
+      <DateTimePicker :label=${'Schedule'} bind-value=${playValue} />
+    </Demo>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>
