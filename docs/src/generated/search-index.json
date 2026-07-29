@@ -106,6 +106,21 @@
     ]
   },
   {
+    "title": "Confirm",
+    "section": "Components",
+    "href": "/components/confirm",
+    "keywords": [
+      "confirm",
+      "open",
+      "title",
+      "message",
+      "confirmLabel",
+      "cancelLabel",
+      "danger",
+      "busy"
+    ]
+  },
+  {
     "title": "DatePicker",
     "section": "Components",
     "href": "/components/date-picker",

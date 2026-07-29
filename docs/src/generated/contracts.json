@@ -266,6 +266,45 @@
       "change"
     ]
   },
+  "Confirm": {
+    "props": {
+      "open": {
+        "type": "boolean",
+        "model": true,
+        "default": false
+      },
+      "title": {
+        "type": "string",
+        "default": "Confirm"
+      },
+      "message": {
+        "type": "string",
+        "default": ""
+      },
+      "confirmLabel": {
+        "type": "string",
+        "default": "Confirm"
+      },
+      "cancelLabel": {
+        "type": "string",
+        "default": "Cancel"
+      },
+      "danger": {
+        "type": "boolean",
+        "default": false
+      },
+      "busy": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "confirm",
+      "cancel"
+    ]
+  },
   "DatePicker": {
     "props": {
       "label": {

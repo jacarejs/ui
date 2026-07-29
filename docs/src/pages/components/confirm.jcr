@@ -1,0 +1,166 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Confirm from '@jacare/ui/components/Confirm.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  busy,
+  neutral,
+  playgroundCode as buildPlaygroundCode,
+} from '../../examples/confirm.js'
+
+const contract = getContract('Confirm')
+const navLinks = previousNext('/components/confirm')
+
+const playOpen = pulse(false)
+const playTitle = pulse('Delete item')
+const playMessage = pulse('This cannot be undone.')
+const playConfirmLabel = pulse('Delete')
+const playCancelLabel = pulse('Cancel')
+const playDanger = pulse(true)
+const playBusy = pulse(false)
+
+const a11y = [
+  'Dialog renders only while open, keeping inert content out of the accessibility tree',
+  'Escape and backdrop click emit cancel unless busy is true',
+  'Confirm and cancel buttons are disabled while busy and announce waiting copy',
+  'Danger mode styles the confirm action for destructive flows without changing keyboard order',
+]
+
+function handleConfirmDemo() {
+  playBusy.set(true)
+  setTimeout(() => {
+    playBusy.set(false)
+    playOpen.set(false)
+  }, 900)
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    open: playOpen(),
+    title: playTitle(),
+    message: playMessage(),
+    confirmLabel: playConfirmLabel(),
+    cancelLabel: playCancelLabel(),
+    danger: playDanger(),
+    busy: playBusy(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Confirm</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Overlay'}
+      :title=${'Confirm'}
+      :description=${'Modal confirmation with danger and busy states. Bind open to a pulse and listen for confirm or cancel.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Title'} bind-value=${playTitle} />
+          <Field :label=${'Message'} bind-value=${playMessage} />
+          <Field :label=${'Confirm label'} bind-value=${playConfirmLabel} />
+          <Field :label=${'Cancel label'} bind-value=${playCancelLabel} />
+
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Danger'} bind-checked=${playDanger} />
+            <Switch :label=${'Busy'} bind-checked=${playBusy} />
+            <Switch :label=${'Open'} bind-checked=${playOpen} />
+          </Stack>
+
+          <Button :variant=${'primary'} on-press=${() => playOpen.set(true)}>Open dialog</Button>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <p class="docs-lead" style="margin:0">Toggle Open or use the button. The dialog mounts above the page.</p>
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'confirm-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+
+      <Confirm
+        bind-open=${playOpen}
+        :title=${playTitle}
+        :message=${playMessage}
+        :confirmLabel=${playConfirmLabel}
+        :cancelLabel=${playCancelLabel}
+        :danger=${playDanger}
+        :busy=${playBusy}
+        on-confirm=${() => playOpen.set(false)}
+        on-cancel=${() => playOpen.set(false)}
+      />
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Destructive confirm'} :code=${basic} :filename=${'confirm-basic.jcr'} :layout=${'stack'}>
+      <Button :variant=${'danger'} on-press=${() => playOpen.set(true)}>Delete</Button>
+      <Confirm
+        bind-open=${playOpen}
+        :title=${'Delete item'}
+        :message=${'This cannot be undone.'}
+        :danger=${true}
+        :confirmLabel=${'Delete'}
+        on-confirm=${() => playOpen.set(false)}
+        on-cancel=${() => playOpen.set(false)}
+      />
+    </Demo>
+
+    <DocsSection :id=${'neutral'} :title=${'Neutral confirm'}>
+      <Demo :id=${'neutral-demo'} :title=${'Leave page'} :code=${neutral} :filename=${'confirm-neutral.jcr'} :layout=${'bleed'}>
+        <Button on-press=${() => playOpen.set(true)}>Leave page</Button>
+        <Confirm
+          bind-open=${playOpen}
+          :title=${'Leave without saving?'}
+          :message=${'Unsaved changes will be lost.'}
+          :danger=${false}
+          on-confirm=${() => playOpen.set(false)}
+          on-cancel=${() => playOpen.set(false)}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'busy'} :title=${'Busy state'}>
+      <Demo :id=${'busy-demo'} :title=${'Async confirm'} :code=${busy} :filename=${'confirm-busy.jcr'} :layout=${'stack'}>
+        <Button :variant=${'danger'} on-press=${() => playOpen.set(true)}>Delete</Button>
+        <Confirm
+          bind-open=${playOpen}
+          :title=${'Delete item'}
+          :message=${'Working…'}
+          :danger=${true}
+          :busy=${playBusy}
+          on-confirm=${handleConfirmDemo}
+          on-cancel=${() => playOpen.set(false)}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -20,6 +20,7 @@ export <view>
         <li><code>Grid</code> — CSS grid tracks (<code>1</code>–<code>12</code>, <code>auto</code>) with dense packing</li>
         <li><code>Select</code> — searchable single/multi dropdown with string or tagged options</li>
         <li><code>DatePicker</code> — typed or calendar date input with range and bounds support</li>
+        <li><code>Confirm</code> — modal confirmation dialog with danger and busy states</li>
         <li>Layouts docs — shell, sidebar, split, gallery, and toolbar recipes using canopy tokens</li>
         <li>Docs fixes for Pages mounts, logo base path, CodeBlock spacing/copy state, and <code>boot.js</code> filenames</li>
       </ul>

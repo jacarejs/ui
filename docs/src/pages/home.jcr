@@ -42,7 +42,7 @@ export <view>
     <section class="docs-panel" style="padding:1.25rem">
       <h2 class="docs-section-title" style="margin-top:0">In 0.1.0</h2>
       <ul class="docs-checklist">
-        <li>21 primitives with playgrounds, demos, and accessibility notes</li>
+        <li>22 primitives with playgrounds, demos, and accessibility notes</li>
         <li>Theme Editor for live token drafts and CSS export</li>
         <li>applyTheme, ThemeToggle, and ThemeScope for light / dark / system</li>
       </ul>

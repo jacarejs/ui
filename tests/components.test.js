@@ -445,6 +445,68 @@ describe('@jacare/ui components', () => {
     expect(panel.hidden).toBe(true)
   })
 
+  it('Confirm renders only when open and emits confirm/cancel', async () => {
+    const Confirm = await loadComponent('Confirm')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const open = pulse(false)
+    let confirmed = 0
+    let cancelled = 0
+
+    Confirm.mount(host, {
+      open,
+      title: 'Delete item',
+      message: 'This cannot be undone.',
+      danger: true,
+      confirm: () => {
+        confirmed += 1
+      },
+      cancel: () => {
+        cancelled += 1
+      },
+    })
+
+    expect(host.querySelector('.jui-confirm')).toBeNull()
+
+    open.set(true)
+    expect(host.querySelector('.jui-confirm')).toBeTruthy()
+    expect(host.querySelector('.jui-confirm__title').textContent).toBe('Delete item')
+
+    const confirmBtn = host.querySelector('.jui-confirm__btn--confirm')
+    expect(confirmBtn.classList.contains('is-danger')).toBe(true)
+
+    confirmBtn.click()
+    expect(confirmed).toBe(1)
+    expect(open()).toBe(true)
+
+    host.querySelector('.jui-confirm__btn--cancel').click()
+    expect(cancelled).toBe(1)
+    expect(open()).toBe(false)
+    expect(host.querySelector('.jui-confirm')).toBeNull()
+  })
+
+  it('Confirm disables actions while busy', async () => {
+    const Confirm = await loadComponent('Confirm')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const open = pulse(true)
+    const busy = pulse(true)
+    let confirmed = 0
+
+    Confirm.mount(host, {
+      open,
+      busy,
+      confirm: () => {
+        confirmed += 1
+      },
+    })
+
+    const confirmBtn = host.querySelector('.jui-confirm__btn--confirm')
+    expect(confirmBtn.disabled).toBe(true)
+    confirmBtn.click()
+    expect(confirmed).toBe(0)
+  })
+
   it('Grid applies column tracks, gap, and dense packing', async () => {
     const Grid = await loadComponent('Grid')
     const host = document.createElement('div')

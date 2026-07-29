@@ -13,6 +13,7 @@ export const shippedComponents = [
   { name: 'Card', group: 'Data display', blurb: 'Elevated surface for grouped content' },
   { name: 'Checkbox', group: 'Forms', blurb: 'Boolean choice with pulse binding' },
   { name: 'ColorPicker', group: 'Forms', blurb: 'Hex + swatch color field for tokens' },
+  { name: 'Confirm', group: 'Overlay', blurb: 'Modal confirmation with danger and busy states' },
   { name: 'DatePicker', group: 'Forms', blurb: 'Typed or calendar date and range picker' },
   { name: 'Divider', group: 'Layout', blurb: 'Quiet separator between sections' },
   { name: 'Field', group: 'Forms', blurb: 'Labeled input with hint and error' },
