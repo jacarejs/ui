@@ -66,11 +66,13 @@ Components ship as precompiled ESM modules (`mount` / `render` / `resume`). Your
 | `Button` | Primary actions (`press` emit) |
 | `Card` | Surface with optional title |
 | `Checkbox` | Two-way boolean control |
+| `ColorPicker` | Hex + swatch color field |
 | `Divider` | Horizontal / vertical rule |
 | `Field` | Labeled text input (`model` value) |
 | `Flex` | Full flexbox positioning |
 | `Grid` | CSS grid tracks for layout |
 | `Progress` | Signal-driven progress bar |
+| `Select` | Searchable single / multi select |
 | `Spinner` | Loading indicator |
 | `Stack` | Simple flex gap helper |
 | `Switch` | Toggle control |

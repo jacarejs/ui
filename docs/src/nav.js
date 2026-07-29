@@ -27,6 +27,7 @@ export const nav = createNav({
     '/components/field': { use: lazy(() => import('./pages/components/field.jcr')), title: 'Field · Jacaré UI' },
     '/components/flex': { use: lazy(() => import('./pages/components/flex.jcr')), title: 'Flex · Jacaré UI' },
     '/components/grid': { use: lazy(() => import('./pages/components/grid.jcr')), title: 'Grid · Jacaré UI' },
+    '/components/select': { use: lazy(() => import('./pages/components/select.jcr')), title: 'Select · Jacaré UI' },
     '/components/progress': { use: lazy(() => import('./pages/components/progress.jcr')), title: 'Progress · Jacaré UI' },
     '/components/spinner': { use: lazy(() => import('./pages/components/spinner.jcr')), title: 'Spinner · Jacaré UI' },
     '/components/stack': { use: lazy(() => import('./pages/components/stack.jcr')), title: 'Stack · Jacaré UI' },

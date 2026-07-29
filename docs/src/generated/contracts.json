@@ -417,6 +417,60 @@
     "slots": [],
     "emits": []
   },
+  "Select": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "any",
+        "model": true,
+        "default": ""
+      },
+      "options": {
+        "type": "any",
+        "required": true
+      },
+      "placeholder": {
+        "type": "string",
+        "default": "Select"
+      },
+      "searchPlaceholder": {
+        "type": "string",
+        "default": "Search..."
+      },
+      "searchable": {
+        "type": "boolean",
+        "default": true
+      },
+      "required": {
+        "type": "boolean",
+        "default": false
+      },
+      "multiple": {
+        "type": "boolean",
+        "default": false
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
   "Spinner": {
     "props": {
       "size": {

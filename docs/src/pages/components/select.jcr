@@ -1,0 +1,201 @@
+import { pulse } from '@jacare/core'
+import Field from '@jacare/ui/components/Field.jcr'
+import Select from '@jacare/ui/components/Select.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  multiple as multipleExample,
+  playgroundCode as buildPlaygroundCode,
+  searchable as searchableExample,
+  states,
+  tags,
+} from '../../examples/select.js'
+
+const contract = getContract('Select')
+const navLinks = previousNext('/components/select')
+
+const playgroundOptions = ['Apple', 'Banana', 'Cherry']
+
+const playLabel = pulse('Fruit')
+const playPlaceholder = pulse('Select a fruit')
+const playSearchPlaceholder = pulse('Search...')
+const playHint = pulse('Pick your favorite')
+const playError = pulse('')
+const playRequired = pulse(false)
+const playDisabled = pulse(false)
+const playSearchable = pulse(true)
+const playMultiple = pulse(false)
+const playValue = pulse('')
+const playValueMultiple = pulse([])
+
+const a11y = [
+  'Trigger exposes aria-haspopup="listbox" and aria-expanded via the native details/summary pair',
+  'Options render role="option" with aria-selected reflecting the current value',
+  'required sets aria-required and shows a visual asterisk on the label',
+  'error sets aria-invalid on the trigger and surfaces validation copy with role="alert"',
+  'disabled blocks opening the panel and is announced through the dimmed, non-interactive trigger',
+]
+
+function currentPlayValue() {
+  return playMultiple() ? playValueMultiple() : playValue()
+}
+
+function handlePlaygroundChange(next) {
+  if (playMultiple()) {
+    playValueMultiple.set(next)
+    return
+  }
+  playValue.set(next)
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    label: playLabel(),
+    value: currentPlayValue(),
+    options: playgroundOptions,
+    placeholder: playPlaceholder(),
+    searchable: playSearchable(),
+    multiple: playMultiple(),
+    required: playRequired(),
+    disabled: playDisabled(),
+    error: playError(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Select</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'Select'}
+      :description=${'Searchable single or multi-select dropdown. Bind value to a pulse, pass string or tagged options, and surface validation beside the control.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label'} bind-value=${playLabel} />
+          <Field :label=${'Placeholder'} bind-value=${playPlaceholder} />
+          <Field :label=${'Hint'} bind-value=${playHint} />
+          <Field :label=${'Error'} :hint=${'Leave empty for a valid select'} bind-value=${playError} />
+
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Required'} bind-checked=${playRequired} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+            <Switch :label=${'Searchable'} bind-checked=${playSearchable} />
+            <Switch :label=${'Multiple'} bind-checked=${playMultiple} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <Select
+              :label=${playLabel}
+              :value=${currentPlayValue}
+              :options=${playgroundOptions}
+              :placeholder=${playPlaceholder}
+              :searchPlaceholder=${playSearchPlaceholder}
+              :searchable=${playSearchable}
+              :multiple=${playMultiple}
+              :required=${playRequired}
+              :disabled=${playDisabled}
+              :hint=${playHint}
+              :error=${playError}
+              on-change=${handlePlaygroundChange}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'select-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'select-basic.jcr'} :layout=${'stack'}>
+      <div style="width:min(20rem,100%)">
+        <Select :label=${'Fruit'} :options=${['Apple', 'Banana', 'Cherry']} bind-value=${playValue} />
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'tags'} :title=${'Object options with tags'}>
+      <p class="docs-lead">Pass <code>{'{value, label, tag}'}</code> objects to badge an option, like plan tiers.</p>
+      <Demo :id=${'tags-demo'} :title=${'Plan tags'} :code=${tags} :filename=${'select-tags.jcr'} :layout=${'bleed'}>
+        <div style="width:min(20rem,100%)">
+          <Select
+            :label=${'Plan'}
+            :options=${[
+              { value: 'free', label: 'Free' },
+              { value: 'pro', label: 'Pro', tag: 'Popular' },
+              { value: 'team', label: 'Team', tag: 'New' },
+            ]}
+            bind-value=${playValue}
+          />
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'multiple'} :title=${'Multiple selection'}>
+      <p class="docs-lead">The value becomes an array. Chosen options stay visible until removed.</p>
+      <Demo :id=${'multiple-demo'} :title=${'Roles'} :code=${multipleExample} :filename=${'select-multiple.jcr'} :layout=${'rail'}>
+        <div style="width:min(20rem,100%)">
+          <Select
+            :label=${'Roles'}
+            :multiple=${true}
+            :options=${['Admin', 'Editor', 'Viewer']}
+            bind-value=${playValueMultiple}
+          />
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'search'} :title=${'Search'}>
+      <p class="docs-lead">Searchable is on by default. Turn it off for short, fixed lists.</p>
+      <Demo :id=${'search-demo'} :title=${'No search box'} :code=${searchableExample} :filename=${'select-searchable.jcr'} :layout=${'stack'}>
+        <div style="width:min(20rem,100%)">
+          <Select
+            :label=${'Country'}
+            :options=${['Brazil', 'Canada', 'Germany', 'Japan', 'Portugal']}
+            :searchable=${false}
+            bind-value=${playValue}
+          />
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'states'} :title=${'States'}>
+      <Demo :id=${'select-states'} :title=${'Required, error, and disabled'} :code=${states} :filename=${'select-states.jcr'} :layout=${'stack'}>
+        <div style="width:min(20rem,100%)">
+          <Stack :gap=${'md'}>
+            <Select :label=${'Required'} :required=${true} :options=${['One', 'Two']} bind-value=${playValue} />
+            <Select :label=${'Plan'} :error=${'Choose a plan to continue'} :options=${['free', 'pro']} bind-value=${playError} />
+            <Select :label=${'Locked plan'} :disabled=${true} :options=${['free', 'pro']} bind-value=${playValue} />
+          </Stack>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

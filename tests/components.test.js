@@ -338,6 +338,59 @@ describe('@jacare/ui components', () => {
     expect(el.classList.contains('jui-flex--wrap')).toBe(true)
   })
 
+  it('Select updates value and emits change from options', async () => {
+    const Select = await loadComponent('Select')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const value = pulse('')
+    let changed = null
+
+    Select.mount(host, {
+      label: 'Fruit',
+      value,
+      options: ['Apple', 'Banana', 'Cherry'],
+      change: (next) => {
+        changed = next
+      },
+    })
+
+    const trigger = host.querySelector('.jui-select__trigger')
+    expect(trigger.querySelector('.jui-select__value-text').textContent).toBe('Select')
+
+    const options = host.querySelectorAll('[data-select-option]')
+    options[2].click()
+
+    expect(value()).toBe('Banana')
+    expect(changed).toBe('Banana')
+    expect(trigger.querySelector('.jui-select__value-text').textContent).toBe('Banana')
+  })
+
+  it('Select supports multiple selection with tagged options', async () => {
+    const Select = await loadComponent('Select')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const value = pulse([])
+
+    Select.mount(host, {
+      label: 'Roles',
+      value,
+      multiple: true,
+      options: [
+        { value: 'admin', label: 'Admin', tag: 'New' },
+        { value: 'editor', label: 'Editor' },
+      ],
+    })
+
+    const options = host.querySelectorAll('[data-select-option]')
+    options[1].click()
+    expect(value()).toEqual(['admin'])
+    expect(options[1].classList.contains('is-active')).toBe(true)
+    expect(host.querySelector('.jui-select__tag').textContent).toBe('New')
+
+    options[1].click()
+    expect(value()).toEqual([])
+  })
+
   it('Grid applies column tracks, gap, and dense packing', async () => {
     const Grid = await loadComponent('Grid')
     const host = document.createElement('div')

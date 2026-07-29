@@ -1,0 +1,401 @@
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'any', default: '', model: true }
+    options: { type: 'any', required: true }
+    placeholder: { type: 'string', default: 'Select' }
+    searchPlaceholder: { type: 'string', default: 'Search...' }
+    searchable: { type: 'boolean', default: true }
+    required: { type: 'boolean', default: false }
+    multiple: { type: 'boolean', default: false }
+    error: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+    hint: { type: 'string', default: '' }
+  }
+  emits: ['change']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function normalizedOptions(source) {
+  return (read(source) || []).map((option) => (option && typeof option === 'object')
+    ? option
+    : { value: option, label: String(option) })
+}
+
+function selectedValues(model) {
+  const current = read(model)
+  return Array.isArray(current) ? current : []
+}
+
+function isSelected(optionValue, model, multipleValue) {
+  if (read(multipleValue)) {
+    return selectedValues(model).some((item) => String(item) === String(optionValue))
+  }
+  return String(optionValue) === String(read(model) ?? '')
+}
+
+function selectedOption(model, source) {
+  const current = String(read(model) ?? '')
+  return normalizedOptions(source).find((option) => String(option.value) === current)
+}
+
+function selectedLabel(model, source, placeholderValue, multipleValue) {
+  if (read(multipleValue)) {
+    const labels = normalizedOptions(source)
+      .filter((option) => isSelected(option.value, model, true))
+      .map((option) => option.label)
+    if (!labels.length) return read(placeholderValue)
+    if (labels.length <= 2) return labels.join(', ')
+    return `${labels.length} selected`
+  }
+  return selectedOption(model, source)?.label || read(placeholderValue)
+}
+
+function selectedTag(model, source) {
+  return selectedOption(model, source)?.tag || ''
+}
+
+function commitValue(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function filterOptions(event) {
+  const details = event.target.closest('details')
+  if (!details) return
+  const query = String(event.target.value || '').trim().toLowerCase()
+  let visible = 0
+  details.querySelectorAll('[data-select-option]').forEach((button) => {
+    const haystack = String(button.getAttribute('data-search') || '')
+    const matches = haystack.includes(query)
+    const item = button.closest('li')
+    if (item) item.hidden = !matches
+    if (matches) visible += 1
+  })
+  const empty = details.querySelector('[data-select-empty]')
+  if (empty) empty.hidden = visible > 0
+}
+
+function handleToggle(event) {
+  const current = event.currentTarget
+  if (!current.open) {
+    current.outsideController?.abort()
+    return
+  }
+  document.querySelectorAll('details.jui-select__control[open]').forEach((details) => {
+    if (details !== current) details.removeAttribute('open')
+  })
+  current.outsideController?.abort()
+  const controller = new AbortController()
+  current.outsideController = controller
+  requestAnimationFrame(() => {
+    current.querySelector('input')?.focus()
+    document.addEventListener('pointerdown', (pointerEvent) => {
+      if (!current.contains(pointerEvent.target)) current.removeAttribute('open')
+    }, { signal: controller.signal })
+  })
+}
+
+function chooseOption(option, event, model, multipleValue, emitFn) {
+  const details = event.currentTarget.closest('details')
+  if (read(multipleValue)) {
+    const current = selectedValues(model)
+    const next = option.value === ''
+      ? []
+      : isSelected(option.value, current, true)
+        ? current.filter((item) => String(item) !== String(option.value))
+        : [...current, option.value]
+    commitValue(model, next, emitFn)
+    return
+  }
+  commitValue(model, option.value, emitFn)
+  details?.removeAttribute('open')
+  const search = details?.querySelector('input')
+  if (search) search.value = ''
+  details?.querySelectorAll('li').forEach((item) => {
+    item.hidden = item.hasAttribute('data-select-empty')
+  })
+}
+
+export <view>
+  <div class="jui-select" class-has-error=${() => !!read(error)} class-is-disabled=${() => !!read(disabled)}>
+    #if read(label)
+      <span class="jui-select__label">
+        ${() => read(label)}
+        #if read(required)
+          <span class="jui-select__req" aria-hidden="true">*</span>
+        #end
+      </span>
+    #end
+
+    <details class="jui-select__control" on-toggle=${handleToggle}>
+      <summary
+        class="jui-select__trigger"
+        aria-required=${() => !!read(required)}
+        aria-invalid=${() => !!read(error)}
+        aria-haspopup="listbox"
+        tabindex=${() => read(disabled) ? '-1' : '0'}
+        on-click=${(event) => {
+          if (read(disabled)) event.preventDefault()
+        }}
+      >
+        <span class="jui-select__value">
+          <span class="jui-select__value-text">${() => selectedLabel(value, options, placeholder, multiple)}</span>
+          #if !read(multiple) && selectedTag(value, options)
+            <small class="jui-select__tag">${() => selectedTag(value, options)}</small>
+          #end
+        </span>
+        <span class="jui-select__chevron" aria-hidden="true">⌄</span>
+      </summary>
+
+      <div class="jui-select__panel">
+        #if read(searchable)
+          <input
+            class="jui-select__search"
+            type="search"
+            placeholder=${() => read(searchPlaceholder)}
+            on-input=${filterOptions}
+            on-keydown=${(event) => {
+              if (event.key === 'Escape') event.currentTarget.closest('details').removeAttribute('open')
+            }}
+          />
+        #end
+        <ul class="jui-select__list" role="listbox" aria-multiselectable=${() => !!read(multiple)}>
+          <li>
+            <button
+              type="button"
+              role="option"
+              class="jui-select__option"
+              class-is-active=${() => read(multiple) ? selectedValues(value).length === 0 : String(read(value) ?? '') === ''}
+              aria-selected=${() => read(multiple) ? selectedValues(value).length === 0 : String(read(value) ?? '') === ''}
+              data-select-option
+              data-search=${() => String(read(placeholder)).toLowerCase()}
+              on-click=${(event) => chooseOption({ value: '', label: read(placeholder) }, event, value, multiple, emit)}
+            >
+              ${() => read(placeholder)}
+            </button>
+          </li>
+          #for normalizedOptions(options) as option (option.value)
+            <li>
+              <button
+                type="button"
+                role="option"
+                class="jui-select__option"
+                class-is-active=${() => isSelected(option.value, value, multiple)}
+                aria-selected=${() => isSelected(option.value, value, multiple)}
+                data-select-option
+                data-search=${() => `${option.label} ${option.tag || ''}`.toLowerCase()}
+                on-click=${(event) => chooseOption(option, event, value, multiple, emit)}
+              >
+                <span>${option.label}</span>
+                #if option.tag
+                  <small class="jui-select__tag">${option.tag}</small>
+                #end
+              </button>
+            </li>
+          #end
+          #if read(searchable)
+            <li class="jui-select__empty" data-select-empty hidden>No results</li>
+          #end
+        </ul>
+      </div>
+    </details>
+
+    #if read(error)
+      <span class="jui-select__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-select__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-select {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-select__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-select__req {
+  color: var(--j-danger);
+}
+
+.jui-select__control {
+  position: relative;
+  min-width: 0;
+}
+
+.jui-select__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  outline: 0;
+  color: var(--j-text);
+  background: var(--j-surface-2);
+  cursor: pointer;
+  list-style: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-select__trigger::-webkit-details-marker {
+  display: none;
+}
+
+.jui-select__trigger:focus,
+.jui-select__control[open] .jui-select__trigger {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-select.has-error .jui-select__trigger {
+  border-color: var(--j-danger);
+}
+
+.jui-select.has-error .jui-select__label {
+  color: var(--j-danger);
+}
+
+.jui-select.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-select.is-disabled .jui-select__trigger {
+  cursor: not-allowed;
+}
+
+.jui-select__value {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.jui-select__value-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jui-select__chevron {
+  color: var(--j-muted);
+  font-size: 1.1rem;
+  transition: transform 120ms ease;
+}
+
+.jui-select__control[open] .jui-select__chevron {
+  transform: rotate(180deg);
+}
+
+.jui-select__panel {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  padding: 0.55rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  box-shadow: var(--j-shadow);
+}
+
+.jui-select__control:not([open]) .jui-select__panel {
+  display: none;
+}
+
+.jui-select__search {
+  width: 100%;
+  min-height: 2.25rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  outline: 0;
+  color: var(--j-text);
+  background: var(--j-surface);
+}
+
+.jui-select__search:focus {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-select__list {
+  display: grid;
+  gap: 0.18rem;
+  max-height: 14rem;
+  margin: 0.45rem 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.jui-select__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  color: var(--j-text);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.jui-select__option:hover,
+.jui-select__option.is-active {
+  background: var(--j-mint);
+}
+
+.jui-select__tag {
+  flex: 0 0 auto;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--j-radius-pill);
+  color: var(--j-forest);
+  background: var(--j-mint);
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.jui-select__empty {
+  padding: 0.8rem;
+  color: var(--j-muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.jui-select__hint,
+.jui-select__error {
+  font-size: 0.8rem;
+}
+
+.jui-select__hint {
+  color: var(--j-muted);
+}
+
+.jui-select__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

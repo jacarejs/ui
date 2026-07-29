@@ -18,6 +18,7 @@ export const shippedComponents = [
   { name: 'Flex', group: 'Layout', blurb: 'Full flexbox positioning with token gaps' },
   { name: 'Grid', group: 'Layout', blurb: 'CSS grid tracks for page positioning' },
   { name: 'Progress', group: 'Feedback', blurb: 'Determinate 0–100 completion bar' },
+  { name: 'Select', group: 'Forms', blurb: 'Searchable single or multi select dropdown' },
   { name: 'Spinner', group: 'Feedback', blurb: 'Indeterminate loading indicator' },
   { name: 'Stack', group: 'Layout', blurb: 'Simple flex gap layout for rows and columns' },
   { name: 'Switch', group: 'Forms', blurb: 'Immediate on/off toggle control' },
