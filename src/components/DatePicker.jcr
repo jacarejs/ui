@@ -439,8 +439,8 @@ export <style>
 
 .jui-date__input {
   width: 100%;
-  min-height: 2.5rem;
-  padding: 0.6rem 2.9rem 0.6rem 0.85rem;
+  min-height: 2.75rem;
+  padding: 0.65rem 3.1rem 0.65rem 0.9rem;
   border: 1px solid var(--j-border);
   border-radius: var(--j-radius-sm);
   outline: 0;
@@ -467,11 +467,11 @@ export <style>
   position: absolute;
   z-index: 2;
   top: 50%;
-  right: 0.4rem;
+  right: 0.35rem;
   display: grid;
   place-items: center;
-  width: 2.1rem;
-  height: 2.1rem;
+  width: 2.75rem;
+  height: 2.75rem;
   padding: 0;
   border: 0;
   border-radius: var(--j-radius-sm);
@@ -505,8 +505,8 @@ export <style>
   justify-content: space-between;
   gap: 0.7rem;
   width: 100%;
-  min-height: 2.5rem;
-  padding: 0.45rem 0.45rem 0.45rem 0.85rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.5rem 0.5rem 0.9rem;
   border: 1px solid var(--j-border);
   border-radius: var(--j-radius-sm);
   outline: 0;
@@ -558,7 +558,7 @@ export <style>
 
 .jui-date__panel {
   position: absolute;
-  z-index: 50;
+  z-index: 80;
   top: calc(100% + 0.45rem);
   left: 0;
   width: min(22rem, calc(100vw - 2rem));

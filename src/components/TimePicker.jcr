@@ -1,0 +1,386 @@
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'string', default: '', model: true }
+    placeholder: { type: 'string', default: 'Select time' }
+    clearable: { type: 'boolean', default: true }
+    disabled: { type: 'boolean', default: false }
+    arrowControl: { type: 'boolean', default: false }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function pad2(n) {
+  return String(n).padStart(2, '0')
+}
+
+function timeParts(value) {
+  const raw = String(read(value) || '')
+  const segments = raw.split(':')
+  const hasSeconds = segments.length > 2
+  const hour = Number(segments[0])
+  const minute = Number(segments[1])
+  const second = Number(segments[2])
+  return {
+    hasSeconds,
+    hour: Number.isFinite(hour) ? hour : 0,
+    minute: Number.isFinite(minute) ? minute : 0,
+    second: hasSeconds && Number.isFinite(second) ? second : 0,
+  }
+}
+
+function composeTime(parts) {
+  return parts.hasSeconds
+    ? `${pad2(parts.hour)}:${pad2(parts.minute)}:${pad2(parts.second)}`
+    : `${pad2(parts.hour)}:${pad2(parts.minute)}`
+}
+
+function commitValue(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function createOption(text, value, selected) {
+  const option = document.createElement('option')
+  option.text = text
+  option.value = value
+  option.selected = selected
+  return option
+}
+
+function populateSelects(root, model) {
+  const parts = timeParts(model)
+  const hourSelect = root.querySelector('[data-time-hour]')
+  const minuteSelect = root.querySelector('[data-time-minute]')
+  const secondSelect = root.querySelector('[data-time-second]')
+  if (hourSelect) {
+    hourSelect.replaceChildren(...Array.from({ length: 24 }, (_, h) => createOption(pad2(h), String(h), h === parts.hour)))
+  }
+  if (minuteSelect) {
+    minuteSelect.replaceChildren(...Array.from({ length: 60 }, (_, m) => createOption(pad2(m), String(m), m === parts.minute)))
+  }
+  if (secondSelect) {
+    secondSelect.replaceChildren(...Array.from({ length: 60 }, (_, s) => createOption(pad2(s), String(s), s === parts.second)))
+  }
+}
+
+function handleUnitChange(event, model, unit, emitFn) {
+  const parts = timeParts(model)
+  const next = { ...parts, [unit]: Number(event.target.value) }
+  commitValue(model, composeTime(next), emitFn)
+}
+
+function adjustUnit(model, unit, delta, max, emitFn) {
+  const parts = timeParts(model)
+  const current = parts[unit]
+  const next = ((current + delta) % (max + 1) + (max + 1)) % (max + 1)
+  commitValue(model, composeTime({ ...parts, [unit]: next }), emitFn)
+}
+
+function clearTime(event, model, emitFn) {
+  commitValue(model, '', emitFn)
+  const root = event.currentTarget.closest('[data-time-picker]')
+  if (root && !root.querySelector('[data-time-arrow]')) populateSelects(root, model)
+  root?.querySelector('details')?.removeAttribute('open')
+}
+
+function setNow(event, model, emitFn) {
+  const now = new Date()
+  const withSeconds = timeParts(model).hasSeconds
+  const next = withSeconds
+    ? `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`
+    : `${pad2(now.getHours())}:${pad2(now.getMinutes())}`
+  commitValue(model, next, emitFn)
+  const root = event.currentTarget.closest('[data-time-picker]')
+  if (root && !root.querySelector('[data-time-arrow]')) populateSelects(root, model)
+}
+
+function handleToggle(event, model, arrowControlValue) {
+  const current = event.currentTarget
+  if (!current.open) {
+    current.outsideController?.abort()
+    return
+  }
+  document.querySelectorAll('details.jui-time-picker__control[open]').forEach((details) => {
+    if (details !== current) details.removeAttribute('open')
+  })
+  if (!read(arrowControlValue)) populateSelects(current, model)
+  current.outsideController?.abort()
+  const controller = new AbortController()
+  current.outsideController = controller
+  requestAnimationFrame(() => {
+    document.addEventListener('pointerdown', (pointerEvent) => {
+      if (!current.contains(pointerEvent.target)) current.removeAttribute('open')
+    }, { signal: controller.signal })
+  })
+}
+
+export <view>
+  <div class="jui-time-picker" data-time-picker class-has-error=${() => !!read(error)} class-is-disabled=${() => !!read(disabled)}>
+    #if read(label)
+      <span class="jui-time-picker__label">${() => read(label)}</span>
+    #end
+
+    <details class="jui-time-picker__control" on-toggle=${(event) => handleToggle(event, value, arrowControl)}>
+      <summary
+        class="jui-time-picker__trigger"
+        aria-haspopup="dialog"
+        tabindex=${() => read(disabled) ? '-1' : '0'}
+        on-click=${(event) => {
+          if (read(disabled)) event.preventDefault()
+        }}
+      >
+        <span class="jui-time-picker__value" class-is-placeholder=${() => !read(value)}>${() => read(value) || read(placeholder)}</span>
+        <span class="jui-time-picker__chevron" aria-hidden="true">⌄</span>
+      </summary>
+
+      <div class="jui-time-picker__panel">
+        #if read(arrowControl)
+          <div class="jui-time-picker__units" data-time-arrow>
+            <div class="jui-time-picker__spinner">
+              <button type="button" class="jui-time-picker__arrow" aria-label="Increase hour" on-click=${() => adjustUnit(value, 'hour', 1, 23, emit)}>▲</button>
+              <span class="jui-time-picker__digit">${() => pad2(timeParts(value).hour)}</span>
+              <button type="button" class="jui-time-picker__arrow" aria-label="Decrease hour" on-click=${() => adjustUnit(value, 'hour', -1, 23, emit)}>▼</button>
+            </div>
+            <span class="jui-time-picker__colon">:</span>
+            <div class="jui-time-picker__spinner">
+              <button type="button" class="jui-time-picker__arrow" aria-label="Increase minute" on-click=${() => adjustUnit(value, 'minute', 1, 59, emit)}>▲</button>
+              <span class="jui-time-picker__digit">${() => pad2(timeParts(value).minute)}</span>
+              <button type="button" class="jui-time-picker__arrow" aria-label="Decrease minute" on-click=${() => adjustUnit(value, 'minute', -1, 59, emit)}>▼</button>
+            </div>
+            #if timeParts(value).hasSeconds
+              <span class="jui-time-picker__colon">:</span>
+              <div class="jui-time-picker__spinner">
+                <button type="button" class="jui-time-picker__arrow" aria-label="Increase second" on-click=${() => adjustUnit(value, 'second', 1, 59, emit)}>▲</button>
+                <span class="jui-time-picker__digit">${() => pad2(timeParts(value).second)}</span>
+                <button type="button" class="jui-time-picker__arrow" aria-label="Decrease second" on-click=${() => adjustUnit(value, 'second', -1, 59, emit)}>▼</button>
+              </div>
+            #end
+          </div>
+        #else
+          <div class="jui-time-picker__units">
+            <select class="jui-time-picker__select" data-time-hour aria-label="Hour" on-change=${(event) => handleUnitChange(event, value, 'hour', emit)}></select>
+            <span class="jui-time-picker__colon">:</span>
+            <select class="jui-time-picker__select" data-time-minute aria-label="Minute" on-change=${(event) => handleUnitChange(event, value, 'minute', emit)}></select>
+            #if timeParts(value).hasSeconds
+              <span class="jui-time-picker__colon">:</span>
+              <select class="jui-time-picker__select" data-time-second aria-label="Second" on-change=${(event) => handleUnitChange(event, value, 'second', emit)}></select>
+            #end
+          </div>
+        #end
+
+        <div class="jui-time-picker__actions">
+          #if read(clearable)
+            <button type="button" class="jui-time-picker__text-btn" on-click=${(event) => clearTime(event, value, emit)}>Clear</button>
+          #end
+          <button type="button" class="jui-time-picker__text-btn" on-click=${(event) => setNow(event, value, emit)}>Now</button>
+        </div>
+      </div>
+    </details>
+
+    #if read(error)
+      <span class="jui-time-picker__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-time-picker__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-time-picker {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-time-picker__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-time-picker.has-error .jui-time-picker__label {
+  color: var(--j-danger);
+}
+
+.jui-time-picker.has-error .jui-time-picker__trigger {
+  border-color: var(--j-danger);
+}
+
+.jui-time-picker.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-time-picker__control {
+  position: relative;
+  min-width: 0;
+}
+
+.jui-time-picker__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  outline: 0;
+  color: var(--j-text);
+  background: var(--j-surface-2);
+  cursor: pointer;
+  list-style: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-time-picker__trigger::-webkit-details-marker {
+  display: none;
+}
+
+.jui-time-picker__trigger:focus,
+.jui-time-picker__control[open] .jui-time-picker__trigger {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-time-picker__value.is-placeholder {
+  color: var(--j-muted);
+}
+
+.jui-time-picker__chevron {
+  color: var(--j-muted);
+  font-size: 1.1rem;
+  transition: transform 120ms ease;
+}
+
+.jui-time-picker__control[open] .jui-time-picker__chevron {
+  transform: rotate(180deg);
+}
+
+.jui-time-picker__panel {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.8rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  box-shadow: var(--j-shadow);
+}
+
+.jui-time-picker__control:not([open]) .jui-time-picker__panel {
+  display: none;
+}
+
+.jui-time-picker__units {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.jui-time-picker__select {
+  min-width: 3.4rem;
+  min-height: 2.4rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  color: var(--j-text);
+  background: var(--j-surface);
+  font: inherit;
+  font-weight: 700;
+  text-align: center;
+}
+
+.jui-time-picker__colon {
+  color: var(--j-muted);
+  font-weight: 800;
+}
+
+.jui-time-picker__spinner {
+  display: grid;
+  place-items: center;
+  gap: 0.2rem;
+}
+
+.jui-time-picker__digit {
+  min-width: 2.4rem;
+  padding: 0.3rem 0;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  color: var(--j-text);
+  background: var(--j-surface);
+  font-weight: 800;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.jui-time-picker__arrow {
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.5rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  color: var(--j-primary);
+  background: var(--j-mint);
+  cursor: pointer;
+  font-size: 0.7rem;
+}
+
+.jui-time-picker__arrow:hover {
+  background: var(--j-lime);
+}
+
+.jui-time-picker__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--j-border);
+}
+
+.jui-time-picker__text-btn {
+  min-height: 2rem;
+  padding: 0.4rem 0.65rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  color: var(--j-primary);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.jui-time-picker__text-btn:hover {
+  background: var(--j-mint);
+}
+
+.jui-time-picker__hint,
+.jui-time-picker__error {
+  font-size: 0.8rem;
+}
+
+.jui-time-picker__hint {
+  color: var(--j-muted);
+}
+
+.jui-time-picker__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

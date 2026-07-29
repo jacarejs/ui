@@ -1,0 +1,191 @@
+export <contract>
+  props: {
+    label: { type: 'string', required: true }
+    value: { type: 'string', model: true }
+    placeholder: { type: 'string', default: '' }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+    required: { type: 'boolean', default: false }
+    rows: { type: 'number', default: 4 }
+    maxLength: { type: 'number', default: 0 }
+    showCount: { type: 'boolean', default: false }
+    resize: { type: 'string', default: 'vertical' }
+    name: { type: 'string', default: '' }
+  }
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function rowCount(value) {
+  const next = Number(read(value))
+  if (!Number.isFinite(next) || next < 2) return 4
+  return Math.min(24, Math.round(next))
+}
+
+function maxChars(value) {
+  const next = Number(read(value))
+  if (!Number.isFinite(next) || next <= 0) return 0
+  return Math.round(next)
+}
+
+function resizeMode(value) {
+  const next = read(value)
+  if (next === 'none' || next === 'both' || next === 'horizontal' || next === 'vertical') return next
+  return 'vertical'
+}
+
+function currentLength(model) {
+  return String(read(model) ?? '').length
+}
+
+function countLabel(model, maxValue) {
+  const length = currentLength(model)
+  const max = maxChars(maxValue)
+  return max > 0 ? `${length} / ${max}` : String(length)
+}
+
+export <view>
+  <label
+    class="jui-textarea"
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
+  >
+    <span class="jui-textarea__label">
+      ${() => read(label)}
+      #if read(required)
+        <span class="jui-textarea__req" aria-hidden="true">*</span>
+      #end
+    </span>
+    <textarea
+      class="jui-textarea__control"
+      class-jui-textarea__control--resize-none=${() => resizeMode(resize) === 'none'}
+      class-jui-textarea__control--resize-both=${() => resizeMode(resize) === 'both'}
+      class-jui-textarea__control--resize-horizontal=${() => resizeMode(resize) === 'horizontal'}
+      class-jui-textarea__control--resize-vertical=${() => resizeMode(resize) === 'vertical'}
+      name=${() => read(name) || ''}
+      rows=${() => rowCount(rows)}
+      placeholder=${() => read(placeholder) || ''}
+      disabled=${() => !!read(disabled)}
+      required=${() => !!read(required)}
+      maxlength=${() => {
+        const max = maxChars(maxLength)
+        return max > 0 ? max : undefined
+      }}
+      aria-invalid=${() => !!read(error)}
+      bind-value=${value}
+    ></textarea>
+    <span class="jui-textarea__meta">
+      #if read(error)
+        <span class="jui-textarea__error" role="alert">${() => read(error)}</span>
+      #elif read(hint)
+        <span class="jui-textarea__hint">${() => read(hint)}</span>
+      #else
+        <span class="jui-textarea__hint"></span>
+      #end
+      #if read(showCount)
+        <span class="jui-textarea__count">${() => countLabel(value, maxLength)}</span>
+      #end
+    </span>
+  </label>
+</view>
+
+export <style>
+.jui-textarea {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-textarea__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-textarea__req {
+  color: var(--j-danger);
+}
+
+.jui-textarea__control {
+  width: 100%;
+  min-height: 6.5rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  font: inherit;
+  line-height: 1.45;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-textarea__control::placeholder {
+  color: color-mix(in srgb, var(--j-muted) 75%, white);
+}
+
+.jui-textarea__control:focus {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+  outline: none;
+}
+
+.jui-textarea__control--resize-none {
+  resize: none;
+}
+
+.jui-textarea__control--resize-both {
+  resize: both;
+}
+
+.jui-textarea__control--resize-horizontal {
+  resize: horizontal;
+}
+
+.jui-textarea__control--resize-vertical {
+  resize: vertical;
+}
+
+.jui-textarea.has-error .jui-textarea__control {
+  border-color: var(--j-danger);
+}
+
+.jui-textarea.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-textarea__meta {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 1.1rem;
+}
+
+.jui-textarea__hint,
+.jui-textarea__error,
+.jui-textarea__count {
+  font-size: 0.8rem;
+}
+
+.jui-textarea__hint {
+  color: var(--j-muted);
+}
+
+.jui-textarea__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+
+.jui-textarea__count {
+  flex: 0 0 auto;
+  color: var(--j-muted);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+</style>

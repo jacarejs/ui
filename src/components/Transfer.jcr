@@ -1,0 +1,442 @@
+import { pulse } from '@jacare/core'
+
+export <contract>
+  props: {
+    value: { type: 'object', default: [], model: true }
+    data: { type: 'object', required: true }
+    filterable: { type: 'boolean', default: false }
+    titles: { type: 'object', default: ['Source', 'Target'] }
+    buttonTexts: { type: 'object', default: ['To right', 'To left'] }
+    disabled: { type: 'boolean', default: false }
+  }
+  emits: ['change']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function normalizeItems(source) {
+  const list = read(source)
+  if (!Array.isArray(list)) return []
+  return list.map((item, index) => {
+    const key = String(item?.key ?? index)
+    return {
+      key,
+      label: item?.label ?? key,
+      disabled: !!item?.disabled,
+    }
+  })
+}
+
+function targetKeys(model) {
+  const current = read(model)
+  return new Set((Array.isArray(current) ? current : []).map(String))
+}
+
+function sideItems(source, model, side) {
+  const target = targetKeys(model)
+  return normalizeItems(source).filter((item) => target.has(item.key) === (side === 'right'))
+}
+
+function matchesQuery(item, query) {
+  if (!query) return true
+  return item.label.toLowerCase().includes(query) || item.key.toLowerCase().includes(query)
+}
+
+function queryState(emitFn, side) {
+  const prop = side === 'right' ? '__juiTransferRightQuery' : '__juiTransferLeftQuery'
+  if (!emitFn[prop]) emitFn[prop] = pulse('')
+  return emitFn[prop]
+}
+
+function visibleItems(source, model, side, emitFn) {
+  const query = String(read(queryState(emitFn, side)) || '').trim().toLowerCase()
+  return sideItems(source, model, side).filter((item) => matchesQuery(item, query))
+}
+
+function checkedState(emitFn, side) {
+  const prop = side === 'right' ? '__juiTransferRightChecked' : '__juiTransferLeftChecked'
+  if (!emitFn[prop]) emitFn[prop] = pulse(new Set())
+  return emitFn[prop]
+}
+
+function isChecked(key, checkedPulse) {
+  return read(checkedPulse).has(key)
+}
+
+function toggleChecked(key, checkedPulse) {
+  const next = new Set(read(checkedPulse))
+  if (next.has(key)) next.delete(key)
+  else next.add(key)
+  checkedPulse.set(next)
+}
+
+function selectableKeys(items) {
+  return items.filter((item) => !item.disabled).map((item) => item.key)
+}
+
+function isAllChecked(source, model, side, emitFn) {
+  const keys = selectableKeys(sideItems(source, model, side))
+  if (!keys.length) return false
+  const checked = checkedState(emitFn, side)
+  return keys.every((key) => isChecked(key, checked))
+}
+
+function toggleSelectAll(source, model, side, emitFn) {
+  const keys = selectableKeys(sideItems(source, model, side))
+  const checked = checkedState(emitFn, side)
+  const allChecked = keys.length > 0 && keys.every((key) => isChecked(key, checked))
+  checked.set(allChecked ? new Set() : new Set(keys))
+}
+
+function checkedCount(source, model, side, emitFn) {
+  const items = sideItems(source, model, side)
+  const checked = checkedState(emitFn, side)
+  return items.filter((item) => isChecked(item.key, checked)).length
+}
+
+function commitValue(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function moveChecked(source, model, fromSide, disabledValue, emitFn) {
+  if (read(disabledValue)) return
+  const checked = checkedState(emitFn, fromSide)
+  const movable = sideItems(source, model, fromSide)
+    .filter((item) => !item.disabled && isChecked(item.key, checked))
+    .map((item) => item.key)
+  if (!movable.length) return
+  const current = targetKeys(model)
+  if (fromSide === 'left') movable.forEach((key) => current.add(key))
+  else movable.forEach((key) => current.delete(key))
+  commitValue(model, Array.from(current), emitFn)
+  checked.set(new Set())
+}
+
+function titleFor(titlesValue, index, fallback) {
+  const list = read(titlesValue)
+  return (Array.isArray(list) && list[index]) || fallback
+}
+
+function buttonTextFor(buttonTextsValue, index, fallback) {
+  const list = read(buttonTextsValue)
+  return (Array.isArray(list) && list[index]) || fallback
+}
+
+export <view>
+  <div class="jui-transfer" class-is-disabled=${() => !!read(disabled)}>
+    <div class="jui-transfer__panel">
+      <div class="jui-transfer__head">
+        <label class="jui-transfer__head-check">
+          <input
+            type="checkbox"
+            disabled=${() => !!read(disabled) || !selectableKeys(sideItems(data, value, 'left')).length}
+            checked=${() => isAllChecked(data, value, 'left', emit)}
+            on-change=${() => toggleSelectAll(data, value, 'left', emit)}
+          />
+          <span class="jui-transfer__box" aria-hidden="true"></span>
+          <span class="jui-transfer__head-title">${() => titleFor(titles, 0, 'Source')}</span>
+        </label>
+        <span class="jui-transfer__head-count">${() => `${checkedCount(data, value, 'left', emit)}/${sideItems(data, value, 'left').length}`}</span>
+      </div>
+
+      #if read(filterable)
+        <input
+          class="jui-transfer__search"
+          type="search"
+          placeholder="Search..."
+          disabled=${() => !!read(disabled)}
+          on-input=${(event) => queryState(emit, 'left').set(event.target.value)}
+        />
+      #end
+
+      <ul class="jui-transfer__list" role="listbox" aria-label=${() => titleFor(titles, 0, 'Source')}>
+        #for visibleItems(data, value, 'left', emit) as item (item.key)
+          <li>
+            <label class="jui-transfer__item" class-is-disabled=${() => !!item.disabled}>
+              <input
+                type="checkbox"
+                disabled=${() => !!(read(disabled) || item.disabled)}
+                checked=${() => isChecked(item.key, checkedState(emit, 'left'))}
+                on-change=${() => toggleChecked(item.key, checkedState(emit, 'left'))}
+              />
+              <span class="jui-transfer__box" aria-hidden="true"></span>
+              <span class="jui-transfer__item-label">${item.label}</span>
+            </label>
+          </li>
+        #end
+        #if visibleItems(data, value, 'left', emit).length === 0
+          <li class="jui-transfer__empty">No items</li>
+        #end
+      </ul>
+    </div>
+
+    <div class="jui-transfer__ops">
+      <button
+        type="button"
+        class="jui-transfer__op-btn"
+        disabled=${() => !!read(disabled) || checkedCount(data, value, 'left', emit) === 0}
+        aria-label="Move to target"
+        on-click=${() => moveChecked(data, value, 'left', disabled, emit)}
+      >${() => buttonTextFor(buttonTexts, 0, 'To right')}</button>
+      <button
+        type="button"
+        class="jui-transfer__op-btn"
+        disabled=${() => !!read(disabled) || checkedCount(data, value, 'right', emit) === 0}
+        aria-label="Move to source"
+        on-click=${() => moveChecked(data, value, 'right', disabled, emit)}
+      >${() => buttonTextFor(buttonTexts, 1, 'To left')}</button>
+    </div>
+
+    <div class="jui-transfer__panel">
+      <div class="jui-transfer__head">
+        <label class="jui-transfer__head-check">
+          <input
+            type="checkbox"
+            disabled=${() => !!read(disabled) || !selectableKeys(sideItems(data, value, 'right')).length}
+            checked=${() => isAllChecked(data, value, 'right', emit)}
+            on-change=${() => toggleSelectAll(data, value, 'right', emit)}
+          />
+          <span class="jui-transfer__box" aria-hidden="true"></span>
+          <span class="jui-transfer__head-title">${() => titleFor(titles, 1, 'Target')}</span>
+        </label>
+        <span class="jui-transfer__head-count">${() => `${checkedCount(data, value, 'right', emit)}/${sideItems(data, value, 'right').length}`}</span>
+      </div>
+
+      #if read(filterable)
+        <input
+          class="jui-transfer__search"
+          type="search"
+          placeholder="Search..."
+          disabled=${() => !!read(disabled)}
+          on-input=${(event) => queryState(emit, 'right').set(event.target.value)}
+        />
+      #end
+
+      <ul class="jui-transfer__list" role="listbox" aria-label=${() => titleFor(titles, 1, 'Target')}>
+        #for visibleItems(data, value, 'right', emit) as item (item.key)
+          <li>
+            <label class="jui-transfer__item" class-is-disabled=${() => !!item.disabled}>
+              <input
+                type="checkbox"
+                disabled=${() => !!(read(disabled) || item.disabled)}
+                checked=${() => isChecked(item.key, checkedState(emit, 'right'))}
+                on-change=${() => toggleChecked(item.key, checkedState(emit, 'right'))}
+              />
+              <span class="jui-transfer__box" aria-hidden="true"></span>
+              <span class="jui-transfer__item-label">${item.label}</span>
+            </label>
+          </li>
+        #end
+        #if visibleItems(data, value, 'right', emit).length === 0
+          <li class="jui-transfer__empty">No items</li>
+        #end
+      </ul>
+    </div>
+  </div>
+</view>
+
+export <style>
+.jui-transfer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.jui-transfer.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-transfer__panel {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  min-width: 0;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  overflow: hidden;
+}
+
+.jui-transfer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.7rem 0.85rem;
+  border-bottom: 1px solid var(--j-border);
+  background: var(--j-surface);
+}
+
+.jui-transfer__head-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.jui-transfer__head-title {
+  overflow: hidden;
+  color: var(--j-forest);
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jui-transfer__head-count {
+  flex: 0 0 auto;
+  color: var(--j-muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.jui-transfer__search {
+  margin: 0.6rem 0.7rem 0;
+  min-height: 2.25rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  outline: 0;
+  color: var(--j-text);
+  background: var(--j-surface-2);
+}
+
+.jui-transfer__search:focus {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-transfer__list {
+  display: grid;
+  align-content: start;
+  gap: 0.1rem;
+  min-height: 12rem;
+  max-height: 18rem;
+  margin: 0;
+  padding: 0.5rem;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.jui-transfer__item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.35rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--j-radius-sm);
+  cursor: pointer;
+  user-select: none;
+}
+
+.jui-transfer__item:hover {
+  background: var(--j-mint);
+}
+
+.jui-transfer__item.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.jui-transfer__item-label {
+  overflow: hidden;
+  color: var(--j-text);
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jui-transfer__head-check input,
+.jui-transfer__item input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-transfer__box {
+  position: relative;
+  flex: 0 0 auto;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 1.5px solid var(--j-border);
+  border-radius: 0.3rem;
+  background: var(--j-surface-2);
+  transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+input:checked + .jui-transfer__box {
+  background: var(--j-primary);
+  border-color: var(--j-primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5 6.5 11.5 12.5 4.5'/%3E%3C/svg%3E");
+  background-size: 0.8rem;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+input:focus-visible + .jui-transfer__box {
+  box-shadow: var(--j-focus);
+}
+
+input:disabled + .jui-transfer__box {
+  opacity: 0.6;
+}
+
+.jui-transfer__empty {
+  padding: 1.2rem 0.5rem;
+  color: var(--j-muted);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.jui-transfer__ops {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.jui-transfer__op-btn {
+  display: grid;
+  place-items: center;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0 0.6rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  color: var(--j-forest);
+  background: var(--j-surface-2);
+  font-weight: 800;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.jui-transfer__op-btn:hover:not(:disabled) {
+  border-color: var(--j-primary);
+  color: var(--j-primary);
+  background: var(--j-mint);
+}
+
+.jui-transfer__op-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .jui-transfer {
+    grid-template-columns: 1fr;
+  }
+
+  .jui-transfer__ops {
+    flex-direction: row;
+  }
+}
+</style>

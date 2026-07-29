@@ -70,7 +70,7 @@ export <style>
 
 .jui-field__control {
   width: 100%;
-  min-height: 2.5rem;
+  min-height: 2.75rem;
   padding: 0.6rem 0.85rem;
   border: 1px solid var(--j-border);
   border-radius: var(--j-radius-sm);

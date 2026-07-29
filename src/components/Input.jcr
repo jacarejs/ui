@@ -1,0 +1,220 @@
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'string', default: '', model: true }
+    type: { type: 'string', default: 'text' }
+    placeholder: { type: 'string', default: '' }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+    required: { type: 'boolean', default: false }
+    clearable: { type: 'boolean', default: false }
+    size: { type: 'string', default: 'md' }
+    name: { type: 'string', default: '' }
+    autocomplete: { type: 'string', default: '' }
+    maxLength: { type: 'number', default: 0 }
+  }
+  slots: ['prefix', 'suffix']
+  emits: ['change', 'clear']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function sizeClass(value) {
+  const next = read(value)
+  if (next === 'sm' || next === 'lg') return next
+  return 'md'
+}
+
+function maxChars(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) && next > 0 ? Math.round(next) : 0
+}
+
+function commit(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function clearValue(model, emitFn) {
+  commit(model, '', emitFn)
+  emitFn('clear')
+}
+
+export <view>
+  <label
+    class="jui-input"
+    class-jui-input--sm=${() => sizeClass(size) === 'sm'}
+    class-jui-input--lg=${() => sizeClass(size) === 'lg'}
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
+  >
+    #if read(label)
+      <span class="jui-input__label">
+        ${() => read(label)}
+        #if read(required)
+          <span class="jui-input__req" aria-hidden="true">*</span>
+        #end
+      </span>
+    #end
+
+    <span class="jui-input__control">
+      <span class="jui-input__prefix"><slot name="prefix" /></span>
+      <input
+        class="jui-input__field"
+        type=${() => read(type) || 'text'}
+        name=${() => read(name) || ''}
+        autocomplete=${() => read(autocomplete) || ''}
+        placeholder=${() => read(placeholder) || ''}
+        disabled=${() => !!read(disabled)}
+        required=${() => !!read(required)}
+        maxlength=${() => {
+          const limit = maxChars(maxLength)
+          return limit > 0 ? limit : undefined
+        }}
+        aria-invalid=${() => !!read(error)}
+        value=${() => read(value)}
+        on-input=${(event) => commit(value, event.target.value, emit)}
+      />
+      #if read(clearable) && !read(disabled) && read(value)
+        <button type="button" class="jui-input__clear" aria-label="Clear" on-click=${() => clearValue(value, emit)}>×</button>
+      #end
+      <span class="jui-input__suffix"><slot name="suffix" /></span>
+    </span>
+
+    #if read(error)
+      <span class="jui-input__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-input__hint">${() => read(hint)}</span>
+    #end
+  </label>
+</view>
+
+export <style>
+.jui-input {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-input__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-text);
+}
+
+.jui-input__req {
+  color: var(--j-danger);
+}
+
+.jui-input__control {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 0.85rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-input--sm .jui-input__control {
+  min-height: 2.1rem;
+  padding: 0 0.65rem;
+}
+
+.jui-input--lg .jui-input__control {
+  min-height: 3.1rem;
+  padding: 0 1rem;
+}
+
+.jui-input__control:focus-within {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-input__field {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  padding: 0.6rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--j-text);
+  font: inherit;
+  outline: none;
+}
+
+.jui-input--sm .jui-input__field {
+  font-size: 0.875rem;
+}
+
+.jui-input--lg .jui-input__field {
+  font-size: 1.05rem;
+}
+
+.jui-input__field::placeholder {
+  color: color-mix(in srgb, var(--j-muted) 75%, white);
+}
+
+.jui-input__prefix:empty,
+.jui-input__suffix:empty {
+  display: none;
+}
+
+.jui-input__prefix,
+.jui-input__suffix {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  color: var(--j-muted);
+}
+
+.jui-input__clear {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--j-muted);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.jui-input__clear:hover {
+  color: var(--j-danger);
+}
+
+.jui-input.has-error .jui-input__control {
+  border-color: var(--j-danger);
+}
+
+.jui-input.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-input__hint,
+.jui-input__error {
+  font-size: 0.8rem;
+}
+
+.jui-input__hint {
+  color: var(--j-muted);
+}
+
+.jui-input__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

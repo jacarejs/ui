@@ -1,0 +1,286 @@
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'number', default: 0, model: true }
+    min: { type: 'number', default: null }
+    max: { type: 'number', default: null }
+    step: { type: 'number', default: 1 }
+    precision: { type: 'number', default: null }
+    disabled: { type: 'boolean', default: false }
+    controls: { type: 'boolean', default: true }
+    size: { type: 'string', default: 'md' }
+    placeholder: { type: 'string', default: '' }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+    required: { type: 'boolean', default: false }
+  }
+  emits: ['change']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function numberOr(value, fallback) {
+  const next = Number(read(value))
+  return Number.isFinite(next) ? next : fallback
+}
+
+function boundOf(value) {
+  const next = read(value)
+  return next === null || next === undefined || next === '' ? null : Number(next)
+}
+
+function precisionOf(value) {
+  const next = boundOf(value)
+  return next === null ? null : Math.max(0, Math.round(next))
+}
+
+function roundTo(number, precision) {
+  if (precision === null) return number
+  const factor = 10 ** precision
+  return Math.round(number * factor) / factor
+}
+
+function clampTo(number, minProp, maxProp) {
+  const minimum = boundOf(minProp)
+  const maximum = boundOf(maxProp)
+  let next = number
+  if (minimum !== null) next = Math.max(minimum, next)
+  if (maximum !== null) next = Math.min(maximum, next)
+  return next
+}
+
+function normalize(number, minProp, maxProp, precisionProp) {
+  return roundTo(clampTo(number, minProp, maxProp), precisionOf(precisionProp))
+}
+
+function commit(model, next, minProp, maxProp, precisionProp, emitFn) {
+  const normalized = normalize(next, minProp, maxProp, precisionProp)
+  if (model && typeof model.set === 'function') model.set(normalized)
+  emitFn('change', normalized)
+  return normalized
+}
+
+function displayValue(model) {
+  const current = read(model)
+  return Number.isFinite(current) ? current : 0
+}
+
+function adjust(direction, model, stepProp, minProp, maxProp, precisionProp, emitFn) {
+  const current = numberOr(model, 0)
+  const amount = numberOr(stepProp, 1) * direction
+  commit(model, current + amount, minProp, maxProp, precisionProp, emitFn)
+}
+
+function handleBlur(event, model, minProp, maxProp, precisionProp, emitFn) {
+  const parsed = Number(event.target.value)
+  const next = Number.isFinite(parsed) ? parsed : numberOr(model, 0)
+  event.target.value = commit(model, next, minProp, maxProp, precisionProp, emitFn)
+}
+
+function handleKeydown(event, model, stepProp, minProp, maxProp, precisionProp, emitFn) {
+  if (event.key === 'ArrowUp') {
+    event.preventDefault()
+    adjust(1, model, stepProp, minProp, maxProp, precisionProp, emitFn)
+  } else if (event.key === 'ArrowDown') {
+    event.preventDefault()
+    adjust(-1, model, stepProp, minProp, maxProp, precisionProp, emitFn)
+  }
+}
+
+function isDecreaseDisabled(model, minProp, disabledProp) {
+  if (read(disabledProp)) return true
+  const minimum = boundOf(minProp)
+  return minimum !== null && numberOr(model, 0) <= minimum
+}
+
+function isIncreaseDisabled(model, maxProp, disabledProp) {
+  if (read(disabledProp)) return true
+  const maximum = boundOf(maxProp)
+  return maximum !== null && numberOr(model, 0) >= maximum
+}
+
+function sizeClass(value) {
+  const next = read(value)
+  if (next === 'sm' || next === 'lg') return next
+  return 'md'
+}
+
+export <view>
+  <div
+    class="jui-input-number"
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
+  >
+    #if read(label)
+      <span class="jui-input-number__label">
+        ${() => read(label)}
+        #if read(required)
+          <span class="jui-input-number__req" aria-hidden="true">*</span>
+        #end
+      </span>
+    #end
+
+    <div
+      class="jui-input-number__control"
+      class-jui-input-number__control--sm=${() => sizeClass(size) === 'sm'}
+      class-jui-input-number__control--lg=${() => sizeClass(size) === 'lg'}
+      class-jui-input-number__control--no-controls=${() => !read(controls)}
+    >
+      #if read(controls)
+        <button
+          type="button"
+          class="jui-input-number__btn jui-input-number__btn--minus"
+          aria-label="Decrease"
+          tabindex="-1"
+          disabled=${() => isDecreaseDisabled(value, min, disabled)}
+          on-click=${() => adjust(-1, value, step, min, max, precision, emit)}
+        >−</button>
+      #end
+      <input
+        class="jui-input-number__field"
+        type="text"
+        inputmode="decimal"
+        placeholder=${() => read(placeholder) || ''}
+        disabled=${() => !!read(disabled)}
+        required=${() => !!read(required)}
+        aria-invalid=${() => !!read(error)}
+        value=${() => displayValue(value)}
+        on-blur=${(event) => handleBlur(event, value, min, max, precision, emit)}
+        on-keydown=${(event) => handleKeydown(event, value, step, min, max, precision, emit)}
+      />
+      #if read(controls)
+        <button
+          type="button"
+          class="jui-input-number__btn jui-input-number__btn--plus"
+          aria-label="Increase"
+          tabindex="-1"
+          disabled=${() => isIncreaseDisabled(value, max, disabled)}
+          on-click=${() => adjust(1, value, step, min, max, precision, emit)}
+        >+</button>
+      #end
+    </div>
+
+    #if read(error)
+      <span class="jui-input-number__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-input-number__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-input-number {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-input-number__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-text);
+}
+
+.jui-input-number__req {
+  color: var(--j-danger);
+}
+
+.jui-input-number__control {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr) 2.5rem;
+  align-items: stretch;
+  min-width: 0;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+  overflow: hidden;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-input-number__control:focus-within {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-input-number__control--no-controls {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.jui-input-number__field {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 0;
+  background: transparent;
+  color: var(--j-text);
+  font: inherit;
+  text-align: center;
+  outline: none;
+}
+
+.jui-input-number__control--sm .jui-input-number__field {
+  min-height: 2.1rem;
+  font-size: 0.875rem;
+}
+
+.jui-input-number__control--lg .jui-input-number__field {
+  min-height: 3.1rem;
+  font-size: 1.05rem;
+}
+
+.jui-input-number__btn {
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: var(--j-surface-2);
+  color: var(--j-muted);
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.jui-input-number__btn--minus {
+  border-right: 1px solid var(--j-border);
+}
+
+.jui-input-number__btn--plus {
+  border-left: 1px solid var(--j-border);
+}
+
+.jui-input-number__btn:hover:not(:disabled) {
+  color: var(--j-primary);
+}
+
+.jui-input-number__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.jui-input-number.has-error .jui-input-number__control {
+  border-color: var(--j-danger);
+}
+
+.jui-input-number.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-input-number__hint,
+.jui-input-number__error {
+  font-size: 0.8rem;
+}
+
+.jui-input-number__hint {
+  color: var(--j-muted);
+}
+
+.jui-input-number__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

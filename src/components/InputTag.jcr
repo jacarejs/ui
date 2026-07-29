@@ -1,0 +1,250 @@
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'object', default: [], model: true }
+    placeholder: { type: 'string', default: 'Add a tag' }
+    max: { type: 'number', default: null }
+    clearable: { type: 'boolean', default: true }
+    disabled: { type: 'boolean', default: false }
+    delimiter: { type: 'string', default: 'Enter' }
+    required: { type: 'boolean', default: false }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change', 'add-tag', 'remove-tag']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function tagsOf(model) {
+  const current = read(model)
+  return Array.isArray(current) ? current : []
+}
+
+function commit(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function limitOf(value) {
+  const next = read(value)
+  return next === null || next === undefined || next === '' ? null : Number(next)
+}
+
+function atLimit(model, maxProp) {
+  const limit = limitOf(maxProp)
+  return limit !== null && tagsOf(model).length >= limit
+}
+
+function addTag(raw, model, maxProp, emitFn) {
+  const tag = String(raw || '').trim()
+  if (!tag || atLimit(model, maxProp)) return false
+  const current = tagsOf(model)
+  if (current.includes(tag)) return false
+  commit(model, [...current, tag], emitFn)
+  emitFn('add-tag', tag)
+  return true
+}
+
+function removeTagAt(index, model, emitFn) {
+  const current = tagsOf(model)
+  if (index < 0 || index >= current.length) return
+  const removed = current[index]
+  commit(model, current.filter((_, itemIndex) => itemIndex !== index), emitFn)
+  emitFn('remove-tag', removed)
+}
+
+function clearTags(model, emitFn) {
+  if (!tagsOf(model).length) return
+  commit(model, [], emitFn)
+}
+
+function delimiterKey(value) {
+  return String(read(value) || 'Enter')
+}
+
+function handleKeydown(event, model, maxProp, delimiterProp, emitFn) {
+  if (event.key === delimiterKey(delimiterProp)) {
+    event.preventDefault()
+    if (addTag(event.target.value, model, maxProp, emitFn)) event.target.value = ''
+    return
+  }
+  if (event.key === 'Backspace' && !event.target.value) {
+    const current = tagsOf(model)
+    if (current.length) removeTagAt(current.length - 1, model, emitFn)
+  }
+}
+
+function handleBlur(event, model, maxProp, emitFn) {
+  if (addTag(event.target.value, model, maxProp, emitFn)) event.target.value = ''
+}
+
+export <view>
+  <div
+    class="jui-input-tag"
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
+  >
+    #if read(label)
+      <span class="jui-input-tag__label">
+        ${() => read(label)}
+        #if read(required)
+          <span class="jui-input-tag__req" aria-hidden="true">*</span>
+        #end
+      </span>
+    #end
+
+    <div class="jui-input-tag__control">
+      #for tagsOf(value) as tag (tag)
+        <span class="jui-input-tag__tag">
+          <span class="jui-input-tag__tag-text">${tag}</span>
+          #if !read(disabled)
+            <button
+              type="button"
+              class="jui-input-tag__tag-remove"
+              aria-label=${`Remove ${tag}`}
+              on-click=${() => removeTagAt(tagsOf(value).indexOf(tag), value, emit)}
+            >×</button>
+          #end
+        </span>
+      #end
+      <input
+        class="jui-input-tag__field"
+        type="text"
+        placeholder=${() => (atLimit(value, max) ? '' : read(placeholder) || '')}
+        disabled=${() => !!(read(disabled) || atLimit(value, max))}
+        aria-invalid=${() => !!read(error)}
+        on-keydown=${(event) => handleKeydown(event, value, max, delimiter, emit)}
+        on-blur=${(event) => handleBlur(event, value, max, emit)}
+      />
+    </div>
+
+    #if read(clearable) && !read(disabled) && tagsOf(value).length
+      <button type="button" class="jui-input-tag__clear" on-click=${() => clearTags(value, emit)}>Clear all</button>
+    #end
+
+    #if read(error)
+      <span class="jui-input-tag__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-input-tag__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-input-tag {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-input-tag__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-text);
+}
+
+.jui-input-tag__req {
+  color: var(--j-danger);
+}
+
+.jui-input-tag__control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-input-tag__control:focus-within {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-input-tag__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.3rem 0.25rem 0.6rem;
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+  color: var(--j-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.jui-input-tag__tag-remove {
+  display: grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--j-muted);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.jui-input-tag__tag-remove:hover {
+  color: var(--j-danger);
+}
+
+.jui-input-tag__field {
+  flex: 1 1 8rem;
+  min-width: 6rem;
+  min-height: 2rem;
+  border: 0;
+  background: transparent;
+  color: var(--j-text);
+  font: inherit;
+  outline: none;
+}
+
+.jui-input-tag__clear {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--j-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.jui-input-tag__clear:hover {
+  color: var(--j-danger);
+}
+
+.jui-input-tag.has-error .jui-input-tag__control {
+  border-color: var(--j-danger);
+}
+
+.jui-input-tag.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-input-tag__hint,
+.jui-input-tag__error {
+  font-size: 0.8rem;
+}
+
+.jui-input-tag__hint {
+  color: var(--j-muted);
+}
+
+.jui-input-tag__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

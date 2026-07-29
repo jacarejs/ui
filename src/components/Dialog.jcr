@@ -1,0 +1,200 @@
+import { effect, pulse } from '@jacare/core'
+
+export <contract>
+  props: {
+    open: { type: 'boolean', default: false, model: true }
+    title: { type: 'string', default: '' }
+    size: { type: 'string', default: 'md' }
+  }
+  slots: ['default']
+  emits: ['close']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function openState(openProp, emitFn) {
+  if (openProp && typeof openProp.set === 'function') return openProp
+  if (!emitFn.__juiDialogOpen) {
+    emitFn.__juiDialogOpen = pulse(read(openProp) === true)
+  }
+  return emitFn.__juiDialogOpen
+}
+
+function isOpen(openProp, emitFn) {
+  return read(openState(openProp, emitFn)) === true
+}
+
+function closeDialog(openProp, emitFn) {
+  openState(openProp, emitFn).set(false)
+  emitFn('close')
+}
+
+function handleBackdrop(event, openProp, emitFn) {
+  if (event.target !== event.currentTarget) return
+  closeDialog(openProp, emitFn)
+}
+
+function sizeClass(value) {
+  const next = read(value)
+  if (next === 'sm' || next === 'lg') return next
+  return 'md'
+}
+
+function armEscape(openProp, emitFn) {
+  if (!emitFn.__juiDialogEscape) {
+    emitFn.__juiDialogEscape = effect(() => {
+      if (!isOpen(openProp, emitFn)) return
+      const handler = (event) => {
+        if (event.key !== 'Escape') return
+        closeDialog(openProp, emitFn)
+      }
+      document.addEventListener('keydown', handler)
+      return () => document.removeEventListener('keydown', handler)
+    })
+  }
+  return ''
+}
+
+export <view>
+  #if isOpen(open, emit)
+    <div class="jui-dialog-backdrop" on-click=${(event) => handleBackdrop(event, open, emit)}>
+      <section
+        class="jui-dialog"
+        class-jui-dialog--sm=${() => sizeClass(size) === 'sm'}
+        class-jui-dialog--md=${() => sizeClass(size) === 'md'}
+        class-jui-dialog--lg=${() => sizeClass(size) === 'lg'}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby=${() => (read(title) ? 'jui-dialog-title' : undefined)}
+        on-click=${(event) => event.stopPropagation()}
+      >
+        <header class="jui-dialog__head">
+          #if read(title)
+            <h2 class="jui-dialog__title" id="jui-dialog-title">${() => read(title)}</h2>
+          #else
+            <span class="jui-dialog__title-spacer"></span>
+          #end
+          <button
+            type="button"
+            class="jui-dialog__close"
+            aria-label="Close"
+            on-click=${() => closeDialog(open, emit)}
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        </header>
+
+        <div class="jui-dialog__body">
+          <slot />
+        </div>
+
+        <span class="jui-dialog__arm" aria-hidden="true">${() => armEscape(open, emit)}</span>
+      </section>
+    </div>
+  #end
+</view>
+
+export <style>
+.jui-dialog-backdrop {
+  position: fixed;
+  z-index: 130;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: max(1rem, env(safe-area-inset-top, 0px)) 1rem max(1rem, env(safe-area-inset-bottom, 0px));
+  background: rgba(0, 24, 24, 0.55);
+}
+
+.jui-dialog {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(32rem, 100%);
+  max-height: min(85dvh, 40rem);
+  overflow: hidden;
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  box-shadow: var(--j-shadow);
+}
+
+.jui-dialog--sm {
+  width: min(22rem, 100%);
+}
+
+.jui-dialog--lg {
+  width: min(42rem, 100%);
+}
+
+.jui-dialog__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  padding: 0.85rem 0.9rem 0.85rem 1.15rem;
+  border-bottom: 1px solid var(--j-border);
+}
+
+.jui-dialog__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.jui-dialog__title-spacer {
+  flex: 1;
+}
+
+.jui-dialog__close {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  background: transparent;
+  color: var(--j-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.jui-dialog__close:hover {
+  background: var(--j-mint);
+  color: var(--j-text);
+}
+
+.jui-dialog__body {
+  overflow: auto;
+  padding: 1.1rem 1.15rem 1.15rem;
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.jui-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0.15rem 0 0;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--j-border);
+}
+
+.jui-dialog__actions > * {
+  flex: 0 0 auto;
+}
+
+.jui-dialog__arm {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+</style>

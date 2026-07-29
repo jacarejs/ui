@@ -1,0 +1,398 @@
+import { pulse } from '@jacare/core'
+
+export <contract>
+  props: {
+    value: { type: 'object', default: [], model: true }
+    accept: { type: 'string', default: '' }
+    multiple: { type: 'boolean', default: false }
+    disabled: { type: 'boolean', default: false }
+    listType: { type: 'string', default: 'text' }
+    drag: { type: 'boolean', default: false }
+    limit: { type: 'number', default: 0 }
+  }
+  slots: ['default']
+  emits: ['change', 'remove', 'exceed']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function isFunction(value) {
+  return typeof value === 'function'
+}
+
+function filesOf(model) {
+  const current = read(model)
+  return Array.isArray(current) ? current : []
+}
+
+function commit(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function makeUid() {
+  return `jui-upload-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+function isPicture(value) {
+  return read(value) === 'picture'
+}
+
+function formatSize(bytes) {
+  const size = Number(bytes)
+  if (!Number.isFinite(size) || size <= 0) return ''
+  if (size < 1024) return `${size} B`
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function readAsDataUrl(file) {
+  return new Promise((resolve) => {
+    if (typeof FileReader === 'undefined') {
+      resolve('')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.onerror = () => resolve('')
+    reader.readAsDataURL(file)
+  })
+}
+
+function updateFileUrl(model, record, url, emitFn) {
+  const next = filesOf(model).map((file) => (file === record ? { ...file, url } : file))
+  commit(model, next, emitFn)
+}
+
+function addFiles(fileList, model, limitValue, listTypeValue, emitFn) {
+  const incoming = Array.from(fileList || [])
+  if (!incoming.length) return
+  const limit = Number(read(limitValue)) || 0
+  if (limit > 0 && filesOf(model).length + incoming.length > limit) {
+    emitFn('exceed', { files: incoming, limit })
+    return
+  }
+  const records = incoming.map((file) => ({
+    uid: makeUid(),
+    name: file.name,
+    size: file.size,
+    status: 'done',
+    url: '',
+    raw: file,
+  }))
+  commit(model, [...filesOf(model), ...records], emitFn)
+  if (isPicture(listTypeValue)) {
+    records.forEach((record) => {
+      if (!/^image\//.test(record.raw?.type || '')) return
+      readAsDataUrl(record.raw).then((url) => {
+        if (url) updateFileUrl(model, record, url, emitFn)
+      })
+    })
+  }
+}
+
+function handleInputChange(event, model, limitValue, listTypeValue, emitFn) {
+  addFiles(event.target.files, model, limitValue, listTypeValue, emitFn)
+  event.target.value = ''
+}
+
+function removeFile(file, model, emitFn) {
+  commit(model, filesOf(model).filter((item) => item !== file), emitFn)
+  emitFn('remove', file)
+}
+
+function triggerPick(event) {
+  event.currentTarget.closest('[data-upload]')?.querySelector('input[type="file"]')?.click()
+}
+
+function dragState(emitFn) {
+  if (!emitFn.__juiUploadDragging) emitFn.__juiUploadDragging = pulse(false)
+  return emitFn.__juiUploadDragging
+}
+
+function handleDragOver(event, dragValue) {
+  if (!read(dragValue)) return
+  event.preventDefault()
+}
+
+function handleDragEnter(event, dragValue, disabledValue, emitFn) {
+  if (!read(dragValue) || read(disabledValue)) return
+  event.preventDefault()
+  dragState(emitFn).set(true)
+}
+
+function handleDragLeave(event, dragValue, emitFn) {
+  if (!read(dragValue)) return
+  event.preventDefault()
+  dragState(emitFn).set(false)
+}
+
+function handleDrop(event, dragValue, model, limitValue, listTypeValue, disabledValue, emitFn) {
+  if (!read(dragValue)) return
+  event.preventDefault()
+  dragState(emitFn).set(false)
+  if (read(disabledValue)) return
+  addFiles(event.dataTransfer?.files, model, limitValue, listTypeValue, emitFn)
+}
+
+export <view>
+  <div class="jui-upload" data-upload class-is-disabled=${() => !!read(disabled)}>
+    <input
+      class="jui-upload__input"
+      type="file"
+      accept=${() => read(accept) || ''}
+      multiple=${() => !!read(multiple)}
+      disabled=${() => !!read(disabled)}
+      tabindex="-1"
+      aria-hidden="true"
+      on-change=${(event) => handleInputChange(event, value, limit, listType, emit)}
+    />
+
+    <button
+      type="button"
+      class="jui-upload__trigger"
+      class-jui-upload__trigger--drag=${() => !!read(drag)}
+      class-is-dragging=${() => !!read(drag) && read(dragState(emit))}
+      disabled=${() => !!read(disabled)}
+      on-click=${triggerPick}
+      on-dragover=${(event) => handleDragOver(event, drag)}
+      on-dragenter=${(event) => handleDragEnter(event, drag, disabled, emit)}
+      on-dragleave=${(event) => handleDragLeave(event, drag, emit)}
+      on-drop=${(event) => handleDrop(event, drag, value, limit, listType, disabled, emit)}
+    >
+      #if isFunction(children)
+        <slot />
+      #elif read(drag)
+        <span class="jui-upload__drop-icon" aria-hidden="true"></span>
+        <span class="jui-upload__drop-text">Drag files here or click to browse</span>
+      #else
+        <span class="jui-upload__trigger-text">Click to upload</span>
+      #end
+    </button>
+
+    #if filesOf(value).length
+      <ul class="jui-upload__list" class-jui-upload__list--picture=${() => isPicture(listType)}>
+        #for filesOf(value) as file, index (file.uid || index)
+          <li class="jui-upload__item" class-is-error=${() => file.status === 'error'}>
+            #if isPicture(listType)
+              <span class="jui-upload__thumb">
+                #if file.url
+                  <img class="jui-upload__thumb-img" src=${file.url} alt=${file.name} />
+                #else
+                  <span class="jui-upload__thumb-icon" aria-hidden="true"></span>
+                #end
+              </span>
+            #end
+            <span class="jui-upload__meta">
+              <span class="jui-upload__name">${file.name}</span>
+              #if formatSize(file.size)
+                <span class="jui-upload__size">${() => formatSize(file.size)}</span>
+              #end
+              #if file.status === 'error'
+                <span class="jui-upload__status">Failed</span>
+              #elif file.status === 'uploading'
+                <span class="jui-upload__status">Uploading…</span>
+              #end
+            </span>
+            <button
+              type="button"
+              class="jui-upload__remove"
+              aria-label=${`Remove ${file.name}`}
+              disabled=${() => !!read(disabled)}
+              on-click=${() => removeFile(file, value, emit)}
+            >×</button>
+          </li>
+        #end
+      </ul>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-upload {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.jui-upload.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-upload__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-upload__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.65rem 1.15rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  color: var(--j-forest);
+  background: var(--j-surface-2);
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.jui-upload__trigger:hover:not(:disabled) {
+  border-color: var(--j-primary);
+  background: var(--j-mint);
+}
+
+.jui-upload__trigger:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-upload__trigger:disabled {
+  cursor: not-allowed;
+}
+
+.jui-upload__trigger--drag {
+  flex-direction: column;
+  width: 100%;
+  min-height: 8rem;
+  padding: 1.5rem;
+  border: 1.5px dashed var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface);
+}
+
+.jui-upload__trigger--drag.is-dragging {
+  border-color: var(--j-primary);
+  background: var(--j-mint);
+}
+
+.jui-upload__drop-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background-color: var(--j-primary);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 16V4M12 4 7 9M12 4l5 5'/%3E%3Cpath d='M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3'/%3E%3C/svg%3E") center / 60% no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 16V4M12 4 7 9M12 4l5 5'/%3E%3Cpath d='M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3'/%3E%3C/svg%3E") center / 60% no-repeat;
+}
+
+.jui-upload__drop-text {
+  color: var(--j-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.jui-upload__list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jui-upload__list--picture {
+  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+}
+
+.jui-upload__item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+}
+
+.jui-upload__item.is-error {
+  border-color: var(--j-danger);
+}
+
+.jui-upload__list--picture .jui-upload__item {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0.5rem;
+}
+
+.jui-upload__thumb {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+}
+
+.jui-upload__thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.jui-upload__thumb-icon {
+  width: 1.8rem;
+  height: 1.8rem;
+  background-color: var(--j-muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='16' rx='2'/%3E%3Ccircle cx='9' cy='10' r='1.5'/%3E%3Cpath d='M21 16l-5.5-5.5L4 21'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='16' rx='2'/%3E%3Ccircle cx='9' cy='10' r='1.5'/%3E%3Cpath d='M21 16l-5.5-5.5L4 21'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.jui-upload__meta {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.jui-upload__name {
+  overflow: hidden;
+  color: var(--j-text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jui-upload__size {
+  color: var(--j-muted);
+  font-size: 0.75rem;
+}
+
+.jui-upload__status {
+  color: var(--j-danger);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.jui-upload__remove {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: 0;
+  border-radius: 999px;
+  color: var(--j-muted);
+  background: transparent;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.jui-upload__remove:hover:not(:disabled) {
+  color: var(--j-danger);
+  background: var(--j-mint);
+}
+
+.jui-upload__remove:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+</style>

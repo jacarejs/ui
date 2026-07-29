@@ -1,0 +1,251 @@
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'any', model: true }
+    options: { type: 'object', default: [] }
+    layout: { type: 'string', default: 'list' }
+    name: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+    required: { type: 'boolean', default: false }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function normalizeOptions(optionsValue) {
+  const list = read(optionsValue)
+  if (!Array.isArray(list)) return []
+  return list.map((option, index) => {
+    if (option && typeof option === 'object') {
+      const value = option.value ?? option.id ?? String(index)
+      return {
+        value,
+        label: option.label ?? String(value),
+        description: option.description ?? '',
+        disabled: !!option.disabled,
+      }
+    }
+    return {
+      value: option,
+      label: String(option),
+      description: '',
+      disabled: false,
+    }
+  })
+}
+
+function groupName(nameValue, emitFn) {
+  const named = String(read(nameValue) || '').trim()
+  if (named) return named
+  if (!emitFn.__juiRadioName) {
+    emitFn.__juiRadioName = `jui-radio-${Math.random().toString(36).slice(2, 9)}`
+  }
+  return emitFn.__juiRadioName
+}
+
+function isSelected(optionValue, model) {
+  return read(model) === optionValue
+}
+
+function pick(option, model, disabledValue, emitFn) {
+  if (read(disabledValue) || option.disabled) return
+  if (model && typeof model.set === 'function') model.set(option.value)
+  emitFn('change', option.value)
+}
+
+function layoutOf(value) {
+  return read(value) === 'cards' ? 'cards' : 'list'
+}
+
+export <view>
+  <fieldset
+    class="jui-radio"
+    class-jui-radio--cards=${() => layoutOf(layout) === 'cards'}
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
+    disabled=${() => !!read(disabled)}
+  >
+    #if read(label)
+      <legend class="jui-radio__legend">
+        ${() => read(label)}
+        #if read(required)
+          <span class="jui-radio__req" aria-hidden="true">*</span>
+        #end
+      </legend>
+    #end
+
+    <div class="jui-radio__list" role="presentation">
+      #for normalizeOptions(options) as option (option.value)
+        <label
+          class="jui-radio__option"
+          class-is-active=${() => isSelected(option.value, value)}
+          class-is-disabled=${() => !!option.disabled}
+        >
+          <input
+            class="jui-radio__input"
+            type="radio"
+            name=${() => groupName(name, emit)}
+            value=${() => String(option.value)}
+            disabled=${() => !!(read(disabled) || option.disabled)}
+            checked=${() => isSelected(option.value, value)}
+            required=${() => !!read(required)}
+            aria-invalid=${() => !!read(error)}
+            on-change=${() => pick(option, value, disabled, emit)}
+          />
+          <span class="jui-radio__control" aria-hidden="true"></span>
+          <span class="jui-radio__copy">
+            <span class="jui-radio__title">${option.label}</span>
+            #if option.description
+              <span class="jui-radio__desc">${option.description}</span>
+            #end
+          </span>
+        </label>
+      #end
+    </div>
+
+    #if read(error)
+      <span class="jui-radio__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-radio__hint">${() => read(hint)}</span>
+    #end
+  </fieldset>
+</view>
+
+export <style>
+.jui-radio {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+.jui-radio__legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-radio__req {
+  color: var(--j-danger);
+}
+
+.jui-radio__list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.jui-radio--cards .jui-radio__list {
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.65rem;
+}
+
+.jui-radio__option {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: start;
+  min-height: 2.75rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.jui-radio__option:hover {
+  border-color: color-mix(in srgb, var(--j-primary) 45%, var(--j-border));
+}
+
+.jui-radio__option.is-active {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+  background: color-mix(in srgb, var(--j-mint) 55%, var(--j-surface-2));
+}
+
+.jui-radio__option.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.jui-radio.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-radio__input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.jui-radio__control {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.1rem;
+  border: 1.5px solid var(--j-border);
+  border-radius: 999px;
+  background: var(--j-surface-2);
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.jui-radio__input:checked + .jui-radio__control {
+  border-color: var(--j-primary);
+  background:
+    radial-gradient(circle at center, var(--j-primary) 0 0.28rem, transparent 0.3rem),
+    var(--j-surface-2);
+}
+
+.jui-radio__input:focus-visible + .jui-radio__control {
+  box-shadow: var(--j-focus);
+}
+
+.jui-radio__copy {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.jui-radio__title {
+  font-weight: 700;
+  color: var(--j-text);
+  line-height: 1.3;
+}
+
+.jui-radio__desc {
+  color: var(--j-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.jui-radio.has-error .jui-radio__option {
+  border-color: color-mix(in srgb, var(--j-danger) 55%, var(--j-border));
+}
+
+.jui-radio__hint,
+.jui-radio__error {
+  font-size: 0.8rem;
+}
+
+.jui-radio__hint {
+  color: var(--j-muted);
+}
+
+.jui-radio__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

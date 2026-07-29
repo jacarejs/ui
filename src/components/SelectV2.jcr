@@ -1,0 +1,343 @@
+import { pulse } from '@jacare/core'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'any', default: '', model: true }
+    options: { type: 'any', required: true }
+    placeholder: { type: 'string', default: 'Select' }
+    searchPlaceholder: { type: 'string', default: 'Search...' }
+    searchable: { type: 'boolean', default: true }
+    disabled: { type: 'boolean', default: false }
+    error: { type: 'string', default: '' }
+    hint: { type: 'string', default: '' }
+    height: { type: 'number', default: 274 }
+    itemSize: { type: 'number', default: 44 }
+  }
+  emits: ['change']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function normalizedOptions(source) {
+  return (read(source) || []).map((option) => (option && typeof option === 'object')
+    ? { value: option.value, label: option.label ?? String(option.value), tag: option.tag || '' }
+    : { value: option, label: String(option), tag: '' })
+}
+
+function queryPulse(emitFn) {
+  if (!emitFn.__juiSelectV2Query) emitFn.__juiSelectV2Query = pulse('')
+  return emitFn.__juiSelectV2Query
+}
+
+function scrollPulse(emitFn) {
+  if (!emitFn.__juiSelectV2Scroll) emitFn.__juiSelectV2Scroll = pulse(0)
+  return emitFn.__juiSelectV2Scroll
+}
+
+function filteredOptions(source, emitFn) {
+  const query = String(queryPulse(emitFn)() || '').trim().toLowerCase()
+  const list = normalizedOptions(source)
+  if (!query) return list
+  return list.filter((option) => `${option.label} ${option.tag}`.toLowerCase().includes(query))
+}
+
+function windowedOptions(source, emitFn, heightValue, itemSizeValue) {
+  const list = filteredOptions(source, emitFn)
+  const itemSize = Math.max(28, Number(read(itemSizeValue)) || 44)
+  const height = Math.max(itemSize * 3, Number(read(heightValue)) || 274)
+  const scrollTop = Number(scrollPulse(emitFn)()) || 0
+  const visible = Math.ceil(height / itemSize) + 4
+  const start = Math.max(0, Math.floor(scrollTop / itemSize) - 2)
+  const end = Math.min(list.length, start + visible)
+  return {
+    list: list.slice(start, end),
+    start,
+    padTop: start * itemSize,
+    padBottom: Math.max(0, (list.length - end) * itemSize),
+    total: list.length,
+    height,
+    itemSize,
+  }
+}
+
+function selectedOption(model, source) {
+  const current = String(read(model) ?? '')
+  return normalizedOptions(source).find((option) => String(option.value) === current)
+}
+
+function selectedLabel(model, source, placeholderValue) {
+  return selectedOption(model, source)?.label || read(placeholderValue)
+}
+
+function commitValue(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function handleToggle(event, emitFn) {
+  const current = event.currentTarget
+  if (!current.open) {
+    current.outsideController?.abort()
+    return
+  }
+  document.querySelectorAll('details.jui-select-v2__control[open]').forEach((details) => {
+    if (details !== current) details.removeAttribute('open')
+  })
+  queryPulse(emitFn).set('')
+  scrollPulse(emitFn).set(0)
+  current.outsideController?.abort()
+  const controller = new AbortController()
+  current.outsideController = controller
+  requestAnimationFrame(() => {
+    current.querySelector('input')?.focus()
+    document.addEventListener('pointerdown', (pointerEvent) => {
+      if (!current.contains(pointerEvent.target)) current.removeAttribute('open')
+    }, { signal: controller.signal })
+  })
+}
+
+function chooseOption(option, event, model, emitFn) {
+  const details = event.currentTarget.closest('details')
+  commitValue(model, option.value, emitFn)
+  details?.removeAttribute('open')
+  queryPulse(emitFn).set('')
+  scrollPulse(emitFn).set(0)
+}
+
+export <view>
+  <div class="jui-select-v2" class-has-error=${() => !!read(error)} class-is-disabled=${() => !!read(disabled)}>
+    #if read(label)
+      <span class="jui-select-v2__label">${() => read(label)}</span>
+    #end
+
+    <details class="jui-select-v2__control" on-toggle=${(event) => handleToggle(event, emit)}>
+      <summary
+        class="jui-select-v2__trigger"
+        aria-haspopup="listbox"
+        tabindex=${() => read(disabled) ? '-1' : '0'}
+        on-click=${(event) => {
+          if (read(disabled)) event.preventDefault()
+        }}
+      >
+        <span class="jui-select-v2__value">${() => selectedLabel(value, options, placeholder)}</span>
+        <span class="jui-select-v2__chevron" aria-hidden="true">⌄</span>
+      </summary>
+
+      <div class="jui-select-v2__panel">
+        #if read(searchable)
+          <input
+            class="jui-select-v2__search"
+            type="search"
+            placeholder=${() => read(searchPlaceholder)}
+            value=${() => queryPulse(emit)()}
+            on-input=${(event) => {
+              queryPulse(emit).set(event.target.value)
+              scrollPulse(emit).set(0)
+            }}
+            on-keydown=${(event) => {
+              if (event.key === 'Escape') event.currentTarget.closest('details').removeAttribute('open')
+            }}
+          />
+        #end
+
+        <div
+          class="jui-select-v2__viewport"
+          role="listbox"
+          :style=${() => `height:${windowedOptions(options, emit, height, itemSize).height}px`}
+          on-scroll=${(event) => scrollPulse(emit).set(event.currentTarget.scrollTop)}
+        >
+          <div :style=${() => `height:${windowedOptions(options, emit, height, itemSize).padTop}px`}></div>
+          #for windowedOptions(options, emit, height, itemSize).list as option (option.value)
+            <button
+              type="button"
+              role="option"
+              class="jui-select-v2__option"
+              class-is-active=${() => String(read(value) ?? '') === String(option.value)}
+              aria-selected=${() => String(read(value) ?? '') === String(option.value)}
+              :style=${() => `height:${windowedOptions(options, emit, height, itemSize).itemSize}px`}
+              on-click=${(event) => chooseOption(option, event, value, emit)}
+            >
+              <span>${option.label}</span>
+              #if option.tag
+                <small class="jui-select-v2__tag">${option.tag}</small>
+              #end
+            </button>
+          #end
+          <div :style=${() => `height:${windowedOptions(options, emit, height, itemSize).padBottom}px`}></div>
+          #if windowedOptions(options, emit, height, itemSize).total === 0
+            <div class="jui-select-v2__empty">No results</div>
+          #end
+        </div>
+      </div>
+    </details>
+
+    #if read(error)
+      <span class="jui-select-v2__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-select-v2__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-select-v2 {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-select-v2__label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-select-v2__control {
+  position: relative;
+  min-width: 0;
+}
+
+.jui-select-v2__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  outline: 0;
+  color: var(--j-text);
+  background: var(--j-surface-2);
+  cursor: pointer;
+  list-style: none;
+}
+
+.jui-select-v2__trigger::-webkit-details-marker {
+  display: none;
+}
+
+.jui-select-v2__trigger:focus,
+.jui-select-v2__control[open] .jui-select-v2__trigger {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-select-v2.has-error .jui-select-v2__trigger {
+  border-color: var(--j-danger);
+}
+
+.jui-select-v2.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-select-v2.is-disabled .jui-select-v2__trigger {
+  cursor: not-allowed;
+}
+
+.jui-select-v2__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jui-select-v2__chevron {
+  color: var(--j-muted);
+  font-size: 1.1rem;
+}
+
+.jui-select-v2__control[open] .jui-select-v2__chevron {
+  transform: rotate(180deg);
+}
+
+.jui-select-v2__panel {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  padding: 0.55rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  box-shadow: var(--j-shadow);
+}
+
+.jui-select-v2__control:not([open]) .jui-select-v2__panel {
+  display: none;
+}
+
+.jui-select-v2__search {
+  width: 100%;
+  min-height: 2.25rem;
+  margin-bottom: 0.45rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  outline: 0;
+  color: var(--j-text);
+  background: var(--j-surface);
+}
+
+.jui-select-v2__viewport {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.jui-select-v2__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0 0.7rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  color: var(--j-text);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.jui-select-v2__option:hover,
+.jui-select-v2__option.is-active {
+  background: var(--j-mint);
+}
+
+.jui-select-v2__tag {
+  flex: 0 0 auto;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--j-radius-pill);
+  color: var(--j-forest);
+  background: var(--j-mint);
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.jui-select-v2__empty {
+  padding: 0.8rem;
+  color: var(--j-muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.jui-select-v2__hint,
+.jui-select-v2__error {
+  font-size: 0.8rem;
+}
+
+.jui-select-v2__hint {
+  color: var(--j-muted);
+}
+
+.jui-select-v2__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

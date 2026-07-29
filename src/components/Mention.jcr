@@ -1,0 +1,266 @@
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'string', default: '', model: true }
+    options: { type: 'any', required: true }
+    prefix: { type: 'string', default: '@' }
+    placeholder: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change', 'select']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function normalizedOptions(source) {
+  return (read(source) || []).map((item) => (item && typeof item === 'object')
+    ? { value: item.value, label: item.label ?? String(item.value) }
+    : { value: item, label: String(item) })
+}
+
+function commitValue(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function triggerAt(text, caret, prefixChar) {
+  const upToCaret = text.slice(0, caret)
+  const triggerIndex = upToCaret.lastIndexOf(prefixChar)
+  if (triggerIndex === -1) return null
+  const before = upToCaret[triggerIndex - 1]
+  if (before && !/\s/.test(before)) return null
+  const query = upToCaret.slice(triggerIndex + prefixChar.length)
+  if (/\s/.test(query)) return null
+  return { start: triggerIndex, query }
+}
+
+function closePanel(root) {
+  if (!root) return
+  const panel = root.querySelector('[data-mention-panel]')
+  if (panel) panel.hidden = true
+  root.mentionController?.abort()
+}
+
+function handleInput(event, model, prefixValue, emitFn) {
+  const input = event.currentTarget
+  commitValue(model, input.value, emitFn)
+  const root = input.closest('[data-mention]')
+  const caret = input.selectionStart ?? input.value.length
+  const prefixChar = read(prefixValue) || '@'
+  const trigger = triggerAt(input.value, caret, prefixChar)
+
+  if (!trigger) {
+    closePanel(root)
+    return
+  }
+
+  input.dataset.mentionStart = String(trigger.start)
+  input.dataset.mentionEnd = String(caret)
+  const query = trigger.query.toLowerCase()
+  let visible = 0
+  root.querySelectorAll('[data-mention-option]').forEach((button) => {
+    const matches = String(button.getAttribute('data-search') || '').includes(query)
+    const item = button.closest('li')
+    if (item) item.hidden = !matches
+    if (matches) visible += 1
+  })
+  const empty = root.querySelector('[data-mention-empty]')
+  if (empty) empty.hidden = visible > 0
+
+  root.mentionController?.abort()
+  const controller = new AbortController()
+  root.mentionController = controller
+  root.querySelector('[data-mention-panel]').hidden = false
+  document.addEventListener('pointerdown', (pointerEvent) => {
+    if (!root.contains(pointerEvent.target)) closePanel(root)
+  }, { signal: controller.signal })
+}
+
+function insertMention(option, event, model, prefixValue, emitFn) {
+  const root = event.currentTarget.closest('[data-mention]')
+  const input = root.querySelector('[data-mention-input]')
+  const start = Number(input.dataset.mentionStart || 0)
+  const end = Number(input.dataset.mentionEnd || start)
+  const current = String(read(model) || '')
+  const insertText = `${read(prefixValue) || '@'}${option.label} `
+  const next = current.slice(0, start) + insertText + current.slice(end)
+
+  input.value = next
+  commitValue(model, next, emitFn)
+  emitFn('select', option)
+  closePanel(root)
+
+  requestAnimationFrame(() => {
+    input.focus()
+    const caret = start + insertText.length
+    input.setSelectionRange(caret, caret)
+  })
+}
+
+export <view>
+  <div class="jui-mention" data-mention class-has-error=${() => !!read(error)} class-is-disabled=${() => !!read(disabled)}>
+    #if read(label)
+      <span class="jui-mention__label">${() => read(label)}</span>
+    #end
+
+    <div class="jui-mention__control">
+      <input
+        class="jui-mention__input"
+        data-mention-input
+        type="text"
+        placeholder=${() => read(placeholder)}
+        value=${() => read(value)}
+        disabled=${() => !!read(disabled)}
+        aria-invalid=${() => !!read(error)}
+        on-input=${(event) => handleInput(event, value, prefix, emit)}
+        on-keydown=${(event) => {
+          if (event.key === 'Escape') closePanel(event.currentTarget.closest('[data-mention]'))
+        }}
+      />
+
+      <ul class="jui-mention__panel" data-mention-panel role="listbox" hidden>
+        #for normalizedOptions(options) as option (option.value)
+          <li>
+            <button
+              type="button"
+              role="option"
+              class="jui-mention__option"
+              data-mention-option
+              data-search=${() => String(option.label).toLowerCase()}
+              on-click=${(event) => insertMention(option, event, value, prefix, emit)}
+            >${option.label}</button>
+          </li>
+        #end
+        <li class="jui-mention__empty" data-mention-empty hidden>No matches</li>
+      </ul>
+    </div>
+
+    #if read(error)
+      <span class="jui-mention__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-mention__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-mention {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-mention__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-mention__control {
+  position: relative;
+  min-width: 0;
+}
+
+.jui-mention__input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  outline: 0;
+  color: var(--j-text);
+  background: var(--j-surface-2);
+  font: inherit;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-mention__input:focus {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-mention__input:disabled {
+  cursor: not-allowed;
+}
+
+.jui-mention.has-error .jui-mention__input {
+  border-color: var(--j-danger);
+}
+
+.jui-mention.has-error .jui-mention__label {
+  color: var(--j-danger);
+}
+
+.jui-mention.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-mention__panel {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  min-width: 12rem;
+  display: grid;
+  gap: 0.18rem;
+  max-height: 12rem;
+  margin: 0;
+  padding: 0.45rem;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  box-shadow: var(--j-shadow);
+}
+
+.jui-mention__panel[hidden] {
+  display: none;
+}
+
+.jui-mention__option {
+  display: block;
+  width: 100%;
+  min-height: 2.4rem;
+  padding: 0.5rem 0.7rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  color: var(--j-text);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-weight: 700;
+}
+
+.jui-mention__option:hover {
+  background: var(--j-mint);
+}
+
+.jui-mention__empty {
+  padding: 0.7rem;
+  color: var(--j-muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.jui-mention__hint,
+.jui-mention__error {
+  font-size: 0.8rem;
+}
+
+.jui-mention__hint {
+  color: var(--j-muted);
+}
+
+.jui-mention__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

@@ -527,4 +527,105 @@ describe('@jacare/ui components', () => {
     expect(el.classList.contains('jui-grid--gap-sm')).toBe(true)
     expect(el.classList.contains('jui-grid--dense')).toBe(true)
   })
+
+  it('Icon renders named glyph with accessible label', async () => {
+    const Icon = await loadComponent('Icon')
+    const host = document.createElement('div')
+
+    Icon.mount(host, {
+      name: 'check',
+      size: 'lg',
+      tone: 'success',
+      label: 'Done',
+    })
+
+    const el = host.querySelector('.jui-icon')
+    expect(el).toBeTruthy()
+    expect(el.classList.contains('jui-icon--lg')).toBe(true)
+    expect(el.classList.contains('jui-icon--success')).toBe(true)
+    expect(el.getAttribute('role')).toBe('img')
+    expect(el.getAttribute('aria-label')).toBe('Done')
+    expect(el.style.getPropertyValue('--jui-icon-mask') || el.getAttribute('style') || '').toContain('data:image/svg+xml')
+  })
+
+  it('Textarea binds a pulse and shows character count', async () => {
+    const Textarea = await loadComponent('Textarea')
+    const host = document.createElement('div')
+    const value = pulse('')
+
+    Textarea.mount(host, {
+      label: 'Bio',
+      value,
+      maxLength: 10,
+      showCount: true,
+    })
+
+    const control = host.querySelector('textarea')
+    expect(control).toBeTruthy()
+    expect(host.querySelector('.jui-textarea__count').textContent).toBe('0 / 10')
+
+    control.value = 'hello'
+    control.dispatchEvent(new Event('input', { bubbles: true }))
+    expect(value()).toBe('hello')
+    expect(host.querySelector('.jui-textarea__count').textContent).toBe('5 / 10')
+  })
+
+  it('RadioGroup updates value from option selection', async () => {
+    const RadioGroup = await loadComponent('RadioGroup')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const value = pulse('free')
+    let changed = ''
+
+    RadioGroup.mount(host, {
+      label: 'Plan',
+      value,
+      options: [
+        { value: 'free', label: 'Free' },
+        { value: 'pro', label: 'Pro' },
+      ],
+      change: (next) => {
+        changed = next
+      },
+    })
+
+    const inputs = host.querySelectorAll('input[type="radio"]')
+    expect(inputs).toHaveLength(2)
+    expect(inputs[0].checked).toBe(true)
+
+    inputs[1].checked = true
+    inputs[1].dispatchEvent(new Event('change', { bubbles: true }))
+    expect(value()).toBe('pro')
+    expect(changed).toBe('pro')
+  })
+
+  it('Dialog renders only when open and emits close', async () => {
+    const Dialog = await loadComponent('Dialog')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const open = pulse(false)
+    let closed = 0
+
+    Dialog.mount(host, {
+      open,
+      title: 'Details',
+      close: () => {
+        closed += 1
+      },
+      children: (target) => {
+        target.appendChild(document.createTextNode('Body'))
+        return () => {}
+      },
+    })
+
+    expect(host.querySelector('.jui-dialog')).toBeNull()
+    open.set(true)
+    expect(host.querySelector('.jui-dialog')).toBeTruthy()
+    expect(host.querySelector('.jui-dialog__title').textContent).toBe('Details')
+
+    host.querySelector('.jui-dialog__close').click()
+    expect(closed).toBe(1)
+    expect(open()).toBe(false)
+    expect(host.querySelector('.jui-dialog')).toBeNull()
+  })
 })

@@ -1,0 +1,216 @@
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'string', default: '', model: true }
+    min: { type: 'string', default: '' }
+    max: { type: 'string', default: '' }
+    clearable: { type: 'boolean', default: true }
+    disabled: { type: 'boolean', default: false }
+    required: { type: 'boolean', default: false }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function splitValue(value) {
+  const raw = String(read(value) || '')
+  const [datePart = '', timePart = ''] = raw.split('T')
+  return { date: datePart, time: timePart.slice(0, 5) }
+}
+
+function composeValue(datePart, timePart) {
+  if (!datePart) return ''
+  return `${datePart}T${timePart || '00:00'}`
+}
+
+function commitValue(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function updateDate(event, model, emitFn) {
+  const { time } = splitValue(model)
+  commitValue(model, composeValue(event.target.value, time), emitFn)
+}
+
+function updateTime(event, model, emitFn) {
+  const { date } = splitValue(model)
+  if (!date) return
+  commitValue(model, composeValue(date, event.target.value), emitFn)
+}
+
+function clearValue(event, model, emitFn) {
+  const root = event.currentTarget.closest('[data-datetime]')
+  const dateInput = root?.querySelector('[data-datetime-date]')
+  const timeInput = root?.querySelector('[data-datetime-time]')
+  if (dateInput) dateInput.value = ''
+  if (timeInput) timeInput.value = ''
+  commitValue(model, '', emitFn)
+}
+
+export <view>
+  <div class="jui-datetime" data-datetime class-has-error=${() => !!read(error)} class-is-disabled=${() => !!read(disabled)}>
+    #if read(label)
+      <span class="jui-datetime__label">
+        ${() => read(label)}
+        #if read(required)
+          <span class="jui-datetime__req" aria-hidden="true">*</span>
+        #end
+      </span>
+    #end
+
+    <div class="jui-datetime__row">
+      <input
+        class="jui-datetime__date"
+        data-datetime-date
+        type="date"
+        min=${() => splitValue(min).date || undefined}
+        max=${() => splitValue(max).date || undefined}
+        value=${() => splitValue(value).date}
+        required=${() => !!read(required)}
+        disabled=${() => !!read(disabled)}
+        aria-invalid=${() => !!read(error)}
+        on-input=${(event) => updateDate(event, value, emit)}
+      />
+      <input
+        class="jui-datetime__time"
+        data-datetime-time
+        type="time"
+        value=${() => splitValue(value).time}
+        required=${() => !!read(required)}
+        disabled=${() => !!(read(disabled) || !splitValue(value).date)}
+        aria-invalid=${() => !!read(error)}
+        on-input=${(event) => updateTime(event, value, emit)}
+      />
+      #if read(clearable) && read(value)
+        <button
+          type="button"
+          class="jui-datetime__clear"
+          aria-label="Clear"
+          on-click=${(event) => clearValue(event, value, emit)}
+        >×</button>
+      #end
+    </div>
+
+    #if read(error)
+      <span class="jui-datetime__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-datetime__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-datetime {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-datetime__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-datetime__req {
+  color: var(--j-danger);
+}
+
+.jui-datetime.has-error .jui-datetime__label {
+  color: var(--j-danger);
+}
+
+.jui-datetime.has-error .jui-datetime__date,
+.jui-datetime.has-error .jui-datetime__time {
+  border-color: var(--j-danger);
+}
+
+.jui-datetime.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-datetime__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.jui-datetime__date,
+.jui-datetime__time {
+  min-height: 2.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  outline: 0;
+  color: var(--j-text);
+  background: var(--j-surface-2);
+  font: inherit;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-datetime__date {
+  flex: 1 1 9rem;
+  min-width: 8.5rem;
+}
+
+.jui-datetime__time {
+  flex: 1 1 7rem;
+  min-width: 7rem;
+}
+
+.jui-datetime__date:focus,
+.jui-datetime__time:focus {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-datetime__date:disabled,
+.jui-datetime__time:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.jui-datetime__clear {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  color: var(--j-muted);
+  background: var(--j-mint);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.jui-datetime__clear:hover {
+  background: var(--j-lime);
+  color: var(--j-forest);
+}
+
+.jui-datetime__hint,
+.jui-datetime__error {
+  font-size: 0.8rem;
+}
+
+.jui-datetime__hint {
+  color: var(--j-muted);
+}
+
+.jui-datetime__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

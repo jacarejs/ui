@@ -1,0 +1,534 @@
+import { pulse } from '@jacare/core'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'any', default: '', model: true }
+    data: { type: 'object', required: true }
+    placeholder: { type: 'string', default: 'Select' }
+    clearable: { type: 'boolean', default: true }
+    multiple: { type: 'boolean', default: false }
+    disabled: { type: 'boolean', default: false }
+    checkStrictly: { type: 'boolean', default: false }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function normalizeNode(node) {
+  const value = node?.value ?? node?.key ?? ''
+  return {
+    value,
+    label: node?.label ?? String(value),
+    disabled: !!node?.disabled,
+    children: Array.isArray(node?.children) ? node.children.map(normalizeNode) : [],
+  }
+}
+
+function normalizeTree(source) {
+  const list = read(source)
+  return Array.isArray(list) ? list.map(normalizeNode) : []
+}
+
+function findNode(nodes, targetValue) {
+  for (const node of nodes) {
+    if (String(node.value) === String(targetValue)) return node
+    const found = findNode(node.children, targetValue)
+    if (found) return found
+  }
+  return null
+}
+
+function flattenTree(nodes) {
+  const out = []
+  const walk = (list) => {
+    list.forEach((node) => {
+      out.push(node)
+      walk(node.children)
+    })
+  }
+  walk(nodes)
+  return out
+}
+
+function expandedState(emitFn) {
+  if (!emitFn.__juiTreeExpanded) emitFn.__juiTreeExpanded = pulse(new Set())
+  return emitFn.__juiTreeExpanded
+}
+
+function isExpanded(nodeValue, expandedPulse) {
+  return read(expandedPulse).has(String(nodeValue))
+}
+
+function toggleExpanded(nodeValue, expandedPulse) {
+  const next = new Set(read(expandedPulse))
+  const key = String(nodeValue)
+  if (next.has(key)) next.delete(key)
+  else next.add(key)
+  expandedPulse.set(next)
+}
+
+function visibleRows(source, emitFn) {
+  const result = []
+  const walk = (list, depth) => {
+    list.forEach((node) => {
+      result.push({ node, depth })
+      if (node.children.length && isExpanded(node.value, expandedState(emitFn))) {
+        walk(node.children, depth + 1)
+      }
+    })
+  }
+  walk(normalizeTree(source), 0)
+  return result
+}
+
+function selectedValues(model, isMultiple) {
+  const current = read(model)
+  if (read(isMultiple)) return Array.isArray(current) ? current.map(String) : []
+  return current === undefined || current === null || current === '' ? [] : [String(current)]
+}
+
+function isSelected(nodeValue, model, isMultiple) {
+  return selectedValues(model, isMultiple).includes(String(nodeValue))
+}
+
+function collectValues(node) {
+  const values = [node.value]
+  node.children.forEach((child) => values.push(...collectValues(child)))
+  return values
+}
+
+function reconcileAncestors(nodes, currentSet) {
+  nodes.forEach((node) => {
+    if (!node.children.length) return
+    reconcileAncestors(node.children, currentSet)
+    const selectable = node.children.filter((child) => !child.disabled)
+    const allChecked = selectable.length > 0 && selectable.every((child) => currentSet.has(String(child.value)))
+    if (allChecked && !node.disabled) currentSet.add(String(node.value))
+    else currentSet.delete(String(node.value))
+  })
+}
+
+function commitValue(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function toggleNode(node, model, source, strictValue, emitFn) {
+  if (node.disabled) return
+  const current = new Set(selectedValues(model, true))
+  const key = String(node.value)
+  const wasChecked = current.has(key)
+
+  if (read(strictValue)) {
+    if (wasChecked) current.delete(key)
+    else current.add(key)
+  } else {
+    const group = collectValues(node).map(String)
+    if (wasChecked) group.forEach((groupValue) => current.delete(groupValue))
+    else group.forEach((groupValue) => current.add(groupValue))
+    reconcileAncestors(normalizeTree(source), current)
+  }
+  commitValue(model, Array.from(current), emitFn)
+}
+
+function isIndeterminate(node, model, strictValue) {
+  if (read(strictValue) || !node.children.length) return false
+  const values = collectValues(node).map(String).filter((v) => v !== String(node.value))
+  const selected = selectedValues(model, true)
+  const anyChecked = values.some((v) => selected.includes(v))
+  return anyChecked && !selected.includes(String(node.value))
+}
+
+function pickSingle(node, event, model, emitFn) {
+  if (node.disabled) return
+  commitValue(model, node.value, emitFn)
+  event.currentTarget.closest('details')?.removeAttribute('open')
+}
+
+function selectedLabel(model, source, isMultiple, placeholderValue) {
+  const flat = flattenTree(normalizeTree(source))
+  if (read(isMultiple)) {
+    const selected = selectedValues(model, true)
+    const labels = flat.filter((node) => selected.includes(String(node.value))).map((node) => node.label)
+    if (!labels.length) return read(placeholderValue)
+    if (labels.length <= 2) return labels.join(', ')
+    return `${labels.length} selected`
+  }
+  const current = read(model)
+  const found = flat.find((node) => String(node.value) === String(current))
+  return found ? found.label : read(placeholderValue)
+}
+
+function hasSelection(model, isMultiple) {
+  return read(isMultiple) ? selectedValues(model, true).length > 0 : read(model) !== '' && read(model) !== undefined && read(model) !== null
+}
+
+function clearSelection(event, model, isMultiple, emitFn) {
+  event.stopPropagation()
+  commitValue(model, read(isMultiple) ? [] : '', emitFn)
+}
+
+function handleToggle(event, emitFn) {
+  const current = event.currentTarget
+  emitFn.__juiTreeDetails = current
+  if (!current.open) {
+    current.outsideController?.abort()
+    return
+  }
+  document.querySelectorAll('details.jui-tree-select__control[open]').forEach((details) => {
+    if (details !== current) details.removeAttribute('open')
+  })
+  current.outsideController?.abort()
+  const controller = new AbortController()
+  current.outsideController = controller
+  requestAnimationFrame(() => {
+    document.addEventListener('pointerdown', (pointerEvent) => {
+      if (!current.contains(pointerEvent.target)) current.removeAttribute('open')
+    }, { signal: controller.signal })
+    document.addEventListener('keydown', (keyEvent) => {
+      if (keyEvent.key === 'Escape') current.removeAttribute('open')
+    }, { signal: controller.signal })
+  })
+}
+
+export <view>
+  <div class="jui-tree-select" class-has-error=${() => !!read(error)} class-is-disabled=${() => !!read(disabled)}>
+    #if read(label)
+      <span class="jui-tree-select__label">${() => read(label)}</span>
+    #end
+
+    <details class="jui-tree-select__control" on-toggle=${(event) => handleToggle(event, emit)}>
+      <summary
+        class="jui-tree-select__trigger"
+        aria-haspopup="tree"
+        aria-invalid=${() => !!read(error)}
+        tabindex=${() => (read(disabled) ? '-1' : '0')}
+        on-click=${(event) => {
+          if (read(disabled)) event.preventDefault()
+        }}
+      >
+        <span class="jui-tree-select__value" class-is-placeholder=${() => !hasSelection(value, multiple)}>${() => selectedLabel(value, data, multiple, placeholder)}</span>
+        #if read(clearable) && hasSelection(value, multiple) && !read(disabled)
+          <button type="button" class="jui-tree-select__clear" aria-label="Clear selection" on-click=${(event) => clearSelection(event, value, multiple, emit)}>×</button>
+        #end
+        <span class="jui-tree-select__chevron" aria-hidden="true">⌄</span>
+      </summary>
+
+      <div class="jui-tree-select__panel">
+        <ul class="jui-tree-select__tree" role="tree">
+          #for visibleRows(data, emit) as row (row.node.value)
+            <li
+              class="jui-tree-select__row"
+              role="treeitem"
+              :style=${() => `padding-left:${row.depth * 1.15}rem`}
+              aria-level=${() => row.depth + 1}
+              aria-expanded=${() => (row.node.children.length ? isExpanded(row.node.value, expandedState(emit)) : undefined)}
+            >
+              #if row.node.children.length
+                <button
+                  type="button"
+                  class="jui-tree-select__toggle"
+                  aria-label=${() => (isExpanded(row.node.value, expandedState(emit)) ? 'Collapse' : 'Expand')}
+                  on-click=${() => toggleExpanded(row.node.value, expandedState(emit))}
+                >
+                  <span class="jui-tree-select__toggle-icon" class-is-open=${() => isExpanded(row.node.value, expandedState(emit))} aria-hidden="true"></span>
+                </button>
+              #else
+                <span class="jui-tree-select__toggle-spacer" aria-hidden="true"></span>
+              #end
+
+              #if read(multiple)
+                <button
+                  type="button"
+                  class="jui-tree-select__option"
+                  role="checkbox"
+                  aria-checked=${() => (isIndeterminate(row.node, value, checkStrictly) ? 'mixed' : isSelected(row.node.value, value, true))}
+                  disabled=${() => !!(read(disabled) || row.node.disabled)}
+                  on-click=${() => toggleNode(row.node, value, data, checkStrictly, emit)}
+                >
+                  <span
+                    class="jui-tree-select__box"
+                    class-is-checked=${() => isSelected(row.node.value, value, true)}
+                    class-is-indeterminate=${() => isIndeterminate(row.node, value, checkStrictly)}
+                    aria-hidden="true"
+                  ></span>
+                  <span class="jui-tree-select__row-label">${row.node.label}</span>
+                </button>
+              #else
+                <button
+                  type="button"
+                  class="jui-tree-select__option"
+                  role="treeitem"
+                  class-is-active=${() => isSelected(row.node.value, value, false)}
+                  aria-selected=${() => isSelected(row.node.value, value, false)}
+                  disabled=${() => !!(read(disabled) || row.node.disabled)}
+                  on-click=${() => pickSingle(row.node, value, emit)}
+                >
+                  <span class="jui-tree-select__row-label">${row.node.label}</span>
+                </button>
+              #end
+            </li>
+          #end
+          #if visibleRows(data, emit).length === 0
+            <li class="jui-tree-select__empty">No data</li>
+          #end
+        </ul>
+      </div>
+    </details>
+
+    #if read(error)
+      <span class="jui-tree-select__error" role="alert">${() => read(error)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-tree-select {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-tree-select__label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-tree-select__control {
+  position: relative;
+  min-width: 0;
+}
+
+.jui-tree-select__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  outline: 0;
+  color: var(--j-text);
+  background: var(--j-surface-2);
+  cursor: pointer;
+  list-style: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-tree-select__trigger::-webkit-details-marker {
+  display: none;
+}
+
+.jui-tree-select__trigger:focus,
+.jui-tree-select__control[open] .jui-tree-select__trigger {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-tree-select.has-error .jui-tree-select__trigger {
+  border-color: var(--j-danger);
+}
+
+.jui-tree-select.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-tree-select__value {
+  overflow: hidden;
+  flex: 1 1 auto;
+  color: var(--j-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jui-tree-select__value.is-placeholder {
+  color: var(--j-muted);
+}
+
+.jui-tree-select__clear {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 0;
+  border-radius: 999px;
+  color: var(--j-muted);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.jui-tree-select__clear:hover {
+  color: var(--j-danger);
+  background: var(--j-mint);
+}
+
+.jui-tree-select__chevron {
+  flex: 0 0 auto;
+  color: var(--j-muted);
+  font-size: 1.1rem;
+  transition: transform 120ms ease;
+}
+
+.jui-tree-select__control[open] .jui-tree-select__chevron {
+  transform: rotate(180deg);
+}
+
+.jui-tree-select__panel {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  padding: 0.5rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  box-shadow: var(--j-shadow);
+}
+
+.jui-tree-select__control:not([open]) .jui-tree-select__panel {
+  display: none;
+}
+
+.jui-tree-select__tree {
+  display: grid;
+  gap: 0.1rem;
+  max-height: 16rem;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.jui-tree-select__row {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.jui-tree-select__toggle,
+.jui-tree-select__toggle-spacer {
+  flex: 0 0 auto;
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.jui-tree-select__toggle {
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  background: transparent;
+  color: var(--j-muted);
+  cursor: pointer;
+}
+
+.jui-tree-select__toggle:hover {
+  background: var(--j-mint);
+}
+
+.jui-tree-select__toggle-icon {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 1.6px solid currentColor;
+  border-bottom: 1.6px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 120ms ease;
+}
+
+.jui-tree-select__toggle-icon.is-open {
+  transform: rotate(45deg);
+}
+
+.jui-tree-select__option {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.35rem;
+  padding: 0.35rem 0.5rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  color: var(--j-text);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.jui-tree-select__option:hover:not(:disabled),
+.jui-tree-select__option.is-active {
+  background: var(--j-mint);
+}
+
+.jui-tree-select__option:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.jui-tree-select__row-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.jui-tree-select__box {
+  position: relative;
+  flex: 0 0 auto;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 1.5px solid var(--j-border);
+  border-radius: 0.3rem;
+  background: var(--j-surface-2);
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.jui-tree-select__box.is-checked {
+  background: var(--j-primary);
+  border-color: var(--j-primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5 6.5 11.5 12.5 4.5'/%3E%3C/svg%3E");
+  background-size: 0.8rem;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.jui-tree-select__box.is-indeterminate {
+  background: var(--j-primary);
+  border-color: var(--j-primary);
+  background-image: none;
+}
+
+.jui-tree-select__box.is-indeterminate::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.55rem;
+  height: 0.15rem;
+  background: #ffffff;
+  transform: translate(-50%, -50%);
+}
+
+.jui-tree-select__empty {
+  padding: 1rem;
+  color: var(--j-muted);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.jui-tree-select__error {
+  color: var(--j-danger);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+</style>

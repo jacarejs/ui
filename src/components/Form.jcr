@@ -1,0 +1,68 @@
+export <contract>
+  props: {
+    labelPosition: { type: 'string', default: 'top' }
+    disabled: { type: 'boolean', default: false }
+    gap: { type: 'string', default: 'md' }
+  }
+  slots: ['default']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function positionOf(value) {
+  return read(value) === 'left' ? 'left' : 'top'
+}
+
+function gapOf(value) {
+  const next = read(value)
+  if (next === 'sm' || next === 'lg') return next
+  return 'md'
+}
+
+export <view>
+  <fieldset
+    class="jui-form"
+    class-jui-form--label-left=${() => positionOf(labelPosition) === 'left'}
+    class-jui-form--gap-sm=${() => gapOf(gap) === 'sm'}
+    class-jui-form--gap-lg=${() => gapOf(gap) === 'lg'}
+    disabled=${() => !!read(disabled)}
+  >
+    <slot />
+  </fieldset>
+</view>
+
+export <style>
+.jui-form {
+  display: grid;
+  gap: 1.1rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+.jui-form--gap-sm {
+  gap: 0.65rem;
+}
+
+.jui-form--gap-lg {
+  gap: 1.6rem;
+}
+
+.jui-form:disabled {
+  opacity: 0.65;
+}
+
+.jui-form--label-left .jui-form-item {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr);
+  align-items: start;
+  gap: 0.5rem 1rem;
+}
+
+.jui-form--label-left .jui-form-item__label {
+  padding-top: 0.6rem;
+}
+</style>

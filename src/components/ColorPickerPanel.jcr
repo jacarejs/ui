@@ -1,0 +1,210 @@
+export <contract>
+  props: {
+    value: { type: 'string', model: true }
+    disabled: { type: 'boolean', default: false }
+    showAlpha: { type: 'boolean', default: false }
+    showInput: { type: 'boolean', default: true }
+    presets: { type: 'object', default: null }
+  }
+  emits: ['change']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function normalizeHex(raw, fallback = '#189030') {
+  const text = String(raw ?? '').trim()
+  if (/^#[0-9a-fA-F]{6}$/.test(text)) return text.toLowerCase()
+  if (/^[0-9a-fA-F]{6}$/.test(text)) return `#${text.toLowerCase()}`
+  if (/^#[0-9a-fA-F]{3}$/.test(text)) {
+    const h = text.slice(1)
+    return `#${h[0]}${h[0]}${h[1]}${h[1]}${h[2]}${h[2]}`.toLowerCase()
+  }
+  if (/^[0-9a-fA-F]{3}$/.test(text)) {
+    return `#${text[0]}${text[0]}${text[1]}${text[1]}${text[2]}${text[2]}`.toLowerCase()
+  }
+  return fallback
+}
+
+function colorOf(current) {
+  return normalizeHex(read(current), '#189030')
+}
+
+function presetList(list) {
+  const items = read(list)
+  return Array.isArray(items) ? items.map((item) => normalizeHex(item)) : [
+    '#189030', '#0f766e', '#2563eb', '#7c3aed', '#db2777', '#ea580c', '#ca8a04', '#111827', '#ffffff',
+  ]
+}
+
+function writeColor(model, next, emitFn) {
+  const hex = normalizeHex(next)
+  if (model && typeof model.set === 'function') model.set(hex)
+  emitFn('change', hex)
+  return hex
+}
+
+export <view>
+  <div class="jui-color-panel" class-is-disabled=${!!read(disabled)}>
+    <div class="jui-color-panel__stage">
+      <label class="jui-color-panel__swatch">
+        <input
+          class="jui-color-panel__native"
+          type="color"
+          disabled=${!!read(disabled)}
+          value=${() => colorOf(value)}
+          aria-label="Color"
+          on-input=${(event) => writeColor(value, event.target.value, emit)}
+        />
+        <span
+          class="jui-color-panel__preview"
+          :style=${() => `background-color:${colorOf(value)}`}
+          aria-hidden="true"
+        ></span>
+      </label>
+
+      #if read(showInput)
+        <input
+          class="jui-color-panel__hex"
+          type="text"
+          spellcheck="false"
+          autocomplete="off"
+          maxlength="7"
+          disabled=${!!read(disabled)}
+          value=${() => colorOf(value)}
+          aria-label="Hex color"
+          on-input=${(event) => {
+            const raw = String(event.target.value || '').trim()
+            if (!/^#?[0-9a-fA-F]{0,6}$/.test(raw)) {
+              event.target.value = colorOf(value)
+              return
+            }
+            if (/^#?[0-9a-fA-F]{3}$/.test(raw) || /^#?[0-9a-fA-F]{6}$/.test(raw)) {
+              writeColor(value, raw, emit)
+            }
+          }}
+          on-blur=${(event) => {
+            const hex = writeColor(value, event.target.value, emit)
+            event.target.value = hex
+          }}
+        />
+      #end
+    </div>
+
+    <div class="jui-color-panel__presets" role="list" aria-label="Color presets">
+      #for presetList(presets) as hex
+        <button
+          type="button"
+          class="jui-color-panel__preset"
+          class-is-active=${() => colorOf(value) === hex}
+          role="listitem"
+          disabled=${!!read(disabled)}
+          aria-label=${hex}
+          :style=${() => `background-color:${hex}`}
+          on-click=${() => writeColor(value, hex, emit)}
+        ></button>
+      #end
+    </div>
+
+    #if read(showAlpha)
+      <p class="jui-color-panel__note">Alpha channel is reserved for a future release.</p>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-color-panel {
+  display: grid;
+  gap: 0.85rem;
+  width: min(18rem, 100%);
+  padding: 0.85rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  box-sizing: border-box;
+}
+
+.jui-color-panel.is-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.jui-color-panel__stage {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.jui-color-panel__swatch {
+  position: relative;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: var(--j-radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--j-border);
+  cursor: pointer;
+}
+
+.jui-color-panel__native {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  border: 0;
+}
+
+.jui-color-panel__preview {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.jui-color-panel__hex {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+  color: var(--j-text);
+  font: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.02em;
+}
+
+.jui-color-panel__hex:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+  border-color: var(--j-primary);
+}
+
+.jui-color-panel__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.jui-color-panel__preset {
+  width: 1.55rem;
+  height: 1.55rem;
+  border: 1px solid var(--j-border);
+  border-radius: 999px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.jui-color-panel__preset.is-active {
+  box-shadow: var(--j-focus);
+}
+
+.jui-color-panel__note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--j-muted);
+}
+</style>

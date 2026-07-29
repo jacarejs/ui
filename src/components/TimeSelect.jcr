@@ -1,0 +1,264 @@
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'string', default: '', model: true }
+    start: { type: 'string', default: '09:00' }
+    end: { type: 'string', default: '18:00' }
+    step: { type: 'string', default: '00:30' }
+    placeholder: { type: 'string', default: 'Select time' }
+    clearable: { type: 'boolean', default: true }
+    disabled: { type: 'boolean', default: false }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function parseHM(text) {
+  const match = String(text || '').match(/^(\d{1,2}):(\d{2})$/)
+  if (!match) return null
+  const hours = Number(match[1])
+  const minutes = Number(match[2])
+  if (hours > 23 || minutes > 59) return null
+  return hours * 60 + minutes
+}
+
+function formatHM(totalMinutes) {
+  const hours = Math.floor(totalMinutes / 60) % 24
+  const minutes = totalMinutes % 60
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${pad(hours)}:${pad(minutes)}`
+}
+
+function timeOptions(startValue, endValue, stepValue) {
+  const start = parseHM(read(startValue)) ?? 0
+  const end = parseHM(read(endValue)) ?? 1439
+  const step = parseHM(read(stepValue)) || 30
+  const options = []
+  for (let minutes = start; minutes <= end; minutes += step) {
+    options.push(formatHM(minutes))
+  }
+  return options
+}
+
+function commitValue(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function chooseTime(time, event, model, emitFn) {
+  commitValue(model, time, emitFn)
+  event.currentTarget.closest('details')?.removeAttribute('open')
+}
+
+function handleToggle(event) {
+  const current = event.currentTarget
+  if (!current.open) {
+    current.outsideController?.abort()
+    return
+  }
+  document.querySelectorAll('details.jui-time-select__control[open]').forEach((details) => {
+    if (details !== current) details.removeAttribute('open')
+  })
+  current.outsideController?.abort()
+  const controller = new AbortController()
+  current.outsideController = controller
+  requestAnimationFrame(() => {
+    document.addEventListener('pointerdown', (pointerEvent) => {
+      if (!current.contains(pointerEvent.target)) current.removeAttribute('open')
+    }, { signal: controller.signal })
+  })
+}
+
+export <view>
+  <div class="jui-time-select" class-has-error=${() => !!read(error)} class-is-disabled=${() => !!read(disabled)}>
+    #if read(label)
+      <span class="jui-time-select__label">${() => read(label)}</span>
+    #end
+
+    <details class="jui-time-select__control" on-toggle=${handleToggle}>
+      <summary
+        class="jui-time-select__trigger"
+        aria-haspopup="listbox"
+        tabindex=${() => read(disabled) ? '-1' : '0'}
+        on-click=${(event) => {
+          if (read(disabled)) event.preventDefault()
+        }}
+      >
+        <span class="jui-time-select__value" class-is-placeholder=${() => !read(value)}>${() => read(value) || read(placeholder)}</span>
+        <span class="jui-time-select__chevron" aria-hidden="true">⌄</span>
+      </summary>
+
+      <ul class="jui-time-select__list" role="listbox">
+        #if read(clearable)
+          <li>
+            <button
+              type="button"
+              role="option"
+              class="jui-time-select__option"
+              class-is-active=${() => !read(value)}
+              on-click=${(event) => chooseTime('', event, value, emit)}
+            >${() => read(placeholder)}</button>
+          </li>
+        #end
+        #for timeOptions(start, end, step) as time (time)
+          <li>
+            <button
+              type="button"
+              role="option"
+              class="jui-time-select__option"
+              class-is-active=${() => read(value) === time}
+              on-click=${(event) => chooseTime(time, event, value, emit)}
+            >${time}</button>
+          </li>
+        #end
+      </ul>
+    </details>
+
+    #if read(error)
+      <span class="jui-time-select__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-time-select__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-time-select {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-time-select__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-time-select.has-error .jui-time-select__label {
+  color: var(--j-danger);
+}
+
+.jui-time-select.has-error .jui-time-select__trigger {
+  border-color: var(--j-danger);
+}
+
+.jui-time-select.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-time-select__control {
+  position: relative;
+  min-width: 0;
+}
+
+.jui-time-select__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  outline: 0;
+  color: var(--j-text);
+  background: var(--j-surface-2);
+  cursor: pointer;
+  list-style: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-time-select__trigger::-webkit-details-marker {
+  display: none;
+}
+
+.jui-time-select__trigger:focus,
+.jui-time-select__control[open] .jui-time-select__trigger {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-time-select__value.is-placeholder {
+  color: var(--j-muted);
+}
+
+.jui-time-select__chevron {
+  color: var(--j-muted);
+  font-size: 1.1rem;
+  transition: transform 120ms ease;
+}
+
+.jui-time-select__control[open] .jui-time-select__chevron {
+  transform: rotate(180deg);
+}
+
+.jui-time-select__list {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  display: grid;
+  gap: 0.18rem;
+  max-height: 14rem;
+  margin: 0;
+  padding: 0.45rem;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  box-shadow: var(--j-shadow);
+}
+
+.jui-time-select__control:not([open]) .jui-time-select__list {
+  display: none;
+}
+
+.jui-time-select__option {
+  display: block;
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.7rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  color: var(--j-text);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.jui-time-select__option:hover,
+.jui-time-select__option.is-active {
+  background: var(--j-mint);
+}
+
+.jui-time-select__option.is-active {
+  color: var(--j-forest);
+  font-weight: 700;
+}
+
+.jui-time-select__hint,
+.jui-time-select__error {
+  font-size: 0.8rem;
+}
+
+.jui-time-select__hint {
+  color: var(--j-muted);
+}
+
+.jui-time-select__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

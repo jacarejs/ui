@@ -1,0 +1,325 @@
+export <contract>
+  props: {
+    value: { type: 'string', default: '', model: true }
+    min: { type: 'string', default: '' }
+    max: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+    border: { type: 'boolean', default: true }
+  }
+  emits: ['change']
+</contract>
+
+const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function parseDate(value) {
+  const parts = String(value || '').split('-').map(Number)
+  if (parts.length !== 3 || parts.some((part) => !Number.isFinite(part))) return null
+  const date = new Date(parts[0], parts[1] - 1, parts[2])
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+function formatValue(date) {
+  const pad = (value) => String(value).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+function isAllowed(value, minimum, maximum) {
+  return (!minimum || value >= minimum) && (!maximum || value <= maximum)
+}
+
+function commitValue(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function createOption(text, value, selected) {
+  const option = document.createElement('option')
+  option.text = text
+  option.value = value
+  option.selected = selected
+  return option
+}
+
+function viewState(root) {
+  if (!root.panelView) {
+    const initial = parseDate(root.dataset.initial) || new Date()
+    root.panelView = new Date(initial.getFullYear(), initial.getMonth(), 1)
+  }
+  return root.panelView
+}
+
+function setView(root, year, month) {
+  root.panelView = new Date(year, month, 1)
+  renderPanel(root)
+}
+
+function changeMonth(root, amount) {
+  const view = viewState(root)
+  setView(root, view.getFullYear(), view.getMonth() + amount)
+}
+
+function selectDate(root, model, minimum, maximum, emitFn, value) {
+  if (!isAllowed(value, minimum, maximum)) return
+  commitValue(model, value, emitFn)
+  renderPanel(root)
+}
+
+function selectToday(root, model, minimum, maximum, emitFn) {
+  const today = formatValue(new Date())
+  selectDate(root, model, minimum, maximum, emitFn, today)
+}
+
+function renderPanel(root) {
+  const model = root.panelModel
+  const minimum = read(root.panelMin)
+  const maximum = read(root.panelMax)
+  const view = viewState(root)
+  const year = view.getFullYear()
+  const month = view.getMonth()
+
+  const monthSelect = root.querySelector('[data-panel-month]')
+  const yearSelect = root.querySelector('[data-panel-year]')
+  monthSelect.replaceChildren(...months.map((name, index) => createOption(name, String(index), index === month)))
+
+  const minimumYear = parseDate(minimum)?.getFullYear() ?? year - 100
+  const maximumYear = parseDate(maximum)?.getFullYear() ?? year + 20
+  const years = []
+  for (let optionYear = maximumYear; optionYear >= minimumYear; optionYear -= 1) {
+    years.push(createOption(String(optionYear), String(optionYear), optionYear === year))
+  }
+  yearSelect.replaceChildren(...years)
+
+  const firstDay = new Date(year, month, 1)
+  const offset = (firstDay.getDay() + 6) % 7
+  const start = new Date(year, month, 1 - offset)
+  const today = formatValue(new Date())
+  const selected = String(read(model) || '')
+  const grid = root.querySelector('[data-panel-days]')
+  const buttons = []
+
+  for (let index = 0; index < 42; index += 1) {
+    const date = new Date(start)
+    date.setDate(start.getDate() + index)
+    const dateValue = formatValue(date)
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'jui-date-panel__day'
+    button.textContent = String(date.getDate())
+    button.classList.toggle('is-outside', date.getMonth() !== month)
+    button.classList.toggle('is-today', dateValue === today)
+    button.classList.toggle('is-selected', dateValue === selected)
+    button.disabled = !isAllowed(dateValue, minimum, maximum)
+    button.setAttribute('aria-label', new Intl.DateTimeFormat('en-US', { dateStyle: 'full' }).format(date))
+    button.addEventListener('click', () => selectDate(root, model, minimum, maximum, root.panelEmit, dateValue))
+    buttons.push(button)
+  }
+
+  grid.replaceChildren(...buttons)
+}
+
+function mountPanel(root, model, minimum, maximum, emitFn) {
+  if (root.panelMounted) return
+  root.panelMounted = true
+  root.panelModel = model
+  root.panelMin = minimum
+  root.panelMax = maximum
+  root.panelEmit = emitFn
+  root.dataset.initial = read(model) || ''
+  renderPanel(root)
+}
+
+export <view>
+  <div
+    class="jui-date-panel"
+    class-jui-date-panel--bordered=${() => !!read(border)}
+    class-is-disabled=${() => !!read(disabled)}
+    on-mount=${(event) => mountPanel(event.currentTarget, value, min, max, emit)}
+  >
+    <div class="jui-date-panel__head">
+      <button type="button" class="jui-date-panel__nav" aria-label="Previous month" disabled=${() => !!read(disabled)} on-click=${(event) => changeMonth(event.currentTarget.closest('.jui-date-panel'), -1)}>‹</button>
+      <select
+        class="jui-date-panel__select"
+        data-panel-month
+        aria-label="Month"
+        disabled=${() => !!read(disabled)}
+        on-change=${(event) => {
+          const root = event.currentTarget.closest('.jui-date-panel')
+          setView(root, viewState(root).getFullYear(), Number(event.target.value))
+        }}
+      ></select>
+      <select
+        class="jui-date-panel__select"
+        data-panel-year
+        aria-label="Year"
+        disabled=${() => !!read(disabled)}
+        on-change=${(event) => {
+          const root = event.currentTarget.closest('.jui-date-panel')
+          setView(root, Number(event.target.value), viewState(root).getMonth())
+        }}
+      ></select>
+      <button type="button" class="jui-date-panel__nav" aria-label="Next month" disabled=${() => !!read(disabled)} on-click=${(event) => changeMonth(event.currentTarget.closest('.jui-date-panel'), 1)}>›</button>
+    </div>
+
+    <div class="jui-date-panel__weekdays" aria-hidden="true">
+      #for weekdays as weekday (weekday)
+        <span>${weekday}</span>
+      #end
+    </div>
+
+    <div class="jui-date-panel__days" data-panel-days></div>
+
+    <div class="jui-date-panel__actions">
+      <button type="button" class="jui-date-panel__text-btn" disabled=${() => !!read(disabled)} on-click=${(event) => selectToday(event.currentTarget.closest('.jui-date-panel'), value, read(min), read(max), emit)}>Today</button>
+    </div>
+  </div>
+</view>
+
+export <style>
+.jui-date-panel {
+  display: grid;
+  gap: 0.7rem;
+  width: min(22rem, 100%);
+  padding: 0.8rem;
+  border-radius: var(--j-radius);
+  color: var(--j-text);
+  background: var(--j-surface-2);
+}
+
+.jui-date-panel--bordered {
+  border: 1px solid var(--j-border);
+  box-shadow: var(--j-shadow-sm);
+}
+
+.jui-date-panel.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-date-panel__head {
+  display: grid;
+  grid-template-columns: 2.2rem minmax(0, 1fr) 5.5rem 2.2rem;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.jui-date-panel__select {
+  min-width: 0;
+  height: 2.2rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  color: var(--j-text);
+  background: var(--j-surface);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.jui-date-panel__nav {
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  color: var(--j-primary);
+  background: var(--j-mint);
+  cursor: pointer;
+  font-size: 1.4rem;
+}
+
+.jui-date-panel__nav:hover:not(:disabled) {
+  background: var(--j-lime);
+}
+
+.jui-date-panel__nav:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jui-date-panel__weekdays,
+.jui-date-panel__days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.jui-date-panel__weekdays {
+  color: var(--j-muted);
+  font-size: 0.65rem;
+  font-weight: 850;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.jui-date-panel__weekdays span {
+  padding: 0.3rem 0;
+}
+
+.jui-date-panel__day {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  color: var(--j-text);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.jui-date-panel__day:hover:not(:disabled) {
+  background: var(--j-surface);
+}
+
+.jui-date-panel__day.is-outside {
+  color: var(--j-muted);
+  opacity: 0.6;
+}
+
+.jui-date-panel__day.is-today {
+  box-shadow: inset 0 0 0 1px var(--j-primary);
+}
+
+.jui-date-panel__day.is-selected {
+  color: #ffffff;
+  background: var(--j-primary);
+}
+
+.jui-date-panel__day:disabled {
+  color: var(--j-border);
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.jui-date-panel__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--j-border);
+}
+
+.jui-date-panel__text-btn {
+  min-height: 2.1rem;
+  padding: 0.45rem 0.7rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  color: var(--j-primary);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.jui-date-panel__text-btn:hover:not(:disabled) {
+  background: var(--j-mint);
+}
+
+.jui-date-panel__text-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+</style>

@@ -243,8 +243,8 @@ export <style>
   justify-content: space-between;
   gap: 0.7rem;
   width: 100%;
-  min-height: 2.5rem;
-  padding: 0.6rem 0.85rem;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.9rem;
   border: 1px solid var(--j-border);
   border-radius: var(--j-radius-sm);
   outline: 0;
@@ -306,7 +306,7 @@ export <style>
 
 .jui-select__panel {
   position: absolute;
-  z-index: 50;
+  z-index: 80;
   top: calc(100% + 0.4rem);
   left: 0;
   right: 0;
@@ -353,7 +353,8 @@ export <style>
   justify-content: space-between;
   gap: 0.6rem;
   width: 100%;
-  padding: 0.55rem 0.65rem;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.7rem;
   border: 0;
   border-radius: var(--j-radius-sm);
   color: var(--j-text);

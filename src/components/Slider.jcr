@@ -1,0 +1,283 @@
+export <contract>
+  props: {
+    value: { type: 'any', default: 0, model: true }
+    min: { type: 'number', default: 0 }
+    max: { type: 'number', default: 100 }
+    step: { type: 'number', default: 1 }
+    range: { type: 'boolean', default: false }
+    disabled: { type: 'boolean', default: false }
+    showTooltip: { type: 'boolean', default: false }
+    vertical: { type: 'boolean', default: false }
+  }
+  emits: ['change', 'input']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function numberOr(value, fallback) {
+  const next = Number(read(value))
+  return Number.isFinite(next) ? next : fallback
+}
+
+function minOf(value) {
+  return numberOr(value, 0)
+}
+
+function maxOf(value) {
+  return numberOr(value, 100)
+}
+
+function stepOf(value) {
+  return numberOr(value, 1) || 1
+}
+
+function isRangeMode(rangeProp, model) {
+  return read(rangeProp) === true || Array.isArray(read(model))
+}
+
+function singleValue(model, minProp) {
+  const current = read(model)
+  return numberOr(Array.isArray(current) ? current[0] : current, minOf(minProp))
+}
+
+function rangeValues(model, minProp, maxProp) {
+  const current = read(model)
+  if (Array.isArray(current)) {
+    return [numberOr(current[0], minOf(minProp)), numberOr(current[1], maxOf(maxProp))]
+  }
+  return [minOf(minProp), maxOf(maxProp)]
+}
+
+function percentOf(number, minProp, maxProp) {
+  const lo = minOf(minProp)
+  const hi = maxOf(maxProp)
+  if (hi === lo) return 0
+  return Math.min(100, Math.max(0, ((number - lo) / (hi - lo)) * 100))
+}
+
+function fillStyle(model, minProp, maxProp, rangeProp) {
+  if (isRangeMode(rangeProp, model)) {
+    const [lo, hi] = rangeValues(model, minProp, maxProp)
+    return `left:${percentOf(lo, minProp, maxProp)}%;right:${100 - percentOf(hi, minProp, maxProp)}%`
+  }
+  return `left:0%;right:${100 - percentOf(singleValue(model, minProp), minProp, maxProp)}%`
+}
+
+function tooltipStyle(number, minProp, maxProp) {
+  return `left:${percentOf(number, minProp, maxProp)}%`
+}
+
+function commit(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function handleSingleInput(event, model, emitFn) {
+  const next = Number(event.target.value)
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('input', next)
+}
+
+function handleSingleChange(event, model, emitFn) {
+  commit(model, Number(event.target.value), emitFn)
+}
+
+function handleRangeInput(index, event, model, minProp, maxProp, emitFn) {
+  const values = rangeValues(model, minProp, maxProp)
+  let next = Number(event.target.value)
+  if (index === 0) next = Math.min(next, values[1])
+  else next = Math.max(next, values[0])
+  const updated = index === 0 ? [next, values[1]] : [values[0], next]
+  if (model && typeof model.set === 'function') model.set(updated)
+  emitFn('input', updated)
+}
+
+function handleRangeChange(index, event, model, minProp, maxProp, emitFn) {
+  const values = rangeValues(model, minProp, maxProp)
+  let next = Number(event.target.value)
+  if (index === 0) next = Math.min(next, values[1])
+  else next = Math.max(next, values[0])
+  commit(model, index === 0 ? [next, values[1]] : [values[0], next], emitFn)
+}
+
+export <view>
+  <div
+    class="jui-slider"
+    class-jui-slider--vertical=${() => !!read(vertical)}
+    class-jui-slider--tooltip=${() => !!read(showTooltip)}
+    class-is-disabled=${() => !!read(disabled)}
+  >
+    <div class="jui-slider__track">
+      <span class="jui-slider__fill" :style=${() => fillStyle(value, min, max, range)}></span>
+
+      #if isRangeMode(range, value)
+        <input
+          class="jui-slider__input jui-slider__input--lo"
+          type="range"
+          min=${() => minOf(min)}
+          max=${() => maxOf(max)}
+          step=${() => stepOf(step)}
+          disabled=${() => !!read(disabled)}
+          value=${() => rangeValues(value, min, max)[0]}
+          on-input=${(event) => handleRangeInput(0, event, value, min, max, emit)}
+          on-change=${(event) => handleRangeChange(0, event, value, min, max, emit)}
+        />
+        <input
+          class="jui-slider__input jui-slider__input--hi"
+          type="range"
+          min=${() => minOf(min)}
+          max=${() => maxOf(max)}
+          step=${() => stepOf(step)}
+          disabled=${() => !!read(disabled)}
+          value=${() => rangeValues(value, min, max)[1]}
+          on-input=${(event) => handleRangeInput(1, event, value, min, max, emit)}
+          on-change=${(event) => handleRangeChange(1, event, value, min, max, emit)}
+        />
+        #if read(showTooltip)
+          <span class="jui-slider__tooltip" :style=${() => tooltipStyle(rangeValues(value, min, max)[0], min, max)}>${() => rangeValues(value, min, max)[0]}</span>
+          <span class="jui-slider__tooltip" :style=${() => tooltipStyle(rangeValues(value, min, max)[1], min, max)}>${() => rangeValues(value, min, max)[1]}</span>
+        #end
+      #else
+        <input
+          class="jui-slider__input"
+          type="range"
+          min=${() => minOf(min)}
+          max=${() => maxOf(max)}
+          step=${() => stepOf(step)}
+          disabled=${() => !!read(disabled)}
+          value=${() => singleValue(value, min)}
+          on-input=${(event) => handleSingleInput(event, value, emit)}
+          on-change=${(event) => handleSingleChange(event, value, emit)}
+        />
+        #if read(showTooltip)
+          <span class="jui-slider__tooltip" :style=${() => tooltipStyle(singleValue(value, min), min, max)}>${() => singleValue(value, min)}</span>
+        #end
+      #end
+    </div>
+  </div>
+</view>
+
+export <style>
+.jui-slider {
+  display: block;
+  width: 100%;
+  padding: 0.9rem 0;
+}
+
+.jui-slider.is-disabled {
+  opacity: 0.6;
+}
+
+.jui-slider__track {
+  position: relative;
+  height: 0.35rem;
+  border-radius: var(--j-radius-sm);
+  background: var(--j-border);
+}
+
+.jui-slider__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: var(--j-radius-sm);
+  background: var(--j-primary);
+}
+
+.jui-slider__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  appearance: none;
+  background: transparent;
+  pointer-events: none;
+}
+
+.jui-slider__input::-webkit-slider-runnable-track {
+  background: transparent;
+}
+
+.jui-slider__input::-moz-range-track {
+  background: transparent;
+}
+
+.jui-slider__input::-webkit-slider-thumb {
+  appearance: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: -0.4rem;
+  border: 2px solid var(--j-primary);
+  border-radius: 999px;
+  background: var(--j-surface-2);
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: var(--j-shadow-sm, none);
+}
+
+.jui-slider__input::-moz-range-thumb {
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 2px solid var(--j-primary);
+  border-radius: 999px;
+  background: var(--j-surface-2);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.jui-slider__input:focus-visible::-webkit-slider-thumb {
+  box-shadow: var(--j-focus);
+}
+
+.jui-slider__input:disabled::-webkit-slider-thumb,
+.jui-slider__input:disabled::-moz-range-thumb {
+  cursor: not-allowed;
+  border-color: var(--j-muted);
+}
+
+.jui-slider__tooltip {
+  position: absolute;
+  bottom: 100%;
+  transform: translate(-50%, -0.5rem);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--j-radius-sm);
+  background: var(--j-text);
+  color: var(--j-surface-2);
+  font-size: 0.7rem;
+  font-weight: 700;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+  white-space: nowrap;
+}
+
+.jui-slider--tooltip .jui-slider__track:hover .jui-slider__tooltip,
+.jui-slider--tooltip .jui-slider__input:focus-visible ~ .jui-slider__tooltip {
+  opacity: 1;
+}
+
+.jui-slider--vertical {
+  display: inline-block;
+  width: auto;
+  height: 12rem;
+  padding: 0 0.9rem;
+}
+
+.jui-slider--vertical .jui-slider__track {
+  width: 0.35rem;
+  height: 100%;
+}
+
+.jui-slider--vertical .jui-slider__fill {
+  left: 0;
+  right: 0;
+  top: auto;
+}
+
+.jui-slider--vertical .jui-slider__input {
+  writing-mode: vertical-lr;
+  direction: rtl;
+}
+</style>

@@ -1,0 +1,98 @@
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'any', required: true }
+    modelValue: { type: 'any', default: null, model: true }
+    name: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+  }
+  slots: ['default']
+  emits: ['change']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function isChecked(model, optionValue) {
+  return read(model) === read(optionValue)
+}
+
+function pick(model, optionValue, disabledValue, emitFn) {
+  if (read(disabledValue)) return
+  const next = read(optionValue)
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+export <view>
+  <label class="jui-radio-item" class-is-disabled=${!!read(disabled)}>
+    <input
+      class="jui-radio-item__input"
+      type="radio"
+      name=${name}
+      disabled=${!!read(disabled)}
+      checked=${() => isChecked(modelValue, value)}
+      on-change=${() => pick(modelValue, value, disabled, emit)}
+    />
+    <span class="jui-radio-item__dot" aria-hidden="true"></span>
+    <span class="jui-radio-item__label">
+      #if read(label)
+        <span>${label}</span>
+      #else
+        <slot />
+      #end
+    </span>
+  </label>
+</view>
+
+export <style>
+.jui-radio-item {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  cursor: pointer;
+  user-select: none;
+  color: var(--j-text);
+}
+
+.jui-radio-item.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.jui-radio-item__input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.jui-radio-item__dot {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+  border: 1.5px solid var(--j-border);
+  border-radius: 999px;
+  background: var(--j-surface-2);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-radio-item__input:checked + .jui-radio-item__dot {
+  border-color: var(--j-primary);
+  background:
+    radial-gradient(circle at center, var(--j-primary) 0 0.32rem, transparent 0.34rem),
+    var(--j-surface-2);
+}
+
+.jui-radio-item__input:focus-visible + .jui-radio-item__dot {
+  box-shadow: var(--j-focus);
+}
+
+.jui-radio-item__label {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+</style>

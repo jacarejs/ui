@@ -1,0 +1,302 @@
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'string', default: '', model: true }
+    suggestions: { type: 'any', required: true }
+    placeholder: { type: 'string', default: 'Search...' }
+    disabled: { type: 'boolean', default: false }
+    clearable: { type: 'boolean', default: true }
+    debounce: { type: 'number', default: 150 }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change', 'select']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function normalizedSuggestions(source) {
+  return (read(source) || []).map((item) => (item && typeof item === 'object')
+    ? { value: item.value, label: item.label ?? String(item.value) }
+    : { value: item, label: String(item) })
+}
+
+function commitValue(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function applyFilter(input) {
+  const root = input.closest('[data-autocomplete]')
+  if (!root) return
+  const query = String(input.value || '').trim().toLowerCase()
+  let visible = 0
+  root.querySelectorAll('[data-ac-option]').forEach((button) => {
+    const haystack = String(button.getAttribute('data-search') || '')
+    const matches = haystack.includes(query)
+    const item = button.closest('li')
+    if (item) item.hidden = !matches
+    if (matches) visible += 1
+  })
+  const empty = root.querySelector('[data-ac-empty]')
+  if (empty) empty.hidden = visible > 0
+  root.querySelector('[data-ac-panel]').hidden = false
+}
+
+function debouncedFilter(event, delayValue) {
+  const input = event.currentTarget
+  window.clearTimeout(input.__juiAcTimer)
+  const delay = Number(read(delayValue)) || 0
+  if (delay <= 0) {
+    applyFilter(input)
+    return
+  }
+  input.__juiAcTimer = window.setTimeout(() => applyFilter(input), delay)
+}
+
+function openPanel(event) {
+  const root = event.currentTarget.closest('[data-autocomplete]')
+  if (!root || event.currentTarget.disabled) return
+  root.acController?.abort()
+  const controller = new AbortController()
+  root.acController = controller
+  root.querySelector('[data-ac-panel]').hidden = false
+  document.addEventListener('pointerdown', (pointerEvent) => {
+    if (!root.contains(pointerEvent.target)) closePanel(root)
+  }, { signal: controller.signal })
+}
+
+function closePanel(root) {
+  if (!root) return
+  const panel = root.querySelector('[data-ac-panel]')
+  if (panel) panel.hidden = true
+  root.acController?.abort()
+}
+
+function selectSuggestion(option, event, model, emitFn) {
+  const root = event.currentTarget.closest('[data-autocomplete]')
+  const input = root?.querySelector('[data-ac-input]')
+  if (input) input.value = option.label
+  commitValue(model, option.label, emitFn)
+  emitFn('select', option)
+  closePanel(root)
+  input?.focus()
+}
+
+function clearValue(event, model, emitFn) {
+  const root = event.currentTarget.closest('[data-autocomplete]')
+  const input = root?.querySelector('[data-ac-input]')
+  if (input) input.value = ''
+  commitValue(model, '', emitFn)
+  input?.focus()
+}
+
+export <view>
+  <div class="jui-autocomplete" data-autocomplete class-has-error=${() => !!read(error)} class-is-disabled=${() => !!read(disabled)}>
+    #if read(label)
+      <span class="jui-autocomplete__label">${() => read(label)}</span>
+    #end
+
+    <div class="jui-autocomplete__control">
+      <div class="jui-autocomplete__field">
+        <input
+          class="jui-autocomplete__input"
+          data-ac-input
+          type="text"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded="false"
+          autocomplete="off"
+          placeholder=${() => read(placeholder)}
+          value=${() => read(value)}
+          disabled=${() => !!read(disabled)}
+          aria-invalid=${() => !!read(error)}
+          on-focus=${openPanel}
+          on-input=${(event) => {
+            commitValue(value, event.target.value, emit)
+            debouncedFilter(event, debounce)
+          }}
+          on-keydown=${(event) => {
+            if (event.key === 'Escape') closePanel(event.currentTarget.closest('[data-autocomplete]'))
+          }}
+        />
+        #if read(clearable) && read(value)
+          <button
+            type="button"
+            class="jui-autocomplete__clear"
+            aria-label="Clear"
+            on-click=${(event) => clearValue(event, value, emit)}
+          >×</button>
+        #end
+      </div>
+
+      <ul class="jui-autocomplete__panel" data-ac-panel role="listbox" hidden>
+        #for normalizedSuggestions(suggestions) as option (option.value)
+          <li>
+            <button
+              type="button"
+              role="option"
+              class="jui-autocomplete__option"
+              data-ac-option
+              data-search=${() => String(option.label).toLowerCase()}
+              on-click=${(event) => selectSuggestion(option, event, value, emit)}
+            >${option.label}</button>
+          </li>
+        #end
+        <li class="jui-autocomplete__empty" data-ac-empty hidden>No matches</li>
+      </ul>
+    </div>
+
+    #if read(error)
+      <span class="jui-autocomplete__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-autocomplete__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-autocomplete {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-autocomplete__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-autocomplete__control {
+  position: relative;
+  min-width: 0;
+}
+
+.jui-autocomplete__field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.jui-autocomplete__input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 2.6rem 0.65rem 0.9rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  outline: 0;
+  color: var(--j-text);
+  background: var(--j-surface-2);
+  font: inherit;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-autocomplete__input:focus {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-autocomplete__input:disabled {
+  cursor: not-allowed;
+}
+
+.jui-autocomplete.has-error .jui-autocomplete__input {
+  border-color: var(--j-danger);
+}
+
+.jui-autocomplete.has-error .jui-autocomplete__label {
+  color: var(--j-danger);
+}
+
+.jui-autocomplete.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-autocomplete__clear {
+  position: absolute;
+  right: 0.5rem;
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  color: var(--j-muted);
+  background: transparent;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.jui-autocomplete__clear:hover {
+  background: var(--j-mint);
+  color: var(--j-text);
+}
+
+.jui-autocomplete__panel {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  display: grid;
+  gap: 0.18rem;
+  max-height: 14rem;
+  margin: 0;
+  padding: 0.45rem;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  box-shadow: var(--j-shadow);
+}
+
+.jui-autocomplete__panel[hidden] {
+  display: none;
+}
+
+.jui-autocomplete__option {
+  display: block;
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.7rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  color: var(--j-text);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.jui-autocomplete__option:hover {
+  background: var(--j-mint);
+}
+
+.jui-autocomplete__empty {
+  padding: 0.8rem;
+  color: var(--j-muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.jui-autocomplete__hint,
+.jui-autocomplete__error {
+  font-size: 0.8rem;
+}
+
+.jui-autocomplete__hint {
+  color: var(--j-muted);
+}
+
+.jui-autocomplete__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

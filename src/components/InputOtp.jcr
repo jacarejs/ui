@@ -1,0 +1,204 @@
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'string', default: '', model: true }
+    length: { type: 'number', default: 6 }
+    mask: { type: 'boolean', default: false }
+    disabled: { type: 'boolean', default: false }
+    size: { type: 'string', default: 'md' }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change', 'finish']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function lengthOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) && next > 0 ? Math.round(next) : 6
+}
+
+function indices(lengthProp) {
+  return Array.from({ length: lengthOf(lengthProp) }, (item, index) => index)
+}
+
+function charsOf(model, lengthProp) {
+  const raw = String(read(model) || '').split('')
+  const size = lengthOf(lengthProp)
+  while (raw.length < size) raw.push('')
+  return raw.slice(0, size)
+}
+
+function digitAt(model, lengthProp, index) {
+  return charsOf(model, lengthProp)[index] || ''
+}
+
+function commit(model, next, lengthProp, emitFn) {
+  const trimmed = next.slice(0, lengthOf(lengthProp))
+  if (model && typeof model.set === 'function') model.set(trimmed)
+  emitFn('change', trimmed)
+  if (trimmed.length === lengthOf(lengthProp)) emitFn('finish', trimmed)
+}
+
+function sizeClass(value) {
+  const next = read(value)
+  if (next === 'sm' || next === 'lg') return next
+  return 'md'
+}
+
+function handleInput(event, index, model, lengthProp, emitFn) {
+  const digit = event.target.value.replace(/\D/g, '').slice(-1)
+  const chars = charsOf(model, lengthProp)
+  chars[index] = digit
+  event.target.value = digit
+  commit(model, chars.join(''), lengthProp, emitFn)
+  if (digit) {
+    const boxes = event.target.closest('[data-otp]').querySelectorAll('input')
+    boxes[index + 1]?.focus()
+  }
+}
+
+function handleKeydown(event, index) {
+  const boxes = event.target.closest('[data-otp]').querySelectorAll('input')
+  if (event.key === 'Backspace' && !event.target.value) {
+    boxes[index - 1]?.focus()
+  } else if (event.key === 'ArrowLeft') {
+    boxes[index - 1]?.focus()
+  } else if (event.key === 'ArrowRight') {
+    boxes[index + 1]?.focus()
+  }
+}
+
+function handlePaste(event, model, lengthProp, emitFn) {
+  event.preventDefault()
+  const text = String((event.clipboardData || window.clipboardData).getData('text') || '')
+    .replace(/\D/g, '')
+    .slice(0, lengthOf(lengthProp))
+  if (!text) return
+  commit(model, text, lengthProp, emitFn)
+  const boxes = event.target.closest('[data-otp]').querySelectorAll('input')
+  boxes[Math.min(text.length, boxes.length - 1)]?.focus()
+}
+
+export <view>
+  <div
+    class="jui-otp"
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
+    data-otp
+  >
+    #if read(label)
+      <span class="jui-otp__label">${() => read(label)}</span>
+    #end
+
+    <div class="jui-otp__boxes" role="group" aria-label="One-time code">
+      #for indices(length) as index (index)
+        <input
+          class="jui-otp__box"
+          class-jui-otp__box--sm=${() => sizeClass(size) === 'sm'}
+          class-jui-otp__box--lg=${() => sizeClass(size) === 'lg'}
+          type=${() => (read(mask) ? 'password' : 'text')}
+          inputmode="numeric"
+          autocomplete=${() => (index === 0 ? 'one-time-code' : 'off')}
+          maxlength="1"
+          disabled=${() => !!read(disabled)}
+          aria-label=${`Digit ${index + 1}`}
+          aria-invalid=${() => !!read(error)}
+          value=${() => digitAt(value, length, index)}
+          on-input=${(event) => handleInput(event, index, value, length, emit)}
+          on-keydown=${(event) => handleKeydown(event, index)}
+          on-paste=${(event) => handlePaste(event, value, length, emit)}
+        />
+      #end
+    </div>
+
+    #if read(error)
+      <span class="jui-otp__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-otp__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-otp {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.jui-otp__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-text);
+}
+
+.jui-otp__boxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.jui-otp__box {
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-align: center;
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-otp__box--sm {
+  width: 2.25rem;
+  height: 2.25rem;
+  font-size: 1rem;
+}
+
+.jui-otp__box--lg {
+  width: 3.25rem;
+  height: 3.25rem;
+  font-size: 1.35rem;
+}
+
+.jui-otp__box:focus {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-otp__box[aria-invalid='true'] {
+  border-color: var(--j-danger);
+}
+
+.jui-otp.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-otp__box:disabled {
+  cursor: not-allowed;
+}
+
+.jui-otp__hint,
+.jui-otp__error {
+  font-size: 0.8rem;
+}
+
+.jui-otp__hint {
+  color: var(--j-muted);
+}
+
+.jui-otp__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

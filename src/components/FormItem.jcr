@@ -1,0 +1,79 @@
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+    required: { type: 'boolean', default: false }
+    hint: { type: 'string', default: '' }
+  }
+  slots: ['default']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+export <view>
+  <div class="jui-form-item" class-has-error=${() => !!read(error)}>
+    #if read(label)
+      <span class="jui-form-item__label">
+        ${() => read(label)}
+        #if read(required)
+          <span class="jui-form-item__req" aria-hidden="true">*</span>
+        #end
+      </span>
+    #end
+    <div class="jui-form-item__control">
+      <slot />
+      #if read(error)
+        <span class="jui-form-item__error" role="alert">${() => read(error)}</span>
+      #elif read(hint)
+        <span class="jui-form-item__hint">${() => read(hint)}</span>
+      #end
+    </div>
+  </div>
+</view>
+
+export <style>
+.jui-form-item {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-form-item__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-text);
+}
+
+.jui-form-item__req {
+  color: var(--j-danger);
+}
+
+.jui-form-item.has-error .jui-form-item__label {
+  color: var(--j-danger);
+}
+
+.jui-form-item__control {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-form-item__hint,
+.jui-form-item__error {
+  font-size: 0.8rem;
+}
+
+.jui-form-item__hint {
+  color: var(--j-muted);
+}
+
+.jui-form-item__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>
