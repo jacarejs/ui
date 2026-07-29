@@ -67,6 +67,7 @@ Components ship as precompiled ESM modules (`mount` / `render` / `resume`). Your
 | `Card` | Surface with optional title |
 | `Checkbox` | Two-way boolean control |
 | `ColorPicker` | Hex + swatch color field |
+| `DatePicker` | Typed or calendar date / range picker |
 | `Divider` | Horizontal / vertical rule |
 | `Field` | Labeled text input (`model` value) |
 | `Flex` | Full flexbox positioning |

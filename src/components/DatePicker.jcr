@@ -1,0 +1,747 @@
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'any', default: '', model: true }
+    min: { type: 'string', default: '' }
+    max: { type: 'string', default: '' }
+    placeholder: { type: 'string', default: 'Select date' }
+    range: { type: 'boolean', default: false }
+    autoApply: { type: 'boolean', default: true }
+    clearable: { type: 'boolean', default: true }
+    required: { type: 'boolean', default: false }
+    disabled: { type: 'boolean', default: false }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change']
+</contract>
+
+const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function parseDate(value) {
+  const parts = String(value || '').split('-').map(Number)
+  if (parts.length !== 3 || parts.some((part) => !Number.isFinite(part))) return null
+  const date = new Date(parts[0], parts[1] - 1, parts[2])
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+function formatValue(date) {
+  const pad = (value) => String(value).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+function formatDisplay(date) {
+  const pad = (value) => String(value).padStart(2, '0')
+  return `${pad(date.getMonth() + 1)}/${pad(date.getDate())}/${date.getFullYear()}`
+}
+
+function displayDate(value) {
+  const date = parseDate(value)
+  return date ? formatDisplay(date) : ''
+}
+
+function parseTypedDate(value) {
+  const match = String(value || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+  if (!match) return ''
+  const month = Number(match[1])
+  const day = Number(match[2])
+  const year = Number(match[3])
+  const date = new Date(year, month - 1, day)
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return ''
+  return formatValue(date)
+}
+
+function maskTypedDate(value) {
+  const numbers = String(value || '').replace(/\D/g, '').slice(0, 8)
+  if (numbers.length <= 2) return numbers
+  if (numbers.length <= 4) return `${numbers.slice(0, 2)}/${numbers.slice(2)}`
+  return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4)}`
+}
+
+function commitValue(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function isAllowed(value, minimum, maximum) {
+  return (!minimum || value >= minimum) && (!maximum || value <= maximum)
+}
+
+function handleDateInput(event, minimum, maximum, model, emitFn) {
+  const input = event.currentTarget
+  const masked = maskTypedDate(input.value)
+  input.value = masked
+  input.removeAttribute('aria-invalid')
+
+  if (!masked) {
+    input.dataset.iso = ''
+    commitValue(model, '', emitFn)
+    return
+  }
+
+  if (masked.length !== 10) return
+  const value = parseTypedDate(masked)
+  if (!value || !isAllowed(value, read(minimum), read(maximum))) {
+    input.setAttribute('aria-invalid', 'true')
+    return
+  }
+
+  input.dataset.iso = value
+  commitValue(model, value, emitFn)
+}
+
+function handleDateBlur(event) {
+  const input = event.currentTarget
+  if (!input.value || parseTypedDate(input.value) === input.dataset.iso) return
+  input.value = displayDate(input.dataset.iso)
+  input.removeAttribute('aria-invalid')
+}
+
+function normalizedSelection(value, isRange) {
+  if (!isRange) return String(read(value) || '')
+  const current = read(value)
+  if (Array.isArray(current)) return current.filter(Boolean).slice(0, 2)
+  if (current?.start || current?.end) return [current.start, current.end].filter(Boolean)
+  return []
+}
+
+function displayValue(value, isRange, placeholderValue) {
+  const selected = normalizedSelection(value, read(isRange))
+  if (!read(isRange)) return displayDate(selected) || read(placeholderValue)
+  if (!selected.length) return read(placeholderValue)
+  if (selected.length === 1) return `${displayDate(selected[0])} – Select end date`
+  return `${displayDate(selected[0])} – ${displayDate(selected[1])}`
+}
+
+function updateTrigger(root, selected, state) {
+  const target = root.querySelector('[data-date-value]')
+  if (target instanceof HTMLInputElement) {
+    target.value = displayDate(selected)
+    target.dataset.iso = selected
+    target.removeAttribute('aria-invalid')
+    return
+  }
+  target.textContent = displayValue(selected, state.range, state.placeholder)
+  target.classList.toggle('is-placeholder', selected.length === 0)
+}
+
+function setView(root, year, month) {
+  const state = root.datePickerState
+  state.view = new Date(year, month, 1)
+  renderCalendar(root)
+}
+
+function changeMonth(root, amount) {
+  const view = root.datePickerState.view
+  setView(root, view.getFullYear(), view.getMonth() + amount)
+}
+
+function selectDate(root, value) {
+  const state = root.datePickerState
+  if (!isAllowed(value, state.min, state.max)) return
+
+  if (!state.range) {
+    state.draft = value
+    applySelection(root)
+    return
+  }
+
+  if (!state.draft.length || state.draft.length === 2) {
+    state.draft = [value]
+  } else {
+    state.draft = value < state.draft[0] ? [value, state.draft[0]] : [state.draft[0], value]
+  }
+
+  updateTrigger(root, state.draft, state)
+  renderCalendar(root)
+  if (state.autoApply && state.draft.length === 2) applySelection(root)
+}
+
+function applySelection(root) {
+  const state = root.datePickerState
+  if (state.range && state.draft.length !== 2) return
+  state.selected = state.range ? [...state.draft] : state.draft
+  updateTrigger(root, state.selected, state)
+  state.commit(state.selected)
+  closePicker(root)
+}
+
+function clearSelection(root) {
+  const state = root.datePickerState
+  state.draft = state.range ? [] : ''
+  state.selected = state.range ? [] : ''
+  updateTrigger(root, state.selected, state)
+  state.commit(state.selected)
+  closePicker(root)
+}
+
+function selectToday(root) {
+  const today = formatValue(new Date())
+  if (!isAllowed(today, root.datePickerState.min, root.datePickerState.max)) return
+  selectDate(root, today)
+}
+
+function renderCalendar(root) {
+  const state = root.datePickerState
+  const view = state.view
+  const year = view.getFullYear()
+  const month = view.getMonth()
+  const monthSelect = root.querySelector('[data-date-month]')
+  const yearSelect = root.querySelector('[data-date-year]')
+
+  monthSelect.replaceChildren(...months.map((name, index) => createOption(name, String(index), index === month)))
+
+  const minimumYear = parseDate(state.min)?.getFullYear() ?? year - 100
+  const maximumYear = parseDate(state.max)?.getFullYear() ?? year + 20
+  const years = []
+  for (let optionYear = maximumYear; optionYear >= minimumYear; optionYear -= 1) {
+    years.push(createOption(String(optionYear), String(optionYear), optionYear === year))
+  }
+  yearSelect.replaceChildren(...years)
+
+  const firstDay = new Date(year, month, 1)
+  const offset = (firstDay.getDay() + 6) % 7
+  const start = new Date(year, month, 1 - offset)
+  const today = formatValue(new Date())
+  const selected = state.range ? state.draft : state.draft ? [state.draft] : []
+  const grid = root.querySelector('[data-date-days]')
+  const buttons = []
+
+  for (let index = 0; index < 42; index += 1) {
+    const date = new Date(start)
+    date.setDate(start.getDate() + index)
+    const dateValue = formatValue(date)
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'jui-date__day'
+    button.textContent = String(date.getDate())
+    button.dataset.date = dateValue
+    button.classList.toggle('is-outside', date.getMonth() !== month)
+    button.classList.toggle('is-today', dateValue === today)
+    button.classList.toggle('is-selected', selected.includes(dateValue))
+    button.classList.toggle('is-range-start', state.range && selected[0] === dateValue)
+    button.classList.toggle('is-range-end', state.range && selected[1] === dateValue)
+    button.classList.toggle('is-in-range', state.range && selected.length === 2 && dateValue > selected[0] && dateValue < selected[1])
+    button.disabled = !isAllowed(dateValue, state.min, state.max)
+    button.setAttribute('aria-label', new Intl.DateTimeFormat('en-US', { dateStyle: 'full' }).format(date))
+    button.addEventListener('click', () => selectDate(root, dateValue))
+    buttons.push(button)
+  }
+
+  grid.replaceChildren(...buttons)
+  root.querySelector('[data-date-range-hint]').hidden = !state.range
+  root.querySelector('[data-date-apply]').hidden = !state.range || state.autoApply
+  root.querySelector('[data-date-clear]').hidden = !state.clearable
+}
+
+function createOption(text, value, selected) {
+  const option = document.createElement('option')
+  option.text = text
+  option.value = value
+  option.selected = selected
+  return option
+}
+
+function closePicker(root) {
+  const panel = root.querySelector('[data-date-panel]')
+  if (panel.hidden) return
+  panel.hidden = true
+  root.querySelector('[data-date-trigger]').setAttribute('aria-expanded', 'false')
+  root.datePickerState?.abortController?.abort()
+}
+
+function openPicker(event, model, minimum, maximum, isRange, shouldAutoApply, canClear, placeholderValue, emitFn) {
+  const root = event.currentTarget.closest('[data-date-picker]')
+  if (event.currentTarget.disabled) return
+
+  document.querySelectorAll('[data-date-panel]:not([hidden])').forEach((panel) => {
+    const otherRoot = panel.closest('[data-date-picker]')
+    if (otherRoot !== root) closePicker(otherRoot)
+  })
+
+  const typedValue = root.querySelector('[data-date-value]')?.dataset?.iso
+  const selected = normalizedSelection(typedValue || read(model), read(isRange))
+  const firstSelected = read(isRange) ? selected[0] : selected
+  const initialDate = parseDate(firstSelected) || parseDate(read(maximum)) || new Date()
+  const abortController = new AbortController()
+  root.datePickerState = {
+    selected,
+    draft: read(isRange) ? [...selected] : selected,
+    range: read(isRange),
+    autoApply: read(shouldAutoApply),
+    clearable: read(canClear),
+    placeholder: read(placeholderValue),
+    min: read(minimum),
+    max: read(maximum),
+    view: new Date(initialDate.getFullYear(), initialDate.getMonth(), 1),
+    commit: (next) => commitValue(model, next, emitFn),
+    abortController,
+  }
+
+  renderCalendar(root)
+  root.querySelector('[data-date-panel]').hidden = false
+  event.currentTarget.setAttribute('aria-expanded', 'true')
+
+  requestAnimationFrame(() => {
+    document.addEventListener('pointerdown', (pointerEvent) => {
+      if (!root.contains(pointerEvent.target)) closePicker(root)
+    }, { signal: abortController.signal })
+    document.addEventListener('keydown', (keyEvent) => {
+      if (keyEvent.key === 'Escape') {
+        closePicker(root)
+        event.currentTarget.focus()
+      }
+    }, { signal: abortController.signal })
+  })
+}
+
+export <view>
+  <div class="jui-date" class-has-error=${() => !!read(error)} class-is-disabled=${() => !!read(disabled)} data-date-picker>
+    #if read(label)
+      <span class="jui-date__label">
+        ${() => read(label)}
+        #if read(required)
+          <span class="jui-date__req" aria-hidden="true">*</span>
+        #end
+      </span>
+    #end
+
+    <span class="jui-date__field">
+      #if read(range)
+        <button
+          type="button"
+          class="jui-date__trigger"
+          data-date-trigger
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          aria-required=${() => !!read(required)}
+          disabled=${() => !!read(disabled)}
+          on-click=${(event) => openPicker(event, value, min, max, range, autoApply, clearable, placeholder, emit)}
+        >
+          <span class="jui-date__value" data-date-value class-is-placeholder=${() => normalizedSelection(value, true).length === 0}>${() => displayValue(value, range, placeholder)}</span>
+          <span class="jui-date__icon" aria-hidden="true"></span>
+        </button>
+      #else
+        <span class="jui-date__input-wrap">
+          <input
+            class="jui-date__input"
+            data-date-value
+            type="text"
+            inputmode="numeric"
+            maxlength="10"
+            autocomplete="bday"
+            placeholder="MM/DD/YYYY"
+            value=${() => displayDate(read(value))}
+            data-iso=${() => read(value)}
+            required=${false}
+            disabled=${() => !!read(disabled)}
+            aria-required=${() => !!read(required)}
+            aria-invalid=${() => !!read(error)}
+            on-input=${(event) => handleDateInput(event, min, max, value, emit)}
+            on-blur=${handleDateBlur}
+          />
+          <button
+            type="button"
+            class="jui-date__button"
+            data-date-trigger
+            aria-label="Open calendar"
+            aria-haspopup="dialog"
+            aria-expanded="false"
+            disabled=${() => !!read(disabled)}
+            on-click=${(event) => openPicker(event, value, min, max, range, autoApply, clearable, placeholder, emit)}
+          >
+            <span class="jui-date__icon" aria-hidden="true"></span>
+          </button>
+        </span>
+      #end
+
+      <div class="jui-date__panel" data-date-panel role="dialog" aria-label="Choose date" hidden>
+        <div class="jui-date__head">
+          <button type="button" class="jui-date__nav" aria-label="Previous month" on-click=${(event) => changeMonth(event.currentTarget.closest('[data-date-picker]'), -1)}>‹</button>
+          <select class="jui-date__select" data-date-month aria-label="Month" on-change=${(event) => {
+            const root = event.currentTarget.closest('[data-date-picker]')
+            setView(root, root.datePickerState.view.getFullYear(), Number(event.target.value))
+          }}></select>
+          <select class="jui-date__select" data-date-year aria-label="Year" on-change=${(event) => {
+            const root = event.currentTarget.closest('[data-date-picker]')
+            setView(root, Number(event.target.value), root.datePickerState.view.getMonth())
+          }}></select>
+          <button type="button" class="jui-date__nav" aria-label="Next month" on-click=${(event) => changeMonth(event.currentTarget.closest('[data-date-picker]'), 1)}>›</button>
+        </div>
+        <div class="jui-date__weekdays" aria-hidden="true">
+          #for weekdays as weekday (weekday)
+            <span>${weekday}</span>
+          #end
+        </div>
+        <div class="jui-date__days" data-date-days></div>
+        <p class="jui-date__range-hint" data-date-range-hint hidden>Select a start and end date.</p>
+        <div class="jui-date__actions">
+          <button type="button" class="jui-date__text-btn" data-date-clear on-click=${(event) => clearSelection(event.currentTarget.closest('[data-date-picker]'))}>Clear</button>
+          <button type="button" class="jui-date__text-btn" on-click=${(event) => selectToday(event.currentTarget.closest('[data-date-picker]'))}>Today</button>
+          <button type="button" class="jui-date__apply-btn" data-date-apply hidden on-click=${(event) => applySelection(event.currentTarget.closest('[data-date-picker]'))}>Apply</button>
+        </div>
+      </div>
+    </span>
+
+    #if read(error)
+      <span class="jui-date__error" role="alert">${() => read(error)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-date {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-date__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-date__req {
+  color: var(--j-danger);
+}
+
+.jui-date.has-error .jui-date__label {
+  color: var(--j-danger);
+}
+
+.jui-date.has-error .jui-date__input,
+.jui-date.has-error .jui-date__trigger {
+  border-color: var(--j-danger);
+}
+
+.jui-date.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-date__field {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.jui-date__input-wrap {
+  position: relative;
+  display: block;
+}
+
+.jui-date__input {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.6rem 2.9rem 0.6rem 0.85rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  outline: 0;
+  color: var(--j-text);
+  background: var(--j-surface-2);
+  font: inherit;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-date__input:focus {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-date__input[aria-invalid='true'] {
+  border-color: var(--j-danger);
+}
+
+.jui-date__input:disabled {
+  cursor: not-allowed;
+}
+
+.jui-date__button {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  right: 0.4rem;
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  color: var(--j-primary);
+  background: var(--j-mint);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.jui-date__button:hover {
+  background: var(--j-lime);
+}
+
+.jui-date__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jui-date__icon {
+  display: block;
+  width: 1.15rem;
+  height: 1.15rem;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 2v3M17 2v3M3.5 9h17'/%3E%3Crect x='3.5' y='4' width='17' height='17' rx='2'/%3E%3Cpath d='M8 13h2M14 13h2M8 17h2M14 17h2'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 2v3M17 2v3M3.5 9h17'/%3E%3Crect x='3.5' y='4' width='17' height='17' rx='2'/%3E%3Cpath d='M8 13h2M14 13h2M8 17h2M14 17h2'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.jui-date__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.45rem 0.45rem 0.45rem 0.85rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  outline: 0;
+  color: var(--j-text);
+  background: var(--j-surface-2);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-date__trigger:focus,
+.jui-date__trigger[aria-expanded='true'] {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-date__trigger:disabled {
+  cursor: not-allowed;
+}
+
+.jui-date__value.is-placeholder {
+  color: var(--j-muted);
+}
+
+.jui-date__trigger .jui-date__icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0.4rem;
+  border-radius: var(--j-radius-sm);
+  color: var(--j-primary);
+  background: var(--j-mint);
+  -webkit-mask: none;
+  mask: none;
+}
+
+.jui-date__trigger .jui-date__icon::before {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 2v3M17 2v3M3.5 9h17'/%3E%3Crect x='3.5' y='4' width='17' height='17' rx='2'/%3E%3Cpath d='M8 13h2M14 13h2M8 17h2M14 17h2'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 2v3M17 2v3M3.5 9h17'/%3E%3Crect x='3.5' y='4' width='17' height='17' rx='2'/%3E%3Cpath d='M8 13h2M14 13h2M8 17h2M14 17h2'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.jui-date__panel {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 0.45rem);
+  left: 0;
+  width: min(22rem, calc(100vw - 2rem));
+  padding: 0.8rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  color: var(--j-text);
+  background: var(--j-surface-2);
+  box-shadow: var(--j-shadow);
+}
+
+.jui-date__panel[hidden] {
+  display: none;
+}
+
+.jui-date__head {
+  display: grid;
+  grid-template-columns: 2.2rem minmax(0, 1fr) 5.5rem 2.2rem;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.jui-date__select {
+  min-width: 0;
+  height: 2.2rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  color: var(--j-text);
+  background: var(--j-surface);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.jui-date__nav {
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  color: var(--j-primary);
+  background: var(--j-mint);
+  cursor: pointer;
+  font-size: 1.4rem;
+}
+
+.jui-date__nav:hover {
+  background: var(--j-lime);
+}
+
+.jui-date__weekdays,
+.jui-date__days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.jui-date__weekdays {
+  margin-top: 0.75rem;
+  color: var(--j-muted);
+  font-size: 0.65rem;
+  font-weight: 850;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.jui-date__weekdays span {
+  padding: 0.3rem 0;
+}
+
+.jui-date__day {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  color: var(--j-text);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.jui-date__day:hover:not(:disabled) {
+  background: var(--j-surface);
+}
+
+.jui-date__day.is-outside {
+  color: var(--j-muted);
+  opacity: 0.6;
+}
+
+.jui-date__day.is-today {
+  box-shadow: inset 0 0 0 1px var(--j-primary);
+}
+
+.jui-date__day.is-in-range {
+  border-radius: 0;
+  color: var(--j-forest);
+  background: var(--j-mint);
+}
+
+.jui-date__day.is-selected {
+  z-index: 1;
+  color: #ffffff;
+  background: var(--j-primary);
+}
+
+.jui-date__day.is-range-start {
+  border-radius: var(--j-radius-sm) 0 0 var(--j-radius-sm);
+}
+
+.jui-date__day.is-range-end {
+  border-radius: 0 var(--j-radius-sm) var(--j-radius-sm) 0;
+}
+
+.jui-date__day:disabled {
+  color: var(--j-border);
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.jui-date__range-hint {
+  margin: 0.65rem 0 0;
+  color: var(--j-muted);
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+.jui-date__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--j-border);
+}
+
+.jui-date__actions button {
+  min-height: 2.1rem;
+  padding: 0.45rem 0.7rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.jui-date__text-btn {
+  color: var(--j-primary);
+  background: transparent;
+}
+
+.jui-date__text-btn:hover {
+  background: var(--j-mint);
+}
+
+.jui-date__apply-btn {
+  color: #ffffff;
+  background: var(--j-primary);
+}
+
+.jui-date__apply-btn:hover {
+  background: var(--j-leaf);
+}
+
+.jui-date__error {
+  color: var(--j-danger);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+@media (max-width: 520px) {
+  .jui-date__panel {
+    left: 0;
+    right: 0;
+    width: auto;
+    padding: 0.6rem;
+  }
+
+  .jui-date__head {
+    grid-template-columns: 2rem minmax(0, 1fr) 4.8rem 2rem;
+  }
+}
+</style>

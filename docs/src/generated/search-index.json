@@ -106,6 +106,25 @@
     ]
   },
   {
+    "title": "DatePicker",
+    "section": "Components",
+    "href": "/components/date-picker",
+    "keywords": [
+      "datepicker",
+      "label",
+      "value",
+      "min",
+      "max",
+      "placeholder",
+      "range",
+      "autoApply",
+      "clearable",
+      "required",
+      "disabled",
+      "error"
+    ]
+  },
+  {
     "title": "Divider",
     "section": "Components",
     "href": "/components/divider",

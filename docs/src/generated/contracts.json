@@ -266,6 +266,60 @@
       "change"
     ]
   },
+  "DatePicker": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "any",
+        "model": true,
+        "default": ""
+      },
+      "min": {
+        "type": "string",
+        "default": ""
+      },
+      "max": {
+        "type": "string",
+        "default": ""
+      },
+      "placeholder": {
+        "type": "string",
+        "default": "Select date"
+      },
+      "range": {
+        "type": "boolean",
+        "default": false
+      },
+      "autoApply": {
+        "type": "boolean",
+        "default": true
+      },
+      "clearable": {
+        "type": "boolean",
+        "default": true
+      },
+      "required": {
+        "type": "boolean",
+        "default": false
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
   "Divider": {
     "props": {
       "label": {

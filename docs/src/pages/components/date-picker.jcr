@@ -1,0 +1,186 @@
+import { pulse } from '@jacare/core'
+import Field from '@jacare/ui/components/Field.jcr'
+import DatePicker from '@jacare/ui/components/DatePicker.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  bounds,
+  manualApply,
+  playgroundCode as buildPlaygroundCode,
+  rangeExample,
+  states,
+} from '../../examples/date-picker.js'
+
+const contract = getContract('DatePicker')
+const navLinks = previousNext('/components/date-picker')
+
+const playLabel = pulse('Birthday')
+const playPlaceholder = pulse('Select date')
+const playHint = pulse('Stored as YYYY-MM-DD')
+const playError = pulse('')
+const playRequired = pulse(false)
+const playDisabled = pulse(false)
+const playRange = pulse(false)
+const playAutoApply = pulse(true)
+const playClearable = pulse(true)
+const playMin = pulse('')
+const playMax = pulse('')
+const playValue = pulse('')
+const playValueRange = pulse([])
+
+const a11y = [
+  'Calendar trigger exposes aria-haspopup="dialog" and aria-expanded while open',
+  'Typed input uses a masked MM/DD/YYYY value and keeps an ISO value in data-iso',
+  'required sets aria-required; error sets aria-invalid and role="alert" copy',
+  'Escape and outside pointer dismiss the panel; disabled blocks opening and typing',
+]
+
+function currentPlayValue() {
+  return playRange() ? playValueRange() : playValue()
+}
+
+function handlePlaygroundChange(next) {
+  if (playRange()) {
+    playValueRange.set(next)
+    return
+  }
+  playValue.set(next)
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    label: playLabel(),
+    value: playRange() ? '' : playValue(),
+    placeholder: playPlaceholder(),
+    range: playRange(),
+    autoApply: playAutoApply(),
+    min: playMin(),
+    max: playMax(),
+    required: playRequired(),
+    disabled: playDisabled(),
+    error: playError(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>DatePicker</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Forms'}
+      :title=${'DatePicker'}
+      :description=${'Typed or calendar date input with optional range, bounds, and clear. Bind value to a pulse as an ISO string or a two-date array.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label'} bind-value=${playLabel} />
+          <Field :label=${'Placeholder'} bind-value=${playPlaceholder} />
+          <Field :label=${'Hint'} bind-value=${playHint} />
+          <Field :label=${'Error'} :hint=${'Leave empty for a valid date'} bind-value=${playError} />
+          <Field :label=${'Min (YYYY-MM-DD)'} bind-value=${playMin} />
+          <Field :label=${'Max (YYYY-MM-DD)'} bind-value=${playMax} />
+
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Required'} bind-checked=${playRequired} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+            <Switch :label=${'Range'} bind-checked=${playRange} />
+            <Switch :label=${'Auto apply'} bind-checked=${playAutoApply} />
+            <Switch :label=${'Clearable'} bind-checked=${playClearable} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <DatePicker
+              :label=${playLabel}
+              :value=${currentPlayValue}
+              :placeholder=${playPlaceholder}
+              :range=${playRange}
+              :autoApply=${playAutoApply}
+              :clearable=${playClearable}
+              :min=${playMin}
+              :max=${playMax}
+              :required=${playRequired}
+              :disabled=${playDisabled}
+              :error=${playError}
+              on-change=${handlePlaygroundChange}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'date-picker-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'date-picker-basic.jcr'} :layout=${'stack'}>
+      <div style="width:min(20rem,100%)">
+        <DatePicker :label=${'Birthday'} bind-value=${playValue} />
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'range'} :title=${'Date range'}>
+      <p class="docs-lead">Set <code>range</code> and bind an array of two ISO dates.</p>
+      <Demo :id=${'range-demo'} :title=${'Trip dates'} :code=${rangeExample} :filename=${'date-picker-range.jcr'} :layout=${'bleed'}>
+        <div style="width:min(22rem,100%)">
+          <DatePicker :label=${'Trip dates'} :range=${true} bind-value=${playValueRange} />
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'bounds'} :title=${'Min and max'}>
+      <p class="docs-lead">Clamp selectable days with ISO <code>min</code> and <code>max</code>.</p>
+      <Demo :id=${'bounds-demo'} :title=${'Bounded appointment'} :code=${bounds} :filename=${'date-picker-bounds.jcr'} :layout=${'rail'}>
+        <div style="width:min(20rem,100%)">
+          <DatePicker :label=${'Appointment'} :min=${'2026-01-01'} :max=${'2026-12-31'} bind-value=${playValue} />
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'manual-apply'} :title=${'Manual apply'}>
+      <p class="docs-lead">Turn off <code>autoApply</code> in range mode to confirm with Apply.</p>
+      <Demo :id=${'manual-apply-demo'} :title=${'Billing period'} :code=${manualApply} :filename=${'date-picker-manual-apply.jcr'} :layout=${'stack'}>
+        <div style="width:min(22rem,100%)">
+          <DatePicker :label=${'Billing period'} :range=${true} :autoApply=${false} bind-value=${playValueRange} />
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'states'} :title=${'States'}>
+      <Demo :id=${'date-states'} :title=${'Required, error, and disabled'} :code=${states} :filename=${'date-picker-states.jcr'} :layout=${'stack'}>
+        <div style="width:min(20rem,100%)">
+          <Stack :gap=${'md'}>
+            <DatePicker :label=${'Required'} :required=${true} bind-value=${playValue} />
+            <DatePicker :label=${'Date'} :error=${'Pick a valid date'} bind-value=${playError} />
+            <DatePicker :label=${'Locked'} :disabled=${true} bind-value=${playValue} />
+          </Stack>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

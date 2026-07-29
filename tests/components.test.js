@@ -391,6 +391,60 @@ describe('@jacare/ui components', () => {
     expect(value()).toEqual([])
   })
 
+  it('DatePicker masks typed input and emits change', async () => {
+    const DatePicker = await loadComponent('DatePicker')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const value = pulse('')
+    let changed = null
+
+    DatePicker.mount(host, {
+      label: 'Birthday',
+      value,
+      change: (next) => {
+        changed = next
+      },
+    })
+
+    const input = host.querySelector('.jui-date__input')
+    expect(input.placeholder).toBe('MM/DD/YYYY')
+
+    input.value = '07282026'
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+
+    expect(input.value).toBe('07/28/2026')
+    expect(value()).toBe('2026-07-28')
+    expect(changed).toBe('2026-07-28')
+  })
+
+  it('DatePicker opens the calendar and selects a day', async () => {
+    const DatePicker = await loadComponent('DatePicker')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const value = pulse('2026-07-01')
+    let changed = null
+
+    DatePicker.mount(host, {
+      label: 'Date',
+      value,
+      change: (next) => {
+        changed = next
+      },
+    })
+
+    host.querySelector('.jui-date__button').click()
+    const panel = host.querySelector('.jui-date__panel')
+    expect(panel.hidden).toBe(false)
+
+    const day = host.querySelector('[data-date="2026-07-15"]')
+    expect(day).toBeTruthy()
+    day.click()
+
+    expect(value()).toBe('2026-07-15')
+    expect(changed).toBe('2026-07-15')
+    expect(panel.hidden).toBe(true)
+  })
+
   it('Grid applies column tracks, gap, and dense packing', async () => {
     const Grid = await loadComponent('Grid')
     const host = document.createElement('div')

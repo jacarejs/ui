@@ -23,6 +23,7 @@ export const nav = createNav({
     '/components/card': { use: lazy(() => import('./pages/components/card.jcr')), title: 'Card · Jacaré UI' },
     '/components/checkbox': { use: lazy(() => import('./pages/components/checkbox.jcr')), title: 'Checkbox · Jacaré UI' },
     '/components/color-picker': { use: lazy(() => import('./pages/components/color-picker.jcr')), title: 'ColorPicker · Jacaré UI' },
+    '/components/date-picker': { use: lazy(() => import('./pages/components/date-picker.jcr')), title: 'DatePicker · Jacaré UI' },
     '/components/divider': { use: lazy(() => import('./pages/components/divider.jcr')), title: 'Divider · Jacaré UI' },
     '/components/field': { use: lazy(() => import('./pages/components/field.jcr')), title: 'Field · Jacaré UI' },
     '/components/flex': { use: lazy(() => import('./pages/components/flex.jcr')), title: 'Flex · Jacaré UI' },
