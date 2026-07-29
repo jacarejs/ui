@@ -11,7 +11,7 @@ import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/slider.js'
+import { basic, rangeExample, tooltipExample, playgroundCode as buildPlaygroundCode } from '../../examples/slider.js'
 
 const contract = getContract('Slider')
 const navLinks = previousNext('/components/slider')
@@ -25,6 +25,10 @@ const playRange = pulse(false)
 const playShowTooltip = pulse(true)
 const playVertical = pulse(false)
 const playDisabled = pulse(false)
+
+const basicValue = pulse(40)
+const rangeValue = pulse([25, 70])
+const tooltipValue = pulse(55)
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -52,7 +56,7 @@ export <view>
     <DocsHero
       :kicker=${'Forms'}
       :title=${'Slider'}
-      :description=${'Single or range value slider built on native range inputs, with an optional value tooltip.'}
+      :description=${'Single or range value slider with pointer and touch drag, optional tooltips, and independent demo state on this page.'}
       :status=${'stable'}
     />
 
@@ -71,7 +75,7 @@ export <view>
         </div>
 
         <div class="docs-alert-play__preview">
-          <div class="docs-panel">
+          <div class="docs-panel docs-slider-stage" class-docs-slider-stage--vertical=${playVertical}>
             #if playRange()
               <Slider
                 :min=${() => Number(playMin()) || 0}
@@ -101,7 +105,15 @@ export <view>
     </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'slider-basic.jcr'}>
-      <Slider :min=${0} :max=${100} bind-value=${playSingle} />
+      <Slider :min=${0} :max=${100} bind-value=${basicValue} />
+    </Demo>
+
+    <Demo :id=${'range'} :title=${'Range'} :code=${rangeExample} :filename=${'slider-range.jcr'}>
+      <Slider :min=${0} :max=${100} :range=${true} bind-value=${rangeValue} />
+    </Demo>
+
+    <Demo :id=${'tooltip'} :title=${'Tooltip'} :code=${tooltipExample} :filename=${'slider-tooltip.jcr'}>
+      <Slider :min=${0} :max=${100} :showTooltip=${true} bind-value=${tooltipValue} />
     </Demo>
 
     <DocsSection :id=${'api'} :title=${'API'}>

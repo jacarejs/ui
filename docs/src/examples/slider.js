@@ -7,6 +7,24 @@ export <view>
   <Slider :min=\${0} :max=\${100} bind-value=\${value} />
 </view>`
 
+export const rangeExample = `import { pulse } from '@jacare/core'
+import Slider from '@jacare/ui/Slider'
+
+const value = pulse([25, 70])
+
+export <view>
+  <Slider :min=\${0} :max=\${100} :range=\${true} bind-value=\${value} />
+</view>`
+
+export const tooltipExample = `import { pulse } from '@jacare/core'
+import Slider from '@jacare/ui/Slider'
+
+const value = pulse(55)
+
+export <view>
+  <Slider :min=\${0} :max=\${100} :showTooltip=\${true} bind-value=\${value} />
+</view>`
+
 export function playgroundCode(state) {
   const initial = state.range
     ? `[${Number(state.lo) || 0}, ${Number(state.hi) || 100}]`

@@ -57,16 +57,39 @@ function percentOf(number, minProp, maxProp) {
   return Math.min(100, Math.max(0, ((number - lo) / (hi - lo)) * 100))
 }
 
-function fillStyle(model, minProp, maxProp, rangeProp) {
-  if (isRangeMode(rangeProp, model)) {
-    const [lo, hi] = rangeValues(model, minProp, maxProp)
-    return `left:${percentOf(lo, minProp, maxProp)}%;right:${100 - percentOf(hi, minProp, maxProp)}%`
-  }
-  return `left:0%;right:${100 - percentOf(singleValue(model, minProp), minProp, maxProp)}%`
+function snapValue(raw, minProp, maxProp, stepProp) {
+  const lo = minOf(minProp)
+  const hi = maxOf(maxProp)
+  const step = stepOf(stepProp)
+  const snapped = Math.round((raw - lo) / step) * step + lo
+  const precision = String(step).includes('.') ? String(step).split('.')[1].length : 0
+  const rounded = precision ? Number(snapped.toFixed(precision)) : snapped
+  return Math.min(hi, Math.max(lo, rounded))
 }
 
-function tooltipStyle(number, minProp, maxProp) {
-  return `left:${percentOf(number, minProp, maxProp)}%`
+function fillStyle(model, minProp, maxProp, rangeProp, verticalProp) {
+  const vertical = !!read(verticalProp)
+  if (isRangeMode(rangeProp, model)) {
+    const [lo, hi] = rangeValues(model, minProp, maxProp)
+    const start = percentOf(lo, minProp, maxProp)
+    const end = percentOf(hi, minProp, maxProp)
+    if (vertical) return `bottom:${start}%;top:${100 - end}%`
+    return `left:${start}%;right:${100 - end}%`
+  }
+  const amount = percentOf(singleValue(model, minProp), minProp, maxProp)
+  if (vertical) return `bottom:0%;top:${100 - amount}%`
+  return `left:0%;right:${100 - amount}%`
+}
+
+function tooltipStyle(number, minProp, maxProp, verticalProp) {
+  const amount = percentOf(number, minProp, maxProp)
+  if (read(verticalProp)) return `bottom:${amount}%`
+  return `left:${amount}%`
+}
+
+function emitLive(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('input', next)
 }
 
 function commit(model, next, emitFn) {
@@ -75,31 +98,114 @@ function commit(model, next, emitFn) {
 }
 
 function handleSingleInput(event, model, emitFn) {
-  const next = Number(event.target.value)
-  if (model && typeof model.set === 'function') model.set(next)
-  emitFn('input', next)
+  emitLive(model, Number(event.target.value), emitFn)
 }
 
 function handleSingleChange(event, model, emitFn) {
   commit(model, Number(event.target.value), emitFn)
 }
 
-function handleRangeInput(index, event, model, minProp, maxProp, emitFn) {
+function clampRange(index, next, model, minProp, maxProp) {
   const values = rangeValues(model, minProp, maxProp)
-  let next = Number(event.target.value)
-  if (index === 0) next = Math.min(next, values[1])
-  else next = Math.max(next, values[0])
-  const updated = index === 0 ? [next, values[1]] : [values[0], next]
-  if (model && typeof model.set === 'function') model.set(updated)
-  emitFn('input', updated)
+  if (index === 0) return [Math.min(next, values[1]), values[1]]
+  return [values[0], Math.max(next, values[0])]
+}
+
+function handleRangeInput(index, event, model, minProp, maxProp, emitFn) {
+  emitLive(model, clampRange(index, Number(event.target.value), model, minProp, maxProp), emitFn)
 }
 
 function handleRangeChange(index, event, model, minProp, maxProp, emitFn) {
-  const values = rangeValues(model, minProp, maxProp)
-  let next = Number(event.target.value)
-  if (index === 0) next = Math.min(next, values[1])
-  else next = Math.max(next, values[0])
-  commit(model, index === 0 ? [next, values[1]] : [values[0], next], emitFn)
+  commit(model, clampRange(index, Number(event.target.value), model, minProp, maxProp), emitFn)
+}
+
+function valueFromPointer(event, root, minProp, maxProp, stepProp, verticalProp) {
+  const track = root.querySelector('.jui-slider__track')
+  if (!track) return minOf(minProp)
+  const rect = track.getBoundingClientRect()
+  let ratio = 0
+  if (read(verticalProp)) {
+    if (rect.height <= 0) return minOf(minProp)
+    ratio = 1 - (event.clientY - rect.top) / rect.height
+  } else {
+    if (rect.width <= 0) return minOf(minProp)
+    ratio = (event.clientX - rect.left) / rect.width
+  }
+  ratio = Math.min(1, Math.max(0, ratio))
+  const lo = minOf(minProp)
+  const hi = maxOf(maxProp)
+  return snapValue(lo + ratio * (hi - lo), minProp, maxProp, stepProp)
+}
+
+function nearestThumb(next, model, minProp, maxProp) {
+  const [lo, hi] = rangeValues(model, minProp, maxProp)
+  return Math.abs(next - lo) <= Math.abs(next - hi) ? 0 : 1
+}
+
+function focusThumb(root, index) {
+  const inputs = root.querySelectorAll('input[type="range"]')
+  const target = inputs[index] || inputs[0]
+  if (target && typeof target.focus === 'function') target.focus({ preventScroll: true })
+}
+
+function clearDrag(root) {
+  root.classList.remove('is-dragging', 'is-dragging-lo', 'is-dragging-hi')
+  root._juiThumb = null
+  root._juiDragging = false
+}
+
+function beginPointer(event, model, minProp, maxProp, stepProp, rangeProp, verticalProp, disabledProp, emitFn) {
+  if (read(disabledProp)) return
+  if (event.pointerType === 'mouse' && event.button !== 0) return
+  const root = event.currentTarget
+  event.preventDefault()
+  root._juiDragging = true
+  root.classList.add('is-dragging')
+  if (typeof root.setPointerCapture === 'function') root.setPointerCapture(event.pointerId)
+
+  const next = valueFromPointer(event, root, minProp, maxProp, stepProp, verticalProp)
+  if (isRangeMode(rangeProp, model)) {
+    const index = nearestThumb(next, model, minProp, maxProp)
+    root._juiThumb = index
+    root.classList.toggle('is-dragging-lo', index === 0)
+    root.classList.toggle('is-dragging-hi', index === 1)
+    emitLive(model, clampRange(index, next, model, minProp, maxProp), emitFn)
+    focusThumb(root, index)
+    return
+  }
+
+  root._juiThumb = 0
+  emitLive(model, next, emitFn)
+  focusThumb(root, 0)
+}
+
+function movePointer(event, model, minProp, maxProp, stepProp, rangeProp, verticalProp, disabledProp, emitFn) {
+  if (read(disabledProp)) return
+  const root = event.currentTarget
+  const captured = typeof root.hasPointerCapture === 'function' && root.hasPointerCapture(event.pointerId)
+  if (!root._juiDragging && !captured) return
+  event.preventDefault()
+
+  const next = valueFromPointer(event, root, minProp, maxProp, stepProp, verticalProp)
+  if (isRangeMode(rangeProp, model)) {
+    const index = root._juiThumb == null ? nearestThumb(next, model, minProp, maxProp) : root._juiThumb
+    emitLive(model, clampRange(index, next, model, minProp, maxProp), emitFn)
+    return
+  }
+  emitLive(model, next, emitFn)
+}
+
+function endPointer(event, model, minProp, maxProp, rangeProp, disabledProp, emitFn) {
+  const root = event.currentTarget
+  const captured = typeof root.hasPointerCapture === 'function' && root.hasPointerCapture(event.pointerId)
+  if (!root._juiDragging && !captured) return
+  if (captured && typeof root.releasePointerCapture === 'function') root.releasePointerCapture(event.pointerId)
+
+  if (!read(disabledProp)) {
+    if (isRangeMode(rangeProp, model)) commit(model, rangeValues(model, minProp, maxProp), emitFn)
+    else commit(model, singleValue(model, minProp), emitFn)
+  }
+  clearDrag(root)
 }
 
 export <view>
@@ -108,9 +214,13 @@ export <view>
     class-jui-slider--vertical=${() => !!read(vertical)}
     class-jui-slider--tooltip=${() => !!read(showTooltip)}
     class-is-disabled=${() => !!read(disabled)}
+    on-pointerdown=${(event) => beginPointer(event, value, min, max, step, range, vertical, disabled, emit)}
+    on-pointermove=${(event) => movePointer(event, value, min, max, step, range, vertical, disabled, emit)}
+    on-pointerup=${(event) => endPointer(event, value, min, max, range, disabled, emit)}
+    on-pointercancel=${(event) => endPointer(event, value, min, max, range, disabled, emit)}
   >
     <div class="jui-slider__track">
-      <span class="jui-slider__fill" :style=${() => fillStyle(value, min, max, range)}></span>
+      <span class="jui-slider__fill" :style=${() => fillStyle(value, min, max, range, vertical)}></span>
 
       #if isRangeMode(range, value)
         <input
@@ -121,6 +231,7 @@ export <view>
           step=${() => stepOf(step)}
           disabled=${() => !!read(disabled)}
           value=${() => rangeValues(value, min, max)[0]}
+          aria-label="Minimum value"
           on-input=${(event) => handleRangeInput(0, event, value, min, max, emit)}
           on-change=${(event) => handleRangeChange(0, event, value, min, max, emit)}
         />
@@ -132,12 +243,13 @@ export <view>
           step=${() => stepOf(step)}
           disabled=${() => !!read(disabled)}
           value=${() => rangeValues(value, min, max)[1]}
+          aria-label="Maximum value"
           on-input=${(event) => handleRangeInput(1, event, value, min, max, emit)}
           on-change=${(event) => handleRangeChange(1, event, value, min, max, emit)}
         />
         #if read(showTooltip)
-          <span class="jui-slider__tooltip" :style=${() => tooltipStyle(rangeValues(value, min, max)[0], min, max)}>${() => rangeValues(value, min, max)[0]}</span>
-          <span class="jui-slider__tooltip" :style=${() => tooltipStyle(rangeValues(value, min, max)[1], min, max)}>${() => rangeValues(value, min, max)[1]}</span>
+          <span class="jui-slider__tooltip jui-slider__tooltip--lo" :style=${() => tooltipStyle(rangeValues(value, min, max)[0], min, max, vertical)}>${() => rangeValues(value, min, max)[0]}</span>
+          <span class="jui-slider__tooltip jui-slider__tooltip--hi" :style=${() => tooltipStyle(rangeValues(value, min, max)[1], min, max, vertical)}>${() => rangeValues(value, min, max)[1]}</span>
         #end
       #else
         <input
@@ -148,11 +260,12 @@ export <view>
           step=${() => stepOf(step)}
           disabled=${() => !!read(disabled)}
           value=${() => singleValue(value, min)}
+          aria-label="Value"
           on-input=${(event) => handleSingleInput(event, value, emit)}
           on-change=${(event) => handleSingleChange(event, value, emit)}
         />
         #if read(showTooltip)
-          <span class="jui-slider__tooltip" :style=${() => tooltipStyle(singleValue(value, min), min, max)}>${() => singleValue(value, min)}</span>
+          <span class="jui-slider__tooltip" :style=${() => tooltipStyle(singleValue(value, min), min, max, vertical)}>${() => singleValue(value, min)}</span>
         #end
       #end
     </div>
@@ -163,11 +276,15 @@ export <style>
 .jui-slider {
   display: block;
   width: 100%;
-  padding: 0.9rem 0;
+  padding: 1rem 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .jui-slider.is-disabled {
   opacity: 0.6;
+  touch-action: auto;
 }
 
 .jui-slider__track {
@@ -183,57 +300,68 @@ export <style>
   bottom: 0;
   border-radius: var(--j-radius-sm);
   background: var(--j-primary);
+  pointer-events: none;
 }
 
 .jui-slider__input {
   position: absolute;
-  inset: 0;
+  left: 0;
+  right: 0;
+  top: 50%;
   width: 100%;
-  height: 100%;
+  height: 2.75rem;
   margin: 0;
+  transform: translateY(-50%);
   appearance: none;
   background: transparent;
+  cursor: pointer;
   pointer-events: none;
+  touch-action: none;
+}
+
+.jui-slider.is-dragging-lo .jui-slider__input--lo,
+.jui-slider.is-dragging-hi .jui-slider__input--hi {
+  z-index: 2;
 }
 
 .jui-slider__input::-webkit-slider-runnable-track {
+  height: 0.35rem;
   background: transparent;
 }
 
 .jui-slider__input::-moz-range-track {
+  height: 0.35rem;
   background: transparent;
 }
 
 .jui-slider__input::-webkit-slider-thumb {
   appearance: none;
-  width: 1.15rem;
-  height: 1.15rem;
-  margin-top: -0.4rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  margin-top: calc((0.35rem - 1.35rem) / 2);
   border: 2px solid var(--j-primary);
   border-radius: 999px;
   background: var(--j-surface-2);
-  cursor: pointer;
-  pointer-events: auto;
   box-shadow: var(--j-shadow-sm, none);
+  pointer-events: none;
 }
 
 .jui-slider__input::-moz-range-thumb {
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 1.35rem;
+  height: 1.35rem;
   border: 2px solid var(--j-primary);
   border-radius: 999px;
   background: var(--j-surface-2);
-  cursor: pointer;
-  pointer-events: auto;
+  pointer-events: none;
 }
 
-.jui-slider__input:focus-visible::-webkit-slider-thumb {
+.jui-slider__input:focus-visible::-webkit-slider-thumb,
+.jui-slider.is-dragging .jui-slider__input:focus::-webkit-slider-thumb {
   box-shadow: var(--j-focus);
 }
 
 .jui-slider__input:disabled::-webkit-slider-thumb,
 .jui-slider__input:disabled::-moz-range-thumb {
-  cursor: not-allowed;
   border-color: var(--j-muted);
 }
 
@@ -251,18 +379,25 @@ export <style>
   pointer-events: none;
   transition: opacity 120ms ease;
   white-space: nowrap;
+  z-index: 3;
 }
 
-.jui-slider--tooltip .jui-slider__track:hover .jui-slider__tooltip,
+.jui-slider--tooltip.is-dragging .jui-slider__tooltip,
 .jui-slider--tooltip .jui-slider__input:focus-visible ~ .jui-slider__tooltip {
   opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .jui-slider--tooltip .jui-slider__track:hover .jui-slider__tooltip {
+    opacity: 1;
+  }
 }
 
 .jui-slider--vertical {
   display: inline-block;
   width: auto;
   height: 12rem;
-  padding: 0 0.9rem;
+  padding: 0 1rem;
 }
 
 .jui-slider--vertical .jui-slider__track {
@@ -273,11 +408,49 @@ export <style>
 .jui-slider--vertical .jui-slider__fill {
   left: 0;
   right: 0;
-  top: auto;
+  width: auto;
 }
 
 .jui-slider--vertical .jui-slider__input {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  right: auto;
+  width: 2.75rem;
+  height: 100%;
+  transform: translateX(-50%);
   writing-mode: vertical-lr;
   direction: rtl;
+}
+
+.jui-slider--vertical .jui-slider__input::-webkit-slider-thumb {
+  margin-top: 0;
+  margin-left: calc((0.35rem - 1.35rem) / 2);
+}
+
+.jui-slider--vertical .jui-slider__tooltip {
+  left: 100%;
+  bottom: auto;
+  transform: translate(0.5rem, 50%);
+}
+
+@media (pointer: coarse) {
+  .jui-slider {
+    padding: 1.15rem 0;
+  }
+
+  .jui-slider__input::-webkit-slider-thumb,
+  .jui-slider__input::-moz-range-thumb {
+    width: 1.55rem;
+    height: 1.55rem;
+  }
+
+  .jui-slider__input::-webkit-slider-thumb {
+    margin-top: calc((0.35rem - 1.55rem) / 2);
+  }
+
+  .jui-slider--vertical .jui-slider__input::-webkit-slider-thumb {
+    margin-left: calc((0.35rem - 1.55rem) / 2);
+  }
 }
 </style>
