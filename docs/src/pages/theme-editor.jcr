@@ -10,6 +10,9 @@ import Progress from '@jacare/ui/components/Progress.jcr'
 import Switch from '@jacare/ui/components/Switch.jcr'
 import ThemeScope from '@jacare/ui/components/ThemeScope.jcr'
 import DocsHero from '../ui/DocsHero.jcr'
+import DocsSection from '../ui/DocsSection.jcr'
+import PreviousNext from '../ui/PreviousNext.jcr'
+import { previousNext } from '../nav-data.js'
 import { lightDefaults, darkDefaults } from '../theme-presets.js'
 import {
   applyThemeTokens,
@@ -29,6 +32,7 @@ import {
 } from '../theme-editor-store.js'
 
 const stored = readThemeEditorState()
+const navLinks = previousNext('/theme-editor')
 
 const tab = pulse('library')
 const mode = pulse('light')
@@ -394,6 +398,17 @@ export <view>
       :description=${'Browse ready-made palettes, edit built-in themes in place, or create your own and keep everything in localStorage.'}
     />
 
+    <DocsSection :id=${'how'} :title=${'How it works'}>
+      <p class="docs-lead">
+        <strong>Library</strong> lists built-in and custom presets — filter, preview, and Apply to publish tokens to the page.
+        <strong>Edit</strong> tweaks the selected palette (built-ins save as overrides; customs update in place).
+        <strong>Create</strong> starts a named custom theme. Export CSS from the preview panel when you are ready to paste into an app stylesheet.
+      </p>
+      <p class="docs-lead">
+        State persists in this browser under <code>jui-theme-editor</code>, <code>jui-theme-editor-custom</code>, and <code>jui-theme-editor-overrides</code>.
+      </p>
+    </DocsSection>
+
     #if appliedNote()
       <Alert :tone=${'success'} :title=${'Theme updated'} :dismissible=${true} on-dismiss=${() => appliedNote.set('')}>
         ${() => appliedNote()}
@@ -701,5 +716,7 @@ export <view>
       on-confirm=${onConfirmApply}
       on-cancel=${onCancelApply}
     />
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
   </article>
 </view>

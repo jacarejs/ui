@@ -5,16 +5,30 @@ import CodeBlock from '../ui/CodeBlock.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
 import { previousNext } from '../nav-data.js'
 import { goDocs } from '../navigate.js'
-import { themeBoot, overrideTokens, semanticAliases, applyModes } from '../examples/theme.js'
+import {
+  themeBoot,
+  overrideTokens,
+  semanticAliases,
+  applyModes,
+  customFonts,
+  customFontsBody,
+  tailwindBridge,
+  tailwindV3Config,
+  densityBoot,
+  motionBoot,
+  densityTokens,
+  motionTokens,
+} from '../examples/theme.js'
 
 const navLinks = previousNext('/theme')
+const tailwindDocsUrl = 'https://tailwindcss.com/docs/installation'
 
 export <view>
   <article class="docs-page">
     <DocsHero
       :kicker=${'Foundations'}
       :title=${'Theme'}
-      :description=${'Jacaré UI is driven by CSS custom properties on --j-* tokens. Import theme.css once, override brand colors when needed, and use applyTheme for light, dark, or system. Semantic aliases keep every component aligned.'}
+      :description=${'Jacaré UI is driven by CSS custom properties on --j-* tokens. Import theme.css once, override brand colors when needed, and use applyTheme, applyDensity, and applyMotion for light/dark, compact layouts, and reduced motion.'}
     />
 
     <DocsSection :id=${'boot'} :title=${'Boot the theme'}>
@@ -33,6 +47,57 @@ export <view>
       <CodeBlock :code=${overrideTokens} :filename=${'app.css'} :language=${'css'} />
     </DocsSection>
 
+    <DocsSection :id=${'fonts'} :title=${'Use other fonts'}>
+      <p class="docs-lead">
+        Typography is controlled by <code>--j-font</code> and <code>--j-font-mono</code>. Load any webfont (Google Fonts, Bunny, self-hosted files), then override those tokens — components pick them up automatically.
+      </p>
+      <CodeBlock :code=${customFonts} :filename=${'fonts.css'} :language=${'css'} />
+      <CodeBlock :code=${customFontsBody} :filename=${'base.css'} :language=${'css'} />
+      <p class="docs-lead">
+        Keep a system fallback after your brand face so text still renders if the webfont is blocked or slow.
+      </p>
+    </DocsSection>
+
+    <DocsSection :id=${'density'} :title=${'Density'}>
+      <p class="docs-lead">
+        <code>--j-density</code> scales control height and padding. Use <code>applyDensity</code> or set <code>data-j-density</code> on <code>:root</code> / a subtree. Button, Field, Input, and Card read the control tokens.
+      </p>
+      <CodeBlock :code=${densityBoot} :filename=${'density.js'} :language=${'javascript'} />
+      <CodeBlock :code=${densityTokens} :filename=${'density.css'} :language=${'css'} />
+      <div class="docs-hero-actions">
+        <Button :variant=${'secondary'} on-press=${() => goDocs('/density-preview')}>Open Density Preview</Button>
+      </div>
+    </DocsSection>
+
+    <DocsSection :id=${'motion'} :title=${'Motion'}>
+      <p class="docs-lead">
+        Durations and eases live on <code>--j-duration-*</code> and <code>--j-ease-*</code>. <code>applyMotion('reduce')</code> zeros durations on the target; <code>system</code> honors <code>prefers-reduced-motion</code>.
+      </p>
+      <CodeBlock :code=${motionBoot} :filename=${'motion.js'} :language=${'javascript'} />
+      <CodeBlock :code=${motionTokens} :filename=${'motion.css'} :language=${'css'} />
+      <div class="docs-hero-actions">
+        <Button :variant=${'secondary'} on-press=${() => goDocs('/motion-lab')}>Open Motion Lab</Button>
+      </div>
+    </DocsSection>
+
+    <DocsSection :id=${'tailwind'} :title=${'Use with Tailwind CSS'}>
+      <p class="docs-lead">
+        Jacaré UI does not depend on Tailwind. You can still use Tailwind for layout and utility classes alongside <code>theme.css</code>. Bridge Jacaré tokens into Tailwind so <code>bg-primary</code> / <code>font-sans</code> stay in sync with the design system.
+      </p>
+      <p class="docs-lead">
+        Official Tailwind install guide:
+        <a href=${tailwindDocsUrl} target="_blank" rel="noreferrer">https://tailwindcss.com/docs/installation</a>
+      </p>
+      <CodeBlock :code=${tailwindBridge} :filename=${'app.css'} :language=${'css'} />
+      <p class="docs-lead">
+        On Tailwind v3, map the same tokens in <code>tailwind.config.js</code> instead of <code>@theme</code>:
+      </p>
+      <CodeBlock :code=${tailwindV3Config} :filename=${'tailwind.config.js'} :language=${'javascript'} />
+      <p class="docs-lead">
+        Import order matters: load <code>@jacare/ui/theme.css</code> before Tailwind so <code>var(--j-*)</code> values resolve when utilities are generated.
+      </p>
+    </DocsSection>
+
     <DocsSection :id=${'semantic'} :title=${'Semantic aliases'}>
       <p class="docs-lead">
         Semantic aliases map brand tokens to roles like background, foreground, and accent. Components read the roles so your brand sheet stays the single source of truth.
@@ -42,11 +107,12 @@ export <view>
 
     <DocsSection :id=${'tools'} :title=${'Tune live'}>
       <p class="docs-lead">
-        Use the Theme Editor to draft token changes and export CSS, or open the Token reference for the full <code>--j-*</code> catalog.
+        Use the Theme Editor to draft token changes and export CSS, open the Token reference for the full <code>--j-*</code> catalog, or try Viewport Lab for mobile frames.
       </p>
       <div class="docs-hero-actions">
         <Button :variant=${'primary'} on-press=${() => goDocs('/theme-editor')}>Open Theme Editor</Button>
         <Button :variant=${'secondary'} on-press=${() => goDocs('/tokens')}>Token reference</Button>
+        <Button :variant=${'ghost'} on-press=${() => goDocs('/viewport-lab')}>Viewport Lab</Button>
       </div>
     </DocsSection>
 

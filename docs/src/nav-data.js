@@ -33,7 +33,7 @@ export const shippedComponents = [
   { name: 'Confirm', group: 'Overlay', blurb: 'Modal confirmation with danger and busy states' },
   { name: 'DatePicker', group: 'Forms', blurb: 'Typed or calendar date and range picker' },
   { name: 'DatePickerPanel', group: 'Forms', blurb: 'Inline calendar surface without the field chrome' },
-  { name: 'DateTimePicker', group: 'Forms', blurb: 'Combined date and time value in one control' },
+  { name: 'DateTimePicker', group: 'Forms', blurb: 'DatePicker + TimePicker as one ISO value' },
   { name: 'Dialog', group: 'Overlay', blurb: 'General modal with title, body, and footer actions' },
   { name: 'Divider', group: 'Layout', blurb: 'Quiet separator between sections' },
   { name: 'Field', group: 'Forms', blurb: 'Labeled input with hint and error' },
@@ -65,7 +65,7 @@ export const shippedComponents = [
   { name: 'TimeSelect', group: 'Forms', blurb: 'Discrete time options from a step list' },
   { name: 'Transfer', group: 'Forms', blurb: 'Move items between source and target lists' },
   { name: 'TreeSelect', group: 'Forms', blurb: 'Select a node from an expandable tree' },
-  { name: 'Upload', group: 'Forms', blurb: 'File picker with list or picture layout' },
+  { name: 'Upload', group: 'Forms', blurb: 'File picker with text or picture listType' },
   { name: 'VisuallyHidden', group: 'Primitives', blurb: 'Hide visually, keep for AT' },
 ]
 
@@ -109,11 +109,11 @@ export const docsNav = [
   {
     title: 'Foundations',
     items: [
-      { href: '/theme', label: 'Theme', blurb: 'Tokens, overrides, applyTheme' },
+      { href: '/theme', label: 'Theme', blurb: 'Tokens, fonts, density, motion, Tailwind' },
       { href: '/dark-mode', label: 'Dark mode', blurb: 'ThemeToggle, ThemeScope, data-j-theme' },
-      { href: '/tokens', label: 'Token reference', blurb: 'Brand, semantic, space, and motion' },
+      { href: '/tokens', label: 'Token reference', blurb: 'Brand, semantic, space, density, motion' },
       { href: '/layouts', label: 'Layouts', blurb: 'Shell, sidebar, split, and gallery models' },
-      { href: '/accessibility', label: 'Accessibility', blurb: 'Focus, keyboard, ARIA baseline' },
+      { href: '/accessibility', label: 'Accessibility', blurb: 'Focus, keyboard, motion, ARIA baseline' },
     ],
   },
   {
@@ -126,7 +126,10 @@ export const docsNav = [
   {
     title: 'Tools',
     items: [
-      { href: '/theme-editor', label: 'Theme Editor', blurb: 'Tune tokens and export CSS' },
+      { href: '/theme-editor', label: 'Theme Editor', blurb: 'Presets, overrides, custom themes, export' },
+      { href: '/viewport-lab', label: 'Viewport Lab', blurb: '320 / 390 / 768 frames + Tap River' },
+      { href: '/density-preview', label: 'Density Preview', blurb: 'Compact, comfortable, spacious' },
+      { href: '/motion-lab', label: 'Motion Lab', blurb: 'Scrub durations and reduced motion' },
       { href: '/changelog', label: 'Changelog', blurb: 'What changed between releases' },
     ],
   },

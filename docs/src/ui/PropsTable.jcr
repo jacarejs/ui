@@ -24,29 +24,82 @@ function rowsOf(data) {
     })
 }
 
+function emitsOf(data) {
+  const emits = (read(data) || {}).emits || []
+  if (Array.isArray(emits)) return emits.map((name) => ({ name: String(name) }))
+  return Object.keys(emits).sort().map((name) => ({ name }))
+}
+
+function slotsOf(data) {
+  const slots = (read(data) || {}).slots || []
+  return (Array.isArray(slots) ? slots : Object.keys(slots)).map((name) => ({ name: String(name) }))
+}
+
 export <view>
-  <div class="docs-table-wrap">
-    <table class="docs-table">
-      <thead>
-        <tr>
-          <th>Prop</th>
-          <th>Type</th>
-          <th>Default</th>
-          <th>Model</th>
-          <th>Required</th>
-        </tr>
-      </thead>
-      <tbody>
-        #for rowsOf(contract) as row (row.name)
+  <div class="docs-api-block">
+    <div class="docs-table-wrap">
+      <table class="docs-table">
+        <thead>
           <tr>
-            <td><code>${row.name}</code></td>
-            <td><code>${row.type}</code></td>
-            <td><code>${row.defaultValue}</code></td>
-            <td>${row.model}</td>
-            <td>${row.required}</td>
+            <th>Prop</th>
+            <th>Type</th>
+            <th>Default</th>
+            <th>Model</th>
+            <th>Required</th>
           </tr>
-        #end
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          #for rowsOf(contract) as row (row.name)
+            <tr>
+              <td><code>${row.name}</code></td>
+              <td><code>${row.type}</code></td>
+              <td><code>${row.defaultValue}</code></td>
+              <td>${row.model}</td>
+              <td>${row.required}</td>
+            </tr>
+          #end
+        </tbody>
+      </table>
+    </div>
+
+    #if emitsOf(contract).length
+      <h3 class="docs-api-subtitle">Emits</h3>
+      <div class="docs-table-wrap">
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Event</th>
+            </tr>
+          </thead>
+          <tbody>
+            #for emitsOf(contract) as row (row.name)
+              <tr>
+                <td><code>${row.name}</code></td>
+              </tr>
+            #end
+          </tbody>
+        </table>
+      </div>
+    #end
+
+    #if slotsOf(contract).length
+      <h3 class="docs-api-subtitle">Slots</h3>
+      <div class="docs-table-wrap">
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Slot</th>
+            </tr>
+          </thead>
+          <tbody>
+            #for slotsOf(contract) as row (row.name)
+              <tr>
+                <td><code>${row.name}</code></td>
+              </tr>
+            #end
+          </tbody>
+        </table>
+      </div>
+    #end
   </div>
 </view>

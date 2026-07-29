@@ -13,6 +13,20 @@ export <view>
     />
 
     <div class="docs-panel" style="padding:1.25rem">
+      <h2 class="docs-section-title" style="margin-top:0">Unreleased</h2>
+      <p class="docs-lead" style="margin-top:0">Forms suite, theme density/motion, and docs tools.</p>
+      <ul class="docs-checklist">
+        <li>Forms — Autocomplete, Cascader, ColorPickerPanel, DatePickerPanel, DateTimePicker (composes DatePicker + TimePicker), Form/FormItem, Input family, Mention, Radio, Rate, SelectV2, Slider, TimePicker, TimeSelect, Transfer, TreeSelect, Upload</li>
+        <li>Theme — <code>--j-density</code>, control sizing tokens, <code>--j-duration-slow</code>, <code>--j-ease-in-out</code>, <code>applyDensity</code>, <code>applyMotion</code></li>
+        <li>Docs tools — Viewport Lab (320/390/768 + Tap River checklist), Density Preview, Motion Lab</li>
+        <li>Theme docs — custom fonts, Tailwind bridge, density and motion guides</li>
+        <li>Theme Editor — expanded presets, sticky live preview, custom themes in localStorage</li>
+        <li>Token reference — catalog with filter, copy, and motion/density tokens</li>
+        <li>Unit tests with coverage for theme helpers, docs stores, and critical components</li>
+      </ul>
+    </div>
+
+    <div class="docs-panel" style="padding:1.25rem">
       <h2 class="docs-section-title" style="margin-top:0">0.1.1</h2>
       <p class="docs-lead" style="margin-top:0">Layout primitives and composition models on the canopy palette.</p>
       <ul class="docs-checklist">
@@ -26,7 +40,7 @@ export <view>
         <li><code>RadioGroup</code> — single-choice list or selectable cards</li>
         <li><code>Dialog</code> — general modal with body and footer slots</li>
         <li>Docs demos — Element Plus–style stage card, Show/Hide source, stacked examples</li>
-        <li>Docs Onda 1 — brand-first home, Syne/Outfit like lab, clearer nav, overlay stacking above code</li>
+        <li>Docs shell polish — brand-first home, clearer nav, overlay stacking above code</li>
         <li>Layouts docs — shell, sidebar, split, gallery, and toolbar recipes using canopy tokens</li>
         <li>Docs fixes for Pages mounts, logo base path, CodeBlock spacing/copy state, and <code>boot.js</code> filenames</li>
       </ul>
@@ -39,7 +53,7 @@ export <view>
         <li>Core primitives: Alert, Avatar, Badge, Button, Card, Checkbox, ColorPicker, Divider, Field, Progress, Spinner, Stack, Switch, Text</li>
         <li>Foundations: ThemeScope, ThemeToggle, VisuallyHidden</li>
         <li>Light + canopy dark <code>--j-*</code> tokens with semantic aliases</li>
-        <li><code>applyTheme</code> for light, dark, and system preferences</li>
+        <li><code>applyTheme</code> for light, dark, or system preferences</li>
         <li>Docs site with playgrounds, live demos, Theme Editor, and accessibility notes</li>
       </ul>
     </div>

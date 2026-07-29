@@ -25,6 +25,9 @@ if (typeof window !== 'undefined') {
       event.preventDefault()
       cmdOpen.set(true)
     }
+    if (event.key === 'Escape' && menuOpen()) {
+      menuOpen.set(false)
+    }
   })
 }
 
@@ -33,8 +36,20 @@ export <view>
 
   <div class="docs-shell">
     <header class="docs-topbar">
-      <button type="button" class="docs-menu-btn" aria-label="Open menu" on-click=${toggleMenu}>
-        Menu
+      <button
+        type="button"
+        class="docs-menu-btn"
+        class-is-open=${menuOpen}
+        aria-label=${() => (menuOpen() ? 'Close menu' : 'Open menu')}
+        aria-expanded=${menuOpen}
+        aria-controls="docs-sidebar"
+        on-click=${toggleMenu}
+      >
+        <span class="docs-menu-btn__icon" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
       </button>
 
       <a class="docs-brand docs-brand--top" jacare-go="/" href=${docsHref('/')} aria-label="Jacaré UI home">
@@ -60,7 +75,7 @@ export <view>
     </header>
 
     <div class="docs-body">
-      <aside class="docs-sidebar" class-is-open=${menuOpen} aria-label="Documentation">
+      <aside id="docs-sidebar" class="docs-sidebar" class-is-open=${menuOpen} aria-label="Documentation">
         <button type="button" class="docs-search-trigger" on-click=${openSearch}>
           <span>Search docs</span>
           <kbd>⌘K</kbd>

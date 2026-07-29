@@ -15,7 +15,6 @@ Accessible, themeable Jacaré components powered by signals — no virtual DOM.
 
 **Docs:** [https://jacarejs.github.io/ui/](https://jacarejs.github.io/ui/)
 
-
 ## Description (GitHub)
 
 > Official UI component library for Jacaré — accessible, themeable components powered by signals, with no virtual DOM
@@ -26,12 +25,17 @@ Accessible, themeable Jacaré components powered by signals — no virtual DOM.
 yarn add @jacare/ui @jacare/core
 ```
 
-Peer dependency: `@jacare/core` — **sempre a última versão publicada** (mínimo `^0.1.15`).
+Peer dependency: `@jacare/core` — always use the latest published release (minimum `^0.1.15`).
 
-Import the theme once in your app entry:
+Import the theme once at your app entry, then boot theme / density / motion preferences:
 
 ```js
 import '@jacare/ui/theme.css'
+import { applyTheme, applyDensity, applyMotion } from '@jacare/ui/theme'
+
+applyTheme('system')
+applyDensity('comfortable')
+applyMotion('system')
 ```
 
 ## Usage
@@ -56,48 +60,66 @@ export <view>
 
 Components ship as precompiled ESM modules (`mount` / `render` / `resume`). Your app still needs `@jacare/vite-plugin` (or the Jacaré CLI) to compile your own `.jcr` files.
 
+Prefer deep imports such as `@jacare/ui/Button` — the same path used throughout the docs. The package barrel also re-exports named members.
+
 ## Components
+
+Full catalog with live demos: [Components overview](https://jacarejs.github.io/ui/components).
 
 | Component | Role |
 |-----------|------|
 | `Alert` | Inline status banner |
-| `Avatar` | Initials / image avatar |
-| `Badge` | Compact status label |
+| `Autocomplete` | Text field with filtered suggestions |
+| `Avatar` | Initials or image avatar |
+| `Badge` | Compact tone pills |
 | `Button` | Primary actions (`press` emit) |
-| `Card` | Surface with optional title |
+| `Card` | Elevated surface with optional title |
+| `Cascader` | Multi-level nested path picker |
 | `Checkbox` | Two-way boolean control |
 | `ColorPicker` | Hex + swatch color field |
-| `Confirm` | Modal confirmation dialog (`open` model) |
+| `ColorPickerPanel` | Standalone color panel |
+| `Confirm` | Modal confirmation (`open` model) |
 | `DatePicker` | Typed or calendar date / range picker |
+| `DatePickerPanel` | Inline calendar surface |
+| `DateTimePicker` | Composed `DatePicker` + `TimePicker` |
 | `Dialog` | General modal (`open` model, body/footer slots) |
 | `Divider` | Horizontal / vertical rule |
 | `Field` | Labeled text input (`model` value) |
 | `Flex` | Full flexbox positioning |
+| `Form` / `FormItem` | Form layout and labeled rows |
 | `Grid` | CSS grid tracks for layout |
 | `Icon` | Stroke icon set (`name`, sizes, tones) |
+| `Input` | Text field with clear, sizes, affixes |
+| `InputNumber` | Numeric stepper |
+| `InputOtp` | One-time code boxes |
+| `InputTag` | Tag chips from keyboard input |
+| `Mention` | Textarea with `@` suggestions |
 | `Progress` | Signal-driven progress bar |
-| `RadioGroup` | Single-choice list or cards |
-| `Select` | Searchable single / multi select |
-| `Spinner` | Loading indicator |
+| `Radio` / `RadioGroup` | Single-choice controls |
+| `Rate` | Star rating |
+| `Select` / `SelectV2` | Dropdown select (virtualized option) |
+| `Slider` | Continuous or range track |
+| `Spinner` | Indeterminate loading indicator |
 | `Stack` | Simple flex gap helper |
-| `Switch` | Toggle control |
+| `Switch` | Immediate on/off toggle |
 | `Text` | Typography helper |
-| `Textarea` | Multiline field with count and resize |
+| `Textarea` | Multiline field with count |
+| `ThemeScope` / `ThemeToggle` | Scoped theme + light/dark/system control |
+| `TimePicker` / `TimeSelect` | Time spinners and discrete lists |
+| `Transfer` | Move items between lists |
+| `TreeSelect` | Select a node from a tree |
+| `Upload` | File picker with list layouts |
+| `VisuallyHidden` | Hide visually, keep for AT |
 
-## Theme tokens
+## Theme API
 
-`@jacare/ui/theme.css` defines the official Jacaré `--j-*` tokens:
+| Helper | Purpose |
+|--------|---------|
+| `applyTheme('light' \| 'dark' \| 'system')` | Resolve and apply `data-j-theme` |
+| `applyDensity('compact' \| 'comfortable' \| 'spacious')` | Scale control height/padding via `--j-density` |
+| `applyMotion('system' \| 'full' \| 'reduce')` | Honor or override reduced motion |
 
-```css
---j-primary: #189030;
---j-lime: #78c018;
---j-forest: #003030;
---j-surface: #f4fbf6;
---j-border: #b8e0c4;
---j-radius: 12px;
-```
-
-Override any token on `:root` (or a subtree) to re-skin the kit.
+Core tokens live in `@jacare/ui/theme.css` (`--j-primary`, `--j-surface`, `--j-font`, `--j-duration-*`, …). Override any token on `:root` or a subtree. See the [Theme](https://jacarejs.github.io/ui/theme), [Token reference](https://jacarejs.github.io/ui/tokens), and docs tools (Theme Editor, Density Preview, Motion Lab, Viewport Lab).
 
 ## Local development
 
@@ -106,6 +128,7 @@ yarn install
 yarn verify
 yarn build
 yarn test
+yarn test:coverage
 yarn docs:dev
 ```
 
@@ -114,18 +137,18 @@ yarn docs:dev
 | `yarn verify` | Compile every `.jcr` and validate contracts |
 | `yarn build` | Emit `dist/` ESM + typings + theme |
 | `yarn test` | Vitest + happy-dom component tests |
+| `yarn test:coverage` | Unit tests with coverage thresholds |
 | `yarn docs:dev` | Documentation site (local) |
 | `yarn docs:build` | Build docs for GitHub Pages |
 
 Live docs: [https://jacarejs.github.io/ui/](https://jacarejs.github.io/ui/)
-
 
 ## Package layout
 
 ```text
 src/
   components/*.jcr   # source of truth
-  theme.css          # design tokens
+  theme/             # tokens + applyTheme / density / motion
   internal/utils.js  # shared helpers
 dist/                # published ESM build
 docs/                # documentation site

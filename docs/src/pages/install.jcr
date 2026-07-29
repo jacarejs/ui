@@ -4,6 +4,7 @@ import DocsSection from '../ui/DocsSection.jcr'
 import CodeBlock from '../ui/CodeBlock.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
 import { previousNext, docsSiteUrl, coreRepoUrl } from '../nav-data.js'
+import { docsHref } from '../navigate.js'
 import { managers, themeImport, componentImports, viteConfig } from '../examples/install.js'
 
 const navLinks = previousNext('/install')
@@ -25,7 +26,7 @@ export <view>
     <DocsHero
       :kicker=${'Getting started'}
       :title=${'Installation'}
-      :description=${'Install @jacare/ui alongside @jacare/core, add the Vite plugin for .jcr compilation, import theme.css once, then deep-import components the same way every docs demo does.'}
+      :description=${'Install @jacare/ui alongside @jacare/core, add the Vite plugin for .jcr compilation, import theme.css once with applyTheme / applyDensity / applyMotion, then deep-import components the same way every docs demo does.'}
     />
 
     <p class="docs-lead">
@@ -71,7 +72,13 @@ export <view>
 
     <DocsSection :id=${'theme'} :title=${'Import the theme'}>
       <p class="docs-lead">
-        Import the theme once at your app entry, then call <code>applyTheme</code> so light, dark, and system modes resolve before the first paint.
+        Import the theme once at your app entry, then call <code>applyTheme</code>, <code>applyDensity</code>, and <code>applyMotion</code> so light/dark, control density, and reduced motion resolve before the first paint.
+        For fonts, Tailwind bridges, and deeper token guidance, see the
+        <a jacare-go="/theme" href=${docsHref('/theme')}>Theme</a> page
+        (<a href=${docsHref('/theme') + '#fonts'}>fonts</a>,
+        <a href=${docsHref('/theme') + '#density'}>density</a>,
+        <a href=${docsHref('/theme') + '#motion'}>motion</a>,
+        <a href=${docsHref('/theme') + '#tailwind'}>Tailwind</a>).
       </p>
       <CodeBlock :code=${themeImport} :filename=${'boot.js'} :language=${'javascript'} />
     </DocsSection>

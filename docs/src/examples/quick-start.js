@@ -9,10 +9,12 @@ export default defineConfig({
 })`
 
 export const boot = `import '@jacare/ui/theme.css'
-import { applyTheme } from '@jacare/ui/theme'
+import { applyTheme, applyDensity, applyMotion } from '@jacare/ui/theme'
 import { mount } from './app.jcr'
 
 applyTheme('system')
+applyDensity('comfortable')
+applyMotion('system')
 mount(document.querySelector('#app'))`
 
 export const firstComponent = `import Button from '@jacare/ui/Button'

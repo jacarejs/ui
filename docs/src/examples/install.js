@@ -26,9 +26,11 @@ export const managers = [
 ]
 
 export const themeImport = `import '@jacare/ui/theme.css'
-import { applyTheme } from '@jacare/ui/theme'
+import { applyTheme, applyDensity, applyMotion } from '@jacare/ui/theme'
 
-applyTheme('system')`
+applyTheme('system')
+applyDensity('comfortable')
+applyMotion('system')`
 
 export const componentImports = `// Preferred deep import (matches every docs demo)
 import Button from '@jacare/ui/Button'

@@ -7,10 +7,13 @@ import VisuallyHidden from '@jacare/ui/components/VisuallyHidden.jcr'
 import DocsHero from '../ui/DocsHero.jcr'
 import DocsSection from '../ui/DocsSection.jcr'
 import Demo from '../ui/Demo.jcr'
+import CodeBlock from '../ui/CodeBlock.jcr'
 import AccessibilityChecklist from '../ui/AccessibilityChecklist.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
 import { previousNext } from '../nav-data.js'
+import { goDocs } from '../navigate.js'
 import { focus, visuallyHidden, themeToggle, states } from '../examples/accessibility.js'
+import { motionBoot } from '../examples/theme.js'
 
 const navLinks = previousNext('/accessibility')
 const email = pulse('')
@@ -22,6 +25,9 @@ const items = [
   'Loading buttons set aria-busy',
   'Fields with errors set aria-invalid',
   'Prefer labels from children, VisuallyHidden, or aria-label',
+  'Honor prefers-reduced-motion (or applyMotion(\'reduce\'))',
+  'Interactive targets stay ≥ 44×44 CSS px on touch devices',
+  'Do not rely on hover alone to reveal actions',
 ]
 
 export <view>
@@ -111,6 +117,17 @@ export <view>
           </div>
         </Stack>
       </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'motion'} :title=${'Reduced motion'}>
+      <p class="docs-lead">
+        Components that animate should read <code>--j-duration-*</code>. Call <code>applyMotion('reduce')</code> to force zero durations, or leave <code>system</code> so the OS preference wins. Scrub timings in Motion Lab; validate thumb UX in Viewport Lab.
+      </p>
+      <CodeBlock :code=${motionBoot} :filename=${'motion.js'} :language=${'javascript'} />
+      <div class="docs-hero-actions">
+        <Button :variant=${'secondary'} on-press=${() => goDocs('/motion-lab')}>Motion Lab</Button>
+        <Button :variant=${'ghost'} on-press=${() => goDocs('/viewport-lab')}>Viewport Lab</Button>
+      </div>
     </DocsSection>
 
     <DocsSection :id=${'checklist'} :title=${'Checklist'}>

@@ -85,6 +85,18 @@ export const tokenGroups = [
     ],
   },
   {
+    id: 'controls',
+    title: 'Control sizing',
+    blurb: 'Density-aware height and padding used by Button, Field, Input, and related controls.',
+    layout: 'space',
+    items: [
+      { name: '--j-density', kind: 'space', role: 'Density multiplier' },
+      { name: '--j-control-height', kind: 'space', role: 'Control min-height' },
+      { name: '--j-control-padding-x', kind: 'space', role: 'Control padding X' },
+      { name: '--j-control-padding-y', kind: 'space', role: 'Control padding Y' },
+    ],
+  },
+  {
     id: 'motion',
     title: 'Motion and type',
     blurb: 'Durations, easing, and font stacks. Respects prefers-reduced-motion.',
@@ -92,7 +104,9 @@ export const tokenGroups = [
     items: [
       { name: '--j-duration-fast', kind: 'motion', role: 'Fast' },
       { name: '--j-duration-normal', kind: 'motion', role: 'Normal' },
+      { name: '--j-duration-slow', kind: 'motion', role: 'Slow' },
       { name: '--j-ease-out', kind: 'motion', role: 'Ease out' },
+      { name: '--j-ease-in-out', kind: 'motion', role: 'Ease in-out' },
       { name: '--j-font', kind: 'font', role: 'UI sans' },
       { name: '--j-font-mono', kind: 'font', role: 'Mono' },
     ],

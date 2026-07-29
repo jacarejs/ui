@@ -28,7 +28,7 @@ export <view>
     <section class="docs-home-strip" aria-label="What you get">
       <div class="docs-home-strip__item">
         <h2>Theme tokens</h2>
-        <p>One <code>--j-*</code> sheet for light and canopy dark, shared by every control.</p>
+        <p>One <code>--j-*</code> sheet for color, density, motion, and type — shared by every control.</p>
       </div>
       <div class="docs-home-strip__item">
         <h2>Contracts first</h2>
@@ -42,14 +42,16 @@ export <view>
 
     <section class="docs-home-meta">
       <p class="docs-lead" style="margin:0">
-        Primitives shipped · Theme Editor ·
+        Forms suite · Theme Editor · Viewport / Density / Motion labs ·
         <a href=${() => docsSiteUrl} target="_blank" rel="noreferrer">GitHub Pages</a>
         ·
         <a href=${() => coreRepoUrl} target="_blank" rel="noreferrer">Jacaré Core</a>
       </p>
       <div class="docs-hero-actions">
         <Button :variant=${'ghost'} :size=${'sm'} on-press=${() => goDocs('/install')}>Installation</Button>
+        <Button :variant=${'ghost'} :size=${'sm'} on-press=${() => goDocs('/theme')}>Theme</Button>
         <Button :variant=${'ghost'} :size=${'sm'} on-press=${() => goDocs('/theme-editor')}>Theme Editor</Button>
+        <Button :variant=${'ghost'} :size=${'sm'} on-press=${() => goDocs('/viewport-lab')}>Viewport Lab</Button>
         <Button :variant=${'ghost'} :size=${'sm'} on-press=${() => goDocs('/changelog')}>Changelog</Button>
       </div>
     </section>
