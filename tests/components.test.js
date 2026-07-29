@@ -20,17 +20,29 @@ afterEach(() => {
 })
 
 async function loadComponent(name) {
-  const filename = join(root, 'src', 'components', `${name}.jcr`)
-  const source = readFileSync(filename, 'utf8')
-  const result = compile(source, {
-    filename,
-    mode: 'client',
-    cpw: true,
-    debug: false,
-  })
-  const outFile = join(tmpDir, `${name}.${Date.now()}.${Math.random().toString(16).slice(2)}.js`)
-  writeFileSync(outFile, result.code)
-  return import(pathToFileURL(outFile).href)
+  const compiled = new Map()
+
+  function compileComponent(componentName) {
+    if (compiled.has(componentName)) return compiled.get(componentName)
+    const filename = join(root, 'src', 'components', `${componentName}.jcr`)
+    const source = readFileSync(filename, 'utf8')
+    const result = compile(source, {
+      filename,
+      mode: 'client',
+      cpw: true,
+      debug: false,
+    })
+    const deps = [...result.code.matchAll(/from ['"]\.\/([A-Za-z0-9]+)\.jcr['"]/g)].map((match) => match[1])
+    deps.forEach(compileComponent)
+    let code = result.code.replace(/from ['"]\.\/([A-Za-z0-9]+)\.jcr['"]/g, "from './$1.js'")
+    const outFile = join(tmpDir, `${componentName}.js`)
+    writeFileSync(outFile, code)
+    compiled.set(componentName, outFile)
+    return outFile
+  }
+
+  const outFile = compileComponent(name)
+  return import(`${pathToFileURL(outFile).href}?t=${Date.now()}`)
 }
 
 describe('@jacare/ui components', () => {
@@ -627,5 +639,408 @@ describe('@jacare/ui components', () => {
     expect(closed).toBe(1)
     expect(open()).toBe(false)
     expect(host.querySelector('.jui-dialog')).toBeNull()
+  })
+
+  it('Switch mirrors a pulse and exposes switch role', async () => {
+    const Switch = await loadComponent('Switch')
+    const host = document.createElement('div')
+    const checked = pulse(false)
+
+    Switch.mount(host, {
+      label: 'Notifications',
+      checked,
+    })
+
+    const input = host.querySelector('input[role="switch"]')
+    expect(input).toBeTruthy()
+    expect(input.checked).toBe(false)
+    expect(host.querySelector('.jui-switch__label').textContent).toContain('Notifications')
+
+    checked.set(true)
+    expect(input.checked).toBe(true)
+
+    input.checked = false
+    input.dispatchEvent(new Event('change', { bubbles: true }))
+    expect(checked()).toBe(false)
+  })
+
+  it('Spinner renders size and accessible label', async () => {
+    const Spinner = await loadComponent('Spinner')
+    const host = document.createElement('div')
+
+    Spinner.mount(host, {
+      size: 'lg',
+      label: 'Loading catalog',
+    })
+
+    const el = host.querySelector('.jui-spinner')
+    expect(el.classList.contains('jui-spinner--lg')).toBe(true)
+    expect(el.getAttribute('role')).toBe('status')
+    expect(el.getAttribute('aria-label')).toBe('Loading catalog')
+  })
+
+  it('Stack applies direction, gap, and alignment', async () => {
+    const Stack = await loadComponent('Stack')
+    const host = document.createElement('div')
+
+    Stack.mount(host, {
+      direction: 'row',
+      gap: 'lg',
+      align: 'center',
+      justify: 'between',
+      wrap: true,
+      children: (target) => {
+        target.appendChild(document.createTextNode('A'))
+        return () => {}
+      },
+    })
+
+    const el = host.querySelector('.jui-stack')
+    expect(el.classList.contains('jui-stack--row')).toBe(true)
+    expect(el.classList.contains('jui-stack--gap-lg')).toBe(true)
+    expect(el.classList.contains('jui-stack--align-center')).toBe(true)
+    expect(el.classList.contains('jui-stack--justify-between')).toBe(true)
+    expect(el.classList.contains('jui-stack--wrap')).toBe(true)
+  })
+
+  it('Text renders semantic tags and tone classes', async () => {
+    const Text = await loadComponent('Text')
+    const host = document.createElement('div')
+
+    Text.mount(host, {
+      as: 'h2',
+      tone: 'muted',
+      weight: 'bold',
+      children: (target) => {
+        target.appendChild(document.createTextNode('Heading'))
+        return () => {}
+      },
+    })
+
+    const el = host.querySelector('h2.jui-text')
+    expect(el).toBeTruthy()
+    expect(el.classList.contains('jui-text--h2')).toBe(true)
+    expect(el.classList.contains('jui-text--muted')).toBe(true)
+    expect(el.classList.contains('jui-text--bold')).toBe(true)
+    expect(el.textContent).toBe('Heading')
+  })
+
+  it('Divider supports labeled and vertical modes', async () => {
+    const Divider = await loadComponent('Divider')
+    const labeled = document.createElement('div')
+    Divider.mount(labeled, { label: 'Or' })
+    expect(labeled.querySelector('.jui-divider__label').textContent).toBe('Or')
+
+    const vertical = document.createElement('div')
+    Divider.mount(vertical, { vertical: true })
+    expect(vertical.querySelector('.jui-divider--vertical').getAttribute('aria-orientation')).toBe('vertical')
+  })
+
+  it('Rate updates value and can clear the selection', async () => {
+    const Rate = await loadComponent('Rate')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const value = pulse(0)
+    let changed = null
+
+    Rate.mount(host, {
+      value,
+      showText: true,
+      change: (next) => {
+        changed = next
+      },
+    })
+
+    const buttons = host.querySelectorAll('.jui-rate__hit--full')
+    expect(buttons).toHaveLength(5)
+    buttons[2].click()
+    expect(value()).toBe(3)
+    expect(changed).toBe(3)
+    expect(host.querySelector('.jui-rate__text').textContent).toContain('3')
+
+    buttons[2].click()
+    expect(value()).toBe(0)
+    expect(changed).toBe(0)
+  })
+
+  it('Upload accepts dropped files and builds image previews', async () => {
+    const Upload = await loadComponent('Upload')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const files = pulse([])
+    let changed = null
+    const originalCreate = URL.createObjectURL
+    URL.createObjectURL = () => 'blob:preview'
+
+    Upload.mount(host, {
+      value: files,
+      drag: true,
+      multiple: true,
+      accept: 'image/*',
+      listType: 'picture',
+      change: (next) => {
+        changed = next
+      },
+    })
+
+    const zone = host.querySelector('.jui-upload__zone')
+    const file = new File(['fake'], 'photo.png', { type: 'image/png' })
+    const transfer = { files: [file], dropEffect: 'none' }
+
+    const enter = new Event('dragenter', { bubbles: true, cancelable: true })
+    Object.defineProperty(enter, 'dataTransfer', { value: transfer })
+    zone.dispatchEvent(enter)
+    expect(zone.classList.contains('is-dragging')).toBe(true)
+
+    const drop = new Event('drop', { bubbles: true, cancelable: true })
+    Object.defineProperty(drop, 'dataTransfer', { value: transfer })
+    zone.dispatchEvent(drop)
+
+    expect(files()).toHaveLength(1)
+    expect(files()[0].name).toBe('photo.png')
+    expect(files()[0].url).toBe('blob:preview')
+    expect(changed).toHaveLength(1)
+    expect(host.querySelector('.jui-upload__thumb-img')?.getAttribute('src')).toBe('blob:preview')
+
+    URL.createObjectURL = originalCreate
+  })
+
+  it('Upload picture-card lists files and can remove them', async () => {
+    const Upload = await loadComponent('Upload')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const files = pulse([
+      { uid: 'a', name: 'a.png', size: 12, status: 'done', url: 'blob:a', raw: null },
+    ])
+    let removed = null
+
+    Upload.mount(host, {
+      value: files,
+      listType: 'picture-card',
+      remove: (file) => {
+        removed = file
+      },
+    })
+
+    expect(host.querySelector('.jui-upload__list--picture-card')).toBeTruthy()
+    expect(host.querySelector('.jui-upload__name').textContent).toBe('a.png')
+    host.querySelector('.jui-upload__remove').click()
+    expect(files()).toEqual([])
+    expect(removed?.uid).toBe('a')
+  })
+
+  it('TreeSelect picks a single node and closes the panel', async () => {
+    const TreeSelect = await loadComponent('TreeSelect')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const value = pulse('')
+    let changed = null
+
+    TreeSelect.mount(host, {
+      label: 'Page',
+      value,
+      data: [
+        {
+          value: 'docs',
+          label: 'Docs',
+          children: [
+            { value: 'guide', label: 'Guide' },
+            { value: 'api', label: 'API' },
+          ],
+        },
+      ],
+      change: (next) => {
+        changed = next
+      },
+    })
+
+    const details = host.querySelector('details.jui-tree-select__control')
+    details.setAttribute('open', '')
+    host.querySelector('.jui-tree-select__toggle').click()
+    const option = [...host.querySelectorAll('.jui-tree-select__option')].find((node) => node.textContent.includes('Guide'))
+    option.click()
+
+    expect(value()).toBe('guide')
+    expect(changed).toBe('guide')
+    expect(details.hasAttribute('open')).toBe(false)
+    expect(host.querySelector('.jui-tree-select__value').textContent).toBe('Guide')
+  })
+
+  it('Slider binds a single value through the range input', async () => {
+    const Slider = await loadComponent('Slider')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const value = pulse(20)
+    let changed = null
+
+    Slider.mount(host, {
+      value,
+      min: 0,
+      max: 100,
+      change: (next) => {
+        changed = next
+      },
+    })
+
+    const input = host.querySelector('input[type="range"]')
+    expect(input.value).toBe('20')
+    expect(host.querySelector('.jui-slider__fill').getAttribute('style')).toContain('right:80%')
+
+    input.value = '55'
+    input.dispatchEvent(new Event('change', { bubbles: true }))
+    expect(value()).toBe(55)
+    expect(changed).toBe(55)
+  })
+
+  it('Slider updates from pointer drag on the track', async () => {
+    const Slider = await loadComponent('Slider')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const value = pulse(10)
+    const live = []
+    let changed = null
+
+    Slider.mount(host, {
+      value,
+      min: 0,
+      max: 100,
+      input: (next) => live.push(next),
+      change: (next) => {
+        changed = next
+      },
+    })
+
+    const root = host.querySelector('.jui-slider')
+    const track = host.querySelector('.jui-slider__track')
+    Object.defineProperty(track, 'getBoundingClientRect', {
+      value: () => ({ left: 0, top: 0, right: 100, bottom: 8, width: 100, height: 8 }),
+    })
+
+    root.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 75, clientY: 4, pointerId: 1, pointerType: 'touch', button: 0 }))
+    root.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: 80, clientY: 4, pointerId: 1, pointerType: 'touch' }))
+    root.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, clientX: 80, clientY: 4, pointerId: 1, pointerType: 'touch' }))
+
+    expect(live.length).toBeGreaterThan(0)
+    expect(value()).toBe(80)
+    expect(changed).toBe(80)
+  })
+
+  it('Slider range mode keeps thumbs independent', async () => {
+    const Slider = await loadComponent('Slider')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const value = pulse([20, 60])
+
+    Slider.mount(host, {
+      value,
+      min: 0,
+      max: 100,
+      range: true,
+    })
+
+    const inputs = host.querySelectorAll('input[type="range"]')
+    expect(inputs).toHaveLength(2)
+    expect(inputs[0].value).toBe('20')
+    expect(inputs[1].value).toBe('60')
+
+    inputs[0].value = '35'
+    inputs[0].dispatchEvent(new Event('input', { bubbles: true }))
+    expect(value()).toEqual([35, 60])
+
+    inputs[1].value = '10'
+    inputs[1].dispatchEvent(new Event('change', { bubbles: true }))
+    expect(value()).toEqual([35, 35])
+  })
+
+  it('Input binds a pulse and clears when clearable', async () => {
+    const Input = await loadComponent('Input')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const value = pulse('hello')
+    let cleared = 0
+
+    Input.mount(host, {
+      label: 'Name',
+      value,
+      clearable: true,
+      clear: () => {
+        cleared += 1
+      },
+    })
+
+    const control = host.querySelector('input')
+    expect(control.value).toBe('hello')
+
+    control.value = 'Jacaré'
+    control.dispatchEvent(new Event('input', { bubbles: true }))
+    expect(value()).toBe('Jacaré')
+
+    host.querySelector('.jui-input__clear').click()
+    expect(value()).toBe('')
+    expect(cleared).toBe(1)
+  })
+
+  it('DatePickerPanel boots the calendar grid and selects a day', async () => {
+    const DatePickerPanel = await loadComponent('DatePickerPanel')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const value = pulse('2026-07-15')
+    let changed = null
+
+    DatePickerPanel.mount(host, {
+      value,
+      change: (next) => {
+        changed = next
+      },
+    })
+
+    const boot = host.querySelector('.jui-date-panel__boot')
+    expect(boot).toBeTruthy()
+    boot.dispatchEvent(new Event('load'))
+
+    expect(host.querySelectorAll('[data-panel-days] .jui-date-panel__day')).toHaveLength(42)
+    expect(host.querySelectorAll('.jui-date-panel__head .jui-select')).toHaveLength(2)
+    expect(host.querySelector('.jui-date-panel__day.is-selected')?.textContent).toBe('15')
+
+    const day = [...host.querySelectorAll('.jui-date-panel__day')].find((button) =>
+      button.getAttribute('aria-label')?.includes('July 20, 2026'),
+    )
+    expect(day).toBeTruthy()
+    day.click()
+
+    expect(value()).toBe('2026-07-20')
+    expect(changed).toBe('2026-07-20')
+    expect(host.querySelector('.jui-date-panel').classList.contains('jui-date-panel--bordered')).toBe(true)
+  })
+
+  it('DateTimePicker composes DatePicker and TimePicker values', async () => {
+    const mod = await import(pathToFileURL(join(root, 'dist', 'DateTimePicker.js')).href)
+    const DateTimePicker = mod.default || mod
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const value = pulse('2026-07-15T09:30')
+    let changed = null
+
+    const mount = DateTimePicker.mount || DateTimePicker
+    mount(host, {
+      label: 'Schedule',
+      value,
+      change: (next) => {
+        changed = next
+      },
+    })
+
+    expect(host.querySelector('.jui-datetime')).toBeTruthy()
+    expect(host.querySelector('.jui-date')).toBeTruthy()
+    expect(host.querySelector('.jui-time-picker')).toBeTruthy()
+    expect(host.querySelector('.jui-datetime__label').textContent).toContain('Schedule')
+
+    const dateInput = host.querySelector('.jui-date__input')
+    expect(dateInput.value).toBe('07/15/2026')
+
+    dateInput.value = '07282026'
+    dateInput.dispatchEvent(new Event('input', { bubbles: true }))
+    expect(value()).toBe('2026-07-28T09:30')
+    expect(changed).toBe('2026-07-28T09:30')
   })
 })
