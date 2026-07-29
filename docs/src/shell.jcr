@@ -3,6 +3,7 @@ import { docsNav, docsSiteUrl, uiRepoUrl, coreRepoUrl } from './nav-data.js'
 import { docsHref } from './navigate.js'
 import ThemeToggle from '@jacare/ui/components/ThemeToggle.jcr'
 import CommandPalette from './ui/CommandPalette.jcr'
+import JacareLogo from './ui/JacareLogo.jcr'
 
 const menuOpen = pulse(false)
 const cmdOpen = pulse(false)
@@ -53,7 +54,7 @@ export <view>
       </button>
 
       <a class="docs-brand docs-brand--top" jacare-go="/" href=${docsHref('/')} aria-label="Jacaré UI home">
-        <span class="docs-brand__mark" aria-hidden="true"></span>
+        <JacareLogo />
         <span class="docs-brand__copy">
           <span class="docs-brand__name">Jacaré <strong>UI</strong></span>
           <span class="docs-brand__tag">Build with pulse</span>

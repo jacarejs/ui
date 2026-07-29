@@ -53,7 +53,7 @@ export <view>
     <Avatar :size=\${'lg'} />
     <Avatar
       :name=\${'Jacaré logo'}
-      :src=\${'/jacare-logo.png'}
+      :src=\${'/jacare-logo.svg'}
       :alt=\${'Jacaré logo'}
       :size=\${'lg'}
     />

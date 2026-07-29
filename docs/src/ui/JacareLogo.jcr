@@ -1,0 +1,21 @@
+export <contract>
+  props: {
+    variant: { type: 'string', default: 'mark' }
+  }
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+export <view>
+  <span
+    class="docs-jacare-logo"
+    class-is-hero=${() => read(variant) === 'hero'}
+    aria-hidden="true"
+  >
+    <span class="docs-jacare-logo__layer docs-jacare-logo__layer--body"></span>
+    <span class="docs-jacare-logo__layer docs-jacare-logo__layer--detail"></span>
+    <span class="docs-jacare-logo__layer docs-jacare-logo__layer--accent"></span>
+  </span>
+</view>

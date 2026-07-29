@@ -2,6 +2,7 @@ import Button from '@jacare/ui/components/Button.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
 import { previousNext, docsSiteUrl, coreRepoUrl } from '../nav-data.js'
 import { goDocs } from '../navigate.js'
+import JacareLogo from '../ui/JacareLogo.jcr'
 
 const navLinks = previousNext('/')
 
@@ -21,7 +22,7 @@ export <view>
         </div>
       </div>
       <div class="docs-home-hero__visual" aria-hidden="true">
-        <span class="docs-home-hero__logo" aria-hidden="true"></span>
+        <JacareLogo :variant=${'hero'} />
       </div>
     </section>
 

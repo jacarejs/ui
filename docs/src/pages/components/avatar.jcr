@@ -28,7 +28,7 @@ import {
 
 const contract = getContract('Avatar')
 const navLinks = previousNext('/components/avatar')
-const logoSrc = assetUrl('jacare-logo.png')
+const logoSrc = assetUrl('jacare-logo.svg')
 const logoHint = `Leave empty to generate initials. Try ${logoSrc}.`
 
 const playName = pulse('Jacaré UI')

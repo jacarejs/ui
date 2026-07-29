@@ -11,6 +11,7 @@ import Switch from '@jacare/ui/components/Switch.jcr'
 import ThemeScope from '@jacare/ui/components/ThemeScope.jcr'
 import DocsHero from '../ui/DocsHero.jcr'
 import DocsSection from '../ui/DocsSection.jcr'
+import JacareLogo from '../ui/JacareLogo.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
 import { previousNext } from '../nav-data.js'
 import { lightDefaults, darkDefaults } from '../theme-presets.js'
@@ -675,6 +676,10 @@ export <view>
 
           <ThemeScope :mode=${mode}>
             <div class="docs-gallery docs-panel" :style=${() => styleVars()}>
+              <div class="docs-gallery-row docs-gallery-row--brand">
+                <JacareLogo />
+                <span class="docs-brand__name" style="color:var(--j-text)">Jacaré <strong style="color:var(--j-primary)">UI</strong></span>
+              </div>
               <div class="docs-gallery-row">
                 <Button :variant=${'primary'}>Primary</Button>
                 <Button :variant=${'secondary'}>Secondary</Button>

@@ -2,13 +2,8 @@ import '../../src/theme/index.css'
 import './app.css'
 import { effect } from '@jacare/core'
 import { restoreThemeEditorFromStorage } from './theme-editor-store.js'
-import { assetUrl, scrollDocsToTop } from './navigate.js'
+import { scrollDocsToTop } from './navigate.js'
 import { nav } from './nav.js'
-
-document.documentElement.style.setProperty(
-  '--docs-logo-mask',
-  `url("${assetUrl('jacare-logo.png')}")`,
-)
 
 restoreThemeEditorFromStorage()
 
