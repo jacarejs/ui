@@ -1,56 +1,73 @@
-export const basic = `import Badge from '@jacare/ui/Badge'
-import Grid from '@jacare/ui/Grid'
+export const basic = `import Grid from '@jacare/ui/Grid'
 
 export <view>
-  <Grid :columns=\${'3'} :gap=\${'md'}>
-    <Badge :text=\${'1'} :tone=\${'success'} />
-    <Badge :text=\${'2'} :tone=\${'info'} />
-    <Badge :text=\${'3'} />
-  </Grid>
+  <div class="docs-demo-rows">
+    <Grid :columns=\${'1'} :gap=\${'md'}>
+      <div class="docs-cell">24</div>
+    </Grid>
+    <Grid :columns=\${'2'} :gap=\${'md'}>
+      <div class="docs-cell">12</div>
+      <div class="docs-cell">12</div>
+    </Grid>
+    <Grid :columns=\${'3'} :gap=\${'md'}>
+      <div class="docs-cell">8</div>
+      <div class="docs-cell">8</div>
+      <div class="docs-cell">8</div>
+    </Grid>
+    <Grid :columns=\${'4'} :gap=\${'md'}>
+      <div class="docs-cell">6</div>
+      <div class="docs-cell">6</div>
+      <div class="docs-cell">6</div>
+      <div class="docs-cell">6</div>
+    </Grid>
+    <Grid :columns=\${'6'} :gap=\${'md'}>
+      <div class="docs-cell">4</div>
+      <div class="docs-cell">4</div>
+      <div class="docs-cell">4</div>
+      <div class="docs-cell">4</div>
+      <div class="docs-cell">4</div>
+      <div class="docs-cell">4</div>
+    </Grid>
+  </div>
 </view>`
 
-export const columns = `import Badge from '@jacare/ui/Badge'
-import Grid from '@jacare/ui/Grid'
+export const columns = `import Grid from '@jacare/ui/Grid'
 
 export <view>
   <Grid :columns=\${'4'} :gap=\${'sm'}>
-    <Badge :text=\${'A'} />
-    <Badge :text=\${'B'} :tone=\${'info'} />
-    <Badge :text=\${'C'} :tone=\${'success'} />
-    <Badge :text=\${'D'} />
+    <div class="docs-cell">A</div>
+    <div class="docs-cell docs-cell--accent">B</div>
+    <div class="docs-cell">C</div>
+    <div class="docs-cell">D</div>
   </Grid>
 </view>`
 
-export const gaps = `import Badge from '@jacare/ui/Badge'
-import Grid from '@jacare/ui/Grid'
-import Stack from '@jacare/ui/Stack'
-import Text from '@jacare/ui/Text'
+export const gaps = `import Grid from '@jacare/ui/Grid'
 
 export <view>
-  <Stack :gap=\${'lg'}>
-    <Text :size=\${'sm'} :tone=\${'muted'}>gap sm</Text>
-    <Grid :columns=\${'3'} :gap=\${'sm'}>
-      <Badge :text=\${'1'} />
-      <Badge :text=\${'2'} />
-      <Badge :text=\${'3'} />
+  <div class="docs-demo-rows">
+    <Grid :columns=\${'4'} :gap=\${'sm'}>
+      <div class="docs-cell">sm</div>
+      <div class="docs-cell">sm</div>
+      <div class="docs-cell">sm</div>
+      <div class="docs-cell">sm</div>
     </Grid>
-    <Text :size=\${'sm'} :tone=\${'muted'}>gap lg</Text>
-    <Grid :columns=\${'3'} :gap=\${'lg'}>
-      <Badge :text=\${'1'} />
-      <Badge :text=\${'2'} />
-      <Badge :text=\${'3'} />
+    <Grid :columns=\${'4'} :gap=\${'lg'}>
+      <div class="docs-cell">lg</div>
+      <div class="docs-cell">lg</div>
+      <div class="docs-cell">lg</div>
+      <div class="docs-cell">lg</div>
     </Grid>
-  </Stack>
+  </div>
 </view>`
 
-export const align = `import Badge from '@jacare/ui/Badge'
-import Grid from '@jacare/ui/Grid'
+export const align = `import Grid from '@jacare/ui/Grid'
 
 export <view>
   <Grid :columns=\${'3'} :gap=\${'md'} :align=\${'center'}>
-    <Badge :text=\${'Tall'} :tone=\${'info'} />
-    <Badge :text=\${'Mid'} />
-    <Badge :text=\${'Short'} :tone=\${'success'} />
+    <div class="docs-cell" style="min-height:4.5rem">Tall</div>
+    <div class="docs-cell">Mid</div>
+    <div class="docs-cell" style="min-height:2.5rem">Short</div>
   </Grid>
 </view>`
 
@@ -72,40 +89,39 @@ export <view>
   </Grid>
 </view>`
 
-export const dense = `import Badge from '@jacare/ui/Badge'
-import Grid from '@jacare/ui/Grid'
+export const dense = `import Grid from '@jacare/ui/Grid'
 
 export <view>
   <Grid :columns=\${'4'} :gap=\${'sm'} :dense=\${true}>
-    <Badge :text=\${'Wide'} :tone=\${'success'} />
-    <Badge :text=\${'2'} />
-    <Badge :text=\${'3'} :tone=\${'info'} />
-    <Badge :text=\${'4'} />
-    <Badge :text=\${'5'} />
+    <div class="docs-cell docs-cell--accent" style="grid-column: span 2">Wide</div>
+    <div class="docs-cell">1</div>
+    <div class="docs-cell">2</div>
+    <div class="docs-cell">3</div>
+    <div class="docs-cell">4</div>
   </Grid>
 </view>`
 
-export function playgroundCode(state) {
-  const lines = [
-    "import Badge from '@jacare/ui/Badge'",
-    "import Grid from '@jacare/ui/Grid'",
-    '',
-    'export <view>',
-    '  <Grid',
-    `    :columns=\${'${state.columns}'}`,
-    `    :gap=\${'${state.gap}'}`,
-    `    :align=\${'${state.align}'}`,
-    `    :justify=\${'${state.justify}'}`,
-  ]
-  if (state.dense) lines.push('    :dense=\${true}')
-  lines.push(
-    '  >',
-    "    <Badge :text=\${'A'} :tone=\${'success'} />",
-    "    <Badge :text=\${'B'} :tone=\${'info'} />",
-    "    <Badge :text=\${'C'} />",
-    "    <Badge :text=\${'D'} :tone=\${'warn'} />",
-    '  </Grid>',
-    '</view>',
-  )
-  return lines.join('\n')
+export function playgroundCode(state = {}) {
+  const columns = state.columns ?? '3'
+  const gap = state.gap ?? 'md'
+  const align = state.align ?? 'stretch'
+  const justify = state.justify ?? 'stretch'
+  const dense = Boolean(state.dense)
+
+  return `import Grid from '@jacare/ui/Grid'
+
+export <view>
+  <Grid
+    :columns=\${'${columns}'}
+    :gap=\${'${gap}'}
+    :align=\${'${align}'}
+    :justify=\${'${justify}'}
+    :dense=\${${dense}}
+  >
+    <div class="docs-cell">A</div>
+    <div class="docs-cell">B</div>
+    <div class="docs-cell">C</div>
+    <div class="docs-cell">D</div>
+  </Grid>
+</view>`
 }

@@ -287,50 +287,70 @@ export <view>
       </div>
     </DocsSection>
 
-    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'button-basic.jcr'}>
-      <Button :variant=${'primary'}>Continue</Button>
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic usage'}
+      :lead=${'Use variant to define the Button style — solid, outline, ghost, and semantic colors.'}
+      :code=${basic}
+      :filename=${'button-basic.jcr'}
+    >
+      <div class="docs-demo-rows">
+        <div class="docs-demo-row">
+          <Button>Default</Button>
+          <Button :variant=${'primary'}>Primary</Button>
+          <Button :variant=${'success'}>Success</Button>
+          <Button :variant=${'info'}>Info</Button>
+          <Button :variant=${'warn'}>Warning</Button>
+          <Button :variant=${'danger'}>Danger</Button>
+        </div>
+        <div class="docs-demo-row">
+          <Button :variant=${'outline'}>Outline</Button>
+          <Button :variant=${'secondary'}>Secondary</Button>
+          <Button :variant=${'ghost'}>Ghost</Button>
+        </div>
+      </div>
     </Demo>
 
     <DocsSection :id=${'variants'} :title=${'Variants'}>
       <Demo :id=${'variants-demo'} :title=${'Style variants'} :code=${variants} :filename=${'button-variants.jcr'}>
-        <Stack :direction=${'row'} :gap=${'xl'} :align=${'center'} :justify=${'center'} :wrap=${true}>
+        <div class="docs-demo-row">
           <Button :variant=${'primary'}>Primary</Button>
           <Button :variant=${'secondary'}>Secondary</Button>
           <Button :variant=${'ghost'}>Ghost</Button>
           <Button :variant=${'outline'}>Outline</Button>
-        </Stack>
+        </div>
       </Demo>
     </DocsSection>
 
     <DocsSection :id=${'colors'} :title=${'Colors'}>
       <Demo :id=${'colors-demo'} :title=${'Semantic colors'} :code=${colors} :filename=${'button-colors.jcr'}>
-        <Stack :direction=${'row'} :gap=${'xl'} :align=${'center'} :justify=${'center'} :wrap=${true}>
+        <div class="docs-demo-row">
           <Button :variant=${'primary'}>Primary</Button>
           <Button :variant=${'success'}>Success</Button>
           <Button :variant=${'warn'}>Warning</Button>
           <Button :variant=${'danger'}>Danger</Button>
           <Button :variant=${'info'}>Info</Button>
-        </Stack>
+        </div>
       </Demo>
     </DocsSection>
 
     <DocsSection :id=${'sizes'} :title=${'Sizes'}>
       <Demo :id=${'sizes-demo'} :title=${'Size scale'} :code=${sizes} :filename=${'button-sizes.jcr'}>
-        <Stack :direction=${'row'} :gap=${'xl'} :align=${'center'} :justify=${'center'} :wrap=${true}>
+        <div class="docs-demo-row">
           <Button :size=${'sm'}>Small</Button>
           <Button :size=${'md'}>Medium</Button>
           <Button :size=${'lg'}>Large</Button>
-        </Stack>
+        </div>
       </Demo>
     </DocsSection>
 
     <DocsSection :id=${'shapes'} :title=${'Shapes'}>
       <Demo :id=${'shapes-demo'} :title=${'Pill, rounded, and circle'} :code=${shapes} :filename=${'button-shapes.jcr'}>
-        <Stack :direction=${'row'} :gap=${'xl'} :align=${'center'} :justify=${'center'} :wrap=${true}>
+        <div class="docs-demo-row">
           <Button :shape=${'pill'}>Pill</Button>
           <Button :shape=${'rounded'}>Rounded</Button>
           <Button :shape=${'circle'}>+</Button>
-        </Stack>
+        </div>
       </Demo>
     </DocsSection>
 
@@ -342,7 +362,7 @@ export <view>
         :code=${icons}
         :filename=${'button-icons.jcr'}
       >
-        <Stack :direction=${'row'} :gap=${'xl'} :align=${'center'} :justify=${'center'} :wrap=${true}>
+        <div class="docs-demo-row">
           <Button>
             <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 5v14M5 12h14" />
@@ -368,7 +388,7 @@ export <view>
             </svg>
             <VisuallyHidden>Open menu</VisuallyHidden>
           </Button>
-        </Stack>
+        </div>
       </Demo>
 
       <Demo :id=${'icon-start'} :title=${'Icon on the left'} :code=${iconStart} :filename=${'button-icon-start.jcr'}>
@@ -443,11 +463,11 @@ export <view>
 
     <DocsSection :id=${'states'} :title=${'States'}>
       <Demo :id=${'states-demo'} :title=${'Loading, disabled, block'} :code=${states} :filename=${'button-states.jcr'}>
-        <Stack :direction=${'row'} :gap=${'xl'} :align=${'center'} :justify=${'center'} :wrap=${true}>
-          <Button :loading=${true}>Saving</Button>
-          <Button :disabled=${true}>Disabled</Button>
-        </Stack>
-        <div class="docs-demo-constrain" style="margin-top:1rem">
+        <div class="docs-demo-rows">
+          <div class="docs-demo-row">
+            <Button :loading=${true}>Saving</Button>
+            <Button :disabled=${true}>Disabled</Button>
+          </div>
           <Button :block=${true}>Full width</Button>
         </div>
       </Demo>
@@ -461,11 +481,11 @@ export <view>
         :code=${types}
         :filename=${'button-types.jcr'}
       >
-        <Stack :direction=${'row'} :gap=${'xl'} :align=${'center'} :justify=${'center'} :wrap=${true}>
+        <div class="docs-demo-row">
           <Button :type=${'submit'} :variant=${'primary'}>Submit</Button>
           <Button :type=${'reset'} :variant=${'secondary'}>Reset</Button>
           <Button :type=${'button'} :variant=${'ghost'}>Button</Button>
-        </Stack>
+        </div>
       </Demo>
     </DocsSection>
 

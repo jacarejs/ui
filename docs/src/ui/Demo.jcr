@@ -1,3 +1,4 @@
+import { pulse } from '@jacare/core'
 import CodeBlock from './CodeBlock.jcr'
 
 export <contract>
@@ -7,10 +8,13 @@ export <contract>
     lead: { type: 'string', default: '' }
     code: { type: 'string', required: true }
     filename: { type: 'string', default: 'example.jcr' }
-    layout: { type: 'string', default: 'split' }
+    layout: { type: 'string', default: 'stack' }
+    align: { type: 'string', default: 'start' }
   }
   slots: ['default']
 </contract>
+
+const sourceOpenByKey = new Map()
 
 function read(value) {
   return typeof value === 'function' ? value() : value
@@ -18,16 +22,39 @@ function read(value) {
 
 function layoutOf(value) {
   const next = read(value)
-  if (next === 'stack' || next === 'bleed' || next === 'rail') return next
-  return 'split'
+  if (next === 'split' || next === 'bleed' || next === 'rail') return next
+  return 'stack'
+}
+
+function alignOf(value) {
+  return read(value) === 'center' ? 'center' : 'start'
+}
+
+function sourceKey(id, title) {
+  return String(read(id) || read(title) || 'demo')
+}
+
+function sourceOpenFor(id, title) {
+  const key = sourceKey(id, title)
+  if (!sourceOpenByKey.has(key)) {
+    sourceOpenByKey.set(key, pulse(true))
+  }
+  return sourceOpenByKey.get(key)
+}
+
+function toggleSource(id, title) {
+  const open = sourceOpenFor(id, title)
+  open.set(!open())
 }
 
 export <view>
   <section
     class="docs-demo"
     class-docs-demo--stack=${() => layoutOf(layout) === 'stack'}
+    class-docs-demo--split=${() => layoutOf(layout) === 'split'}
     class-docs-demo--bleed=${() => layoutOf(layout) === 'bleed'}
     class-docs-demo--rail=${() => layoutOf(layout) === 'rail'}
+    class-docs-demo--align-center=${() => alignOf(align) === 'center'}
     id=${id}
   >
     <header class="docs-demo-head">
@@ -39,12 +66,26 @@ export <view>
       </div>
     </header>
 
-    <div class="docs-demo-grid">
-      <div class="docs-demo-live docs-panel">
+    <div class="docs-demo-card">
+      <div class="docs-demo-live">
         <div class="docs-demo-live-inner"><slot /></div>
       </div>
 
-      <CodeBlock :code=${code} :filename=${filename} :language=${'jacare'} />
+      <div class="docs-demo-source">
+        <div class="docs-demo-source-bar">
+          <button
+            type="button"
+            class="docs-demo-source-toggle"
+            aria-expanded=${() => sourceOpenFor(id, title)()}
+            on-click=${() => toggleSource(id, title)}
+          >
+            ${() => (sourceOpenFor(id, title)() ? 'Hide source' : 'Show source')}
+          </button>
+        </div>
+        #if sourceOpenFor(id, title)()
+          <CodeBlock :code=${code} :filename=${filename} :language=${'jacare'} />
+        #end
+      </div>
     </div>
   </section>
 </view>

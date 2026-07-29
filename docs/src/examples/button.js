@@ -1,75 +1,86 @@
 export const basic = `import Button from '@jacare/ui/Button'
 
 export <view>
-  <Button :variant=\${'primary'}>Continue</Button>
+  <div class="docs-demo-rows">
+    <div class="docs-demo-row">
+      <Button>Default</Button>
+      <Button :variant=\${'primary'}>Primary</Button>
+      <Button :variant=\${'success'}>Success</Button>
+      <Button :variant=\${'info'}>Info</Button>
+      <Button :variant=\${'warn'}>Warning</Button>
+      <Button :variant=\${'danger'}>Danger</Button>
+    </div>
+    <div class="docs-demo-row">
+      <Button :variant=\${'outline'}>Outline</Button>
+      <Button :variant=\${'secondary'}>Secondary</Button>
+      <Button :variant=\${'ghost'}>Ghost</Button>
+    </div>
+  </div>
 </view>`
 
 export const variants = `import Button from '@jacare/ui/Button'
-import Stack from '@jacare/ui/Stack'
 
 export <view>
-  <Stack :direction=\${'row'} :gap=\${'md'} :wrap=\${true}>
+  <div class="docs-demo-row">
     <Button :variant=\${'primary'}>Primary</Button>
     <Button :variant=\${'secondary'}>Secondary</Button>
     <Button :variant=\${'ghost'}>Ghost</Button>
     <Button :variant=\${'outline'}>Outline</Button>
-  </Stack>
+  </div>
 </view>`
 
 export const colors = `import Button from '@jacare/ui/Button'
-import Stack from '@jacare/ui/Stack'
 
 export <view>
-  <Stack :direction=\${'row'} :gap=\${'md'} :wrap=\${true}>
+  <div class="docs-demo-row">
     <Button :variant=\${'primary'}>Primary</Button>
     <Button :variant=\${'success'}>Success</Button>
     <Button :variant=\${'warn'}>Warning</Button>
     <Button :variant=\${'danger'}>Danger</Button>
     <Button :variant=\${'info'}>Info</Button>
-  </Stack>
+  </div>
 </view>`
 
 export const sizes = `import Button from '@jacare/ui/Button'
-import Stack from '@jacare/ui/Stack'
 
 export <view>
-  <Stack :direction=\${'row'} :align=\${'center'} :gap=\${'md'}>
+  <div class="docs-demo-row">
     <Button :size=\${'sm'}>Small</Button>
     <Button :size=\${'md'}>Medium</Button>
     <Button :size=\${'lg'}>Large</Button>
-  </Stack>
+  </div>
 </view>`
 
 export const shapes = `import Button from '@jacare/ui/Button'
-import Stack from '@jacare/ui/Stack'
 
 export <view>
-  <Stack :direction=\${'row'} :align=\${'center'} :gap=\${'md'}>
+  <div class="docs-demo-row">
     <Button :shape=\${'pill'}>Pill</Button>
     <Button :shape=\${'rounded'}>Rounded</Button>
     <Button :shape=\${'circle'}>+</Button>
-  </Stack>
+  </div>
 </view>`
 
 export const states = `import Button from '@jacare/ui/Button'
-import Stack from '@jacare/ui/Stack'
 
 export <view>
-  <Stack :direction=\${'row'} :gap=\${'md'} :wrap=\${true}>
-    <Button :loading=\${true}>Saving</Button>
-    <Button :disabled=\${true}>Disabled</Button>
-  </Stack>
-  <Button :block=\${true}>Full width</Button>
+  <div class="docs-demo-rows">
+    <div class="docs-demo-row">
+      <Button :loading=\${true}>Saving</Button>
+      <Button :disabled=\${true}>Disabled</Button>
+    </div>
+    <Button :block=\${true}>Full width</Button>
+  </div>
 </view>`
 
 export const types = `import Button from '@jacare/ui/Button'
 
 export <view>
-  <form>
+  <div class="docs-demo-row">
     <Button :type=\${'submit'} :variant=\${'primary'}>Submit</Button>
     <Button :type=\${'reset'} :variant=\${'secondary'}>Reset</Button>
     <Button :type=\${'button'} :variant=\${'ghost'}>Button</Button>
-  </form>
+  </div>
 </view>`
 
 export const events = `import { pulse } from '@jacare/core'

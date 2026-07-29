@@ -3,7 +3,7 @@ import DocsHero from '../ui/DocsHero.jcr'
 import DocsSection from '../ui/DocsSection.jcr'
 import CodeBlock from '../ui/CodeBlock.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
-import { previousNext, docsSiteUrl } from '../nav-data.js'
+import { previousNext, docsSiteUrl, coreRepoUrl } from '../nav-data.js'
 import { managers, themeImport, componentImports, viteConfig } from '../examples/install.js'
 
 const navLinks = previousNext('/install')
@@ -31,12 +31,15 @@ export <view>
     <p class="docs-lead">
       Full documentation:
       <a href=${() => docsSiteUrl} target="_blank" rel="noreferrer">${() => docsSiteUrl}</a>
+      · Jacaré Core:
+      <a href=${() => coreRepoUrl} target="_blank" rel="noreferrer">${() => coreRepoUrl}</a>
     </p>
 
     <DocsSection :id=${'package'} :title=${'Package'}>
       <p class="docs-lead">
         Pick your package manager. All of these install the UI library and its peer dependency
-        <code>@jacare/core</code> — always the latest published release (minimum <code>^0.1.15</code>).
+        <a href=${() => coreRepoUrl} target="_blank" rel="noreferrer"><code>@jacare/core</code></a>
+        — always the latest published release (minimum <code>^0.1.15</code>).
       </p>
 
       <div class="docs-pkg-tabs" role="tablist" aria-label="Package manager">

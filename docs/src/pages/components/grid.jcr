@@ -188,17 +188,39 @@ export <view>
 
     <Demo
       :id=${'basic'}
-      :title=${'Basic'}
-      :lead=${'Three equal tracks — the default grid starting point.'}
+      :title=${'Basic layout'}
+      :lead=${'Create grids with columns. Each track is equal — use 1, 2, 3, 4, or 6 columns like a classic layout scale.'}
       :code=${basic}
       :filename=${'grid-basic.jcr'}
-      :layout=${'stack'}
     >
-      <Grid :columns=${'3'} :gap=${'md'}>
-        <div class="docs-cell">1</div>
-        <div class="docs-cell">2</div>
-        <div class="docs-cell">3</div>
-      </Grid>
+      <div class="docs-demo-rows">
+        <Grid :columns=${'1'} :gap=${'md'}>
+          <div class="docs-cell">24</div>
+        </Grid>
+        <Grid :columns=${'2'} :gap=${'md'}>
+          <div class="docs-cell">12</div>
+          <div class="docs-cell">12</div>
+        </Grid>
+        <Grid :columns=${'3'} :gap=${'md'}>
+          <div class="docs-cell">8</div>
+          <div class="docs-cell">8</div>
+          <div class="docs-cell">8</div>
+        </Grid>
+        <Grid :columns=${'4'} :gap=${'md'}>
+          <div class="docs-cell">6</div>
+          <div class="docs-cell">6</div>
+          <div class="docs-cell">6</div>
+          <div class="docs-cell">6</div>
+        </Grid>
+        <Grid :columns=${'6'} :gap=${'md'}>
+          <div class="docs-cell">4</div>
+          <div class="docs-cell">4</div>
+          <div class="docs-cell">4</div>
+          <div class="docs-cell">4</div>
+          <div class="docs-cell">4</div>
+          <div class="docs-cell">4</div>
+        </Grid>
+      </div>
     </Demo>
 
     <DocsSection :id=${'columns'} :title=${'Columns'}>
@@ -208,7 +230,6 @@ export <view>
         :title=${'Four-up matrix'}
         :code=${columns}
         :filename=${'grid-columns.jcr'}
-        :layout=${'bleed'}
       >
         <Grid :columns=${'4'} :gap=${'sm'}>
           <div class="docs-cell">A</div>
@@ -219,37 +240,28 @@ export <view>
       </Demo>
     </DocsSection>
 
-    <DocsSection :id=${'gap'} :title=${'Gap'}>
-      <p class="docs-lead">Same cells, different spacing — read top to bottom.</p>
+    <DocsSection :id=${'gap'} :title=${'Column spacing'}>
+      <p class="docs-lead">Row provides gap to specify spacing between columns.</p>
       <Demo
         :id=${'gaps'}
         :title=${'Spacing contrast'}
         :code=${gaps}
         :filename=${'grid-gaps.jcr'}
-        :layout=${'stack'}
       >
-        <ul class="docs-spec">
-          <li class="docs-spec__row">
-            <p class="docs-spec__key">sm</p>
-            <div class="docs-spec__value">
-              <Grid :columns=${'3'} :gap=${'sm'}>
-                <div class="docs-cell">1</div>
-                <div class="docs-cell">2</div>
-                <div class="docs-cell">3</div>
-              </Grid>
-            </div>
-          </li>
-          <li class="docs-spec__row">
-            <p class="docs-spec__key">lg</p>
-            <div class="docs-spec__value">
-              <Grid :columns=${'3'} :gap=${'lg'}>
-                <div class="docs-cell">1</div>
-                <div class="docs-cell">2</div>
-                <div class="docs-cell">3</div>
-              </Grid>
-            </div>
-          </li>
-        </ul>
+        <div class="docs-demo-rows">
+          <Grid :columns=${'4'} :gap=${'sm'}>
+            <div class="docs-cell">sm</div>
+            <div class="docs-cell">sm</div>
+            <div class="docs-cell">sm</div>
+            <div class="docs-cell">sm</div>
+          </Grid>
+          <Grid :columns=${'4'} :gap=${'lg'}>
+            <div class="docs-cell">lg</div>
+            <div class="docs-cell">lg</div>
+            <div class="docs-cell">lg</div>
+            <div class="docs-cell">lg</div>
+          </Grid>
+        </div>
       </Demo>
     </DocsSection>
 

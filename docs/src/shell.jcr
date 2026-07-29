@@ -1,6 +1,6 @@
 import { pulse } from '@jacare/core'
-import { docsNav } from './nav-data.js'
-import { assetUrl, docsHref } from './navigate.js'
+import { docsNav, docsSiteUrl, uiRepoUrl, coreRepoUrl } from './nav-data.js'
+import { docsHref } from './navigate.js'
 import ThemeToggle from '@jacare/ui/components/ThemeToggle.jcr'
 import CommandPalette from './ui/CommandPalette.jcr'
 
@@ -38,7 +38,7 @@ export <view>
       </button>
 
       <a class="docs-brand docs-brand--top" jacare-go="/" href=${docsHref('/')} aria-label="Jacaré UI home">
-        <img class="docs-brand__mark" src=${assetUrl('jacare-logo.png')} alt="" width="40" height="40" />
+        <span class="docs-brand__mark" aria-hidden="true"></span>
         <span class="docs-brand__copy">
           <span class="docs-brand__name">Jacaré <strong>UI</strong></span>
           <span class="docs-brand__tag">Build with pulse</span>
@@ -51,10 +51,11 @@ export <view>
       </button>
 
       <div class="docs-topbar-actions">
-        <span class="docs-version">v0.1.0</span>
+        <span class="docs-version">v0.1.1</span>
         <ThemeToggle />
-        <a class="docs-github" href="https://jacarejs.github.io/ui/" target="_blank" rel="noreferrer">Docs</a>
-        <a class="docs-github" href="https://github.com/jacarejs/ui" target="_blank" rel="noreferrer">GitHub</a>
+        <a class="docs-github" href=${() => docsSiteUrl} target="_blank" rel="noreferrer">Docs</a>
+        <a class="docs-github" href=${() => uiRepoUrl} target="_blank" rel="noreferrer">GitHub</a>
+        <a class="docs-github" href=${() => coreRepoUrl} target="_blank" rel="noreferrer">Core</a>
       </div>
     </header>
 
@@ -76,7 +77,7 @@ export <view>
                   href=${item.href}
                   on-click=${closeMenu}
                 >
-                  <span class="docs-nav-label">${item.label}</span>
+  <span class="docs-nav-label">${item.label}</span>
                   #if item.blurb
                     <span class="docs-nav-blurb">${item.blurb}</span>
                   #end
