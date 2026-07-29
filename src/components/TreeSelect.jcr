@@ -267,7 +267,7 @@ export <view>
                   class-is-active=${() => isSelected(row.node.value, value, false)}
                   aria-selected=${() => isSelected(row.node.value, value, false)}
                   disabled=${() => !!(read(disabled) || row.node.disabled)}
-                  on-click=${() => pickSingle(row.node, value, emit)}
+                  on-click=${(event) => pickSingle(row.node, event, value, emit)}
                 >
                   <span class="jui-tree-select__row-label">${row.node.label}</span>
                 </button>
