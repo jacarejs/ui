@@ -70,13 +70,15 @@ export <style>
 
 .jui-field__control {
   width: 100%;
-  min-height: 2.75rem;
-  padding: 0.6rem 0.85rem;
+  min-height: calc(var(--j-control-height, 2.5rem) + 0.25rem);
+  padding: var(--j-control-padding-y, 0.6rem) calc(var(--j-control-padding-x, 1.15rem) * 0.75);
   border: 1px solid var(--j-border);
   border-radius: var(--j-radius-sm);
   background: var(--j-surface-2);
   color: var(--j-text);
-  transition: border-color 120ms ease, box-shadow 120ms ease;
+  transition:
+    border-color var(--j-duration-fast, 120ms) var(--j-ease-out, ease),
+    box-shadow var(--j-duration-fast, 120ms) var(--j-ease-out, ease);
 }
 
 .jui-field__control::placeholder {

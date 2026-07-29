@@ -63,7 +63,7 @@ export <style>
   height: 1.45rem;
   border-radius: var(--j-radius-pill);
   background: #c7d9cc;
-  transition: background 140ms ease;
+  transition: background var(--j-duration-fast, 120ms) var(--j-ease-out, ease);
   flex-shrink: 0;
 }
 
@@ -76,7 +76,7 @@ export <style>
   border-radius: 50%;
   background: #ffffff;
   box-shadow: 0 2px 6px rgba(0, 24, 24, 0.18);
-  transition: transform 140ms ease;
+  transition: transform var(--j-duration-normal, 200ms) var(--j-ease-out, ease);
 }
 
 .jui-switch__input:checked + .jui-switch__track {

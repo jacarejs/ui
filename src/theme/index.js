@@ -1,4 +1,6 @@
 const STORAGE_KEY = 'j-theme'
+const DENSITY_KEY = 'j-density'
+const MOTION_KEY = 'j-motion'
 
 export function getSystemTheme() {
   if (typeof matchMedia !== 'function') return 'light'
@@ -47,4 +49,57 @@ export const themes = {
   light: 'light',
   dark: 'dark',
   system: 'system',
+}
+
+export const densities = {
+  compact: 'compact',
+  comfortable: 'comfortable',
+  spacious: 'spacious',
+}
+
+export function resolveDensity(mode = 'comfortable') {
+  if (mode === 'compact' || mode === 'spacious' || mode === 'comfortable') return mode
+  return 'comfortable'
+}
+
+export function applyDensity(mode = 'comfortable', target = typeof document !== 'undefined' ? document.documentElement : null) {
+  const resolved = resolveDensity(mode)
+  if (!target) return resolved
+  target.dataset.jDensity = resolved
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(DENSITY_KEY, resolved)
+  }
+  return resolved
+}
+
+export function readStoredDensity(fallback = 'comfortable') {
+  if (typeof localStorage === 'undefined') return resolveDensity(fallback)
+  return resolveDensity(localStorage.getItem(DENSITY_KEY) || fallback)
+}
+
+export const motionModes = {
+  system: 'system',
+  full: 'full',
+  reduce: 'reduce',
+}
+
+export function resolveMotion(mode = 'system') {
+  if (mode === 'full' || mode === 'reduce' || mode === 'system') return mode
+  return 'system'
+}
+
+export function applyMotion(mode = 'system', target = typeof document !== 'undefined' ? document.documentElement : null) {
+  const resolved = resolveMotion(mode)
+  if (!target) return resolved
+  if (resolved === 'system') delete target.dataset.jMotion
+  else target.dataset.jMotion = resolved
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(MOTION_KEY, resolved)
+  }
+  return resolved
+}
+
+export function readStoredMotion(fallback = 'system') {
+  if (typeof localStorage === 'undefined') return resolveMotion(fallback)
+  return resolveMotion(localStorage.getItem(MOTION_KEY) || fallback)
 }

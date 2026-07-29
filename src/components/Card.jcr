@@ -33,7 +33,7 @@ export <style>
 .jui-card {
   display: grid;
   gap: 0.85rem;
-  padding: 1.25rem;
+  padding: calc(1.25rem * var(--j-density, 1));
   border: 1px solid var(--j-border);
   border-radius: calc(var(--j-radius) + 4px);
   background: var(--j-surface-2);

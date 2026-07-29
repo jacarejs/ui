@@ -64,8 +64,8 @@ export <style>
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  min-height: 2.5rem;
-  padding: 0.65rem 1.15rem;
+  min-height: var(--j-control-height, 2.5rem);
+  padding: var(--j-control-padding-y, 0.65rem) var(--j-control-padding-x, 1.15rem);
   border: 1px solid var(--jui-btn-border);
   border-radius: var(--j-radius-pill);
   background: var(--jui-btn-bg);
@@ -73,7 +73,12 @@ export <style>
   font-weight: 700;
   line-height: 1.2;
   cursor: pointer;
-  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease, border-color 120ms ease, opacity 120ms ease;
+  transition:
+    transform var(--j-duration-fast, 120ms) var(--j-ease-out, ease),
+    box-shadow var(--j-duration-fast, 120ms) var(--j-ease-out, ease),
+    background var(--j-duration-fast, 120ms) var(--j-ease-out, ease),
+    border-color var(--j-duration-fast, 120ms) var(--j-ease-out, ease),
+    opacity var(--j-duration-fast, 120ms) var(--j-ease-out, ease);
   box-shadow: var(--jui-btn-shadow);
   user-select: none;
 }

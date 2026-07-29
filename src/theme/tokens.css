@@ -29,14 +29,40 @@
   --j-space-4: 1rem;
   --j-space-5: 1.5rem;
   --j-space-6: 2rem;
+  --j-density: 1;
+  --j-control-height: calc(2.5rem * var(--j-density));
+  --j-control-padding-x: calc(1.15rem * var(--j-density));
+  --j-control-padding-y: calc(0.65rem * var(--j-density));
   --j-duration-fast: 120ms;
   --j-duration-normal: 200ms;
+  --j-duration-slow: 320ms;
   --j-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --j-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+[data-j-density='compact'] {
+  --j-density: 0.84;
+}
+
+[data-j-density='comfortable'] {
+  --j-density: 1;
+}
+
+[data-j-density='spacious'] {
+  --j-density: 1.12;
+}
+
+[data-j-motion='reduce'] {
+  --j-duration-fast: 0ms;
+  --j-duration-normal: 0ms;
+  --j-duration-slow: 0ms;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root {
+  :root:not([data-j-motion='full']),
+  [data-j-theme]:not([data-j-motion='full']) {
     --j-duration-fast: 0ms;
     --j-duration-normal: 0ms;
+    --j-duration-slow: 0ms;
   }
 }
