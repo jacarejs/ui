@@ -1,28 +1,38 @@
 import DocsHero from '../ui/DocsHero.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
-import { shippedComponents, componentHref, previousNext } from '../nav-data.js'
+import { componentsByGroup, componentHref, previousNext } from '../nav-data.js'
 
 const navLinks = previousNext('/components')
-const catalog = shippedComponents.filter(
-  (item) => !['ThemeScope', 'ThemeToggle', 'VisuallyHidden'].includes(item.name),
-)
+const catalogGroups = componentsByGroup()
+
+function groupId(title) {
+  return `catalog-${String(title).toLowerCase().replace(/\s+/g, '-')}`
+}
 
 export <view>
   <article class="docs-page">
     <DocsHero
       :kicker=${'Components'}
       :title=${'Catalog'}
-      :description=${'Browse every shipped primitive in @jacare/ui. Each card opens a page with a playground, live demos, Jacaré source, generated API from the .jcr contract, and previous/next navigation.'}
+      :description=${'Browse every shipped primitive in @jacare/ui, grouped by role. Each card opens a page with a playground, live demos, Jacaré source, generated API from the .jcr contract, and previous/next navigation.'}
     />
 
-    <div class="docs-card-grid">
-      #for catalog as item (item.name)
-        <a class="docs-card docs-panel" jacare-go=${componentHref(item.name)} href=${componentHref(item.name)}>
-          <h3>${item.name}</h3>
-          <p>${item.blurb}</p>
-        </a>
-      #end
-    </div>
+    #for catalogGroups as group (group.title)
+      <section class="docs-catalog-group" aria-labelledby=${() => groupId(group.title)}>
+        <div class="docs-catalog-group__head">
+          <h2 class="docs-catalog-group__title" id=${() => groupId(group.title)}>${group.title}</h2>
+          <span class="docs-catalog-group__count">${() => String(group.items.length)}</span>
+        </div>
+        <div class="docs-card-grid">
+          #for group.items as item (item.name)
+            <a class="docs-card docs-panel" jacare-go=${componentHref(item.name)} href=${componentHref(item.name)}>
+              <h3>${item.name}</h3>
+              <p>${item.blurb}</p>
+            </a>
+          #end
+        </div>
+      </section>
+    #end
 
     <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
   </article>
