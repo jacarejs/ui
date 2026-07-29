@@ -4,19 +4,55 @@ import Alert from '@jacare/ui/components/Alert.jcr'
 import Badge from '@jacare/ui/components/Badge.jcr'
 import Card from '@jacare/ui/components/Card.jcr'
 import ColorPicker from '@jacare/ui/components/ColorPicker.jcr'
+import Confirm from '@jacare/ui/components/Confirm.jcr'
 import Field from '@jacare/ui/components/Field.jcr'
+import Progress from '@jacare/ui/components/Progress.jcr'
 import Switch from '@jacare/ui/components/Switch.jcr'
 import ThemeScope from '@jacare/ui/components/ThemeScope.jcr'
 import DocsHero from '../ui/DocsHero.jcr'
-import { themePresets, lightDefaults, darkDefaults } from '../theme-presets.js'
+import { lightDefaults, darkDefaults } from '../theme-presets.js'
+import {
+  applyThemeTokens,
+  builtInThemesResolved,
+  clearBuiltInOverride,
+  clearThemeEditorState,
+  deleteCustomTheme,
+  factoryPresetById,
+  hasBuiltInOverride,
+  isBuiltInThemeId,
+  presetById,
+  readCustomThemes,
+  readThemeEditorState,
+  saveBuiltInOverride,
+  saveCustomTheme,
+  writeThemeEditorState,
+} from '../theme-editor-store.js'
 
+const stored = readThemeEditorState()
+
+const tab = pulse('library')
 const mode = pulse('light')
-const presetId = pulse('jacare')
+const presetId = pulse(stored?.presetId || 'jacare')
+const appliedId = pulse(stored?.presetId || 'jacare')
+const dirty = pulse(false)
 const email = pulse('')
 const enabled = pulse(true)
+const confirmOpen = pulse(false)
+const pendingAction = pulse(null)
+const appliedNote = pulse('')
+const customTick = pulse(0)
+const createLabel = pulse('My theme')
+const createBlurb = pulse('Saved from Theme Editor')
+const createError = pulse('')
+const themeQuery = pulse('')
+const progressDemo = pulse(62)
 
-const lightDraft = pulse({ ...lightDefaults })
-const darkDraft = pulse({ ...darkDefaults })
+const lightDraft = pulse({ ...(stored?.light || lightDefaults) })
+const darkDraft = pulse({ ...(stored?.dark || darkDefaults) })
+
+if (stored) {
+  applyThemeTokens(stored.light, stored.dark)
+}
 
 function draftPulse() {
   return mode() === 'dark' ? darkDraft : lightDraft
@@ -27,7 +63,12 @@ function draft() {
 }
 
 function setToken(key, next) {
-  draftPulse().update((current) => ({ ...current, [key]: next }))
+  draftPulse().update((current) => {
+    const nextDraft = { ...current, [key]: next }
+    if (key === '--j-primary') nextDraft['--j-success'] = next
+    return nextDraft
+  })
+  dirty.set(true)
 }
 
 function styleVars() {
@@ -42,8 +83,8 @@ function exportCss() {
     .map(([key, value]) => `  ${key}: ${value};`)
     .join('\n')
   const selector = mode() === 'dark' ? "[data-j-theme='dark']" : ':root'
-  const css = `${selector} {\n${body}\n}\n`
-  navigator.clipboard?.writeText(css)
+  navigator.clipboard?.writeText(`${selector} {\n${body}\n}\n`)
+  appliedNote.set('CSS copied to clipboard.')
 }
 
 function entries() {
@@ -54,15 +95,295 @@ function setMode(next) {
   mode.set(next)
 }
 
-function applyPreset(id) {
-  const preset = themePresets.find((item) => item.id === id) || themePresets[0]
+function setTab(next) {
+  tab.set(next)
+}
+
+function builtInThemes() {
+  customTick()
+  appliedId()
+  return builtInThemesResolved()
+}
+
+function filteredBuiltInThemes() {
+  const q = String(themeQuery() || '').trim().toLowerCase()
+  const list = builtInThemes()
+  if (!q) return list
+  return list.filter((theme) => `${theme.label} ${theme.blurb} ${theme.id}`.toLowerCase().includes(q))
+}
+
+function filteredCustomThemes() {
+  const q = String(themeQuery() || '').trim().toLowerCase()
+  const list = customThemes()
+  if (!q) return list
+  return list.filter((theme) => `${theme.label} ${theme.blurb} ${theme.id}`.toLowerCase().includes(q))
+}
+
+function customThemes() {
+  customTick()
+  appliedId()
+  return readCustomThemes()
+}
+
+function builtInCountLabel() {
+  return `${filteredBuiltInThemes().length} of ${builtInThemes().length}`
+}
+
+function currentTheme() {
+  customTick()
+  return presetById(presetId())
+}
+
+function editingBuiltIn() {
+  return isBuiltInThemeId(presetId())
+}
+
+function editingCustom() {
+  const id = presetId()
+  return String(id).startsWith('custom-') || !!readCustomThemes().find((item) => item.id === id)
+}
+
+function canSaveCurrentTheme() {
+  return editingBuiltIn() || editingCustom()
+}
+
+function isLiveTheme(id) {
+  return appliedId() === id
+}
+
+function loadPresetDraft(id) {
+  const preset = presetById(id)
   presetId.set(preset.id)
   lightDraft.set({ ...preset.light })
   darkDraft.set({ ...preset.dark })
+  dirty.set(false)
+  return preset
+}
+
+function selectTheme(id) {
+  loadPresetDraft(id)
+}
+
+function loadIntoEditor(id) {
+  loadPresetDraft(id)
+  setTab('edit')
+}
+
+function confirmTitle() {
+  const action = pendingAction()
+  if (!action) return 'Apply theme'
+  if (action.type === 'reset') return 'Reset docs theme?'
+  if (action.type === 'delete') return `Delete ${action.label}?`
+  if (action.type === 'reset-override') return `Restore ${action.label}?`
+  return `Apply ${activePresetLabel()} to docs?`
+}
+
+function confirmMessage() {
+  const action = pendingAction()
+  if (!action) return ''
+  if (action.type === 'reset') {
+    return 'Remove the saved theme from localStorage and restore the default Jacaré tokens across the docs?'
+  }
+  if (action.type === 'delete') {
+    return 'This removes the custom theme from localStorage. The docs theme stays as-is until you apply another one.'
+  }
+  if (action.type === 'reset-override') {
+    return `Discard your edits to ${action.label} and restore the original built-in palette?`
+  }
+  return `Apply ${activePresetLabel()} to the whole documentation site and save it in localStorage?`
+}
+
+function confirmLabelText() {
+  const action = pendingAction()
+  if (action?.type === 'delete') return 'Delete'
+  if (action?.type === 'reset-override') return 'Restore'
+  return 'Apply'
+}
+
+function requestApplyDraft() {
+  pendingAction.set({ type: 'draft' })
+  confirmOpen.set(true)
+}
+
+function requestReset() {
+  pendingAction.set({ type: 'reset' })
+  confirmOpen.set(true)
+}
+
+function requestDeleteCustom(theme) {
+  pendingAction.set({ type: 'delete', id: theme.id, label: theme.label })
+  confirmOpen.set(true)
+}
+
+function requestResetOverride(theme) {
+  pendingAction.set({ type: 'reset-override', id: theme.id, label: theme.label })
+  confirmOpen.set(true)
+}
+
+function persistAndApply(nextPresetId, light, dark, note) {
+  applyThemeTokens(light, dark)
+  writeThemeEditorState({
+    presetId: nextPresetId,
+    light,
+    dark,
+  })
+  appliedId.set(nextPresetId)
+  dirty.set(false)
+  appliedNote.set(note)
+}
+
+function saveCurrentTheme() {
+  const id = presetId()
+  const light = { ...lightDraft() }
+  const dark = { ...darkDraft() }
+
+  if (isBuiltInThemeId(id)) {
+    const theme = saveBuiltInOverride(id, { light, dark })
+    customTick.update((n) => n + 1)
+    dirty.set(false)
+    appliedNote.set(`${theme.label} override saved. Use Apply to publish site-wide.`)
+    return
+  }
+
+  const existing = readCustomThemes().find((item) => item.id === id)
+  if (existing) {
+    saveCustomTheme({
+      id: existing.id,
+      label: existing.label,
+      blurb: existing.blurb,
+      light,
+      dark,
+    })
+    customTick.update((n) => n + 1)
+    dirty.set(false)
+    appliedNote.set(`${existing.label} saved. Use Apply to publish site-wide.`)
+    return
+  }
+
+  setTab('create')
+  createError.set('Save this draft as a new theme first.')
+}
+
+function onConfirmApply() {
+  const action = pendingAction()
+  confirmOpen.set(false)
+  pendingAction.set(null)
+  if (!action) return
+
+  if (action.type === 'reset') {
+    clearThemeEditorState()
+    loadPresetDraft('jacare')
+    appliedId.set('jacare')
+    appliedNote.set('Docs theme reset to Jacaré defaults.')
+    return
+  }
+
+  if (action.type === 'delete') {
+    deleteCustomTheme(action.id)
+    customTick.update((n) => n + 1)
+    if (presetId() === action.id) {
+      loadPresetDraft('jacare')
+    }
+    appliedNote.set(`${action.label} deleted.`)
+    return
+  }
+
+  if (action.type === 'reset-override') {
+    clearBuiltInOverride(action.id)
+    customTick.update((n) => n + 1)
+    const factory = factoryPresetById(action.id)
+    if (presetId() === action.id) {
+      lightDraft.set({ ...factory.light })
+      darkDraft.set({ ...factory.dark })
+      dirty.set(false)
+    }
+    appliedNote.set(`${action.label} restored to original.`)
+    return
+  }
+
+  const light = { ...lightDraft() }
+  const dark = { ...darkDraft() }
+  const id = presetId() || 'custom'
+  persistAndApply(id, light, dark, `${activePresetLabel()} applied to docs and saved.`)
+}
+
+function onCancelApply() {
+  confirmOpen.set(false)
+  pendingAction.set(null)
 }
 
 function presetSwatch(preset) {
-  return `background:${preset.light['--j-primary']}`
+  const p = preset.light || {}
+  const primary = p['--j-primary'] || '#189030'
+  const leaf = p['--j-leaf'] || primary
+  const mint = p['--j-mint'] || '#d8f3dc'
+  const surface = p['--j-surface'] || '#ffffff'
+  return `background:
+    linear-gradient(135deg,
+      ${primary} 0 28%,
+      ${leaf} 28% 52%,
+      ${mint} 52% 74%,
+      ${surface} 74% 100%)`
+}
+
+function activePresetLabel() {
+  const id = presetId()
+  if (id === 'custom') return 'Unsaved draft'
+  const theme = currentTheme()
+  if (theme?.overridden) return `${theme.label} (edited)`
+  return theme?.label || 'Theme'
+}
+
+function previewTitle() {
+  return `Preview · ${activePresetLabel()}`
+}
+
+function editStatusLine() {
+  const parts = [
+    `Editing ${mode() === 'dark' ? 'dark' : 'light'} tokens`,
+    activePresetLabel(),
+  ]
+  if (dirty()) parts.push('unsaved changes')
+  return parts.join(' · ')
+}
+
+function createFromCurrent() {
+  createError.set('')
+  const label = String(createLabel() || '').trim()
+  if (!label) {
+    createError.set('Give your theme a name.')
+    return
+  }
+  const theme = saveCustomTheme({
+    label,
+    blurb: createBlurb(),
+    light: { ...lightDraft() },
+    dark: { ...darkDraft() },
+  })
+  customTick.update((n) => n + 1)
+  presetId.set(theme.id)
+  dirty.set(false)
+  appliedNote.set(`${theme.label} saved to your library.`)
+  setTab('library')
+}
+
+function startCreateFrom(id) {
+  loadPresetDraft(id)
+  createLabel.set(`${presetById(id).label} copy`)
+  createBlurb.set('Custom remix')
+  createError.set('')
+  setTab('create')
+}
+
+function startBlankCreate() {
+  lightDraft.set({ ...lightDefaults })
+  darkDraft.set({ ...darkDefaults })
+  presetId.set('custom')
+  dirty.set(false)
+  createLabel.set('My theme')
+  createBlurb.set('Saved from Theme Editor')
+  createError.set('')
+  setTab('create')
 }
 
 export <view>
@@ -70,83 +391,315 @@ export <view>
     <DocsHero
       :kicker=${'Tools'}
       :title=${'Theme Editor'}
-      :description=${'Live token lab for @jacare/ui. Start from a ready-made theme, flip light/dark, tune colors, watch components update, then export CSS when the mix looks right.'}
+      :description=${'Browse ready-made palettes, edit built-in themes in place, or create your own and keep everything in localStorage.'}
     />
+
+    #if appliedNote()
+      <Alert :tone=${'success'} :title=${'Theme updated'} :dismissible=${true} on-dismiss=${() => appliedNote.set('')}>
+        ${() => appliedNote()}
+      </Alert>
+    #end
+
+    <div class="docs-pkg-tabs docs-theme-tabs" role="tablist" aria-label="Theme editor sections">
+      <button
+        type="button"
+        class="docs-pkg-tab"
+        class-is-active=${() => tab() === 'library'}
+        role="tab"
+        aria-selected=${() => tab() === 'library'}
+        on-click=${() => setTab('library')}
+      >Library</button>
+      <button
+        type="button"
+        class="docs-pkg-tab"
+        class-is-active=${() => tab() === 'edit'}
+        role="tab"
+        aria-selected=${() => tab() === 'edit'}
+        on-click=${() => setTab('edit')}
+      >Edit</button>
+      <button
+        type="button"
+        class="docs-pkg-tab"
+        class-is-active=${() => tab() === 'create'}
+        role="tab"
+        aria-selected=${() => tab() === 'create'}
+        on-click=${() => setTab('create')}
+      >Create</button>
+    </div>
 
     <div class="docs-editor">
       <div class="docs-editor-panel docs-panel">
-        <div class="docs-hero-actions">
-          <Button
-            :size=${'sm'}
-            :variant=${() => (mode() === 'light' ? 'primary' : 'secondary')}
-            on-press=${() => setMode('light')}
-          >Light</Button>
-          <Button
-            :size=${'sm'}
-            :variant=${() => (mode() === 'dark' ? 'primary' : 'secondary')}
-            on-press=${() => setMode('dark')}
-          >Dark</Button>
-          <Button :size=${'sm'} :variant=${'ghost'} on-press=${exportCss}>Export CSS</Button>
-        </div>
+        #if tab() === 'library'
+          <div class="docs-theme-apply-bar">
+            <div class="docs-theme-apply-bar__copy">
+              <p class="docs-alert-play__label" style="margin:0">Selected</p>
+              <p class="docs-demo-lead" style="margin:0">${() => activePresetLabel()}</p>
+            </div>
+            <div class="docs-hero-actions" style="margin:0">
+              <Button
+                :size=${'sm'}
+                :variant=${() => (mode() === 'light' ? 'primary' : 'secondary')}
+                on-press=${() => setMode('light')}
+              >Light</Button>
+              <Button
+                :size=${'sm'}
+                :variant=${() => (mode() === 'dark' ? 'primary' : 'secondary')}
+                on-press=${() => setMode('dark')}
+              >Dark</Button>
+              <Button :size=${'sm'} :variant=${'primary'} on-press=${requestApplyDraft}>Apply</Button>
+            </div>
+          </div>
 
-        <div class="docs-theme-presets">
-          <p class="docs-alert-play__label">Ready-made themes</p>
-          <div class="docs-theme-preset-grid">
-            #for themePresets as theme
-              <button
-                type="button"
-                class="docs-theme-preset"
-                class-is-active=${() => presetId() === theme.id}
-                on-click=${() => applyPreset(theme.id)}
-              >
-                <span class="docs-theme-preset__swatch" :style=${() => presetSwatch(theme)}></span>
-                <span class="docs-theme-preset__copy">
-                  <strong>${theme.label}</strong>
-                  <span>${theme.blurb}</span>
-                </span>
-              </button>
+          <div class="docs-theme-presets">
+            <div class="docs-theme-section-head">
+              <div>
+                <p class="docs-alert-play__label" style="margin:0">Built-in themes</p>
+                <p class="docs-demo-lead" style="margin:0.2rem 0 0">${() => builtInCountLabel()}</p>
+              </div>
+            </div>
+            <Field
+              :label=${'Filter themes'}
+              :placeholder=${'mangue, ocean, coral…'}
+              bind-value=${themeQuery}
+            />
+            <p class="docs-demo-lead" style="margin:0">
+              Select a theme to preview it. Use Apply to publish site-wide.
+            </p>
+            <div class="docs-theme-preset-grid docs-theme-preset-grid--cards">
+              #for filteredBuiltInThemes() as theme
+                <div
+                  class="docs-theme-card"
+                  class-is-active=${() => presetId() === theme.id}
+                >
+                  <button
+                    type="button"
+                    class="docs-theme-card__main"
+                    on-click=${() => selectTheme(theme.id)}
+                  >
+                    <span class="docs-theme-preset__swatch" :style=${() => presetSwatch(theme)}></span>
+                    <span class="docs-theme-preset__copy">
+                      <strong>
+                        ${theme.label}
+                        #if theme.overridden
+                          <span class="docs-theme-edited">edited</span>
+                        #end
+                        #if isLiveTheme(theme.id)
+                          <span class="docs-theme-live">live</span>
+                        #end
+                      </strong>
+                      <span>${theme.blurb}</span>
+                    </span>
+                  </button>
+                  <div class="docs-theme-card__actions">
+                    <Button :size=${'sm'} :variant=${'secondary'} on-press=${() => loadIntoEditor(theme.id)}>Edit</Button>
+                    <Button :size=${'sm'} :variant=${'ghost'} on-press=${() => startCreateFrom(theme.id)}>Remix</Button>
+                    #if theme.overridden
+                      <Button :size=${'sm'} :variant=${'ghost'} on-press=${() => requestResetOverride(theme)}>Restore</Button>
+                    #end
+                  </div>
+                </div>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-theme-presets">
+            <div class="docs-theme-section-head">
+              <p class="docs-alert-play__label" style="margin:0">Your themes</p>
+              <Button :size=${'sm'} :variant=${'secondary'} on-press=${startBlankCreate}>New theme</Button>
+            </div>
+            #if filteredCustomThemes().length
+              <div class="docs-theme-preset-grid docs-theme-preset-grid--cards">
+                #for filteredCustomThemes() as theme
+                  <div
+                    class="docs-theme-card"
+                    class-is-active=${() => presetId() === theme.id}
+                  >
+                    <button
+                      type="button"
+                      class="docs-theme-card__main"
+                      on-click=${() => selectTheme(theme.id)}
+                    >
+                      <span class="docs-theme-preset__swatch" :style=${() => presetSwatch(theme)}></span>
+                      <span class="docs-theme-preset__copy">
+                        <strong>
+                          ${theme.label}
+                          #if isLiveTheme(theme.id)
+                            <span class="docs-theme-live">live</span>
+                          #end
+                        </strong>
+                        <span>${theme.blurb}</span>
+                      </span>
+                    </button>
+                    <div class="docs-theme-card__actions">
+                      <Button :size=${'sm'} :variant=${'secondary'} on-press=${() => loadIntoEditor(theme.id)}>Edit</Button>
+                      <Button :size=${'sm'} :variant=${'ghost'} on-press=${() => requestDeleteCustom(theme)}>Delete</Button>
+                    </div>
+                  </div>
+                #end
+              </div>
+            #else
+              <p class="docs-demo-lead" style="margin:0">
+                No custom themes yet. Use the Create tab to save one.
+              </p>
             #end
           </div>
-        </div>
 
-        <p class="docs-demo-lead">
-          Editing ${() => (mode() === 'dark' ? 'dark' : 'light')} tokens ·
-          ${() => (themePresets.find((item) => item.id === presetId()) || themePresets[0]).label}
-        </p>
+          <div class="docs-hero-actions">
+            <Button :size=${'sm'} :variant=${'ghost'} on-press=${requestReset}>Reset docs</Button>
+          </div>
+        #elif tab() === 'edit'
+          <div class="docs-hero-actions">
+            <Button
+              :size=${'sm'}
+              :variant=${() => (mode() === 'light' ? 'primary' : 'secondary')}
+              on-press=${() => setMode('light')}
+            >Light</Button>
+            <Button
+              :size=${'sm'}
+              :variant=${() => (mode() === 'dark' ? 'primary' : 'secondary')}
+              on-press=${() => setMode('dark')}
+            >Dark</Button>
+            <Button :size=${'sm'} :variant=${'primary'} on-press=${requestApplyDraft}>Apply</Button>
+            #if canSaveCurrentTheme()
+              <Button :size=${'sm'} :variant=${'secondary'} on-press=${saveCurrentTheme}>Save theme</Button>
+            #end
+            <Button :size=${'sm'} :variant=${'ghost'} on-press=${exportCss}>Export CSS</Button>
+            <Button :size=${'sm'} :variant=${'ghost'} on-press=${() => setTab('create')}>Save as new</Button>
+            #if editingBuiltIn() && hasBuiltInOverride(presetId())
+              <Button
+                :size=${'sm'}
+                :variant=${'ghost'}
+                on-press=${() => requestResetOverride(currentTheme())}
+              >Restore original</Button>
+            #end
+          </div>
 
-        #for entries() as token
-          <ColorPicker
-            :label=${token.key}
-            :size=${'sm'}
-            :value=${() => draft()[token.key]}
-            on-change=${(hex) => setToken(token.key, hex)}
-          />
+          <p class="docs-demo-lead" style="margin:0">${() => editStatusLine()}</p>
+
+          #if editingBuiltIn()
+            <Alert :tone=${'info'} :title=${'Editing built-in theme'}>
+              Changes are saved as a local override for this ready-made theme. Use Restore original to discard them.
+            </Alert>
+          #end
+
+          #for entries() as token
+            <ColorPicker
+              :label=${token.key}
+              :size=${'sm'}
+              :value=${() => draft()[token.key]}
+              on-change=${(hex) => setToken(token.key, hex)}
+            />
+          #end
+        #else
+          <p class="docs-alert-play__label">Create a theme</p>
+          <p class="docs-demo-lead" style="margin:0">
+            Name the current light/dark drafts and store them in your library.
+          </p>
+
+          <Field :label=${'Name'} :placeholder=${'Brand night'} bind-value=${createLabel} />
+          <Field :label=${'Blurb'} :placeholder=${'Short description'} bind-value=${createBlurb} />
+
+          #if createError()
+            <Alert :tone=${'danger'} :title=${'Cannot save'}>${() => createError()}</Alert>
+          #end
+
+          <div class="docs-hero-actions">
+            <Button
+              :size=${'sm'}
+              :variant=${() => (mode() === 'light' ? 'primary' : 'secondary')}
+              on-press=${() => setMode('light')}
+            >Light</Button>
+            <Button
+              :size=${'sm'}
+              :variant=${() => (mode() === 'dark' ? 'primary' : 'secondary')}
+              on-press=${() => setMode('dark')}
+            >Dark</Button>
+          </div>
+
+          <p class="docs-demo-lead" style="margin:0">
+            Tune tokens before saving · ${() => (mode() === 'dark' ? 'dark' : 'light')} mode
+          </p>
+
+          #for entries() as token
+            <ColorPicker
+              :label=${token.key}
+              :size=${'sm'}
+              :value=${() => draft()[token.key]}
+              on-change=${(hex) => setToken(token.key, hex)}
+            />
+          #end
+
+          <div class="docs-hero-actions">
+            <Button :variant=${'primary'} on-press=${createFromCurrent}>Save to library</Button>
+            <Button :variant=${'ghost'} on-press=${() => setTab('library')}>Cancel</Button>
+          </div>
         #end
       </div>
 
-      <ThemeScope :mode=${mode}>
-        <div class="docs-gallery docs-panel" :style=${() => styleVars()}>
-          <div class="docs-gallery-row">
-            <Button :variant=${'primary'}>Primary</Button>
-            <Button :variant=${'secondary'}>Secondary</Button>
-            <Button :variant=${'ghost'}>Ghost</Button>
-            <Badge :text=${'Live'} :tone=${'success'} />
+      <aside class="docs-theme-preview-col" aria-label="Live theme preview">
+        <div class="docs-theme-preview-sticky">
+          <div class="docs-theme-preview-head">
+            <div>
+              <p class="docs-alert-play__label" style="margin:0">Preview</p>
+              <p class="docs-demo-lead" style="margin:0">${() => previewTitle()}</p>
+            </div>
+            <div class="docs-hero-actions" style="margin:0">
+              <Button
+                :size=${'sm'}
+                :variant=${() => (mode() === 'light' ? 'primary' : 'ghost')}
+                on-press=${() => setMode('light')}
+              >Light</Button>
+              <Button
+                :size=${'sm'}
+                :variant=${() => (mode() === 'dark' ? 'primary' : 'ghost')}
+                on-press=${() => setMode('dark')}
+              >Dark</Button>
+              <Button :size=${'sm'} :variant=${'primary'} on-press=${requestApplyDraft}>Apply</Button>
+            </div>
           </div>
-          <Alert :tone=${'info'} :title=${'Theme preview'}>
-            Gallery updates as you edit tokens.
-          </Alert>
-          <Alert :tone=${'success'} :title=${'Success'}>Saved with the current palette.</Alert>
-          <Card>
-            <Field :label=${'Email'} :placeholder=${'you@jacare.dev'} bind-value=${email} />
-            <div style="height:0.75rem"></div>
-            <Switch :label=${'Enable notifications'} bind-checked=${enabled} />
-            <div style="height:0.75rem"></div>
-            <p class="docs-demo-lead" style="color:var(--j-text);margin:0">
-              Body text uses --j-text and stays readable in both modes.
-            </p>
-          </Card>
+
+          <ThemeScope :mode=${mode}>
+            <div class="docs-gallery docs-panel" :style=${() => styleVars()}>
+              <div class="docs-gallery-row">
+                <Button :variant=${'primary'}>Primary</Button>
+                <Button :variant=${'secondary'}>Secondary</Button>
+                <Button :variant=${'ghost'}>Ghost</Button>
+                <Badge :text=${'Live'} :tone=${'success'} />
+                <Badge :text=${'Warn'} :tone=${'warn'} />
+              </div>
+              <Progress :value=${progressDemo} :label=${'Progress'} />
+              <Alert :tone=${'info'} :title=${'Theme preview'}>
+                This panel stays in view while you browse themes. Apply publishes the palette across the docs.
+              </Alert>
+              <Alert :tone=${'success'} :title=${'Success'}>Saved with the current palette.</Alert>
+              <Alert :tone=${'danger'} :title=${'Danger'}>Errors use --j-danger.</Alert>
+              <Card :title=${'Sample form'} :subtitle=${'Token surface'}>
+                <Field :label=${'Email'} :placeholder=${'you@jacare.dev'} bind-value=${email} />
+                <div style="height:0.75rem"></div>
+                <Switch :label=${'Enable notifications'} bind-checked=${enabled} />
+                <div style="height:0.75rem"></div>
+                <p class="docs-demo-lead" style="color:var(--j-text);margin:0">
+                  Body text uses --j-text and stays readable in both modes.
+                </p>
+              </Card>
+            </div>
+          </ThemeScope>
         </div>
-      </ThemeScope>
+      </aside>
     </div>
+
+    <Confirm
+      bind-open=${confirmOpen}
+      :title=${() => confirmTitle()}
+      :message=${() => confirmMessage()}
+      :confirmLabel=${() => confirmLabelText()}
+      :cancelLabel=${'Cancel'}
+      :danger=${() => {
+        const type = pendingAction()?.type
+        return type === 'delete' || type === 'reset-override'
+      }}
+      on-confirm=${onConfirmApply}
+      on-cancel=${onCancelApply}
+    />
   </article>
 </view>
