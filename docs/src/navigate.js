@@ -1,5 +1,4 @@
-export function docsHref(path = '/') {
-  const base = import.meta.env.BASE_URL || '/'
+export function docsHref(path = '/', base = import.meta.env.BASE_URL || '/') {
   const route = path.startsWith('/') ? path : `/${path}`
   if (!base || base === '/') return route === '/' ? '/' : route
   const prefix = base.endsWith('/') ? base.slice(0, -1) : base
@@ -7,15 +6,24 @@ export function docsHref(path = '/') {
   return `${prefix}${route}`
 }
 
-export function assetUrl(path = '') {
-  const base = import.meta.env.BASE_URL || '/'
+export function assetUrl(path = '', base = import.meta.env.BASE_URL || '/') {
   const file = String(path).replace(/^\//, '')
   if (!base || base === '/') return `/${file}`
   const prefix = base.endsWith('/') ? base : `${base}/`
   return `${prefix}${file}`
 }
 
+export function scrollDocsToTop() {
+  if (typeof window === 'undefined') return
+  window.scrollTo(0, 0)
+  document.documentElement.scrollTop = 0
+  document.body.scrollTop = 0
+  const main = document.getElementById('docs-content')
+  if (main) main.scrollTop = 0
+}
+
 export function goDocs(path = '/') {
   history.pushState({}, '', docsHref(path))
   window.dispatchEvent(new PopStateEvent('popstate'))
+  scrollDocsToTop()
 }
