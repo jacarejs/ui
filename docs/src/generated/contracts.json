@@ -1715,11 +1715,15 @@
       },
       "drag": {
         "type": "boolean",
-        "default": false
+        "default": true
       },
       "limit": {
         "type": "number",
         "default": 0
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
       }
     },
     "pulses": {},

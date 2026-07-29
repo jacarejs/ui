@@ -7,8 +7,9 @@ export <contract>
     multiple: { type: 'boolean', default: false }
     disabled: { type: 'boolean', default: false }
     listType: { type: 'string', default: 'text' }
-    drag: { type: 'boolean', default: false }
+    drag: { type: 'boolean', default: true }
     limit: { type: 'number', default: 0 }
+    hint: { type: 'string', default: '' }
   }
   slots: ['default']
   emits: ['change', 'remove', 'exceed']
@@ -27,6 +28,21 @@ function filesOf(model) {
   return Array.isArray(current) ? current : []
 }
 
+function listMode(value) {
+  const mode = String(read(value) || 'text')
+  if (mode === 'picture' || mode === 'picture-card') return mode
+  return 'text'
+}
+
+function isPicture(value) {
+  const mode = listMode(value)
+  return mode === 'picture' || mode === 'picture-card'
+}
+
+function isPictureCard(value) {
+  return listMode(value) === 'picture-card'
+}
+
 function commit(model, next, emitFn) {
   if (model && typeof model.set === 'function') model.set(next)
   emitFn('change', next)
@@ -34,10 +50,6 @@ function commit(model, next, emitFn) {
 
 function makeUid() {
   return `jui-upload-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-}
-
-function isPicture(value) {
-  return read(value) === 'picture'
 }
 
 function formatSize(bytes) {
@@ -48,63 +60,53 @@ function formatSize(bytes) {
   return `${(size / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function readAsDataUrl(file) {
-  return new Promise((resolve) => {
-    if (typeof FileReader === 'undefined') {
-      resolve('')
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result || ''))
-    reader.onerror = () => resolve('')
-    reader.readAsDataURL(file)
+function isImageFile(file) {
+  if (!file) return false
+  if (file.type && /^image\//.test(file.type)) return true
+  return /\.(avif|bmp|gif|jpe?g|png|svg|webp)$/i.test(String(file.name || ''))
+}
+
+function matchesAccept(file, acceptValue) {
+  const rules = String(read(acceptValue) || '')
+    .split(',')
+    .map((rule) => rule.trim())
+    .filter(Boolean)
+  if (!rules.length) return true
+  const name = String(file.name || '').toLowerCase()
+  const type = String(file.type || '').toLowerCase()
+  return rules.some((rule) => {
+    const normalized = rule.toLowerCase()
+    if (normalized.endsWith('/*')) return type.startsWith(normalized.slice(0, -1))
+    if (normalized.startsWith('.')) return name.endsWith(normalized)
+    return type === normalized
   })
 }
 
-function updateFileUrl(model, record, url, emitFn) {
-  const next = filesOf(model).map((file) => (file === record ? { ...file, url } : file))
-  commit(model, next, emitFn)
+function createPreviewUrl(file) {
+  if (!isImageFile(file)) return ''
+  if (typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') {
+    try {
+      return URL.createObjectURL(file)
+    } catch {
+      return ''
+    }
+  }
+  return ''
 }
 
-function addFiles(fileList, model, limitValue, listTypeValue, emitFn) {
-  const incoming = Array.from(fileList || [])
-  if (!incoming.length) return
-  const limit = Number(read(limitValue)) || 0
-  if (limit > 0 && filesOf(model).length + incoming.length > limit) {
-    emitFn('exceed', { files: incoming, limit })
-    return
-  }
-  const records = incoming.map((file) => ({
-    uid: makeUid(),
-    name: file.name,
-    size: file.size,
-    status: 'done',
-    url: '',
-    raw: file,
-  }))
-  commit(model, [...filesOf(model), ...records], emitFn)
-  if (isPicture(listTypeValue)) {
-    records.forEach((record) => {
-      if (!/^image\//.test(record.raw?.type || '')) return
-      readAsDataUrl(record.raw).then((url) => {
-        if (url) updateFileUrl(model, record, url, emitFn)
-      })
-    })
+function revokePreviewUrl(url) {
+  if (!url || typeof URL === 'undefined' || typeof URL.revokeObjectURL !== 'function') return
+  if (String(url).startsWith('blob:')) {
+    try {
+      URL.revokeObjectURL(url)
+    } catch {
+      /* ignore */
+    }
   }
 }
 
-function handleInputChange(event, model, limitValue, listTypeValue, emitFn) {
-  addFiles(event.target.files, model, limitValue, listTypeValue, emitFn)
-  event.target.value = ''
-}
-
-function removeFile(file, model, emitFn) {
-  commit(model, filesOf(model).filter((item) => item !== file), emitFn)
-  emitFn('remove', file)
-}
-
-function triggerPick(event) {
-  event.currentTarget.closest('[data-upload]')?.querySelector('input[type="file"]')?.click()
+function revokeAll(files) {
+  files.forEach((file) => revokePreviewUrl(file?.url))
 }
 
 function dragState(emitFn) {
@@ -112,33 +114,140 @@ function dragState(emitFn) {
   return emitFn.__juiUploadDragging
 }
 
-function handleDragOver(event, dragValue) {
-  if (!read(dragValue)) return
+function limitOf(limitValue) {
+  const limit = Number(read(limitValue))
+  return Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : 0
+}
+
+function canAddMore(model, limitValue) {
+  const limit = limitOf(limitValue)
+  if (!limit) return true
+  return filesOf(model).length < limit
+}
+
+function addFiles(fileList, model, limitValue, acceptValue, multipleValue, emitFn) {
+  let incoming = Array.from(fileList || []).filter((file) => matchesAccept(file, acceptValue))
+  if (!incoming.length) return
+
+  if (!read(multipleValue)) incoming = incoming.slice(0, 1)
+
+  const limit = limitOf(limitValue)
+  const current = filesOf(model)
+
+  if (!read(multipleValue)) {
+    revokeAll(current)
+    const file = incoming[0]
+    const record = {
+      uid: makeUid(),
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      status: 'done',
+      url: createPreviewUrl(file),
+      raw: file,
+    }
+    commit(model, [record], emitFn)
+    return
+  }
+
+  if (limit > 0 && current.length + incoming.length > limit) {
+    const remaining = Math.max(0, limit - current.length)
+    if (remaining <= 0) {
+      emitFn('exceed', { files: incoming, limit })
+      return
+    }
+    emitFn('exceed', { files: incoming.slice(remaining), limit })
+    incoming = incoming.slice(0, remaining)
+  }
+
+  const records = incoming.map((file) => ({
+    uid: makeUid(),
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    status: 'done',
+    url: createPreviewUrl(file),
+    raw: file,
+  }))
+  commit(model, [...current, ...records], emitFn)
+}
+
+function handleInputChange(event, model, limitValue, acceptValue, multipleValue, emitFn) {
+  addFiles(event.target.files, model, limitValue, acceptValue, multipleValue, emitFn)
+  event.target.value = ''
+}
+
+function removeFile(file, model, emitFn) {
+  revokePreviewUrl(file?.url)
+  commit(model, filesOf(model).filter((item) => item.uid !== file.uid), emitFn)
+  emitFn('remove', file)
+}
+
+function triggerPick(event) {
+  if (event.target.closest('.jui-upload__remove')) return
+  event.currentTarget.closest('[data-upload]')?.querySelector('input[type="file"]')?.click()
+}
+
+function handleZoneKeydown(event, disabledValue) {
+  if (read(disabledValue)) return
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault()
+    event.currentTarget.closest('[data-upload]')?.querySelector('input[type="file"]')?.click()
+  }
+}
+
+function handleDragOver(event, dragValue, disabledValue) {
+  if (!read(dragValue) || read(disabledValue)) return
   event.preventDefault()
+  if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'
 }
 
 function handleDragEnter(event, dragValue, disabledValue, emitFn) {
   if (!read(dragValue) || read(disabledValue)) return
   event.preventDefault()
+  emitFn.__juiUploadDepth = (emitFn.__juiUploadDepth || 0) + 1
   dragState(emitFn).set(true)
 }
 
 function handleDragLeave(event, dragValue, emitFn) {
   if (!read(dragValue)) return
   event.preventDefault()
-  dragState(emitFn).set(false)
+  emitFn.__juiUploadDepth = Math.max(0, (emitFn.__juiUploadDepth || 0) - 1)
+  if (!emitFn.__juiUploadDepth) dragState(emitFn).set(false)
 }
 
-function handleDrop(event, dragValue, model, limitValue, listTypeValue, disabledValue, emitFn) {
+function handleDrop(event, dragValue, model, limitValue, acceptValue, multipleValue, disabledValue, emitFn) {
   if (!read(dragValue)) return
   event.preventDefault()
+  emitFn.__juiUploadDepth = 0
   dragState(emitFn).set(false)
   if (read(disabledValue)) return
-  addFiles(event.dataTransfer?.files, model, limitValue, listTypeValue, emitFn)
+  addFiles(event.dataTransfer?.files, model, limitValue, acceptValue, multipleValue, emitFn)
+}
+
+function showThumb(file, listTypeValue) {
+  if (isPicture(listTypeValue)) return true
+  return !!file?.url
+}
+
+function dropHint(acceptValue, limitValue, multipleValue) {
+  const parts = []
+  const accept = String(read(acceptValue) || '').trim()
+  if (accept) parts.push(accept)
+  const limit = limitOf(limitValue)
+  if (limit) parts.push(`up to ${limit} file${limit === 1 ? '' : 's'}`)
+  else if (!read(multipleValue)) parts.push('single file')
+  return parts.join(' · ')
 }
 
 export <view>
-  <div class="jui-upload" data-upload class-is-disabled=${() => !!read(disabled)}>
+  <div
+    class="jui-upload"
+    data-upload
+    class-jui-upload--picture=${() => isPicture(listType)}
+    class-jui-upload--picture-card=${() => isPictureCard(listType)}
+    class-is-disabled=${() => !!read(disabled)}
+  >
     <input
       class="jui-upload__input"
       type="file"
@@ -147,54 +256,22 @@ export <view>
       disabled=${() => !!read(disabled)}
       tabindex="-1"
       aria-hidden="true"
-      on-change=${(event) => handleInputChange(event, value, limit, listType, emit)}
+      on-change=${(event) => handleInputChange(event, value, limit, accept, multiple, emit)}
     />
 
-    <button
-      type="button"
-      class="jui-upload__trigger"
-      class-jui-upload__trigger--drag=${() => !!read(drag)}
-      class-is-dragging=${() => !!read(drag) && read(dragState(emit))}
-      disabled=${() => !!read(disabled)}
-      on-click=${triggerPick}
-      on-dragover=${(event) => handleDragOver(event, drag)}
-      on-dragenter=${(event) => handleDragEnter(event, drag, disabled, emit)}
-      on-dragleave=${(event) => handleDragLeave(event, drag, emit)}
-      on-drop=${(event) => handleDrop(event, drag, value, limit, listType, disabled, emit)}
-    >
-      #if isFunction(children)
-        <slot />
-      #elif read(drag)
-        <span class="jui-upload__drop-icon" aria-hidden="true"></span>
-        <span class="jui-upload__drop-text">Drag files here or click to browse</span>
-      #else
-        <span class="jui-upload__trigger-text">Click to upload</span>
-      #end
-    </button>
-
-    #if filesOf(value).length
-      <ul class="jui-upload__list" class-jui-upload__list--picture=${() => isPicture(listType)}>
+    #if isPictureCard(listType)
+      <ul class="jui-upload__list jui-upload__list--picture-card" aria-label="Uploaded files">
         #for filesOf(value) as file, index (file.uid || index)
-          <li class="jui-upload__item" class-is-error=${() => file.status === 'error'}>
-            #if isPicture(listType)
-              <span class="jui-upload__thumb">
-                #if file.url
-                  <img class="jui-upload__thumb-img" src=${file.url} alt=${file.name} />
-                #else
-                  <span class="jui-upload__thumb-icon" aria-hidden="true"></span>
-                #end
-              </span>
-            #end
-            <span class="jui-upload__meta">
+          <li class="jui-upload__item jui-upload__item--card" class-is-error=${() => file.status === 'error'}>
+            <span class="jui-upload__thumb">
+              #if file.url
+                <img class="jui-upload__thumb-img" src=${file.url} alt=${file.name} />
+              #else
+                <span class="jui-upload__thumb-icon" aria-hidden="true"></span>
+              #end
+            </span>
+            <span class="jui-upload__card-meta">
               <span class="jui-upload__name">${file.name}</span>
-              #if formatSize(file.size)
-                <span class="jui-upload__size">${() => formatSize(file.size)}</span>
-              #end
-              #if file.status === 'error'
-                <span class="jui-upload__status">Failed</span>
-              #elif file.status === 'uploading'
-                <span class="jui-upload__status">Uploading…</span>
-              #end
             </span>
             <button
               type="button"
@@ -205,7 +282,106 @@ export <view>
             >×</button>
           </li>
         #end
+
+        #if canAddMore(value, limit) && !read(disabled)
+          <li class="jui-upload__item jui-upload__item--add">
+            <button
+              type="button"
+              class="jui-upload__zone jui-upload__zone--card"
+              class-is-dragging=${() => !!read(drag) && read(dragState(emit))}
+              aria-label="Upload files"
+              on-click=${triggerPick}
+              on-keydown=${(event) => handleZoneKeydown(event, disabled)}
+              on-dragover=${(event) => handleDragOver(event, drag, disabled)}
+              on-dragenter=${(event) => handleDragEnter(event, drag, disabled, emit)}
+              on-dragleave=${(event) => handleDragLeave(event, drag, emit)}
+              on-drop=${(event) => handleDrop(event, drag, value, limit, accept, multiple, disabled, emit)}
+            >
+              <span class="jui-upload__drop-icon" aria-hidden="true"></span>
+              <span class="jui-upload__drop-text">Upload</span>
+            </button>
+          </li>
+        #end
       </ul>
+    #else
+      <div
+        class="jui-upload__zone"
+        class-jui-upload__zone--drag=${() => !!read(drag)}
+        class-is-dragging=${() => !!read(drag) && read(dragState(emit))}
+        role="button"
+        tabindex=${() => (read(disabled) ? '-1' : '0')}
+        aria-disabled=${() => !!read(disabled)}
+        aria-label="Upload files"
+        on-click=${(event) => {
+          if (read(disabled)) return
+          triggerPick(event)
+        }}
+        on-keydown=${(event) => handleZoneKeydown(event, disabled)}
+        on-dragover=${(event) => handleDragOver(event, drag, disabled)}
+        on-dragenter=${(event) => handleDragEnter(event, drag, disabled, emit)}
+        on-dragleave=${(event) => handleDragLeave(event, drag, emit)}
+        on-drop=${(event) => handleDrop(event, drag, value, limit, accept, multiple, disabled, emit)}
+      >
+        #if isFunction(children)
+          <slot />
+        #elif read(drag)
+          <span class="jui-upload__drop-icon" aria-hidden="true"></span>
+          <span class="jui-upload__drop-title">Drag files here</span>
+          <span class="jui-upload__drop-text">or click to browse</span>
+          #if dropHint(accept, limit, multiple)
+            <span class="jui-upload__drop-hint">${() => dropHint(accept, limit, multiple)}</span>
+          #end
+        #else
+          <span class="jui-upload__trigger-text">Click to upload</span>
+          #if dropHint(accept, limit, multiple)
+            <span class="jui-upload__drop-hint">${() => dropHint(accept, limit, multiple)}</span>
+          #end
+        #end
+      </div>
+
+      #if read(hint)
+        <p class="jui-upload__hint">${() => read(hint)}</p>
+      #end
+
+      #if filesOf(value).length
+        <ul
+          class="jui-upload__list"
+          class-jui-upload__list--picture=${() => listMode(listType) === 'picture'}
+          aria-label="Uploaded files"
+        >
+          #for filesOf(value) as file, index (file.uid || index)
+            <li class="jui-upload__item" class-is-error=${() => file.status === 'error'}>
+              #if showThumb(file, listType) || listMode(listType) === 'picture'
+                <span class="jui-upload__thumb">
+                  #if file.url
+                    <img class="jui-upload__thumb-img" src=${file.url} alt=${file.name} />
+                  #else
+                    <span class="jui-upload__thumb-icon" aria-hidden="true"></span>
+                  #end
+                </span>
+              #end
+              <span class="jui-upload__meta">
+                <span class="jui-upload__name">${file.name}</span>
+                #if formatSize(file.size)
+                  <span class="jui-upload__size">${() => formatSize(file.size)}</span>
+                #end
+                #if file.status === 'error'
+                  <span class="jui-upload__status">Failed</span>
+                #elif file.status === 'uploading'
+                  <span class="jui-upload__status">Uploading…</span>
+                #end
+              </span>
+              <button
+                type="button"
+                class="jui-upload__remove"
+                aria-label=${`Remove ${file.name}`}
+                disabled=${() => !!read(disabled)}
+                on-click=${() => removeFile(file, value, emit)}
+              >×</button>
+            </li>
+          #end
+        </ul>
+      #end
     #end
   </div>
 </view>
@@ -215,6 +391,7 @@ export <style>
   display: grid;
   gap: 0.75rem;
   min-width: 0;
+  position: relative;
 }
 
 .jui-upload.is-disabled {
@@ -229,11 +406,11 @@ export <style>
   pointer-events: none;
 }
 
-.jui-upload__trigger {
+.jui-upload__zone {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   min-height: 2.75rem;
   padding: 0.65rem 1.15rem;
   border: 1px solid var(--j-border);
@@ -242,50 +419,84 @@ export <style>
   background: var(--j-surface-2);
   font-weight: 700;
   cursor: pointer;
-  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease, transform 120ms ease;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.jui-upload__trigger:hover:not(:disabled) {
+.jui-upload__zone:hover,
+.jui-upload__zone:focus-visible {
   border-color: var(--j-primary);
   background: var(--j-mint);
 }
 
-.jui-upload__trigger:focus-visible {
+.jui-upload__zone:focus-visible {
   outline: none;
   box-shadow: var(--j-focus);
 }
 
-.jui-upload__trigger:disabled {
+.jui-upload[aria-disabled='true'] .jui-upload__zone,
+.jui-upload.is-disabled .jui-upload__zone {
   cursor: not-allowed;
 }
 
-.jui-upload__trigger--drag {
+.jui-upload__zone--drag {
   flex-direction: column;
   width: 100%;
-  min-height: 8rem;
-  padding: 1.5rem;
+  min-height: 9.5rem;
+  padding: 1.6rem 1.25rem;
   border: 1.5px dashed var(--j-border);
   border-radius: var(--j-radius);
-  background: var(--j-surface);
+  background: color-mix(in srgb, var(--j-surface) 88%, var(--j-mint));
 }
 
-.jui-upload__trigger--drag.is-dragging {
+.jui-upload__zone--drag.is-dragging,
+.jui-upload__zone--card.is-dragging {
   border-color: var(--j-primary);
   background: var(--j-mint);
+  box-shadow: var(--j-focus);
+  transform: translateY(-1px);
+}
+
+.jui-upload__zone--card {
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0.75rem;
+  border: 1.5px dashed var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: color-mix(in srgb, var(--j-surface) 88%, var(--j-mint));
 }
 
 .jui-upload__drop-icon {
-  width: 2rem;
-  height: 2rem;
+  width: 2.25rem;
+  height: 2.25rem;
   border-radius: 50%;
   background-color: var(--j-primary);
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 16V4M12 4 7 9M12 4l5 5'/%3E%3Cpath d='M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3'/%3E%3C/svg%3E") center / 60% no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 16V4M12 4 7 9M12 4l5 5'/%3E%3Cpath d='M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3'/%3E%3C/svg%3E") center / 60% no-repeat;
 }
 
-.jui-upload__drop-text {
+.jui-upload__drop-title {
+  color: var(--j-text);
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+.jui-upload__drop-text,
+.jui-upload__trigger-text {
   color: var(--j-muted);
   font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.jui-upload__drop-hint,
+.jui-upload__hint {
+  margin: 0;
+  color: var(--j-muted);
+  font-size: 0.78rem;
   font-weight: 600;
 }
 
@@ -298,7 +509,12 @@ export <style>
 }
 
 .jui-upload__list--picture {
-  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+}
+
+.jui-upload__list--picture-card {
+  grid-template-columns: repeat(auto-fill, minmax(7.25rem, 1fr));
+  gap: 0.65rem;
 }
 
 .jui-upload__item {
@@ -309,6 +525,7 @@ export <style>
   border: 1px solid var(--j-border);
   border-radius: var(--j-radius-sm);
   background: var(--j-surface-2);
+  min-width: 0;
 }
 
 .jui-upload__item.is-error {
@@ -321,19 +538,46 @@ export <style>
   padding: 0.5rem;
 }
 
+.jui-upload__item--card,
+.jui-upload__item--add {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+}
+
+.jui-upload__item--add {
+  border: 0;
+  background: transparent;
+}
+
 .jui-upload__thumb {
   display: grid;
   place-items: center;
-  aspect-ratio: 1;
+  flex: 0 0 auto;
+  width: 2.6rem;
+  height: 2.6rem;
   overflow: hidden;
   border-radius: var(--j-radius-sm);
   background: var(--j-surface);
+}
+
+.jui-upload__list--picture .jui-upload__thumb,
+.jui-upload__item--card .jui-upload__thumb {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.jui-upload__item--card .jui-upload__thumb {
+  height: 100%;
 }
 
 .jui-upload__thumb-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .jui-upload__thumb-icon {
@@ -344,11 +588,26 @@ export <style>
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='16' rx='2'/%3E%3Ccircle cx='9' cy='10' r='1.5'/%3E%3Cpath d='M21 16l-5.5-5.5L4 21'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
-.jui-upload__meta {
+.jui-upload__meta,
+.jui-upload__card-meta {
   display: grid;
   flex: 1 1 auto;
   gap: 0.1rem;
   min-width: 0;
+}
+
+.jui-upload__item--card .jui-upload__card-meta {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.35rem 0.45rem;
+  background: linear-gradient(transparent, color-mix(in srgb, var(--j-text) 72%, transparent));
+}
+
+.jui-upload__item--card .jui-upload__name {
+  color: #fff;
+  font-size: 0.72rem;
 }
 
 .jui-upload__name {
@@ -386,13 +645,37 @@ export <style>
   cursor: pointer;
 }
 
+.jui-upload__item--card .jui-upload__remove {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  color: #fff;
+  background: color-mix(in srgb, var(--j-text) 55%, transparent);
+}
+
 .jui-upload__remove:hover:not(:disabled) {
   color: var(--j-danger);
   background: var(--j-mint);
 }
 
+.jui-upload__item--card .jui-upload__remove:hover:not(:disabled) {
+  color: #fff;
+  background: var(--j-danger);
+}
+
 .jui-upload__remove:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+@media (pointer: coarse) {
+  .jui-upload__zone--drag {
+    min-height: 10.5rem;
+  }
+
+  .jui-upload__remove {
+    width: 2.15rem;
+    height: 2.15rem;
+  }
 }
 </style>

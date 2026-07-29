@@ -2,6 +2,7 @@ import { pulse } from '@jacare/core'
 import Field from '@jacare/ui/components/Field.jcr'
 import Switch from '@jacare/ui/components/Switch.jcr'
 import Stack from '@jacare/ui/components/Stack.jcr'
+import Select from '@jacare/ui/components/Select.jcr'
 import Upload from '@jacare/ui/components/Upload.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
@@ -11,17 +12,36 @@ import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/upload.js'
+import {
+  basic,
+  dragExample,
+  pictureExample,
+  pictureCardExample,
+  playgroundCode as buildPlaygroundCode,
+} from '../../examples/upload.js'
 
 const contract = getContract('Upload')
 const navLinks = previousNext('/components/upload')
 
+const listTypeOptions = [
+  { value: 'text', label: 'Text' },
+  { value: 'picture', label: 'Picture' },
+  { value: 'picture-card', label: 'Picture card' },
+]
+
 const playFiles = pulse([])
 const playMultiple = pulse(true)
-const playDrag = pulse(false)
+const playDrag = pulse(true)
 const playDisabled = pulse(false)
-const playLimit = pulse('0')
-const playAccept = pulse('')
+const playLimit = pulse('4')
+const playAccept = pulse('image/*')
+const playListType = pulse('picture')
+const playHint = pulse('Drag images here or click to browse')
+
+const basicFiles = pulse([])
+const dragFiles = pulse([])
+const pictureFiles = pulse([])
+const pictureCardFiles = pulse([])
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -30,6 +50,8 @@ function playgroundCode() {
     disabled: playDisabled(),
     limit: Number(playLimit()) || 0,
     accept: playAccept(),
+    listType: playListType(),
+    hint: playHint(),
   })
 }
 
@@ -44,7 +66,7 @@ export <view>
     <DocsHero
       :kicker=${'Forms'}
       :title=${'Upload'}
-      :description=${'File picker that binds a pulse of file records. Supports multiple files, drag-and-drop, accept filters, and a max limit.'}
+      :description=${'Pick or drag files into a drop zone. Image files get instant blob previews in text, picture, and picture-card layouts.'}
       :status=${'stable'}
     />
 
@@ -53,6 +75,8 @@ export <view>
         <div class="docs-alert-play__controls docs-panel">
           <Field :label=${'Accept'} :hint=${'e.g. image/*'} bind-value=${playAccept} />
           <Field :label=${'Limit'} :type=${'number'} :hint=${'0 = unlimited'} bind-value=${playLimit} />
+          <Field :label=${'Hint'} bind-value=${playHint} />
+          <Select :label=${'List type'} :options=${listTypeOptions} bind-value=${playListType} />
           <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
             <Switch :label=${'Multiple'} bind-checked=${playMultiple} />
             <Switch :label=${'Drag'} bind-checked=${playDrag} />
@@ -67,6 +91,8 @@ export <view>
               :drag=${playDrag}
               :disabled=${playDisabled}
               :accept=${playAccept}
+              :hint=${playHint}
+              :listType=${playListType}
               :limit=${() => Number(playLimit()) || 0}
               bind-value=${playFiles}
             />
@@ -77,7 +103,37 @@ export <view>
     </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'upload-basic.jcr'}>
-      <Upload bind-value=${playFiles} />
+      <Upload bind-value=${basicFiles} />
+    </Demo>
+
+    <Demo :id=${'drag'} :title=${'Drag and drop'} :code=${dragExample} :filename=${'upload-drag.jcr'}>
+      <Upload
+        :drag=${true}
+        :multiple=${true}
+        :accept=${'image/*'}
+        :hint=${'PNG, JPG, or WebP'}
+        bind-value=${dragFiles}
+      />
+    </Demo>
+
+    <Demo :id=${'picture'} :title=${'Picture preview'} :code=${pictureExample} :filename=${'upload-picture.jcr'}>
+      <Upload
+        :listType=${'picture'}
+        :multiple=${true}
+        :accept=${'image/*'}
+        :limit=${4}
+        bind-value=${pictureFiles}
+      />
+    </Demo>
+
+    <Demo :id=${'picture-card'} :title=${'Picture card'} :code=${pictureCardExample} :filename=${'upload-picture-card.jcr'}>
+      <Upload
+        :listType=${'picture-card'}
+        :multiple=${true}
+        :accept=${'image/*'}
+        :limit=${6}
+        bind-value=${pictureCardFiles}
+      />
     </Demo>
 
     <DocsSection :id=${'api'} :title=${'API'}>
