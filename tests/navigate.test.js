@@ -28,7 +28,7 @@ describe('navigate', () => {
   })
 
   it('builds asset urls', () => {
-    expect(assetUrl('jacare-logo.png')).toBe('/jacare-logo.png')
+    expect(assetUrl('jacare-logo.svg')).toBe('/jacare-logo.svg')
     expect(assetUrl('/icons/check.svg')).toBe('/icons/check.svg')
     expect(assetUrl()).toBe('/')
   })
@@ -68,5 +68,12 @@ describe('navigate', () => {
     const scroll = vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
     scrollDocsToTop()
     expect(scroll).toHaveBeenCalledWith(0, 0)
+  })
+
+  it('no-ops scroll when window is unavailable', () => {
+    const original = globalThis.window
+    vi.stubGlobal('window', undefined)
+    expect(() => scrollDocsToTop()).not.toThrow()
+    vi.stubGlobal('window', original)
   })
 })

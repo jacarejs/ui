@@ -82,7 +82,7 @@ export function componentsByGroup(hiddenNames = catalogHiddenComponents) {
     .filter((group) => (buckets.get(group) || []).length > 0)
     .map((group) => ({
       title: group,
-      items: (buckets.get(group) || []).slice().sort((a, b) => a.name.localeCompare(b.name)),
+      items: buckets.get(group).slice().sort((a, b) => a.name.localeCompare(b.name)),
     }))
 }
 

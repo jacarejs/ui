@@ -1,4 +1,4 @@
-export function docsHref(path = '/', base = import.meta.env.BASE_URL || '/') {
+export function docsHref(path = '/', base = import.meta.env.BASE_URL) {
   const route = path.startsWith('/') ? path : `/${path}`
   if (!base || base === '/') return route === '/' ? '/' : route
   const prefix = base.endsWith('/') ? base.slice(0, -1) : base
@@ -6,7 +6,7 @@ export function docsHref(path = '/', base = import.meta.env.BASE_URL || '/') {
   return `${prefix}${route}`
 }
 
-export function assetUrl(path = '', base = import.meta.env.BASE_URL || '/') {
+export function assetUrl(path = '', base = import.meta.env.BASE_URL) {
   const file = String(path).replace(/^\//, '')
   if (!base || base === '/') return `/${file}`
   const prefix = base.endsWith('/') ? base : `${base}/`

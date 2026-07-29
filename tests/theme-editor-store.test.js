@@ -223,7 +223,7 @@ describe('theme-editor-store', () => {
 
     const created = saveCustomTheme({
       label: '   ',
-      blurb: '',
+      blurb: '   ',
       light: lightDefaults,
       dark: darkDefaults,
     })
@@ -270,7 +270,51 @@ describe('theme-editor-store', () => {
     clearThemeEditorState()
     expect(saveBuiltInOverride('jacare', { light: lightDefaults, dark: darkDefaults })).toBeTruthy()
     expect(hasBuiltInOverride('jacare')).toBe(false)
+    expect(
+      saveCustomTheme({
+        label: 'Offline',
+        light: lightDefaults,
+        dark: darkDefaults,
+      }).label,
+    ).toBe('Offline')
 
     vi.stubGlobal('localStorage', original)
+  })
+
+  it('fills missing custom theme fields when reading storage', () => {
+    localStorage.setItem(
+      THEME_CUSTOM_STORAGE_KEY,
+      JSON.stringify([
+        {
+          id: 'custom-bare',
+          light: { '--j-primary': '#111111' },
+          dark: { '--j-primary': '#222222' },
+        },
+      ]),
+    )
+    const [theme] = readCustomThemes()
+    expect(theme.label).toBe('custom-bare')
+    expect(theme.blurb).toBe('Custom theme')
+    expect(theme.createdAt).toBe(0)
+  })
+
+  it('no-ops document helpers when document is unavailable', () => {
+    const originalDocument = globalThis.document
+    vi.stubGlobal('document', undefined)
+
+    expect(() => applyThemeTokens(lightDefaults, darkDefaults)).not.toThrow()
+    expect(() => clearThemeEditorState()).not.toThrow()
+
+    vi.stubGlobal('document', originalDocument)
+  })
+
+  it('slugifies empty labels when creating custom theme ids', () => {
+    const created = saveCustomTheme({
+      light: lightDefaults,
+      dark: darkDefaults,
+    })
+    expect(created.label).toBe('Custom')
+    expect(created.blurb).toBe('Saved from Theme Editor')
+    expect(created.id).toMatch(/^custom-custom-/)
   })
 })

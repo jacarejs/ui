@@ -166,4 +166,15 @@ describe('theme', () => {
 
     vi.stubGlobal('localStorage', original)
   })
+
+  it('uses null targets when document is unavailable', () => {
+    const originalDocument = globalThis.document
+    vi.stubGlobal('document', undefined)
+
+    expect(applyTheme('dark')).toBe('dark')
+    expect(applyDensity('compact')).toBe('compact')
+    expect(applyMotion('reduce')).toBe('reduce')
+
+    vi.stubGlobal('document', originalDocument)
+  })
 })
