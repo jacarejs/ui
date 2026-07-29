@@ -1,0 +1,197 @@
+import { pulse, derive } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Spinner from '@jacare/ui/components/Spinner.jcr'
+import Progress from '@jacare/ui/components/Progress.jcr'
+import Alert from '@jacare/ui/components/Alert.jcr'
+import DocsHero from '../ui/DocsHero.jcr'
+import DocsSection from '../ui/DocsSection.jcr'
+import CodeBlock from '../ui/CodeBlock.jcr'
+import PreviousNext from '../ui/PreviousNext.jcr'
+import { previousNext } from '../nav-data.js'
+import {
+  motionDefaults,
+  easePresets,
+  motionModes,
+  motionExportCss,
+} from '../motion-lab.js'
+
+const navLinks = previousNext('/motion-lab')
+const fast = pulse(motionDefaults.fast)
+const normal = pulse(motionDefaults.normal)
+const slow = pulse(motionDefaults.slow)
+const easeId = pulse('out')
+const motionMode = pulse('system')
+const progress = pulse(42)
+const alertOpen = pulse(true)
+const notify = pulse(true)
+const bump = pulse(0)
+
+const activeEase = derive(() => easePresets.find((item) => item.id === easeId()) || easePresets[0])
+const stageStyle = derive(() => {
+  const ease = activeEase().value
+  return [
+    `--j-duration-fast:${fast()}ms`,
+    `--j-duration-normal:${normal()}ms`,
+    `--j-duration-slow:${slow()}ms`,
+    `--j-ease-out:${ease}`,
+    `--j-ease-in-out:${ease}`,
+  ].join(';')
+})
+const stageMotion = derive(() => (motionMode() === 'system' ? '' : motionMode()))
+const exportCode = derive(() =>
+  motionExportCss({
+    fast: fast(),
+    normal: normal(),
+    slow: slow(),
+    ease: activeEase().value,
+    mode: motionMode(),
+  }),
+)
+
+function setMode(id) {
+  motionMode.set(id)
+}
+
+function replay() {
+  bump.update((value) => value + 1)
+  progress.set(10)
+  window.setTimeout(() => progress.set(88), 40)
+  alertOpen.set(false)
+  window.setTimeout(() => alertOpen.set(true), Number(normal()) || 200)
+}
+
+function resetMotion() {
+  fast.set(motionDefaults.fast)
+  normal.set(motionDefaults.normal)
+  slow.set(motionDefaults.slow)
+  easeId.set('out')
+  motionMode.set('system')
+}
+
+export <view>
+  <article class="docs-page">
+    <DocsHero
+      :kicker=${'Tools'}
+      :title=${'Motion Lab'}
+      :description=${'Scrub --j-duration-fast / normal / slow, pick an easing curve, and force reduced motion on the preview island. Export the CSS when the timing feels right.'}
+    />
+
+    <DocsSection :id=${'scrub'} :title=${'Scrub durations'}>
+      <div class="docs-motion-controls docs-panel">
+        <label class="docs-motion-slider">
+          <span>Fast · ${() => `${fast()}ms`}</span>
+          <input
+            type="range"
+            min="0"
+            max="400"
+            step="10"
+            value=${() => fast()}
+            on-input=${(event) => fast.set(Number(event.target.value))}
+          />
+        </label>
+        <label class="docs-motion-slider">
+          <span>Normal · ${() => `${normal()}ms`}</span>
+          <input
+            type="range"
+            min="0"
+            max="800"
+            step="10"
+            value=${() => normal()}
+            on-input=${(event) => normal.set(Number(event.target.value))}
+          />
+        </label>
+        <label class="docs-motion-slider">
+          <span>Slow · ${() => `${slow()}ms`}</span>
+          <input
+            type="range"
+            min="0"
+            max="1200"
+            step="20"
+            value=${() => slow()}
+            on-input=${(event) => slow.set(Number(event.target.value))}
+          />
+        </label>
+
+        <div class="docs-pkg-tabs" role="tablist" aria-label="Easing">
+          #for easePresets as item (item.id)
+            <button
+              type="button"
+              class="docs-pkg-tab"
+              class-is-active=${() => easeId() === item.id}
+              role="tab"
+              aria-selected=${() => easeId() === item.id}
+              on-click=${() => easeId.set(item.id)}
+            >
+              ${item.label}
+            </button>
+          #end
+        </div>
+
+        <div class="docs-pkg-tabs" role="tablist" aria-label="Motion preference">
+          #for motionModes as item (item.id)
+            <button
+              type="button"
+              class="docs-pkg-tab"
+              class-is-active=${() => motionMode() === item.id}
+              role="tab"
+              aria-selected=${() => motionMode() === item.id}
+              on-click=${() => setMode(item.id)}
+            >
+              ${item.label}
+              <span class="docs-viewport-tab-blurb">${item.blurb}</span>
+            </button>
+          #end
+        </div>
+
+        <div class="docs-hero-actions">
+          <Button :variant=${'primary'} on-press=${replay}>Replay preview</Button>
+          <Button :variant=${'ghost'} on-press=${resetMotion}>Reset</Button>
+        </div>
+      </div>
+
+      <div
+        class="docs-motion-stage docs-panel"
+        :style=${stageStyle}
+        data-j-motion=${() => stageMotion()}
+      >
+        <div class="docs-gallery docs-motion-gallery">
+          <p class="docs-lead" style="margin:0">
+            Replay #${bump} · ease ${() => activeEase().label}
+          </p>
+          <div class="docs-gallery-row">
+            <Button :variant=${'primary'}>Hover me</Button>
+            <Button :variant=${'secondary'}>Press</Button>
+            <Spinner :label=${'Loading'} />
+            <Switch :label=${'Animate toggle'} bind-checked=${notify} />
+          </div>
+          <Progress :label=${'Upload'} :value=${progress} :max=${100} />
+          <div
+            class="docs-motion-block"
+            :style=${() => `transition:transform var(--j-duration-slow) var(--j-ease-out),opacity var(--j-duration-normal) var(--j-ease-out);transform:translateX(${bump() % 2 === 0 ? '0' : '1.25rem'})`}
+          >
+            Slow slide block
+          </div>
+          <Alert
+            bind-open=${alertOpen}
+            :tone=${'success'}
+            :title=${'Saved'}
+            :dismissible=${true}
+          >
+            Alert enter/exit follows the scrubbed durations when components use the tokens.
+          </Alert>
+        </div>
+      </div>
+    </DocsSection>
+
+    <DocsSection :id=${'export'} :title=${'Export CSS'}>
+      <p class="docs-lead">
+        Paste into your app stylesheet after importing <code>@jacare/ui/theme.css</code>. Use
+        <code>applyMotion('reduce' | 'full' | 'system')</code> to mirror the preference toggle.
+      </p>
+      <CodeBlock :code=${exportCode} :filename=${'motion.js'} :language=${'javascript'} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

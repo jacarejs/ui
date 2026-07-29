@@ -1,0 +1,94 @@
+import { pulse, derive } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Input from '@jacare/ui/components/Input.jcr'
+import Card from '@jacare/ui/components/Card.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Alert from '@jacare/ui/components/Alert.jcr'
+import DocsHero from '../ui/DocsHero.jcr'
+import DocsSection from '../ui/DocsSection.jcr'
+import CodeBlock from '../ui/CodeBlock.jcr'
+import PreviousNext from '../ui/PreviousNext.jcr'
+import { previousNext } from '../nav-data.js'
+import { densityModes, densityExportCss } from '../density-preview.js'
+
+const navLinks = previousNext('/density-preview')
+const density = pulse('comfortable')
+const name = pulse('Jacaré')
+const email = pulse('you@jacare.dev')
+const notify = pulse(true)
+const alertOpen = pulse(true)
+
+const active = derive(() => densityModes.find((item) => item.id === density()) || densityModes[1])
+const exportCode = derive(() => densityExportCss(density()))
+
+function setDensity(id) {
+  density.set(id)
+}
+
+export <view>
+  <article class="docs-page">
+    <DocsHero
+      :kicker=${'Tools'}
+      :title=${'Density Preview'}
+      :description=${'Toggle compact, comfortable, or spacious density. Controls read --j-density, --j-control-height, and --j-control-padding-* so Button, Field, Input, and Card scale together.'}
+    />
+
+    <DocsSection :id=${'modes'} :title=${'Density modes'}>
+      <p class="docs-lead">
+        Current multiplier:
+        <strong>${() => `${active().value}×`}</strong>
+        · Token <code>--j-density</code> via <code>data-j-density="${() => density()}"</code>
+      </p>
+
+      <div class="docs-pkg-tabs" role="tablist" aria-label="Density">
+        #for densityModes as item (item.id)
+          <button
+            type="button"
+            class="docs-pkg-tab"
+            class-is-active=${() => density() === item.id}
+            role="tab"
+            aria-selected=${() => density() === item.id}
+            on-click=${() => setDensity(item.id)}
+          >
+            ${item.label}
+            <span class="docs-viewport-tab-blurb">${item.blurb}</span>
+          </button>
+        #end
+      </div>
+
+      <div class="docs-density-stage docs-panel" data-j-density=${() => density()}>
+        <div class="docs-gallery docs-density-gallery">
+          <Alert
+            bind-open=${alertOpen}
+            :tone=${'info'}
+            :title=${'Density island'}
+            :dismissible=${true}
+          >
+            Padding and control height follow <code>--j-density</code>.
+          </Alert>
+
+          <Card :title=${'Profile'} :subtitle=${() => `${active().label} density`}>
+            <div class="docs-gallery-row">
+              <Button :variant=${'primary'}>Save</Button>
+              <Button :variant=${'secondary'}>Cancel</Button>
+              <Button :variant=${'outline'} :size=${'sm'}>More</Button>
+            </div>
+            <Field :label=${'Display name'} bind-value=${name} :hint=${'Field min-height tracks density'} />
+            <Input :label=${'Email'} bind-value=${email} :placeholder=${'you@jacare.dev'} :clearable=${true} />
+            <Switch :label=${'Email me updates'} bind-checked=${notify} />
+          </Card>
+        </div>
+      </div>
+    </DocsSection>
+
+    <DocsSection :id=${'apply'} :title=${'Apply in your app'}>
+      <p class="docs-lead">
+        Call <code>applyDensity</code> from <code>@jacare/ui/theme</code>, or set <code>data-j-density</code> on <code>:root</code> / a subtree.
+      </p>
+      <CodeBlock :code=${exportCode} :filename=${'density.js'} :language=${'javascript'} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -1,0 +1,154 @@
+import { pulse, derive } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Select from '@jacare/ui/components/Select.jcr'
+import DatePicker from '@jacare/ui/components/DatePicker.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Confirm from '@jacare/ui/components/Confirm.jcr'
+import DocsHero from '../ui/DocsHero.jcr'
+import DocsSection from '../ui/DocsSection.jcr'
+import PreviousNext from '../ui/PreviousNext.jcr'
+import { previousNext } from '../nav-data.js'
+import {
+  viewportWidths,
+  tapRiverChecks,
+  readViewportChecks,
+  writeViewportChecks,
+} from '../viewport-lab.js'
+
+const navLinks = previousNext('/viewport-lab')
+const widthId = pulse('390')
+const name = pulse('')
+const fruit = pulse('')
+const date = pulse('')
+const notify = pulse(true)
+const confirmOpen = pulse(false)
+
+const stored = readViewportChecks()
+const checks = Object.fromEntries(
+  tapRiverChecks.map((item) => [item.id, pulse(!!stored[item.id])]),
+)
+
+const activeWidth = derive(() => viewportWidths.find((item) => item.id === widthId()) || viewportWidths[1])
+const frameStyle = derive(() => {
+  const width = activeWidth().width
+  if (!width) return 'width:100%;max-width:100%'
+  return `width:min(100%, ${width}px)`
+})
+const checkedCount = derive(() => tapRiverChecks.filter((item) => checks[item.id]()).length)
+
+function setWidth(id) {
+  widthId.set(id)
+}
+
+function persistChecks() {
+  writeViewportChecks(
+    Object.fromEntries(tapRiverChecks.map((entry) => [entry.id, !!checks[entry.id]()])),
+  )
+}
+
+function resetChecks() {
+  for (const item of tapRiverChecks) checks[item.id].set(false)
+  writeViewportChecks({})
+}
+
+export <view>
+  <article class="docs-page">
+    <DocsHero
+      :kicker=${'Tools'}
+      :title=${'Viewport Lab'}
+      :description=${'Resize critical controls into 320 / 390 / 768 frames and walk the Tap River mobile checklist. Desktop docs do not prove thumb UX — this stage does.'}
+    />
+
+    <DocsSection :id=${'frames'} :title=${'Device frames'}>
+      <p class="docs-lead">
+        Pick a width, then open Select, DatePicker, and Confirm inside the frame. Targets should stay ≥ 44×44 CSS px.
+      </p>
+
+      <div class="docs-pkg-tabs" role="tablist" aria-label="Viewport width">
+        #for viewportWidths as item (item.id)
+          <button
+            type="button"
+            class="docs-pkg-tab"
+            class-is-active=${() => widthId() === item.id}
+            role="tab"
+            aria-selected=${() => widthId() === item.id}
+            on-click=${() => setWidth(item.id)}
+          >
+            ${item.label}
+            <span class="docs-viewport-tab-blurb">${item.blurb}</span>
+          </button>
+        #end
+      </div>
+
+      <div class="docs-viewport-stage docs-panel">
+        <div class="docs-viewport-stage__meta">
+          <span>Preview · ${() => activeWidth().label}px class</span>
+          <span>${() => (activeWidth().width ? `${activeWidth().width} CSS px` : 'Fluid')}</span>
+        </div>
+        <div class="docs-viewport-frame" :style=${frameStyle}>
+          <div class="docs-viewport-chrome" aria-hidden="true">
+            <span></span>
+          </div>
+          <div class="docs-gallery docs-viewport-gallery">
+            <div class="docs-gallery-row">
+              <Button :variant=${'primary'}>Save</Button>
+              <Button :variant=${'secondary'}>Cancel</Button>
+              <Button :variant=${'ghost'} on-press=${() => confirmOpen.set(true)}>Confirm</Button>
+            </div>
+            <Field :label=${'Name'} :placeholder=${'Your name'} bind-value=${name} :hint=${'Tap target should stay comfortable'} />
+            <Select
+              :label=${'Fruit'}
+              bind-value=${fruit}
+              :options=${['Apple', 'Banana', 'Cherry']}
+            />
+            <DatePicker :label=${'Date'} bind-value=${date} />
+            <Switch :label=${'Notify me'} bind-checked=${notify} />
+          </div>
+        </div>
+      </div>
+
+      <Confirm
+        bind-open=${confirmOpen}
+        :title=${'Delete draft?'}
+        :message=${'This cannot be undone.'}
+        :danger=${true}
+        on-confirm=${() => confirmOpen.set(false)}
+        on-cancel=${() => confirmOpen.set(false)}
+      />
+    </DocsSection>
+
+    <DocsSection :id=${'tap-river'} :title=${'Tap River checklist'}>
+      <p class="docs-lead">
+        Mobile Device QA checklist — mark each item after trying it in the frame (or on a real device). Progress persists in this browser.
+        ${() => `${checkedCount()} / ${tapRiverChecks.length} done`}
+      </p>
+
+      <div class="docs-viewport-checks docs-panel">
+        <div class="docs-viewport-checks__head">
+          <strong>Checklist</strong>
+          <Button :variant=${'ghost'} :size=${'sm'} on-press=${resetChecks}>Reset</Button>
+        </div>
+        <ul class="docs-viewport-check-list">
+          #for tapRiverChecks as item (item.id)
+            <li>
+              <label class="docs-viewport-check">
+                <input
+                  type="checkbox"
+                  checked=${() => checks[item.id]()}
+                  on-change=${(event) => {
+                    checks[item.id].set(!!event.target.checked)
+                    persistChecks()
+                  }}
+                />
+                <span>${item.label}</span>
+              </label>
+            </li>
+          #end
+        </ul>
+      </div>
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>
