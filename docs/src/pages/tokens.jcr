@@ -1,339 +1,205 @@
+import { pulse } from '@jacare/core'
+import Field from '@jacare/ui/components/Field.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
 import DocsHero from '../ui/DocsHero.jcr'
 import DocsSection from '../ui/DocsSection.jcr'
-import Button from '@jacare/ui/components/Button.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
 import { previousNext } from '../nav-data.js'
 import { goDocs } from '../navigate.js'
+import {
+  tokenGroups,
+  filterGroups,
+  readToken,
+  swatchStyle,
+  copyToken,
+} from '../token-catalog.js'
 
 const navLinks = previousNext('/tokens')
+const query = pulse('')
+const copied = pulse('')
 
-const brand = [
-  { name: '--j-deep', kind: 'color' },
-  { name: '--j-forest', kind: 'color' },
-  { name: '--j-primary', kind: 'color' },
-  { name: '--j-leaf', kind: 'color' },
-  { name: '--j-bright', kind: 'color' },
-  { name: '--j-lime', kind: 'color' },
-  { name: '--j-mint', kind: 'color' },
-]
-
-const surfaces = [
-  { name: '--j-surface', kind: 'color' },
-  { name: '--j-surface-2', kind: 'color' },
-  { name: '--j-border', kind: 'color' },
-  { name: '--j-text', kind: 'color' },
-  { name: '--j-muted', kind: 'color' },
-]
-
-const status = [
-  { name: '--j-danger', kind: 'color' },
-  { name: '--j-warn', kind: 'color' },
-  { name: '--j-info', kind: 'color' },
-  { name: '--j-success', kind: 'color' },
-]
-
-const semantic = [
-  { name: '--j-bg', kind: 'color' },
-  { name: '--j-bg-elevated', kind: 'color' },
-  { name: '--j-fg', kind: 'color' },
-  { name: '--j-fg-muted', kind: 'color' },
-  { name: '--j-accent', kind: 'color' },
-  { name: '--j-accent-hover', kind: 'color' },
-  { name: '--j-ring', kind: 'focus' },
-  { name: '--j-error', kind: 'color' },
-  { name: '--j-warning', kind: 'color' },
-]
-
-const shape = [
-  { name: '--j-radius', kind: 'radius' },
-  { name: '--j-radius-sm', kind: 'radius' },
-  { name: '--j-radius-pill', kind: 'radius' },
-  { name: '--j-shadow', kind: 'shadow' },
-  { name: '--j-shadow-sm', kind: 'shadow' },
-  { name: '--j-focus', kind: 'focus' },
-]
-
-const space = [
-  { name: '--j-space-1', kind: 'space' },
-  { name: '--j-space-2', kind: 'space' },
-  { name: '--j-space-3', kind: 'space' },
-  { name: '--j-space-4', kind: 'space' },
-  { name: '--j-space-5', kind: 'space' },
-  { name: '--j-space-6', kind: 'space' },
-]
-
-const motion = [
-  { name: '--j-duration-fast', kind: 'motion' },
-  { name: '--j-duration-normal', kind: 'motion' },
-  { name: '--j-ease-out', kind: 'motion' },
-  { name: '--j-font', kind: 'font' },
-  { name: '--j-font-mono', kind: 'font' },
-]
-
-function readToken(name) {
-  if (typeof getComputedStyle !== 'function') return ''
-  return getComputedStyle(globalThis.document.documentElement).getPropertyValue(name).trim()
+function visibleGroups() {
+  return filterGroups(tokenGroups, query())
 }
 
-function swatchStyle(item) {
-  const name = item.name
-  if (item.kind === 'radius') {
-    return `--docs-token-fill:var(--j-primary);border-radius:var(${name})`
-  }
-  if (item.kind === 'shadow') {
-    return `--docs-token-fill:var(--j-surface-2, #fff);box-shadow:var(${name})`
-  }
-  if (item.kind === 'focus') {
-    return `--docs-token-fill:var(--j-surface, #fff);box-shadow:var(${name})`
-  }
-  if (item.kind === 'space') {
-    return `--docs-token-fill:var(--j-primary);width:var(${name});min-width:var(${name});height:0.75rem;border-radius:0.2rem`
-  }
-  if (item.kind === 'motion' || item.kind === 'font') {
-    return `--docs-token-fill:transparent;border:1px dashed var(--j-border)`
-  }
-  return `--docs-token-fill:var(${name})`
+function hasNoMatches() {
+  return visibleGroups().length === 0
+}
+
+function jumpTargets() {
+  return visibleGroups().map((group) => ({ id: group.id, title: group.title }))
+}
+
+function sectionHref(id) {
+  return `#${id}`
+}
+
+function copyAria(name) {
+  return `Copy ${name}`
+}
+
+function isLayout(group, layout) {
+  return group.layout === layout
+}
+
+async function onCopy(name) {
+  const ok = await copyToken(name)
+  if (!ok) return
+  copied.set(name)
+  setTimeout(() => {
+    if (copied() === name) copied.set('')
+  }, 1200)
+}
+
+function copyLabel(name) {
+  return copied() === name ? 'Copied' : 'Copy'
 }
 
 export <view>
-  <article class="docs-page">
+  <article class="docs-page docs-tokens-page">
     <DocsHero
       :kicker=${'Foundations'}
       :title=${'Token reference'}
-      :description=${'Catalog of brand, semantic, shape, space, and motion tokens used by @jacare/ui. Change a token once and every component that references it updates — including Theme Editor drafts.'}
+      :description=${'Live catalog of --j-* brand, semantic, shape, space, and motion tokens. Switch Light / Dark in the header to compare canopy themes — every swatch and value updates from the document.'}
     />
 
-    <p class="docs-lead">
-      Values below are read live from the current document theme. Switch Light / Dark in the header to compare canopy dark tokens.
-    </p>
-
-    <div class="docs-hero-actions" style="margin-bottom:0.5rem">
-      <Button :variant=${'secondary'} :size=${'sm'} on-press=${() => goDocs('/theme-editor')}>Open Theme Editor</Button>
+    <div class="docs-tokens-intro docs-panel">
+      <div class="docs-tokens-intro__copy">
+        <p>
+          Change a token once and every component that references it updates. Prefer editing brand tokens
+          (<code>--j-primary</code>, <code>--j-leaf</code>) before restyling primitives.
+        </p>
+        <div class="docs-hero-actions">
+          <Button :variant=${'primary'} :size=${'sm'} on-press=${() => goDocs('/theme-editor')}>Theme Editor</Button>
+          <Button :variant=${'secondary'} :size=${'sm'} on-press=${() => goDocs('/theme')}>Theme guide</Button>
+        </div>
+      </div>
+      <div class="docs-tokens-intro__preview" aria-hidden="true">
+        <span class="docs-tokens-intro__chip" style="background:var(--j-primary)"></span>
+        <span class="docs-tokens-intro__chip" style="background:var(--j-leaf)"></span>
+        <span class="docs-tokens-intro__chip" style="background:var(--j-lime)"></span>
+        <span class="docs-tokens-intro__chip" style="background:var(--j-mint);border:1px solid var(--j-border)"></span>
+        <span class="docs-tokens-intro__chip" style="background:var(--j-surface-2);border:1px solid var(--j-border);box-shadow:var(--j-shadow-sm)"></span>
+      </div>
     </div>
 
-    <DocsSection :id=${'brand'} :title=${'Brand colors'}>
-      <div class="docs-table-wrap">
-        <table class="docs-table">
-          <thead>
-            <tr>
-              <th>Token</th>
-              <th>Kind</th>
-              <th>Swatch</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            #for brand as item
-              <tr>
-                <td><code>${item.name}</code></td>
-                <td>${item.kind}</td>
-                <td>
-                  <span
-                    class="docs-token-swatch"
-                    class-docs-token-swatch--shape=${item.kind !== 'color'}
-                    :style=${() => swatchStyle(item)}
-                    :title=${item.name}
-                  ></span>
-                </td>
-                <td><code class="docs-token-value">${readToken(item.name)}</code></td>
-              </tr>
-            #end
-          </tbody>
-        </table>
-      </div>
-    </DocsSection>
+    <div class="docs-tokens-toolbar">
+      <Field
+        :label=${'Filter tokens'}
+        :placeholder=${'--j-primary, radius, muted…'}
+        bind-value=${query}
+      />
+      <nav class="docs-tokens-jump" aria-label="Token groups">
+        #for jumpTargets() as link (link.id)
+          <a class="docs-tokens-jump__link" href=${() => sectionHref(link.id)}>${link.title}</a>
+        #end
+      </nav>
+    </div>
 
-    <DocsSection :id=${'surfaces'} :title=${'Surfaces and text'}>
-      <div class="docs-table-wrap">
-        <table class="docs-table">
-          <thead>
-            <tr>
-              <th>Token</th>
-              <th>Kind</th>
-              <th>Swatch</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            #for surfaces as item
-              <tr>
-                <td><code>${item.name}</code></td>
-                <td>${item.kind}</td>
-                <td>
-                  <span
-                    class="docs-token-swatch"
-                    class-docs-token-swatch--shape=${item.kind !== 'color'}
-                    :style=${() => swatchStyle(item)}
-                    :title=${item.name}
-                  ></span>
-                </td>
-                <td><code class="docs-token-value">${readToken(item.name)}</code></td>
-              </tr>
-            #end
-          </tbody>
-        </table>
-      </div>
-    </DocsSection>
+    #if hasNoMatches()
+      <p class="docs-lead docs-tokens-empty">No tokens match “${() => query()}”.</p>
+    #end
 
-    <DocsSection :id=${'status'} :title=${'Status colors'}>
-      <div class="docs-table-wrap">
-        <table class="docs-table">
-          <thead>
-            <tr>
-              <th>Token</th>
-              <th>Kind</th>
-              <th>Swatch</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            #for status as item
-              <tr>
-                <td><code>${item.name}</code></td>
-                <td>${item.kind}</td>
-                <td>
-                  <span
-                    class="docs-token-swatch"
-                    class-docs-token-swatch--shape=${item.kind !== 'color'}
-                    :style=${() => swatchStyle(item)}
-                    :title=${item.name}
-                  ></span>
-                </td>
-                <td><code class="docs-token-value">${readToken(item.name)}</code></td>
-              </tr>
-            #end
-          </tbody>
-        </table>
-      </div>
-    </DocsSection>
+    #for visibleGroups() as group (group.id)
+      <DocsSection :id=${group.id} :title=${group.title}>
+        <p class="docs-lead docs-tokens-blurb">${group.blurb}</p>
 
-    <DocsSection :id=${'semantic'} :title=${'Semantic aliases'}>
-      <div class="docs-table-wrap">
-        <table class="docs-table">
-          <thead>
-            <tr>
-              <th>Token</th>
-              <th>Kind</th>
-              <th>Swatch</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            #for semantic as item
-              <tr>
-                <td><code>${item.name}</code></td>
-                <td>${item.kind}</td>
-                <td>
-                  <span
-                    class="docs-token-swatch"
-                    class-docs-token-swatch--shape=${item.kind !== 'color'}
-                    :style=${() => swatchStyle(item)}
-                    :title=${item.name}
-                  ></span>
-                </td>
-                <td><code class="docs-token-value">${readToken(item.name)}</code></td>
-              </tr>
+        #if isLayout(group, 'swatches')
+          <div class="docs-token-grid">
+            #for group.items as item (item.name)
+              <article class="docs-token-card">
+                <button
+                  type="button"
+                  class="docs-token-card__swatch"
+                  class-docs-token-card__swatch--shape=${item.kind !== 'color'}
+                  :style=${() => swatchStyle(item)}
+                  aria-label=${() => copyAria(item.name)}
+                  on-click=${() => onCopy(item.name)}
+                ></button>
+                <div class="docs-token-card__body">
+                  <div class="docs-token-card__row">
+                    <code class="docs-token-card__name">${item.name}</code>
+                    <button type="button" class="docs-token-card__copy" on-click=${() => onCopy(item.name)}>
+                      ${() => copyLabel(item.name)}
+                    </button>
+                  </div>
+                  <p class="docs-token-card__role">${item.role}</p>
+                  <code class="docs-token-card__value">${() => readToken(item.name)}</code>
+                </div>
+              </article>
             #end
-          </tbody>
-        </table>
-      </div>
-    </DocsSection>
-
-    <DocsSection :id=${'shape'} :title=${'Radius, shadow, focus'}>
-      <div class="docs-table-wrap">
-        <table class="docs-table">
-          <thead>
-            <tr>
-              <th>Token</th>
-              <th>Kind</th>
-              <th>Swatch</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            #for shape as item
-              <tr>
-                <td><code>${item.name}</code></td>
-                <td>${item.kind}</td>
-                <td>
-                  <span
-                    class="docs-token-swatch"
-                    class-docs-token-swatch--shape=${item.kind !== 'color'}
-                    :style=${() => swatchStyle(item)}
-                    :title=${item.name}
-                  ></span>
-                </td>
-                <td><code class="docs-token-value">${readToken(item.name)}</code></td>
-              </tr>
+          </div>
+        #elif isLayout(group, 'shape')
+          <div class="docs-token-grid docs-token-grid--shape">
+            #for group.items as item (item.name)
+              <article class="docs-token-card docs-token-card--shape">
+                <div
+                  class="docs-token-shape"
+                  class-docs-token-shape--radius=${item.kind === 'radius'}
+                  class-docs-token-shape--shadow=${item.kind === 'shadow'}
+                  class-docs-token-shape--focus=${item.kind === 'focus'}
+                  :style=${() => swatchStyle(item)}
+                ></div>
+                <div class="docs-token-card__body">
+                  <div class="docs-token-card__row">
+                    <code class="docs-token-card__name">${item.name}</code>
+                    <button type="button" class="docs-token-card__copy" on-click=${() => onCopy(item.name)}>
+                      ${() => copyLabel(item.name)}
+                    </button>
+                  </div>
+                  <p class="docs-token-card__role">${item.role}</p>
+                  <code class="docs-token-card__value">${() => readToken(item.name)}</code>
+                </div>
+              </article>
             #end
-          </tbody>
-        </table>
-      </div>
-    </DocsSection>
-
-    <DocsSection :id=${'space'} :title=${'Space'}>
-      <div class="docs-table-wrap">
-        <table class="docs-table">
-          <thead>
-            <tr>
-              <th>Token</th>
-              <th>Kind</th>
-              <th>Swatch</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            #for space as item
-              <tr>
-                <td><code>${item.name}</code></td>
-                <td>${item.kind}</td>
-                <td>
-                  <span
-                    class="docs-token-swatch"
-                    class-docs-token-swatch--shape=${true}
-                    :style=${() => swatchStyle(item)}
-                    :title=${item.name}
-                  ></span>
-                </td>
-                <td><code class="docs-token-value">${readToken(item.name)}</code></td>
-              </tr>
+          </div>
+        #elif isLayout(group, 'space')
+          <div class="docs-token-space">
+            #for group.items as item (item.name)
+              <div class="docs-token-space__row">
+                <div class="docs-token-space__meta">
+                  <code class="docs-token-card__name">${item.name}</code>
+                  <span class="docs-token-card__role">${item.role}</span>
+                  <code class="docs-token-card__value">${() => readToken(item.name)}</code>
+                </div>
+                <div class="docs-token-space__track">
+                  <span class="docs-token-space__bar" :style=${() => swatchStyle(item)}></span>
+                </div>
+                <button type="button" class="docs-token-card__copy" on-click=${() => onCopy(item.name)}>
+                  ${() => copyLabel(item.name)}
+                </button>
+              </div>
             #end
-          </tbody>
-        </table>
-      </div>
-    </DocsSection>
-
-    <DocsSection :id=${'motion'} :title=${'Motion and type'}>
-      <div class="docs-table-wrap">
-        <table class="docs-table">
-          <thead>
-            <tr>
-              <th>Token</th>
-              <th>Kind</th>
-              <th>Swatch</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            #for motion as item
-              <tr>
-                <td><code>${item.name}</code></td>
-                <td>${item.kind}</td>
-                <td>
-                  <span
-                    class="docs-token-swatch"
-                    class-docs-token-swatch--shape=${true}
-                    :style=${() => swatchStyle(item)}
-                    :title=${item.name}
-                  ></span>
-                </td>
-                <td><code class="docs-token-value">${readToken(item.name)}</code></td>
-              </tr>
+          </div>
+        #else
+          <div class="docs-token-grid docs-token-grid--motion">
+            #for group.items as item (item.name)
+              <article class="docs-token-card docs-token-card--motion">
+                #if item.kind === 'font'
+                  <p class="docs-token-font" :style=${() => swatchStyle(item)}>
+                    The quick jacaré jumps.
+                  </p>
+                #else
+                  <div class="docs-token-motion" :style=${() => swatchStyle(item)}>
+                    <span class="docs-token-motion__dot"></span>
+                  </div>
+                #end
+                <div class="docs-token-card__body">
+                  <div class="docs-token-card__row">
+                    <code class="docs-token-card__name">${item.name}</code>
+                    <button type="button" class="docs-token-card__copy" on-click=${() => onCopy(item.name)}>
+                      ${() => copyLabel(item.name)}
+                    </button>
+                  </div>
+                  <p class="docs-token-card__role">${item.role}</p>
+                  <code class="docs-token-card__value">${() => readToken(item.name)}</code>
+                </div>
+              </article>
             #end
-          </tbody>
-        </table>
-      </div>
-    </DocsSection>
+          </div>
+        #end
+      </DocsSection>
+    #end
 
     <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
   </article>
