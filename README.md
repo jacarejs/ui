@@ -137,9 +137,22 @@ yarn docs:dev
 | `yarn verify` | Compile every `.jcr` and validate contracts |
 | `yarn build` | Emit `dist/` ESM + typings + theme |
 | `yarn test` | Vitest + happy-dom component tests |
-| `yarn test:coverage` | Unit tests with coverage thresholds |
+| `yarn test:coverage` | Unit tests with V8 coverage + thresholds |
 | `yarn docs:dev` | Documentation site (local) |
 | `yarn docs:build` | Build docs for GitHub Pages |
+
+### Coverage
+
+Latest `yarn test:coverage` result (scoped to theme helpers, docs stores, navigate, and related modules):
+
+| Metric | Result |
+|--------|--------|
+| Statements | **100%** (1709/1709) |
+| Branches | **100%** (268/268) |
+| Functions | **100%** (59/59) |
+| Lines | **100%** (1709/1709) |
+
+Thresholds in `vitest.config.js`: lines/functions/statements ≥ 80, branches **100**.
 
 Live docs: [https://jacarejs.github.io/ui/](https://jacarejs.github.io/ui/)
 

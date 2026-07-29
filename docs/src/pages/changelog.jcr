@@ -22,7 +22,8 @@ export <view>
         <li>Theme docs — custom fonts, Tailwind bridge, density and motion guides</li>
         <li>Theme Editor — expanded presets, sticky live preview, custom themes in localStorage</li>
         <li>Token reference — catalog with filter, copy, and motion/density tokens</li>
-        <li>Unit tests with coverage for theme helpers, docs stores, and critical components</li>
+        <li>Docs brand — Jacaré SVG logo in the shell, home hero, and Theme Editor preview; colors follow <code>--j-primary</code>, <code>--j-leaf</code>, and <code>--j-surface-2</code></li>
+        <li>Unit tests — <code>yarn test:coverage</code> at <strong>100%</strong> statements, branches, functions, and lines (theme helpers, docs stores, navigate, and critical components); branch threshold enforced at 100%</li>
       </ul>
     </div>
 
