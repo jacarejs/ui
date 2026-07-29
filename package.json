@@ -64,8 +64,6 @@
     "pretest": "yarn build",
     "docs:dev": "yarn generate:contracts && vite --config docs/vite.config.js --configLoader runner",
     "docs:build": "yarn generate:contracts && vite build --config docs/vite.config.js --configLoader runner",
-    "playground:dev": "vite --config vite.playground.config.js --configLoader runner",
-    "playground:build": "vite build --config vite.playground.config.js --configLoader runner",
     "prepublishOnly": "yarn build"
   },
   "peerDependencies": {
