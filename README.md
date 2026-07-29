@@ -26,7 +26,7 @@ Accessible, themeable Jacaré components powered by signals — no virtual DOM.
 yarn add @jacare/ui @jacare/core
 ```
 
-Peer dependency: `@jacare/core` `^0.1.12`.
+Peer dependency: `@jacare/core` — **sempre a última versão publicada** (mínimo `^0.1.15`).
 
 Import the theme once in your app entry:
 

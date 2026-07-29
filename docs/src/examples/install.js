@@ -44,5 +44,5 @@ export default defineConfig({
   plugins: [jacare()],
 })`
 
-export const peerNote = `@jacare/ui peers @jacare/core ^0.1.12
+export const peerNote = `@jacare/ui peers the latest @jacare/core (minimum ^0.1.15)
 Install both packages together so pulses and mount APIs resolve.`

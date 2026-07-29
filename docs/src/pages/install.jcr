@@ -36,7 +36,7 @@ export <view>
     <DocsSection :id=${'package'} :title=${'Package'}>
       <p class="docs-lead">
         Pick your package manager. All of these install the UI library and its peer dependency
-        <code>@jacare/core</code> (^0.1.12).
+        <code>@jacare/core</code> — always the latest published release (minimum <code>^0.1.15</code>).
       </p>
 
       <div class="docs-pkg-tabs" role="tablist" aria-label="Package manager">

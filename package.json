@@ -69,12 +69,12 @@
     "prepublishOnly": "yarn build"
   },
   "peerDependencies": {
-    "@jacare/core": "^0.1.12"
+    "@jacare/core": "^0.1.15"
   },
   "devDependencies": {
-    "@jacare/compiler": "0.1.12",
-    "@jacare/core": "0.1.12",
-    "@jacare/vite-plugin": "0.1.12",
+    "@jacare/compiler": "0.1.15",
+    "@jacare/core": "0.1.15",
+    "@jacare/vite-plugin": "0.1.15",
     "happy-dom": "^15.11.7",
     "vite": "^6.0.3",
     "vitest": "^2.1.8"

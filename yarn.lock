@@ -247,24 +247,25 @@
   resolved "https://registry.yarnpkg.com/@esbuild/win32-x64/-/win32-x64-0.25.12.tgz#9bdad8176be7811ad148d1f8772359041f46c6c5"
   integrity sha512-alJC0uCZpTFrSL0CCDjcgleBXPnCrEAhTBILpeAp7M/OFgoqtAetfBzX0xM00MUsVVPpVjlPuMbREqnZCXaTnA==
 
-"@jacare/compiler@0.1.12":
-  version "0.1.12"
-  resolved "https://registry.yarnpkg.com/@jacare/compiler/-/compiler-0.1.12.tgz#3328743215896fb221d2e64e9f6ab20cebe1ee4f"
-  integrity sha512-askqig+ebXXDDZ2S6wPwGSn+6VLBWYq6nDzutxknG081rHBr7Mh9xa3PvU8Oyl49lfejvmIdB0hJwv5KOpzhQw==
+"@jacare/compiler@0.1.15":
+  version "0.1.15"
+  resolved "https://registry.yarnpkg.com/@jacare/compiler/-/compiler-0.1.15.tgz#cbdc573f50f771aed14e6629f4c9a0586959294a"
+  integrity sha512-NYk5x1f2HDsfXccNwPDpkrpZHuYOWYVT7AK3PcQXcH6c/Qb4ThN9P/rP4l+kMDKcTh1DCmNTzgFnnFcQwYvqoQ==
   dependencies:
+    esbuild "^0.25.0"
     source-map-js "^1.2.1"
 
-"@jacare/core@0.1.12":
-  version "0.1.12"
-  resolved "https://registry.yarnpkg.com/@jacare/core/-/core-0.1.12.tgz#e135724fc041d5c71bee89e0ce6556bf50959824"
-  integrity sha512-PXQljxUPF+3vRUcCpFJLMJ4oSJm6dzyF+Z/5PpnKj5Gj15Ary6XomWi24kH6IB6oz7dzrgQWdI/sC3gq/tTCTw==
+"@jacare/core@0.1.15":
+  version "0.1.15"
+  resolved "https://registry.yarnpkg.com/@jacare/core/-/core-0.1.15.tgz#05a2716baf52553a671051d1dec105eace4ecb7c"
+  integrity sha512-jNQBdsUvS9Glvc0JX9Ma0iMX6MgSBrfz2E14wpVCLvkdcMapKNBzmOZOaffUFzIBKiwSOtPClGv9w68oPk3Tww==
 
-"@jacare/vite-plugin@0.1.12":
-  version "0.1.12"
-  resolved "https://registry.yarnpkg.com/@jacare/vite-plugin/-/vite-plugin-0.1.12.tgz#c6dc489d825466241c8e2164cd58ff47d4b0cead"
-  integrity sha512-z1NoWFUiROi0fmgKu0SNKLg3CoIJ9maqn9dRd6vPIitisX31WBltNo4pOwL/KJRATgqGJc/BxOiYqs3OgH3e8Q==
+"@jacare/vite-plugin@0.1.15":
+  version "0.1.15"
+  resolved "https://registry.yarnpkg.com/@jacare/vite-plugin/-/vite-plugin-0.1.15.tgz#234a4986d929b128e3d07edad0e0d67dc6e58f13"
+  integrity sha512-9fFubqGjWNXKCrgTcOBP4+wJlvLsrZcF0vniJZEBj27L+UEskzMlHw7M5tDY2ai8qLucwSSGDTF+j7Yc4dDIKw==
   dependencies:
-    "@jacare/compiler" "0.1.12"
+    "@jacare/compiler" "0.1.15"
 
 "@jridgewell/sourcemap-codec@^1.5.5":
   version "1.5.5"
