@@ -9,9 +9,10 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/date-picker-panel.js'
+import { basic, bounds, playgroundCode as buildPlaygroundCode } from '../../examples/date-picker-panel.js'
 
 const contract = getContract('DatePickerPanel')
 const navLinks = previousNext('/components/date-picker-panel')
@@ -21,6 +22,14 @@ const playMin = pulse('')
 const playMax = pulse('')
 const playBorder = pulse(true)
 const playDisabled = pulse(false)
+const boundsValue = pulse('2026-07-10')
+
+const a11yItems = [
+  'Each day button has a full date aria-label',
+  'Disabled days (outside min/max) are not selectable',
+  'Month and year selects remain keyboard accessible',
+  'Today action jumps to the current date when allowed',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -43,7 +52,7 @@ export <view>
     <DocsHero
       :kicker=${'Forms'}
       :title=${'DatePickerPanel'}
-      :description=${'Inline calendar panel that binds an ISO YYYY-MM-DD string. Use inside popovers or embed it next to other form fields.'}
+      :description=${'Inline calendar panel that binds an ISO YYYY-MM-DD string. Embed it in popovers, side panels, or next to other form fields when you do not need DatePicker chrome.'}
       :status=${'stable'}
     />
 
@@ -73,9 +82,33 @@ export <view>
       </div>
     </DocsSection>
 
-    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'date-picker-panel-basic.jcr'}>
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Always-visible calendar with month/year selects and a Today action.'}
+      :code=${basic}
+      :filename=${'date-picker-panel-basic.jcr'}
+    >
       <DatePickerPanel bind-value=${playValue} />
     </Demo>
+
+    <Demo
+      :id=${'bounds'}
+      :title=${'Bounds'}
+      :lead=${'Days outside min/max are disabled. Use this when embedding the panel in a constrained booking flow.'}
+      :code=${bounds}
+      :filename=${'date-picker-panel-bounds.jcr'}
+    >
+      <DatePickerPanel
+        :min=${'2026-07-05'}
+        :max=${'2026-07-25'}
+        bind-value=${boundsValue}
+      />
+    </Demo>
+
+    <DocsSection :id=${'a11y'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11yItems} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

@@ -1,3 +1,6 @@
+import { effect, pulse } from '@jacare/core'
+import Select from './Select.jcr'
+
 export <contract>
   props: {
     value: { type: 'string', default: '', model: true }
@@ -11,6 +14,8 @@ export <contract>
 
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const monthOptions = months.map((label, index) => ({ label, value: String(index) }))
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
 
 function read(value) {
   return typeof value === 'function' ? value() : value
@@ -37,12 +42,26 @@ function commitValue(model, next, emitFn) {
   emitFn('change', next)
 }
 
-function createOption(text, value, selected) {
-  const option = document.createElement('option')
-  option.text = text
-  option.value = value
-  option.selected = selected
-  return option
+function viewControls(emitFn) {
+  if (!emitFn.__juiPanelView) {
+    const now = new Date()
+    emitFn.__juiPanelView = {
+      month: pulse(String(now.getMonth())),
+      year: pulse(String(now.getFullYear())),
+    }
+  }
+  return emitFn.__juiPanelView
+}
+
+function yearOptionsFor(minimum, maximum, currentYear) {
+  const year = Number(currentYear) || new Date().getFullYear()
+  const minimumYear = parseDate(read(minimum))?.getFullYear() ?? year - 100
+  const maximumYear = parseDate(read(maximum))?.getFullYear() ?? year + 20
+  const years = []
+  for (let optionYear = maximumYear; optionYear >= minimumYear; optionYear -= 1) {
+    years.push({ label: String(optionYear), value: String(optionYear) })
+  }
+  return years
 }
 
 function viewState(root) {
@@ -53,8 +72,18 @@ function viewState(root) {
   return root.panelView
 }
 
+function syncViewControls(root) {
+  const emitFn = root?.panelEmit
+  if (!emitFn) return
+  const view = viewState(root)
+  const controls = viewControls(emitFn)
+  controls.month.set(String(view.getMonth()))
+  controls.year.set(String(view.getFullYear()))
+}
+
 function setView(root, year, month) {
   root.panelView = new Date(year, month, 1)
+  syncViewControls(root)
   renderPanel(root)
 }
 
@@ -63,8 +92,28 @@ function changeMonth(root, amount) {
   setView(root, view.getFullYear(), view.getMonth() + amount)
 }
 
+function handleMonthChange(next, emitFn) {
+  const root = emitFn.__juiPanelRoot
+  if (next === '' || next == null) {
+    syncViewControls(root)
+    return
+  }
+  if (!root) return
+  setView(root, viewState(root).getFullYear(), Number(next))
+}
+
+function handleYearChange(next, emitFn) {
+  const root = emitFn.__juiPanelRoot
+  if (next === '' || next == null) {
+    syncViewControls(root)
+    return
+  }
+  if (!root) return
+  setView(root, Number(next), viewState(root).getMonth())
+}
+
 function selectDate(root, model, minimum, maximum, emitFn, value) {
-  if (!isAllowed(value, minimum, maximum)) return
+  if (read(root.panelDisabled) || !isAllowed(value, minimum, maximum)) return
   commitValue(model, value, emitFn)
   renderPanel(root)
 }
@@ -75,31 +124,22 @@ function selectToday(root, model, minimum, maximum, emitFn) {
 }
 
 function renderPanel(root) {
+  if (!root?.isConnected) return
   const model = root.panelModel
   const minimum = read(root.panelMin)
   const maximum = read(root.panelMax)
+  const locked = !!read(root.panelDisabled)
   const view = viewState(root)
   const year = view.getFullYear()
   const month = view.getMonth()
-
-  const monthSelect = root.querySelector('[data-panel-month]')
-  const yearSelect = root.querySelector('[data-panel-year]')
-  monthSelect.replaceChildren(...months.map((name, index) => createOption(name, String(index), index === month)))
-
-  const minimumYear = parseDate(minimum)?.getFullYear() ?? year - 100
-  const maximumYear = parseDate(maximum)?.getFullYear() ?? year + 20
-  const years = []
-  for (let optionYear = maximumYear; optionYear >= minimumYear; optionYear -= 1) {
-    years.push(createOption(String(optionYear), String(optionYear), optionYear === year))
-  }
-  yearSelect.replaceChildren(...years)
+  const grid = root.querySelector('[data-panel-days]')
+  if (!grid) return
 
   const firstDay = new Date(year, month, 1)
   const offset = (firstDay.getDay() + 6) % 7
   const start = new Date(year, month, 1 - offset)
   const today = formatValue(new Date())
   const selected = String(read(model) || '')
-  const grid = root.querySelector('[data-panel-days]')
   const buttons = []
 
   for (let index = 0; index < 42; index += 1) {
@@ -113,7 +153,7 @@ function renderPanel(root) {
     button.classList.toggle('is-outside', date.getMonth() !== month)
     button.classList.toggle('is-today', dateValue === today)
     button.classList.toggle('is-selected', dateValue === selected)
-    button.disabled = !isAllowed(dateValue, minimum, maximum)
+    button.disabled = locked || !isAllowed(dateValue, minimum, maximum)
     button.setAttribute('aria-label', new Intl.DateTimeFormat('en-US', { dateStyle: 'full' }).format(date))
     button.addEventListener('click', () => selectDate(root, model, minimum, maximum, root.panelEmit, dateValue))
     buttons.push(button)
@@ -122,15 +162,24 @@ function renderPanel(root) {
   grid.replaceChildren(...buttons)
 }
 
-function mountPanel(root, model, minimum, maximum, emitFn) {
-  if (root.panelMounted) return
-  root.panelMounted = true
+function armPanel(root, model, minimum, maximum, disabledProp, emitFn) {
+  if (!root || root.panelArmed) return
+  root.panelArmed = true
   root.panelModel = model
   root.panelMin = minimum
   root.panelMax = maximum
+  root.panelDisabled = disabledProp
   root.panelEmit = emitFn
+  emitFn.__juiPanelRoot = root
   root.dataset.initial = read(model) || ''
-  renderPanel(root)
+  syncViewControls(root)
+  root.panelDispose = effect(() => {
+    read(model)
+    read(minimum)
+    read(maximum)
+    read(disabledProp)
+    renderPanel(root)
+  })
 }
 
 export <view>
@@ -138,30 +187,35 @@ export <view>
     class="jui-date-panel"
     class-jui-date-panel--bordered=${() => !!read(border)}
     class-is-disabled=${() => !!read(disabled)}
-    on-mount=${(event) => mountPanel(event.currentTarget, value, min, max, emit)}
   >
+    <img
+      class="jui-date-panel__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armPanel(event.currentTarget.closest('.jui-date-panel'), value, min, max, disabled, emit)}
+    />
+
     <div class="jui-date-panel__head">
       <button type="button" class="jui-date-panel__nav" aria-label="Previous month" disabled=${() => !!read(disabled)} on-click=${(event) => changeMonth(event.currentTarget.closest('.jui-date-panel'), -1)}>‹</button>
-      <select
-        class="jui-date-panel__select"
-        data-panel-month
-        aria-label="Month"
-        disabled=${() => !!read(disabled)}
-        on-change=${(event) => {
-          const root = event.currentTarget.closest('.jui-date-panel')
-          setView(root, viewState(root).getFullYear(), Number(event.target.value))
-        }}
-      ></select>
-      <select
-        class="jui-date-panel__select"
-        data-panel-year
-        aria-label="Year"
-        disabled=${() => !!read(disabled)}
-        on-change=${(event) => {
-          const root = event.currentTarget.closest('.jui-date-panel')
-          setView(root, Number(event.target.value), viewState(root).getMonth())
-        }}
-      ></select>
+      <Select
+        :options=${monthOptions}
+        :searchable=${false}
+        :placeholder=${'Month'}
+        :disabled=${disabled}
+        bind-value=${viewControls(emit).month}
+        on-change=${(next) => handleMonthChange(next, emit)}
+      />
+      <Select
+        :options=${() => yearOptionsFor(min, max, viewControls(emit).year())}
+        :searchable=${true}
+        :placeholder=${'Year'}
+        :disabled=${disabled}
+        bind-value=${viewControls(emit).year}
+        on-change=${(next) => handleYearChange(next, emit)}
+      />
       <button type="button" class="jui-date-panel__nav" aria-label="Next month" disabled=${() => !!read(disabled)} on-click=${(event) => changeMonth(event.currentTarget.closest('.jui-date-panel'), 1)}>›</button>
     </div>
 
@@ -181,6 +235,7 @@ export <view>
 
 export <style>
 .jui-date-panel {
+  position: relative;
   display: grid;
   gap: 0.7rem;
   width: min(22rem, 100%);
@@ -188,6 +243,14 @@ export <style>
   border-radius: var(--j-radius);
   color: var(--j-text);
   background: var(--j-surface-2);
+}
+
+.jui-date-panel__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .jui-date-panel--bordered {
@@ -201,22 +264,28 @@ export <style>
 
 .jui-date-panel__head {
   display: grid;
-  grid-template-columns: 2.2rem minmax(0, 1fr) 5.5rem 2.2rem;
+  grid-template-columns: 2.2rem minmax(0, 1.4fr) minmax(0, 1fr) 2.2rem;
   align-items: center;
   gap: 0.35rem;
 }
 
-.jui-date-panel__select {
+.jui-date-panel__head .jui-select {
   min-width: 0;
-  height: 2.2rem;
-  padding: 0 0.4rem;
-  border: 1px solid var(--j-border);
-  border-radius: var(--j-radius-sm);
-  color: var(--j-text);
-  background: var(--j-surface);
-  font: inherit;
+}
+
+.jui-date-panel__head .jui-select__trigger {
+  min-height: 2.2rem;
+  padding: 0.3rem 0.55rem;
   font-size: 0.78rem;
   font-weight: 800;
+}
+
+.jui-date-panel__head .jui-select__panel {
+  z-index: 90;
+}
+
+.jui-date-panel__head .jui-select__list {
+  max-height: 12rem;
 }
 
 .jui-date-panel__nav {

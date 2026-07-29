@@ -49,6 +49,7 @@ for (const name of COMPONENT_NAMES) {
   })
 
   let code = result.code.replaceAll("from '../theme/index.js'", "from './theme/index.js'")
+  code = code.replace(/from ['"]\.\/([A-Za-z0-9]+)\.jcr['"]/g, "from './$1.js'")
   writeFileSync(join(distDir, `${name}.js`), code)
   if (result.map) {
     writeFileSync(join(distDir, `${name}.js.map`), JSON.stringify(result.map))
@@ -92,6 +93,14 @@ export function readStoredTheme(fallback?: 'light' | 'dark' | 'system'): 'light'
 export function watchSystemTheme(onChange: (theme: 'light' | 'dark') => void): () => void
 export function themeBootScript(): string
 export const themes: { light: 'light'; dark: 'dark'; system: 'system' }
+export const densities: { compact: 'compact'; comfortable: 'comfortable'; spacious: 'spacious' }
+export function resolveDensity(mode?: 'compact' | 'comfortable' | 'spacious'): 'compact' | 'comfortable' | 'spacious'
+export function applyDensity(mode?: 'compact' | 'comfortable' | 'spacious', target?: HTMLElement | null): 'compact' | 'comfortable' | 'spacious'
+export function readStoredDensity(fallback?: 'compact' | 'comfortable' | 'spacious'): 'compact' | 'comfortable' | 'spacious'
+export const motionModes: { system: 'system'; full: 'full'; reduce: 'reduce' }
+export function resolveMotion(mode?: 'system' | 'full' | 'reduce'): 'system' | 'full' | 'reduce'
+export function applyMotion(mode?: 'system' | 'full' | 'reduce', target?: HTMLElement | null): 'system' | 'full' | 'reduce'
+export function readStoredMotion(fallback?: 'system' | 'full' | 'reduce'): 'system' | 'full' | 'reduce'
 `
 }
 

@@ -9,24 +9,37 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/date-time-picker.js'
+import { basic, bounds, playgroundCode as buildPlaygroundCode } from '../../examples/date-time-picker.js'
 
 const contract = getContract('DateTimePicker')
 const navLinks = previousNext('/components/date-time-picker')
 
 const playLabel = pulse('Schedule')
-const playValue = pulse('')
+const playValue = pulse('2026-07-28T14:30')
+const playMin = pulse('2026-07-01T00:00')
+const playMax = pulse('2026-08-31T23:59')
 const playClearable = pulse(true)
 const playRequired = pulse(false)
 const playDisabled = pulse(false)
 const playError = pulse('')
+const boundsValue = pulse('2026-07-15T10:00')
+
+const a11yItems = [
+  'DatePicker and TimePicker keep their own keyboard and ARIA contracts',
+  'Outer label + required marker describe the combined control',
+  'TimePicker stays disabled until a date is chosen',
+  'Error and hint render once on the DateTimePicker wrapper',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
     label: playLabel(),
     value: playValue(),
+    min: playMin(),
+    max: playMax(),
     clearable: playClearable(),
     required: playRequired(),
     disabled: playDisabled(),
@@ -45,7 +58,7 @@ export <view>
     <DocsHero
       :kicker=${'Forms'}
       :title=${'DateTimePicker'}
-      :description=${'Combined date and time inputs that bind a single YYYY-MM-DDTHH:mm string pulse.'}
+      :description=${'Composes DatePicker and TimePicker into one control that binds a single ISO pulse (YYYY-MM-DDTHH:mm, or with seconds when TimePicker emits them).'}
       :status=${'stable'}
     />
 
@@ -53,6 +66,8 @@ export <view>
       <div class="docs-alert-play">
         <div class="docs-alert-play__controls docs-panel">
           <Field :label=${'Label'} bind-value=${playLabel} />
+          <Field :label=${'Min (ISO)'} :hint=${'YYYY-MM-DDTHH:mm'} bind-value=${playMin} />
+          <Field :label=${'Max (ISO)'} bind-value=${playMax} />
           <Field :label=${'Error'} :hint=${'Leave empty for a valid value'} bind-value=${playError} />
           <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
             <Switch :label=${'Clearable'} bind-checked=${playClearable} />
@@ -65,6 +80,8 @@ export <view>
           <div class="docs-panel">
             <DateTimePicker
               :label=${playLabel}
+              :min=${playMin}
+              :max=${playMax}
               :clearable=${playClearable}
               :required=${playRequired}
               :disabled=${playDisabled}
@@ -77,9 +94,35 @@ export <view>
       </div>
     </DocsSection>
 
-    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'date-time-picker-basic.jcr'}>
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'DatePicker handles the calendar; TimePicker handles the clock. Both write into one pulse.'}
+      :code=${basic}
+      :filename=${'date-time-picker-basic.jcr'}
+    >
       <DateTimePicker :label=${'Schedule'} bind-value=${playValue} />
     </Demo>
+
+    <Demo
+      :id=${'bounds'}
+      :title=${'Min and max'}
+      :lead=${'Bounds are passed to DatePicker as date portions of the ISO strings.'}
+      :code=${bounds}
+      :filename=${'date-time-picker-bounds.jcr'}
+    >
+      <DateTimePicker
+        :label=${'Window'}
+        :min=${'2026-07-01T00:00'}
+        :max=${'2026-07-31T23:59'}
+        :hint=${'July only'}
+        bind-value=${boundsValue}
+      />
+    </Demo>
+
+    <DocsSection :id=${'a11y'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11yItems} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

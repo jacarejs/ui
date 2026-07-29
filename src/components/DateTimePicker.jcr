@@ -1,3 +1,7 @@
+import { effect, pulse, untrack } from '@jacare/core'
+import DatePicker from './DatePicker.jcr'
+import TimePicker from './TimePicker.jcr'
+
 export <contract>
   props: {
     label: { type: 'string', default: '' }
@@ -20,7 +24,10 @@ function read(value) {
 function splitValue(value) {
   const raw = String(read(value) || '')
   const [datePart = '', timePart = ''] = raw.split('T')
-  return { date: datePart, time: timePart.slice(0, 5) }
+  return {
+    date: datePart,
+    time: timePart ? timePart.slice(0, 8) : '',
+  }
 }
 
 function composeValue(datePart, timePart) {
@@ -33,24 +40,53 @@ function commitValue(model, next, emitFn) {
   emitFn('change', next)
 }
 
-function updateDate(event, model, emitFn) {
-  const { time } = splitValue(model)
-  commitValue(model, composeValue(event.target.value, time), emitFn)
+function dateBound(value) {
+  return splitValue(value).date
 }
 
-function updateTime(event, model, emitFn) {
-  const { date } = splitValue(model)
-  if (!date) return
-  commitValue(model, composeValue(date, event.target.value), emitFn)
+function ensureParts(model, emitFn) {
+  if (emitFn.__juiDateTime) return emitFn.__juiDateTime
+
+  const initial = splitValue(model)
+  const datePulse = pulse(initial.date)
+  const timePulse = pulse(initial.time || '00:00')
+  let syncing = false
+
+  effect(() => {
+    const next = splitValue(model)
+    if (syncing) return
+    syncing = true
+    if (untrack(() => datePulse()) !== next.date) datePulse.set(next.date)
+    if (next.time && untrack(() => timePulse()) !== next.time) timePulse.set(next.time)
+    if (!next.date && !next.time && untrack(() => timePulse()) !== '00:00') timePulse.set('00:00')
+    syncing = false
+  })
+
+  effect(() => {
+    const datePart = datePulse()
+    const timePart = timePulse()
+    if (syncing) return
+    const composed = composeValue(datePart, timePart)
+    if (composed === untrack(() => read(model))) return
+    syncing = true
+    commitValue(model, composed, emitFn)
+    syncing = false
+  })
+
+  emitFn.__juiDateTime = { datePulse, timePulse }
+  return emitFn.__juiDateTime
 }
 
-function clearValue(event, model, emitFn) {
-  const root = event.currentTarget.closest('[data-datetime]')
-  const dateInput = root?.querySelector('[data-datetime-date]')
-  const timeInput = root?.querySelector('[data-datetime-time]')
-  if (dateInput) dateInput.value = ''
-  if (timeInput) timeInput.value = ''
-  commitValue(model, '', emitFn)
+function dateModel(model, emitFn) {
+  return ensureParts(model, emitFn).datePulse
+}
+
+function timeModel(model, emitFn) {
+  return ensureParts(model, emitFn).timePulse
+}
+
+function timeDisabled(model, disabledProp) {
+  return !!read(disabledProp) || !dateBound(model)
 }
 
 export <view>
@@ -65,36 +101,25 @@ export <view>
     #end
 
     <div class="jui-datetime__row">
-      <input
-        class="jui-datetime__date"
-        data-datetime-date
-        type="date"
-        min=${() => splitValue(min).date || undefined}
-        max=${() => splitValue(max).date || undefined}
-        value=${() => splitValue(value).date}
-        required=${() => !!read(required)}
-        disabled=${() => !!read(disabled)}
-        aria-invalid=${() => !!read(error)}
-        on-input=${(event) => updateDate(event, value, emit)}
-      />
-      <input
-        class="jui-datetime__time"
-        data-datetime-time
-        type="time"
-        value=${() => splitValue(value).time}
-        required=${() => !!read(required)}
-        disabled=${() => !!(read(disabled) || !splitValue(value).date)}
-        aria-invalid=${() => !!read(error)}
-        on-input=${(event) => updateTime(event, value, emit)}
-      />
-      #if read(clearable) && read(value)
-        <button
-          type="button"
-          class="jui-datetime__clear"
-          aria-label="Clear"
-          on-click=${(event) => clearValue(event, value, emit)}
-        >×</button>
-      #end
+      <div class="jui-datetime__date">
+        <DatePicker
+          :placeholder=${'Select date'}
+          :min=${() => dateBound(min)}
+          :max=${() => dateBound(max)}
+          :clearable=${clearable}
+          :required=${required}
+          :disabled=${disabled}
+          bind-value=${dateModel(value, emit)}
+        />
+      </div>
+      <div class="jui-datetime__time">
+        <TimePicker
+          :placeholder=${'Select time'}
+          :clearable=${clearable}
+          :disabled=${() => timeDisabled(value, disabled)}
+          bind-value=${timeModel(value, emit)}
+        />
+      </div>
     </div>
 
     #if read(error)
@@ -129,11 +154,6 @@ export <style>
   color: var(--j-danger);
 }
 
-.jui-datetime.has-error .jui-datetime__date,
-.jui-datetime.has-error .jui-datetime__time {
-  border-color: var(--j-danger);
-}
-
 .jui-datetime.is-disabled {
   opacity: 0.65;
 }
@@ -141,63 +161,24 @@ export <style>
 .jui-datetime__row {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.jui-datetime__date,
-.jui-datetime__time {
-  min-height: 2.75rem;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid var(--j-border);
-  border-radius: var(--j-radius-sm);
-  outline: 0;
-  color: var(--j-text);
-  background: var(--j-surface-2);
-  font: inherit;
-  transition: border-color 120ms ease, box-shadow 120ms ease;
+  align-items: flex-start;
+  gap: 0.65rem;
+  min-width: 0;
 }
 
 .jui-datetime__date {
-  flex: 1 1 9rem;
-  min-width: 8.5rem;
+  flex: 1 1 14rem;
+  min-width: min(100%, 12rem);
 }
 
 .jui-datetime__time {
-  flex: 1 1 7rem;
-  min-width: 7rem;
+  flex: 1 1 10rem;
+  min-width: min(100%, 9rem);
 }
 
-.jui-datetime__date:focus,
-.jui-datetime__time:focus {
-  border-color: var(--j-primary);
-  box-shadow: var(--j-focus);
-}
-
-.jui-datetime__date:disabled,
-.jui-datetime__time:disabled {
-  cursor: not-allowed;
-  opacity: 0.75;
-}
-
-.jui-datetime__clear {
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 0;
-  border-radius: var(--j-radius-sm);
-  color: var(--j-muted);
-  background: var(--j-mint);
-  font-size: 1.1rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.jui-datetime__clear:hover {
-  background: var(--j-lime);
-  color: var(--j-forest);
+.jui-datetime__date .jui-date,
+.jui-datetime__time .jui-time-picker {
+  width: 100%;
 }
 
 .jui-datetime__hint,

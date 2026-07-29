@@ -7,6 +7,19 @@ export <view>
   <DatePickerPanel bind-value=\${value} />
 </view>`
 
+export const bounds = `import { pulse } from '@jacare/core'
+import DatePickerPanel from '@jacare/ui/DatePickerPanel'
+
+const value = pulse('2026-07-10')
+
+export <view>
+  <DatePickerPanel
+    :min=\${'2026-07-05'}
+    :max=\${'2026-07-25'}
+    bind-value=\${value}
+  />
+</view>`
+
 function quote(value) {
   return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 }
