@@ -1,3 +1,6 @@
+import { pulse } from '@jacare/core'
+import Select from './Select.jcr'
+
 export <contract>
   props: {
     label: { type: 'string', default: '' }
@@ -17,6 +20,7 @@ export <contract>
 
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const monthOptions = months.map((label, index) => ({ label, value: String(index) }))
 
 function read(value) {
   return typeof value === 'function' ? value() : value
@@ -132,12 +136,64 @@ function updateTrigger(root, selected, state) {
 function setView(root, year, month) {
   const state = root.datePickerState
   state.view = new Date(year, month, 1)
+  syncViewControls(root)
   renderCalendar(root)
 }
 
 function changeMonth(root, amount) {
   const view = root.datePickerState.view
   setView(root, view.getFullYear(), view.getMonth() + amount)
+}
+
+function viewControls(emitFn) {
+  if (!emitFn.__juiDateView) {
+    const now = new Date()
+    emitFn.__juiDateView = {
+      month: pulse(String(now.getMonth())),
+      year: pulse(String(now.getFullYear())),
+    }
+  }
+  return emitFn.__juiDateView
+}
+
+function syncViewControls(root) {
+  const state = root?.datePickerState
+  const emitFn = state?.emitFn
+  if (!state?.view || !emitFn) return
+  const controls = viewControls(emitFn)
+  controls.month.set(String(state.view.getMonth()))
+  controls.year.set(String(state.view.getFullYear()))
+}
+
+function yearOptionsFor(minimum, maximum, currentYear) {
+  const year = Number(currentYear) || new Date().getFullYear()
+  const minimumYear = parseDate(read(minimum))?.getFullYear() ?? year - 100
+  const maximumYear = parseDate(read(maximum))?.getFullYear() ?? year + 20
+  const years = []
+  for (let optionYear = maximumYear; optionYear >= minimumYear; optionYear -= 1) {
+    years.push({ label: String(optionYear), value: String(optionYear) })
+  }
+  return years
+}
+
+function handleMonthChange(next, emitFn) {
+  const root = emitFn.__juiDateRoot
+  if (next === '' || next == null) {
+    syncViewControls(root)
+    return
+  }
+  if (!root?.datePickerState) return
+  setView(root, root.datePickerState.view.getFullYear(), Number(next))
+}
+
+function handleYearChange(next, emitFn) {
+  const root = emitFn.__juiDateRoot
+  if (next === '' || next == null) {
+    syncViewControls(root)
+    return
+  }
+  if (!root?.datePickerState) return
+  setView(root, Number(next), root.datePickerState.view.getMonth())
 }
 
 function selectDate(root, value) {
@@ -190,19 +246,6 @@ function renderCalendar(root) {
   const view = state.view
   const year = view.getFullYear()
   const month = view.getMonth()
-  const monthSelect = root.querySelector('[data-date-month]')
-  const yearSelect = root.querySelector('[data-date-year]')
-
-  monthSelect.replaceChildren(...months.map((name, index) => createOption(name, String(index), index === month)))
-
-  const minimumYear = parseDate(state.min)?.getFullYear() ?? year - 100
-  const maximumYear = parseDate(state.max)?.getFullYear() ?? year + 20
-  const years = []
-  for (let optionYear = maximumYear; optionYear >= minimumYear; optionYear -= 1) {
-    years.push(createOption(String(optionYear), String(optionYear), optionYear === year))
-  }
-  yearSelect.replaceChildren(...years)
-
   const firstDay = new Date(year, month, 1)
   const offset = (firstDay.getDay() + 6) % 7
   const start = new Date(year, month, 1 - offset)
@@ -236,14 +279,6 @@ function renderCalendar(root) {
   root.querySelector('[data-date-range-hint]').hidden = !state.range
   root.querySelector('[data-date-apply]').hidden = !state.range || state.autoApply
   root.querySelector('[data-date-clear]').hidden = !state.clearable
-}
-
-function createOption(text, value, selected) {
-  const option = document.createElement('option')
-  option.text = text
-  option.value = value
-  option.selected = selected
-  return option
 }
 
 function closePicker(root) {
@@ -280,7 +315,10 @@ function openPicker(event, model, minimum, maximum, isRange, shouldAutoApply, ca
     view: new Date(initialDate.getFullYear(), initialDate.getMonth(), 1),
     commit: (next) => commitValue(model, next, emitFn),
     abortController,
+    emitFn,
   }
+  emitFn.__juiDateRoot = root
+  syncViewControls(root)
 
   renderCalendar(root)
   root.querySelector('[data-date-panel]').hidden = false
@@ -362,14 +400,22 @@ export <view>
       <div class="jui-date__panel" data-date-panel role="dialog" aria-label="Choose date" hidden>
         <div class="jui-date__head">
           <button type="button" class="jui-date__nav" aria-label="Previous month" on-click=${(event) => changeMonth(event.currentTarget.closest('[data-date-picker]'), -1)}>‹</button>
-          <select class="jui-date__select" data-date-month aria-label="Month" on-change=${(event) => {
-            const root = event.currentTarget.closest('[data-date-picker]')
-            setView(root, root.datePickerState.view.getFullYear(), Number(event.target.value))
-          }}></select>
-          <select class="jui-date__select" data-date-year aria-label="Year" on-change=${(event) => {
-            const root = event.currentTarget.closest('[data-date-picker]')
-            setView(root, Number(event.target.value), root.datePickerState.view.getMonth())
-          }}></select>
+          <Select
+            :options=${monthOptions}
+            :searchable=${false}
+            :placeholder=${'Month'}
+            :disabled=${disabled}
+            bind-value=${viewControls(emit).month}
+            on-change=${(next) => handleMonthChange(next, emit)}
+          />
+          <Select
+            :options=${() => yearOptionsFor(min, max, viewControls(emit).year())}
+            :searchable=${true}
+            :placeholder=${'Year'}
+            :disabled=${disabled}
+            bind-value=${viewControls(emit).year}
+            on-change=${(next) => handleYearChange(next, emit)}
+          />
           <button type="button" class="jui-date__nav" aria-label="Next month" on-click=${(event) => changeMonth(event.currentTarget.closest('[data-date-picker]'), 1)}>›</button>
         </div>
         <div class="jui-date__weekdays" aria-hidden="true">
@@ -576,22 +622,29 @@ export <style>
 
 .jui-date__head {
   display: grid;
-  grid-template-columns: 2.2rem minmax(0, 1fr) 5.5rem 2.2rem;
+  grid-template-columns: 2.2rem minmax(0, 1.4fr) minmax(0, 1fr) 2.2rem;
   align-items: center;
   gap: 0.35rem;
 }
 
-.jui-date__select {
+.jui-date__head .jui-select {
   min-width: 0;
-  height: 2.2rem;
-  padding: 0 0.4rem;
-  border: 1px solid var(--j-border);
-  border-radius: var(--j-radius-sm);
-  color: var(--j-text);
-  background: var(--j-surface);
-  font: inherit;
+}
+
+.jui-date__head .jui-select__trigger {
+  min-height: 2.2rem;
+  padding: 0.3rem 0.55rem;
   font-size: 0.78rem;
   font-weight: 800;
+}
+
+.jui-date__head .jui-select__panel {
+  z-index: 90;
+  max-height: 16rem;
+}
+
+.jui-date__head .jui-select__list {
+  max-height: 12rem;
 }
 
 .jui-date__nav {
@@ -741,7 +794,7 @@ export <style>
   }
 
   .jui-date__head {
-    grid-template-columns: 2rem minmax(0, 1fr) 4.8rem 2rem;
+    grid-template-columns: 2rem minmax(0, 1.3fr) minmax(0, 1fr) 2rem;
   }
 }
 </style>

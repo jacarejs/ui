@@ -1,3 +1,6 @@
+import { effect, pulse } from '@jacare/core'
+import Select from './Select.jcr'
+
 export <contract>
   props: {
     label: { type: 'string', default: '' }
@@ -11,6 +14,18 @@ export <contract>
   }
   emits: ['change']
 </contract>
+
+const hourOptions = Array.from({ length: 24 }, (_, hour) => ({
+  label: String(hour).padStart(2, '0'),
+  value: String(hour),
+}))
+
+const minuteOptions = Array.from({ length: 60 }, (_, minute) => ({
+  label: String(minute).padStart(2, '0'),
+  value: String(minute),
+}))
+
+const secondOptions = minuteOptions
 
 function read(value) {
   return typeof value === 'function' ? value() : value
@@ -46,34 +61,35 @@ function commitValue(model, next, emitFn) {
   emitFn('change', next)
 }
 
-function createOption(text, value, selected) {
-  const option = document.createElement('option')
-  option.text = text
-  option.value = value
-  option.selected = selected
-  return option
+function unitControls(model, emitFn) {
+  if (emitFn.__juiTimeUnits) return emitFn.__juiTimeUnits
+  const parts = timeParts(model)
+  const hour = pulse(String(parts.hour))
+  const minute = pulse(String(parts.minute))
+  const second = pulse(String(parts.second))
+  let syncing = false
+
+  effect(() => {
+    const next = timeParts(model)
+    if (syncing) return
+    syncing = true
+    if (hour() !== String(next.hour)) hour.set(String(next.hour))
+    if (minute() !== String(next.minute)) minute.set(String(next.minute))
+    if (second() !== String(next.second)) second.set(String(next.second))
+    syncing = false
+  })
+
+  emitFn.__juiTimeUnits = { hour, minute, second }
+  return emitFn.__juiTimeUnits
 }
 
-function populateSelects(root, model) {
+function setUnit(model, unit, next, emitFn) {
+  if (next === '' || next == null) return
   const parts = timeParts(model)
-  const hourSelect = root.querySelector('[data-time-hour]')
-  const minuteSelect = root.querySelector('[data-time-minute]')
-  const secondSelect = root.querySelector('[data-time-second]')
-  if (hourSelect) {
-    hourSelect.replaceChildren(...Array.from({ length: 24 }, (_, h) => createOption(pad2(h), String(h), h === parts.hour)))
-  }
-  if (minuteSelect) {
-    minuteSelect.replaceChildren(...Array.from({ length: 60 }, (_, m) => createOption(pad2(m), String(m), m === parts.minute)))
-  }
-  if (secondSelect) {
-    secondSelect.replaceChildren(...Array.from({ length: 60 }, (_, s) => createOption(pad2(s), String(s), s === parts.second)))
-  }
-}
-
-function handleUnitChange(event, model, unit, emitFn) {
-  const parts = timeParts(model)
-  const next = { ...parts, [unit]: Number(event.target.value) }
-  commitValue(model, composeTime(next), emitFn)
+  const hasSeconds = parts.hasSeconds || unit === 'second'
+  const controls = unitControls(model, emitFn)
+  controls[unit].set(String(Number(next)))
+  commitValue(model, composeTime({ ...parts, hasSeconds, [unit]: Number(next) }), emitFn)
 }
 
 function adjustUnit(model, unit, delta, max, emitFn) {
@@ -85,9 +101,7 @@ function adjustUnit(model, unit, delta, max, emitFn) {
 
 function clearTime(event, model, emitFn) {
   commitValue(model, '', emitFn)
-  const root = event.currentTarget.closest('[data-time-picker]')
-  if (root && !root.querySelector('[data-time-arrow]')) populateSelects(root, model)
-  root?.querySelector('details')?.removeAttribute('open')
+  event.currentTarget.closest('details')?.removeAttribute('open')
 }
 
 function setNow(event, model, emitFn) {
@@ -97,11 +111,9 @@ function setNow(event, model, emitFn) {
     ? `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`
     : `${pad2(now.getHours())}:${pad2(now.getMinutes())}`
   commitValue(model, next, emitFn)
-  const root = event.currentTarget.closest('[data-time-picker]')
-  if (root && !root.querySelector('[data-time-arrow]')) populateSelects(root, model)
 }
 
-function handleToggle(event, model, arrowControlValue) {
+function handleToggle(event) {
   const current = event.currentTarget
   if (!current.open) {
     current.outsideController?.abort()
@@ -110,7 +122,6 @@ function handleToggle(event, model, arrowControlValue) {
   document.querySelectorAll('details.jui-time-picker__control[open]').forEach((details) => {
     if (details !== current) details.removeAttribute('open')
   })
-  if (!read(arrowControlValue)) populateSelects(current, model)
   current.outsideController?.abort()
   const controller = new AbortController()
   current.outsideController = controller
@@ -127,7 +138,7 @@ export <view>
       <span class="jui-time-picker__label">${() => read(label)}</span>
     #end
 
-    <details class="jui-time-picker__control" on-toggle=${(event) => handleToggle(event, value, arrowControl)}>
+    <details class="jui-time-picker__control" on-toggle=${handleToggle}>
       <summary
         class="jui-time-picker__trigger"
         aria-haspopup="dialog"
@@ -165,12 +176,33 @@ export <view>
           </div>
         #else
           <div class="jui-time-picker__units">
-            <select class="jui-time-picker__select" data-time-hour aria-label="Hour" on-change=${(event) => handleUnitChange(event, value, 'hour', emit)}></select>
+            <Select
+              :options=${hourOptions}
+              :searchable=${true}
+              :placeholder=${'HH'}
+              :disabled=${disabled}
+              bind-value=${unitControls(value, emit).hour}
+              on-change=${(next) => setUnit(value, 'hour', next, emit)}
+            />
             <span class="jui-time-picker__colon">:</span>
-            <select class="jui-time-picker__select" data-time-minute aria-label="Minute" on-change=${(event) => handleUnitChange(event, value, 'minute', emit)}></select>
+            <Select
+              :options=${minuteOptions}
+              :searchable=${true}
+              :placeholder=${'MM'}
+              :disabled=${disabled}
+              bind-value=${unitControls(value, emit).minute}
+              on-change=${(next) => setUnit(value, 'minute', next, emit)}
+            />
             #if timeParts(value).hasSeconds
               <span class="jui-time-picker__colon">:</span>
-              <select class="jui-time-picker__select" data-time-second aria-label="Second" on-change=${(event) => handleUnitChange(event, value, 'second', emit)}></select>
+              <Select
+                :options=${secondOptions}
+                :searchable=${true}
+                :placeholder=${'SS'}
+                :disabled=${disabled}
+                bind-value=${unitControls(value, emit).second}
+                on-change=${(next) => setUnit(value, 'second', next, emit)}
+              />
             #end
           </div>
         #end
@@ -274,6 +306,7 @@ export <style>
   left: 0;
   display: grid;
   gap: 0.65rem;
+  min-width: min(20rem, calc(100vw - 2rem));
   padding: 0.8rem;
   border: 1px solid var(--j-border);
   border-radius: var(--j-radius);
@@ -292,17 +325,25 @@ export <style>
   gap: 0.35rem;
 }
 
-.jui-time-picker__select {
-  min-width: 3.4rem;
+.jui-time-picker__units .jui-select {
+  flex: 1 1 4.5rem;
+  min-width: 4.25rem;
+  max-width: 6rem;
+}
+
+.jui-time-picker__units .jui-select__trigger {
   min-height: 2.4rem;
-  padding: 0.3rem 0.4rem;
-  border: 1px solid var(--j-border);
-  border-radius: var(--j-radius-sm);
-  color: var(--j-text);
-  background: var(--j-surface);
-  font: inherit;
-  font-weight: 700;
-  text-align: center;
+  padding: 0.35rem 0.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.jui-time-picker__units .jui-select__panel {
+  z-index: 90;
+}
+
+.jui-time-picker__units .jui-select__list {
+  max-height: 12rem;
 }
 
 .jui-time-picker__colon {
