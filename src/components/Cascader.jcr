@@ -57,6 +57,21 @@ function commitPath(model, path, emitFn) {
   emitFn('change', next)
 }
 
+function isMobileLayout() {
+  if (typeof window === 'undefined' || typeof matchMedia !== 'function') return false
+  return matchMedia('(max-width: 640px)').matches
+}
+
+function nodesAtDepth(tree, path, depth) {
+  let level = tree
+  for (let index = 0; index < depth; index += 1) {
+    const node = findNode(level, path[index])
+    if (!node) return []
+    level = node.children || []
+  }
+  return level
+}
+
 function buildColumn(nodes, activeValue, level, root) {
   const list = document.createElement('ul')
   list.className = 'jui-cascader__column'
@@ -92,10 +107,48 @@ function buildColumn(nodes, activeValue, level, root) {
   return list
 }
 
+function buildMobileNav(root) {
+  const state = root.cascaderState
+  const nav = document.createElement('div')
+  nav.className = 'jui-cascader__nav'
+
+  const back = document.createElement('button')
+  back.type = 'button'
+  back.className = 'jui-cascader__nav-back'
+  back.textContent = 'Back'
+  back.disabled = state.path.length === 0
+  back.addEventListener('click', () => {
+    if (!state.path.length) return
+    state.path = state.path.slice(0, -1)
+    renderColumns(root)
+  })
+
+  const title = document.createElement('span')
+  title.className = 'jui-cascader__nav-title'
+  const labels = pathLabels(state.tree, state.path)
+  title.textContent = labels.length ? labels[labels.length - 1] : 'Select'
+
+  nav.appendChild(back)
+  nav.appendChild(title)
+  return nav
+}
+
 function renderColumns(root) {
   const state = root.cascaderState
   const container = root.querySelector('[data-cascader-columns]')
+  const mobile = !!state.mobile
+  root.classList.toggle('is-mobile', mobile)
   container.replaceChildren()
+
+  if (mobile) {
+    container.appendChild(buildMobileNav(root))
+    const depth = state.path.length
+    const nodes = nodesAtDepth(state.tree, state.path, depth)
+    if (nodes.length) {
+      container.appendChild(buildColumn(nodes, state.path[depth], depth, root))
+    }
+    return
+  }
 
   let level = state.tree
   for (let index = 0; index <= state.path.length; index += 1) {
@@ -127,6 +180,7 @@ function closePicker(root) {
   const panel = root.querySelector('[data-cascader-panel]')
   if (panel) panel.hidden = true
   root.querySelector('[data-cascader-trigger]')?.setAttribute('aria-expanded', 'false')
+  root.classList.remove('is-open', 'is-mobile')
   root.cascaderController?.abort()
 }
 
@@ -142,11 +196,13 @@ function openPicker(event, model, source, sep, emitFn) {
   root.cascaderState = {
     tree: normalizedTree(source),
     path: toPath(model, sep),
+    mobile: isMobileLayout(),
     commit: (path) => commitPath(model, path, emitFn),
   }
 
   renderColumns(root)
   root.querySelector('[data-cascader-panel]').hidden = false
+  root.classList.add('is-open')
   event.currentTarget.setAttribute('aria-expanded', 'true')
 
   root.cascaderController?.abort()
@@ -185,7 +241,10 @@ export <view>
         <span class="jui-cascader__chevron" aria-hidden="true">⌄</span>
       </button>
 
+      <div class="jui-cascader__backdrop" data-cascader-backdrop aria-hidden="true" on-click=${(event) => closePicker(event.currentTarget.closest('[data-cascader]'))}></div>
+
       <div class="jui-cascader__panel" data-cascader-panel role="dialog" aria-label="Choose option" hidden>
+        <div class="jui-cascader__sheet-handle" aria-hidden="true"></div>
         <div class="jui-cascader__columns" data-cascader-columns></div>
         #if read(clearable)
           <div class="jui-cascader__footer">
@@ -261,6 +320,7 @@ export <style>
   text-align: left;
   cursor: pointer;
   transition: border-color 120ms ease, box-shadow 120ms ease;
+  touch-action: manipulation;
 }
 
 .jui-cascader__trigger:focus,
@@ -294,6 +354,14 @@ export <style>
   transform: rotate(180deg);
 }
 
+.jui-cascader__backdrop {
+  display: none;
+}
+
+.jui-cascader__sheet-handle {
+  display: none;
+}
+
 .jui-cascader__panel {
   position: absolute;
   z-index: 80;
@@ -301,6 +369,7 @@ export <style>
   left: 0;
   display: grid;
   gap: 0.5rem;
+  max-width: min(100vw - 1.5rem, 36rem);
   padding: 0.55rem;
   border: 1px solid var(--j-border);
   border-radius: var(--j-radius);
@@ -315,23 +384,34 @@ export <style>
 .jui-cascader__columns {
   display: flex;
   gap: 0.4rem;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .jui-cascader__column {
   display: grid;
   align-content: start;
   gap: 0.15rem;
+  flex: 0 0 11rem;
   width: 11rem;
   max-height: 16rem;
   margin: 0;
   padding: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   list-style: none;
 }
 
 .jui-cascader__column + .jui-cascader__column {
   border-left: 1px solid var(--j-border);
   padding-left: 0.4rem;
+}
+
+.jui-cascader__nav {
+  display: none;
 }
 
 .jui-cascader__option {
@@ -349,6 +429,7 @@ export <style>
   cursor: pointer;
   text-align: left;
   font-size: 0.88rem;
+  touch-action: manipulation;
 }
 
 .jui-cascader__option:hover,
@@ -374,15 +455,16 @@ export <style>
 }
 
 .jui-cascader__text-btn {
-  min-height: 2rem;
-  padding: 0.4rem 0.65rem;
+  min-height: 2.25rem;
+  padding: 0.45rem 0.75rem;
   border: 0;
   border-radius: var(--j-radius-sm);
   color: var(--j-primary);
   background: transparent;
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 850;
+  touch-action: manipulation;
 }
 
 .jui-cascader__text-btn:hover {
@@ -401,5 +483,136 @@ export <style>
 .jui-cascader__error {
   color: var(--j-danger);
   font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .jui-cascader {
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  .jui-cascader__trigger {
+    min-height: 3rem;
+    font-size: 16px;
+  }
+
+  .jui-cascader.is-open.is-mobile .jui-cascader__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: color-mix(in srgb, var(--j-forest) 42%, transparent);
+    touch-action: manipulation;
+  }
+
+  .jui-cascader.is-open.is-mobile .jui-cascader__panel {
+    position: fixed;
+    z-index: 95;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: none;
+    max-height: min(78vh, 34rem);
+    padding: 0.45rem 0.85rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    border-radius: calc(var(--j-radius) + 6px) calc(var(--j-radius) + 6px) 0 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    box-shadow: 0 -16px 40px color-mix(in srgb, var(--j-forest) 22%, transparent);
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  .jui-cascader.is-mobile .jui-cascader__sheet-handle {
+    display: block;
+    width: 2.5rem;
+    height: 0.28rem;
+    margin: 0.15rem auto 0.55rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--j-muted) 45%, transparent);
+  }
+
+  .jui-cascader.is-mobile .jui-cascader__columns {
+    display: grid;
+    gap: 0.45rem;
+    overflow: visible;
+    touch-action: manipulation;
+  }
+
+  .jui-cascader.is-mobile .jui-cascader__nav {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.65rem;
+    min-height: 2.75rem;
+  }
+
+  .jui-cascader.is-mobile .jui-cascader__nav-back {
+    min-height: 2.5rem;
+    padding: 0.45rem 0.75rem;
+    border: 1px solid var(--j-border);
+    border-radius: var(--j-radius-pill);
+    color: var(--j-text);
+    background: var(--j-surface);
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .jui-cascader.is-mobile .jui-cascader__nav-back:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .jui-cascader.is-mobile .jui-cascader__nav-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--j-forest);
+  }
+
+  .jui-cascader.is-mobile .jui-cascader__column,
+  .jui-cascader.is-mobile .jui-cascader__column + .jui-cascader__column {
+    flex: none;
+    width: 100%;
+    max-height: min(52vh, 22rem);
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .jui-cascader.is-mobile .jui-cascader__option {
+    min-height: 2.85rem;
+    padding: 0.7rem 0.75rem;
+    font-size: 16px;
+  }
+
+  .jui-cascader.is-mobile .jui-cascader__footer {
+    justify-content: stretch;
+  }
+
+  .jui-cascader.is-mobile .jui-cascader__text-btn {
+    width: 100%;
+    min-height: 2.75rem;
+    font-size: 16px;
+  }
+}
+
+@media (pointer: coarse) {
+  .jui-cascader__option {
+    min-height: 2.75rem;
+    font-size: 16px;
+  }
+
+  .jui-cascader__trigger {
+    font-size: 16px;
+  }
 }
 </style>

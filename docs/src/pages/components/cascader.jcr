@@ -81,7 +81,7 @@ export <view>
     <DocsHero
       :kicker=${'Forms'}
       :title=${'Cascader'}
-      :description=${'Hierarchical picker for nested options. Bind value to a pulse of path segments and pass trees of value/label/children.'}
+      :description=${'Hierarchical picker for nested options. Bind value to a pulse of path segments and pass trees of value/label/children. On narrow viewports it opens as a bottom sheet with single-column drill-down.'}
       :status=${'stable'}
     />
 
