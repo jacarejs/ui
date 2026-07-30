@@ -1,3 +1,5 @@
+import { read } from '../internal/utils.js'
+
 export <contract>
   props: {
     value: { type: 'number', required: true }
@@ -7,10 +9,6 @@ export <contract>
     tone: { type: 'string', default: 'primary' }
   }
 </contract>
-
-function read(value) {
-  return typeof value === 'function' ? value() : value
-}
 
 function pctOf(value, max) {
   const current = Number(read(value) ?? 0)

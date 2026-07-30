@@ -55,7 +55,7 @@ export <view>
     <DocsSection :id=${'quick'} :title=${'Quick start'}>
       <p class="docs-lead">
         Boot with the folder messages. Dot keys like <code>app.title</code> work.
-        In templates use a getter — <code>${"() => t('key')"}</code> — so copy updates when the locale changes.
+        In templates write <code>${"t('key')"}</code> — <code>t</code> returns a reactive translation (like a pulse), so no arrow wrapper is needed.
       </p>
       <CodeBlock :code=${createI18nBoot} :filename=${'i18n.js'} :language=${'javascript'} />
       <CodeBlock :code=${useInTemplate} :filename=${'app.jcr'} :language=${'javascript'} />
@@ -76,18 +76,18 @@ export <view>
               { id: 'pt-BR', label: 'Português' },
             ]}
           />
-          <p class="docs-lead" style="margin:0">${() => t('lead')}</p>
-          <h3 style="margin:0">${() => t('app.title')}</h3>
-          <p style="margin:0">${() => t('hello', { name: 'Jacaré' })}</p>
+          <p class="docs-lead" style="margin:0">${t('lead')}</p>
+          <h3 style="margin:0">${t('app.title')}</h3>
+          <p style="margin:0">${t('hello', { name: 'Jacaré' })}</p>
           <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
-            <Button :variant=${'primary'}>${() => t('save')}</Button>
-            <Button :variant=${'secondary'}>${() => t('cancel')}</Button>
+            <Button :variant=${'primary'}>${t('save')}</Button>
+            <Button :variant=${'secondary'}>${t('cancel')}</Button>
             <Button :variant=${'ghost'} on-press=${() => setLocale('en')}>EN</Button>
             <Button :variant=${'ghost'} on-press=${() => setLocale('pt-BR')}>PT</Button>
           </Stack>
           <Field
-            :label=${() => t('app.title')}
-            :placeholder=${() => t('hello', { name: '…' })}
+            :label=${t('app.title')}
+            :placeholder=${t('hello', { name: '…' })}
             :hint=${() => `locale: ${locale()}`}
             bind-value=${demoValue}
           />
@@ -114,7 +114,11 @@ export <view>
             </tr>
             <tr>
               <td><code>t(key, params?)</code></td>
-              <td>Translate a key. Supports nested keys and <code>${'{name}'}</code> params.</td>
+              <td>Returns a reactive translation (call it like a pulse). Use as <code>${"t('key')"}</code> or <code>${":title=\${t('key')}"}</code>.</td>
+            </tr>
+            <tr>
+              <td><code>translate(key, params?)</code></td>
+              <td>Immediate string for scripts/logs — same as <code>t(key, params)()</code>.</td>
             </tr>
             <tr>
               <td><code>te(key)</code></td>
@@ -155,7 +159,7 @@ export <view>
 
     <DocsSection :id=${'components'} :title=${'With UI components'}>
       <p class="docs-lead">
-        Jacaré components take text through props. Pass getters so labels stay in sync with the locale — put those strings in the same <code>locales/*.js</code> files.
+        Pass <code>t('key')</code> straight into props — no arrow. Keep the copy in the same <code>locales/*.js</code> files.
       </p>
       <CodeBlock :code=${componentLabels} :filename=${'translated-chrome.jcr'} :language=${'javascript'} />
     </DocsSection>
@@ -173,7 +177,8 @@ export <view>
       <ul class="docs-checklist">
         <li>One file per locale under <code>locales/</code>; re-export them from <code>locales/index.js</code>.</li>
         <li>Call <code>createI18n</code> once before any <code>t</code> / <code>LocaleToggle</code>.</li>
-        <li>In <code>.jcr</code> templates, wrap translations in a getter: <code>${"\${() => t('key')}"}</code>.</li>
+        <li>In <code>.jcr</code> templates use <code>${"\${t('key')}"}</code> or <code>${":title=\${t('key')}"}</code> — no arrow needed.</li>
+        <li>In plain JS, use <code>translate('key')</code> (or <code>t('key')()</code>) when you need the string now.</li>
         <li>Missing keys return the key string; missing locales fall back to <code>fallbackLocale</code>.</li>
         <li>Nest only when it helps (<code>app.title</code>); keep packs easy to scan.</li>
         <li>Component built-in English defaults stay English unless you pass translated props.</li>

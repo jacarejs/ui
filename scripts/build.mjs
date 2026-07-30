@@ -53,6 +53,7 @@ for (const name of COMPONENT_NAMES) {
 
   let code = result.code.replaceAll("from '../theme/index.js'", "from './theme/index.js'")
   code = code.replaceAll("from '../i18n/index.js'", "from './i18n/index.js'")
+  code = code.replaceAll("from '../internal/utils.js'", "from './internal/utils.js'")
   code = code.replace(/from ['"]\.\/([A-Za-z0-9]+)\.jcr['"]/g, "from './$1.js'")
   writeFileSync(join(distDir, `${name}.js`), code)
   if (result.map) {
@@ -114,8 +115,9 @@ function i18nDts() {
   return `export const LOCALE_STORAGE_KEY: 'j-locale'
 export type I18nMessages = Record<string, Record<string, unknown>>
 export type I18nParams = Record<string, string | number | boolean | null | undefined>
+export type Translation = { (): string }
 export interface I18nInstance {
-  t(key: string, params?: I18nParams): string
+  t(key: string, params?: I18nParams): Translation
   te(key: string): boolean
   locale: { (): string; set(value: string): void }
   setLocale(locale: string): string
@@ -137,7 +139,8 @@ export function createI18n(options?: CreateI18nOptions): I18nInstance
 export function resetI18n(): void
 export function useI18n(): I18nInstance
 export function getI18n(): I18nInstance | null
-export function t(key: string, params?: I18nParams): string
+export function t(key: string, params?: I18nParams): Translation
+export function translate(key: string, params?: I18nParams): string
 export function te(key: string): boolean
 export function locale(): string
 export function setLocale(locale: string): string

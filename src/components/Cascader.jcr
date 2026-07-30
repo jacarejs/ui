@@ -1,3 +1,5 @@
+import { read } from '../internal/utils.js'
+
 export <contract>
   props: {
     label: { type: 'string', default: '' }
@@ -12,10 +14,6 @@ export <contract>
   }
   emits: ['change']
 </contract>
-
-function read(value) {
-  return typeof value === 'function' ? value() : value
-}
 
 function normalizedTree(source) {
   const list = read(source)

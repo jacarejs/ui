@@ -1,3 +1,5 @@
+import { read } from '../internal/utils.js'
+
 export <contract>
   props: {
     name: { type: 'string', required: true }
@@ -37,10 +39,6 @@ const glyphs = {
   plus: '<path d="M12 5v14"/><path d="M5 12h14"/>',
   minus: '<path d="M5 12h14"/>',
   menu: '<path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/>',
-}
-
-function read(value) {
-  return typeof value === 'function' ? value() : value
 }
 
 function iconName(value) {

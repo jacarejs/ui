@@ -1,4 +1,5 @@
 import { effect, pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
 
 export <contract>
   props: {
@@ -13,10 +14,6 @@ export <contract>
   slots: ['default']
   emits: ['dismiss']
 </contract>
-
-function read(value) {
-  return typeof value === 'function' ? value() : value
-}
 
 function openState(openProp, emitFn) {
   if (openProp && typeof openProp.set === 'function') return openProp

@@ -1,4 +1,4 @@
-import { pulse } from '@jacare/core'
+import { derive, pulse } from '@jacare/core'
 
 export const LOCALE_STORAGE_KEY = 'j-locale'
 
@@ -36,6 +36,11 @@ function applyDocumentLang(locale) {
   document.documentElement.lang = locale
 }
 
+function cacheKey(key, params) {
+  if (!params || typeof params !== 'object') return String(key ?? '')
+  return `${key}\0${JSON.stringify(params)}`
+}
+
 export function readStoredLocale(fallback = '') {
   if (typeof localStorage === 'undefined') return fallback
   const value = localStorage.getItem(LOCALE_STORAGE_KEY)
@@ -59,6 +64,8 @@ function createInstance(options = {}) {
     (persist ? readStoredLocale('') : '') ||
     String(options.locale || fallbackLocale)
   const localePulse = pulse(initial)
+  const revision = pulse(0)
+  const translations = new Map()
 
   function resolveMessage(key, locale) {
     const direct = getByPath(messages[locale], key)
@@ -67,14 +74,26 @@ function createInstance(options = {}) {
     return undefined
   }
 
-  function t(key, params) {
+  function render(key, params) {
+    revision()
     localePulse()
     const message = resolveMessage(key, localePulse())
     if (message == null) return String(key ?? '')
     return interpolate(message, params)
   }
 
+  function t(key, params) {
+    const id = cacheKey(key, params)
+    let translated = translations.get(id)
+    if (!translated) {
+      translated = derive(() => render(key, params))
+      translations.set(id, translated)
+    }
+    return translated
+  }
+
   function te(key) {
+    revision()
     localePulse()
     return resolveMessage(key, localePulse()) != null
   }
@@ -93,6 +112,7 @@ function createInstance(options = {}) {
       ...readMessages(messages[id]),
       ...readMessages(bag),
     }
+    revision.set(revision() + 1)
     return messages[id]
   }
 
@@ -135,7 +155,12 @@ export function getI18n() {
 }
 
 export function t(key, params) {
-  return active ? active.t(key, params) : String(key ?? '')
+  if (active) return active.t(key, params)
+  return derive(() => String(key ?? ''))
+}
+
+export function translate(key, params) {
+  return t(key, params)()
 }
 
 export function te(key) {

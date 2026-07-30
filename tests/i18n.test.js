@@ -12,6 +12,7 @@ import {
   setLocale,
   t,
   te,
+  translate,
   useI18n,
   writeStoredLocale,
 } from '../src/i18n/index.js'
@@ -46,8 +47,9 @@ describe('i18n', () => {
       },
     })
 
-    expect(i18n.t('hello', { name: 'Heber' })).toBe('Hello, Heber!')
-    expect(i18n.t('app.title')).toBe('Jacaré UI')
+    expect(typeof i18n.t('hello', { name: 'Heber' })).toBe('function')
+    expect(i18n.t('hello', { name: 'Heber' })()).toBe('Hello, Heber!')
+    expect(i18n.t('app.title')()).toBe('Jacaré UI')
     expect(i18n.te('save')).toBe(true)
     expect(i18n.te('missing')).toBe(false)
     expect(i18n.availableLocales()).toEqual(['en', 'pt-BR'])
@@ -55,8 +57,9 @@ describe('i18n', () => {
     i18n.setLocale('pt-BR')
     expect(i18n.locale()).toBe('pt-BR')
     expect(document.documentElement.lang).toBe('pt-BR')
-    expect(i18n.t('hello', { name: 'Heber' })).toBe('Olá, Heber!')
-    expect(t('save')).toBe('Salvar')
+    expect(i18n.t('hello', { name: 'Heber' })()).toBe('Olá, Heber!')
+    expect(t('save')()).toBe('Salvar')
+    expect(translate('save')).toBe('Salvar')
     expect(locale()).toBe('pt-BR')
   })
 
@@ -71,12 +74,12 @@ describe('i18n', () => {
       },
     })
 
-    expect(t('shared')).toBe('Olá')
-    expect(t('onlyEn')).toBe('English only')
-    expect(t('flat.key')).toBe('Flat')
-    expect(t('missing.key')).toBe('missing.key')
-    expect(t(null)).toBe('')
-    expect(t('')).toBe('')
+    expect(t('shared')()).toBe('Olá')
+    expect(t('onlyEn')()).toBe('English only')
+    expect(t('flat.key')()).toBe('Flat')
+    expect(t('missing.key')()).toBe('missing.key')
+    expect(t(null)()).toBe('')
+    expect(t('')()).toBe('')
     expect(te('onlyEn')).toBe(true)
     expect(te('gone')).toBe(false)
   })
@@ -87,10 +90,10 @@ describe('i18n', () => {
       persist: false,
       messages: { en: { hi: 'Hi {name}', nested: { deep: { value: 1 } } } },
     })
-    expect(t('hi', { other: 'x' })).toBe('Hi {name}')
-    expect(t('hi', null)).toBe('Hi {name}')
-    expect(t('nested.deep.value')).toBe('nested.deep.value')
-    expect(t('nested.deep.missing')).toBe('nested.deep.missing')
+    expect(t('hi', { other: 'x' })()).toBe('Hi {name}')
+    expect(t('hi', null)()).toBe('Hi {name}')
+    expect(t('nested.deep.value')()).toBe('nested.deep.value')
+    expect(t('nested.deep.missing')()).toBe('nested.deep.missing')
   })
 
   it('merges messages and exposes helpers', () => {
@@ -103,8 +106,22 @@ describe('i18n', () => {
     expect(addMessages('es', { hola: 'Hola' })).toEqual({ hola: 'Hola' })
     expect(addMessages('', { z: 'Z' })).toEqual({ a: 'A', b: 'B', z: 'Z' })
     expect(availableLocales()).toContain('es')
-    expect(useI18n().t('b')).toBe('B')
+    expect(useI18n().t('b')()).toBe('B')
     expect(getI18n()).toBeTruthy()
+  })
+
+  it('reuses the same derive for the same key and params', () => {
+    createI18n({
+      locale: 'en',
+      persist: false,
+      messages: { en: { hello: 'Hello, {name}!' }, pt: { hello: 'Olá, {name}!' } },
+    })
+    const first = t('hello', { name: 'Heber' })
+    const second = t('hello', { name: 'Heber' })
+    expect(first).toBe(second)
+    expect(first()).toBe('Hello, Heber!')
+    setLocale('pt')
+    expect(first()).toBe('Olá, Heber!')
   })
 
   it('persists locale when enabled', () => {
@@ -174,14 +191,15 @@ describe('i18n', () => {
 
   it('defaults options and covers inactive helpers', () => {
     createI18n({})
-    expect(t('x')).toBe('x')
+    expect(t('x')()).toBe('x')
     expect(setLocale('')).toBe('en')
     expect(addMessages(null, null)).toEqual({})
 
     resetI18n()
     expect(getI18n()).toBeNull()
-    expect(t('hello')).toBe('hello')
-    expect(t(null)).toBe('')
+    expect(t('hello')()).toBe('hello')
+    expect(t(null)()).toBe('')
+    expect(translate('hello')).toBe('hello')
     expect(te('hello')).toBe(false)
     expect(locale()).toBe('')
     expect(setLocale('pt')).toBe('pt')
@@ -198,6 +216,6 @@ describe('i18n', () => {
       messages: null,
     })
     expect(availableLocales()).toEqual([])
-    expect(t('x')).toBe('x')
+    expect(t('x')()).toBe('x')
   })
 })

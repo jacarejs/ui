@@ -1,5 +1,11 @@
 export function read(value) {
-  return typeof value === 'function' ? value() : value
+  let current = value
+  for (let index = 0; index < 4; index += 1) {
+    if (typeof current !== 'function') return current
+    if (typeof current.set === 'function') return current()
+    current = current()
+  }
+  return current
 }
 
 export function cx(...parts) {

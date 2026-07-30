@@ -1,6 +1,7 @@
 import { effect, pulse, untrack } from '@jacare/core'
 import DatePicker from './DatePicker.jcr'
 import TimePicker from './TimePicker.jcr'
+import { read } from '../internal/utils.js'
 
 export <contract>
   props: {
@@ -16,10 +17,6 @@ export <contract>
   }
   emits: ['change']
 </contract>
-
-function read(value) {
-  return typeof value === 'function' ? value() : value
-}
 
 function splitValue(value) {
   const raw = String(read(value) || '')

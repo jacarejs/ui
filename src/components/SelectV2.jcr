@@ -1,4 +1,5 @@
 import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
 
 export <contract>
   props: {
@@ -16,10 +17,6 @@ export <contract>
   }
   emits: ['change']
 </contract>
-
-function read(value) {
-  return typeof value === 'function' ? value() : value
-}
 
 function normalizedOptions(source) {
   return (read(source) || []).map((option) => (option && typeof option === 'object')

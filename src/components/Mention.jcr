@@ -1,3 +1,5 @@
+import { read } from '../internal/utils.js'
+
 export <contract>
   props: {
     label: { type: 'string', default: '' }
@@ -11,10 +13,6 @@ export <contract>
   }
   emits: ['change', 'select']
 </contract>
-
-function read(value) {
-  return typeof value === 'function' ? value() : value
-}
 
 function normalizedOptions(source) {
   return (read(source) || []).map((item) => (item && typeof item === 'object')

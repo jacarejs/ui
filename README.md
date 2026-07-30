@@ -65,16 +65,22 @@ import ptBR from './pt-BR.js'
 export const messages = { en, 'pt-BR': ptBR }
 
 // i18n.js
-import { createI18n, t, setLocale } from '@jacare/ui/i18n'
+import { createI18n, t, translate, setLocale } from '@jacare/ui/i18n'
 import { messages } from './locales/index.js'
 
 createI18n({ locale: 'en', fallbackLocale: 'en', messages })
 
-t('hello', { name: 'Heber' }) // Hello, Heber!
+translate('hello', { name: 'Heber' }) // Hello, Heber!
 setLocale('pt-BR')
 ```
 
-In `.jcr` views use a getter so text updates when the locale changes: `${() => t('save')}`.
+In `.jcr` views, `t()` is already reactive — no arrow:
+
+```jacare
+<h1>${t('app.title')}</h1>
+<Confirm :title=${t('confirm.title')} />
+```
+
 `LocaleToggle` switches locales; see the [i18n docs](https://jacarejs.github.io/ui/i18n).
 
 ## Usage

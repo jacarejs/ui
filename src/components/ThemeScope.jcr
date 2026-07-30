@@ -1,13 +1,11 @@
+import { read } from '../internal/utils.js'
+
 export <contract>
   props: {
     mode: { type: 'string', default: 'system' }
   }
   slots: ['default']
 </contract>
-
-function read(value) {
-  return typeof value === 'function' ? value() : value
-}
 
 function scopeAttr(value) {
   const next = read(value)

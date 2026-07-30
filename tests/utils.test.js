@@ -1,10 +1,17 @@
 import { describe, expect, it } from 'vitest'
+import { pulse } from '@jacare/core'
 import { coalesce, cx, read } from '../src/internal/utils.js'
 
 describe('internal utils', () => {
-  it('reads plain values and pulses', () => {
+  it('reads plain values, thunks, and pulses', () => {
     expect(read('ok')).toBe('ok')
     expect(read(() => 42)).toBe(42)
+    expect(read(pulse('signal'))).toBe('signal')
+  })
+
+  it('unwraps lazy prop thunks into translation derives', () => {
+    const translated = pulse('Salvar')
+    expect(read(() => translated)).toBe('Salvar')
   })
 
   it('joins truthy class parts', () => {

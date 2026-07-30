@@ -1,3 +1,5 @@
+import { read } from '../internal/utils.js'
+
 export <contract>
   props: {
     name: { type: 'string', default: '' }
@@ -11,10 +13,6 @@ export <contract>
     bordered: { type: 'boolean', default: false }
   }
 </contract>
-
-function read(value) {
-  return typeof value === 'function' ? value() : value
-}
 
 function initialsOf(name) {
   const raw = String(read(name) ?? '').trim()

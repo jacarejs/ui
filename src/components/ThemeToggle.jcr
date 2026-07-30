@@ -1,5 +1,6 @@
 import { applyTheme, readStoredTheme } from '../theme/index.js'
 import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
 
 export <contract>
   props: {
@@ -9,10 +10,6 @@ export <contract>
   emits: ['change']
 </contract>
 
-function read(value) {
-  return typeof value === 'function' ? value() : value
-}
-
 const current = pulse(typeof document !== 'undefined' ? readStoredTheme('system') : 'system')
 
 if (typeof document !== 'undefined') {
@@ -21,7 +18,10 @@ if (typeof document !== 'undefined') {
 
 function modeLabel(map, key, fallback) {
   const value = read(map)
-  if (value && typeof value === 'object' && value[key]) return value[key]
+  if (value && typeof value === 'object' && value[key] != null) {
+    const label = read(value[key])
+    if (label != null && label !== '') return label
+  }
   return fallback
 }
 

@@ -1,5 +1,6 @@
 import { effect, pulse } from '@jacare/core'
 import Select from './Select.jcr'
+import { read } from '../internal/utils.js'
 
 export <contract>
   props: {
@@ -16,10 +17,6 @@ const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const monthOptions = months.map((label, index) => ({ label, value: String(index) }))
 const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
-
-function read(value) {
-  return typeof value === 'function' ? value() : value
-}
 
 function parseDate(value) {
   const parts = String(value || '').split('-').map(Number)

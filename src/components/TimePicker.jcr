@@ -1,5 +1,6 @@
 import { effect, pulse } from '@jacare/core'
 import Select from './Select.jcr'
+import { read } from '../internal/utils.js'
 
 export <contract>
   props: {
@@ -26,10 +27,6 @@ const minuteOptions = Array.from({ length: 60 }, (_, minute) => ({
 }))
 
 const secondOptions = minuteOptions
-
-function read(value) {
-  return typeof value === 'function' ? value() : value
-}
 
 function pad2(n) {
   return String(n).padStart(2, '0')

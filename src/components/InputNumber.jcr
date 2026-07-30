@@ -1,3 +1,5 @@
+import { read } from '../internal/utils.js'
+
 export <contract>
   props: {
     label: { type: 'string', default: '' }
@@ -16,10 +18,6 @@ export <contract>
   }
   emits: ['change']
 </contract>
-
-function read(value) {
-  return typeof value === 'function' ? value() : value
-}
 
 function numberOr(value, fallback) {
   const next = Number(read(value))

@@ -47,9 +47,9 @@ export const useInTemplate = `import Button from '@jacare/ui/Button'
 import { t, setLocale } from '@jacare/ui/i18n'
 
 export <view>
-  <h1>\${() => t('app.title')}</h1>
-  <p>\${() => t('hello', { name: 'Heber' })}</p>
-  <Button :variant=\${'primary'} on-press=\${() => {}}>\${() => t('save')}</Button>
+  <h1>\${t('app.title')}</h1>
+  <p>\${t('hello', { name: 'Heber' })}</p>
+  <Button :variant=\${'primary'} on-press=\${() => {}}>\${t('save')}</Button>
   <Button :variant=\${'ghost'} on-press=\${() => setLocale('pt-BR')}>PT</Button>
   <Button :variant=\${'ghost'} on-press=\${() => setLocale('en')}>EN</Button>
 </view>`
@@ -64,7 +64,7 @@ export <view>
       { id: 'pt-BR', label: 'Português' },
     ]}
   />
-  <p>\${() => t('hello', { name: 'Jacaré' })}</p>
+  <p>\${t('hello', { name: 'Jacaré' })}</p>
 </view>`
 
 export const useI18nHelper = `import { useI18n, translate } from '@jacare/ui/i18n'
@@ -102,7 +102,7 @@ export <view>
   <Confirm
     :title=\${t('confirm.title')}
     :message=\${t('confirm.message')}
-    :confirmLabel=\${() => t('save')}
+    :confirmLabel=\${t('save')}
     :cancelLabel=\${t('cancel')}
   />
 </view>`
