@@ -23,6 +23,8 @@ const playDisabled = pulse(false)
 const playGap = pulse('md')
 const playName = pulse('')
 const playEmail = pulse('')
+const basicName = pulse('')
+const basicEmail = pulse('')
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -77,10 +79,10 @@ export <view>
       <div style="width:min(28rem,100%)">
         <Form>
           <FormItem :label=${'Name'} :required=${true}>
-            <Input bind-value=${playName} />
+            <Input bind-value=${basicName} />
           </FormItem>
           <FormItem :label=${'Email'} :hint=${'We will never share your email'}>
-            <Input :type=${'email'} bind-value=${playEmail} />
+            <Input :type=${'email'} bind-value=${basicEmail} />
           </FormItem>
         </Form>
       </div>

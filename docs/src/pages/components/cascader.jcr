@@ -60,6 +60,7 @@ const playPlaceholder = pulse('Select')
 const playValue = pulse([])
 const playClearable = pulse(true)
 const playDisabled = pulse(false)
+const basicValue = pulse([])
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -113,7 +114,7 @@ export <view>
     </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'cascader-basic.jcr'}>
-      <Cascader :label=${'Category'} :options=${options} bind-value=${playValue} />
+      <Cascader :label=${'Category'} :options=${options} bind-value=${basicValue} />
     </Demo>
 
     <DocsSection :id=${'api'} :title=${'API'}>

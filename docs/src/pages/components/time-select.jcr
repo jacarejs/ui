@@ -23,6 +23,7 @@ const playEnd = pulse('18:00')
 const playStep = pulse('00:30')
 const playClearable = pulse(true)
 const playDisabled = pulse(false)
+const basicValue = pulse('09:30')
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -87,7 +88,7 @@ export <view>
         :start=${'09:00'}
         :end=${'18:00'}
         :step=${'00:30'}
-        bind-value=${playValue}
+        bind-value=${basicValue}
       />
     </Demo>
 

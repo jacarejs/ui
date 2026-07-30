@@ -24,6 +24,7 @@ const playError = pulse('')
 const playRequired = pulse(false)
 const playDisabled = pulse(false)
 const playClearable = pulse(true)
+const basicValue = pulse('')
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -87,7 +88,7 @@ export <view>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'input-basic.jcr'} :layout=${'stack'}>
       <div style="width:min(24rem,100%)">
-        <Input :label=${'Name'} :placeholder=${'Jane Doe'} bind-value=${playValue} />
+        <Input :label=${'Name'} :placeholder=${'Jane Doe'} bind-value=${basicValue} />
       </div>
     </Demo>
 

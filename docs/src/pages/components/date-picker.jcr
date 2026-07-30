@@ -37,6 +37,13 @@ const playMin = pulse('')
 const playMax = pulse('')
 const playValue = pulse('')
 const playValueRange = pulse([])
+const basicValue = pulse('')
+const rangeValue = pulse([])
+const boundsValue = pulse('')
+const manualApplyValue = pulse([])
+const statesRequiredValue = pulse('')
+const statesErrorValue = pulse('')
+const statesDisabledValue = pulse('')
 
 const a11y = [
   'Calendar trigger exposes aria-haspopup="dialog" and aria-expanded while open',
@@ -130,7 +137,7 @@ export <view>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'date-picker-basic.jcr'} :layout=${'stack'}>
       <div style="width:min(20rem,100%)">
-        <DatePicker :label=${'Birthday'} bind-value=${playValue} />
+        <DatePicker :label=${'Birthday'} bind-value=${basicValue} />
       </div>
     </Demo>
 
@@ -138,7 +145,7 @@ export <view>
       <p class="docs-lead">Set <code>range</code> and bind an array of two ISO dates.</p>
       <Demo :id=${'range-demo'} :title=${'Trip dates'} :code=${rangeExample} :filename=${'date-picker-range.jcr'} :layout=${'bleed'}>
         <div style="width:min(22rem,100%)">
-          <DatePicker :label=${'Trip dates'} :range=${true} bind-value=${playValueRange} />
+          <DatePicker :label=${'Trip dates'} :range=${true} bind-value=${rangeValue} />
         </div>
       </Demo>
     </DocsSection>
@@ -147,7 +154,7 @@ export <view>
       <p class="docs-lead">Clamp selectable days with ISO <code>min</code> and <code>max</code>.</p>
       <Demo :id=${'bounds-demo'} :title=${'Bounded appointment'} :code=${bounds} :filename=${'date-picker-bounds.jcr'} :layout=${'rail'}>
         <div style="width:min(20rem,100%)">
-          <DatePicker :label=${'Appointment'} :min=${'2026-01-01'} :max=${'2026-12-31'} bind-value=${playValue} />
+          <DatePicker :label=${'Appointment'} :min=${'2026-01-01'} :max=${'2026-12-31'} bind-value=${boundsValue} />
         </div>
       </Demo>
     </DocsSection>
@@ -156,7 +163,7 @@ export <view>
       <p class="docs-lead">Turn off <code>autoApply</code> in range mode to confirm with Apply.</p>
       <Demo :id=${'manual-apply-demo'} :title=${'Billing period'} :code=${manualApply} :filename=${'date-picker-manual-apply.jcr'} :layout=${'stack'}>
         <div style="width:min(22rem,100%)">
-          <DatePicker :label=${'Billing period'} :range=${true} :autoApply=${false} bind-value=${playValueRange} />
+          <DatePicker :label=${'Billing period'} :range=${true} :autoApply=${false} bind-value=${manualApplyValue} />
         </div>
       </Demo>
     </DocsSection>
@@ -165,9 +172,9 @@ export <view>
       <Demo :id=${'date-states'} :title=${'Required, error, and disabled'} :code=${states} :filename=${'date-picker-states.jcr'} :layout=${'stack'}>
         <div style="width:min(20rem,100%)">
           <Stack :gap=${'md'}>
-            <DatePicker :label=${'Required'} :required=${true} bind-value=${playValue} />
-            <DatePicker :label=${'Date'} :error=${'Pick a valid date'} bind-value=${playError} />
-            <DatePicker :label=${'Locked'} :disabled=${true} bind-value=${playValue} />
+            <DatePicker :label=${'Required'} :required=${true} bind-value=${statesRequiredValue} />
+            <DatePicker :label=${'Date'} :error=${'Pick a valid date'} bind-value=${statesErrorValue} />
+            <DatePicker :label=${'Locked'} :disabled=${true} bind-value=${statesDisabledValue} />
           </Stack>
         </div>
       </Demo>

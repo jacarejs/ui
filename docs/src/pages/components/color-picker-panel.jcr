@@ -21,6 +21,7 @@ const playValue = pulse('#189030')
 const playShowInput = pulse(true)
 const playDisabled = pulse(false)
 const playPresets = pulse(true)
+const basicValue = pulse('#189030')
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -71,7 +72,7 @@ export <view>
     </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'color-picker-panel-basic.jcr'}>
-      <ColorPickerPanel bind-value=${playValue} />
+      <ColorPickerPanel bind-value=${basicValue} />
     </Demo>
 
     <DocsSection :id=${'api'} :title=${'API'}>

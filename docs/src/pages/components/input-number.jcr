@@ -23,6 +23,7 @@ const playMax = pulse('10')
 const playStep = pulse('1')
 const playControls = pulse(true)
 const playDisabled = pulse(false)
+const basicValue = pulse(3)
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -82,7 +83,7 @@ export <view>
     </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'input-number-basic.jcr'}>
-      <InputNumber :label=${'Quantity'} :min=${0} :max=${10} bind-value=${playValue} />
+      <InputNumber :label=${'Quantity'} :min=${0} :max=${10} bind-value=${basicValue} />
     </Demo>
 
     <DocsSection :id=${'api'} :title=${'API'}>

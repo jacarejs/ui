@@ -21,6 +21,7 @@ const playValue = pulse('09:30')
 const playClearable = pulse(true)
 const playArrowControl = pulse(false)
 const playDisabled = pulse(false)
+const basicValue = pulse('09:30')
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -74,7 +75,7 @@ export <view>
     </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'time-picker-basic.jcr'}>
-      <TimePicker :label=${'Start time'} bind-value=${playValue} />
+      <TimePicker :label=${'Start time'} bind-value=${basicValue} />
     </Demo>
 
     <DocsSection :id=${'api'} :title=${'API'}>

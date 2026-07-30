@@ -35,6 +35,11 @@ const playError = pulse('')
 const playRequired = pulse(false)
 const playDisabled = pulse(false)
 const playCards = pulse(false)
+const basicValue = pulse('pro')
+const cardsValue = pulse('pro')
+const statesRequiredValue = pulse('')
+const statesErrorValue = pulse('')
+const statesDisabledValue = pulse('pro')
 
 const a11y = [
   'Fieldset + legend provide the group name for assistive technologies',
@@ -101,21 +106,21 @@ export <view>
     </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'radio-group-basic.jcr'} :layout=${'stack'}>
-      <RadioGroup :label=${'Plan'} :options=${planOptions} bind-value=${playValue} />
+      <RadioGroup :label=${'Plan'} :options=${planOptions} bind-value=${basicValue} />
     </Demo>
 
     <DocsSection :id=${'cards'} :title=${'Card layout'}>
       <Demo :id=${'cards-demo'} :title=${'Selectable cards'} :code=${cards} :filename=${'radio-group-cards.jcr'} :layout=${'bleed'}>
-        <RadioGroup :label=${'Plan'} :layout=${'cards'} :options=${planOptions} bind-value=${playValue} />
+        <RadioGroup :label=${'Plan'} :layout=${'cards'} :options=${planOptions} bind-value=${cardsValue} />
       </Demo>
     </DocsSection>
 
     <DocsSection :id=${'states'} :title=${'States'}>
       <Demo :id=${'radio-states'} :title=${'Required, error, and disabled'} :code=${states} :filename=${'radio-group-states.jcr'} :layout=${'stack'}>
         <Stack :gap=${'md'}>
-          <RadioGroup :label=${'Required'} :required=${true} :options=${['One', 'Two']} bind-value=${playValue} />
-          <RadioGroup :label=${'Plan'} :error=${'Choose a plan to continue'} :options=${['free', 'pro']} bind-value=${playError} />
-          <RadioGroup :label=${'Locked'} :disabled=${true} :options=${['free', 'pro']} bind-value=${playValue} />
+          <RadioGroup :label=${'Required'} :required=${true} :options=${['One', 'Two']} bind-value=${statesRequiredValue} />
+          <RadioGroup :label=${'Plan'} :error=${'Choose a plan to continue'} :options=${['free', 'pro']} bind-value=${statesErrorValue} />
+          <RadioGroup :label=${'Locked'} :disabled=${true} :options=${['free', 'pro']} bind-value=${statesDisabledValue} />
         </Stack>
       </Demo>
     </DocsSection>

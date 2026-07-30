@@ -32,7 +32,14 @@ const playHint = pulse('We never share your email')
 const playError = pulse('')
 const playRequired = pulse(false)
 const playDisabled = pulse(false)
-const playDisabledValue = pulse('Locked value')
+const basicValue = pulse('')
+const typesEmail = pulse('')
+const typesPassword = pulse('')
+const typesSearch = pulse('')
+const hintValue = pulse('')
+const errorValue = pulse('')
+const statesRequiredValue = pulse('')
+const statesDisabledValue = pulse('Locked value')
 const typeOptions = ['text', 'email', 'password', 'search', 'url', 'tel']
 
 const a11y = [
@@ -121,7 +128,7 @@ export <view>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'field-basic.jcr'}>
       <div style="width:min(20rem,100%)">
-        <Field :label=${'Email'} :placeholder=${'you@jacare.dev'} bind-value=${playValue} />
+        <Field :label=${'Email'} :placeholder=${'you@jacare.dev'} bind-value=${basicValue} />
       </div>
     </Demo>
 
@@ -129,9 +136,9 @@ export <view>
       <Demo :id=${'all-types'} :title=${'Email, password, and search'} :code=${types} :filename=${'field-types.jcr'}>
         <div style="width:min(22rem,100%)">
           <Stack :gap=${'md'}>
-            <Field :label=${'Email'} :type=${'email'} bind-value=${playValue} />
-            <Field :label=${'Password'} :type=${'password'} bind-value=${playValue} />
-            <Field :label=${'Search'} :type=${'search'} bind-value=${playValue} />
+            <Field :label=${'Email'} :type=${'email'} bind-value=${typesEmail} />
+            <Field :label=${'Password'} :type=${'password'} bind-value=${typesPassword} />
+            <Field :label=${'Search'} :type=${'search'} bind-value=${typesSearch} />
           </Stack>
         </div>
       </Demo>
@@ -144,7 +151,7 @@ export <view>
             :label=${'Username'}
             :hint=${'Letters, numbers, and underscores'}
             :placeholder=${'jacare'}
-            bind-value=${playValue}
+            bind-value=${hintValue}
           />
         </div>
       </Demo>
@@ -153,7 +160,7 @@ export <view>
           <Field
             :label=${'Email'}
             :error=${'Enter a valid email address'}
-            bind-value=${playValue}
+            bind-value=${errorValue}
           />
         </div>
       </Demo>
@@ -163,8 +170,8 @@ export <view>
       <Demo :id=${'field-states'} :title=${'Required and disabled'} :code=${states} :filename=${'field-states.jcr'}>
         <div style="width:min(20rem,100%)">
           <Stack :gap=${'md'}>
-            <Field :label=${'Required'} :required=${true} bind-value=${playValue} />
-            <Field :label=${'Disabled'} :disabled=${true} bind-value=${playDisabledValue} />
+            <Field :label=${'Required'} :required=${true} bind-value=${statesRequiredValue} />
+            <Field :label=${'Disabled'} :disabled=${true} bind-value=${statesDisabledValue} />
           </Stack>
         </div>
       </Demo>

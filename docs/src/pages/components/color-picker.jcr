@@ -45,6 +45,7 @@ const playSize = pulse('md')
 const playShowInput = pulse(true)
 const playDisabled = pulse(false)
 const playPresets = pulse(true)
+const basicValue = pulse('#189030')
 const brand = pulse('#30a830')
 const sm = pulse('#1f6feb')
 const md = pulse('#189030')
@@ -144,7 +145,7 @@ export <view>
           :label=${'Primary'}
           :hint=${'Used for buttons and focus rings'}
           :presets=${brandPresets}
-          bind-value=${playValue}
+          bind-value=${basicValue}
         />
       </div>
     </Demo>

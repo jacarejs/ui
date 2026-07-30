@@ -27,6 +27,7 @@ const playLabel = pulse('Message')
 const playPlaceholder = pulse('Type @ to mention someone')
 const playValue = pulse('')
 const playDisabled = pulse(false)
+const basicValue = pulse('')
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -82,7 +83,7 @@ export <view>
         :label=${'Message'}
         :options=${options}
         :placeholder=${'Type @ to mention someone'}
-        bind-value=${playValue}
+        bind-value=${basicValue}
       />
     </Demo>
 

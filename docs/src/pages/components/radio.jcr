@@ -17,6 +17,7 @@ const navLinks = previousNext('/components/radio')
 
 const playValue = pulse('pro')
 const playDisabled = pulse(false)
+const basicValue = pulse('pro')
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -63,9 +64,9 @@ export <view>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'radio-basic.jcr'}>
       <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
-        <Radio :label=${'Free'} :value=${'free'} :name=${'plan'} bind-modelValue=${playValue} />
-        <Radio :label=${'Pro'} :value=${'pro'} :name=${'plan'} bind-modelValue=${playValue} />
-        <Radio :label=${'Team'} :value=${'team'} :name=${'plan'} bind-modelValue=${playValue} />
+        <Radio :label=${'Free'} :value=${'free'} :name=${'plan'} bind-modelValue=${basicValue} />
+        <Radio :label=${'Pro'} :value=${'pro'} :name=${'plan'} bind-modelValue=${basicValue} />
+        <Radio :label=${'Team'} :value=${'team'} :name=${'plan'} bind-modelValue=${basicValue} />
       </Stack>
     </Demo>
 

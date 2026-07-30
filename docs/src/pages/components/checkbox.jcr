@@ -27,6 +27,7 @@ const navLinks = previousNext('/components/checkbox')
 const playLabel = pulse('Accept terms')
 const playChecked = pulse(true)
 const playDisabled = pulse(false)
+const basicChecked = pulse(true)
 const email = pulse(true)
 const sms = pulse(false)
 const push = pulse(true)
@@ -87,7 +88,7 @@ export <view>
     </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'checkbox-basic.jcr'}>
-      <Checkbox :label=${'Accept terms'} bind-checked=${playChecked} />
+      <Checkbox :label=${'Accept terms'} bind-checked=${basicChecked} />
     </Demo>
 
     <DocsSection :id=${'group'} :title=${'Groups'}>
@@ -103,7 +104,7 @@ export <view>
     <DocsSection :id=${'states'} :title=${'States'}>
       <Demo :id=${'disabled-demo'} :title=${'Enabled and disabled'} :code=${disabled} :filename=${'checkbox-disabled.jcr'}>
         <Stack :gap=${'sm'}>
-          <Checkbox :label=${'Enabled'} bind-checked=${playChecked} />
+          <Checkbox :label=${'Enabled'} bind-checked=${disabledOn} />
           <Checkbox :label=${'Disabled on'} :disabled=${true} bind-checked=${disabledOn} />
           <Checkbox :label=${'Disabled off'} :disabled=${true} bind-checked=${disabledOff} />
         </Stack>

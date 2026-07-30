@@ -23,6 +23,7 @@ const playPlaceholder = pulse('Search fruit')
 const playValue = pulse('')
 const playClearable = pulse(true)
 const playDisabled = pulse(false)
+const basicValue = pulse('')
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -77,7 +78,7 @@ export <view>
     </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'autocomplete-basic.jcr'}>
-      <Autocomplete :label=${'Fruit'} :suggestions=${suggestions} :placeholder=${'Search fruit'} bind-value=${playValue} />
+      <Autocomplete :label=${'Fruit'} :suggestions=${suggestions} :placeholder=${'Search fruit'} bind-value=${basicValue} />
     </Demo>
 
     <DocsSection :id=${'api'} :title=${'API'}>

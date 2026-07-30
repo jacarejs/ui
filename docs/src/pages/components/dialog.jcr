@@ -26,6 +26,9 @@ const navLinks = previousNext('/components/dialog')
 const playOpen = pulse(false)
 const playTitle = pulse('Project details')
 const playSize = pulse('md')
+const basicOpen = pulse(false)
+const sizesOpen = pulse(false)
+const sizesSize = pulse('md')
 
 const a11y = [
   'Dialog mounts only while open and uses role="dialog" with aria-modal',
@@ -86,12 +89,12 @@ export <view>
     </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'dialog-basic.jcr'} :layout=${'stack'}>
-      <Button on-press=${() => playOpen.set(true)}>Open dialog</Button>
-      <Dialog bind-open=${playOpen} :title=${'Project details'}>
+      <Button on-press=${() => basicOpen.set(true)}>Open dialog</Button>
+      <Dialog bind-open=${basicOpen} :title=${'Project details'}>
         <Text>Use Dialog for general content. Confirm stays for destructive choices.</Text>
         <div class="jui-dialog__actions">
-          <Button :variant=${'secondary'} on-press=${() => playOpen.set(false)}>Close</Button>
-          <Button :variant=${'primary'} on-press=${() => playOpen.set(false)}>Save</Button>
+          <Button :variant=${'secondary'} on-press=${() => basicOpen.set(false)}>Close</Button>
+          <Button :variant=${'primary'} on-press=${() => basicOpen.set(false)}>Save</Button>
         </div>
       </Dialog>
     </Demo>
@@ -99,11 +102,11 @@ export <view>
     <DocsSection :id=${'sizes'} :title=${'Sizes'}>
       <Demo :id=${'sizes-demo'} :title=${'Small, medium, and large'} :code=${sizes} :filename=${'dialog-sizes.jcr'} :layout=${'rail'}>
         <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
-          <Button :size=${'sm'} on-press=${() => { playSize.set('sm'); playOpen.set(true) }}>Small</Button>
-          <Button :size=${'sm'} on-press=${() => { playSize.set('md'); playOpen.set(true) }}>Medium</Button>
-          <Button :size=${'sm'} on-press=${() => { playSize.set('lg'); playOpen.set(true) }}>Large</Button>
+          <Button :size=${'sm'} on-press=${() => { sizesSize.set('sm'); sizesOpen.set(true) }}>Small</Button>
+          <Button :size=${'sm'} on-press=${() => { sizesSize.set('md'); sizesOpen.set(true) }}>Medium</Button>
+          <Button :size=${'sm'} on-press=${() => { sizesSize.set('lg'); sizesOpen.set(true) }}>Large</Button>
         </Stack>
-        <Dialog bind-open=${playOpen} :title=${'Sized dialog'} :size=${playSize}>
+        <Dialog bind-open=${sizesOpen} :title=${'Sized dialog'} :size=${sizesSize}>
           <p>Dialog width follows the size prop.</p>
         </Dialog>
       </Demo>

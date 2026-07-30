@@ -22,6 +22,7 @@ const playMin = pulse('')
 const playMax = pulse('')
 const playBorder = pulse(true)
 const playDisabled = pulse(false)
+const basicValue = pulse('2026-07-15')
 const boundsValue = pulse('2026-07-10')
 
 const a11yItems = [
@@ -89,7 +90,7 @@ export <view>
       :code=${basic}
       :filename=${'date-picker-panel-basic.jcr'}
     >
-      <DatePickerPanel bind-value=${playValue} />
+      <DatePickerPanel bind-value=${basicValue} />
     </Demo>
 
     <Demo

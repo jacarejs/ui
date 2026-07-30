@@ -26,6 +26,7 @@ const navLinks = previousNext('/components/switch')
 const playLabel = pulse('Notifications')
 const playChecked = pulse(true)
 const playDisabled = pulse(false)
+const basicChecked = pulse(true)
 const dark = pulse(true)
 const sync = pulse(false)
 const sound = pulse(true)
@@ -86,7 +87,7 @@ export <view>
     </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'switch-basic.jcr'}>
-      <Switch :label=${'Notifications'} bind-checked=${playChecked} />
+      <Switch :label=${'Notifications'} bind-checked=${basicChecked} />
     </Demo>
 
     <DocsSection :id=${'settings'} :title=${'Settings list'}>
@@ -102,7 +103,7 @@ export <view>
     <DocsSection :id=${'states'} :title=${'States'}>
       <Demo :id=${'disabled-demo'} :title=${'Enabled and disabled'} :code=${disabled} :filename=${'switch-disabled.jcr'}>
         <Stack :gap=${'md'}>
-          <Switch :label=${'Enabled'} bind-checked=${playChecked} />
+          <Switch :label=${'Enabled'} bind-checked=${disabledOn} />
           <Switch :label=${'Disabled on'} :disabled=${true} bind-checked=${disabledOn} />
           <Switch :label=${'Disabled off'} :disabled=${true} bind-checked=${disabledOff} />
         </Stack>

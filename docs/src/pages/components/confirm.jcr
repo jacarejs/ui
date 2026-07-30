@@ -30,6 +30,10 @@ const playConfirmLabel = pulse('Delete')
 const playCancelLabel = pulse('Cancel')
 const playDanger = pulse(true)
 const playBusy = pulse(false)
+const basicOpen = pulse(false)
+const neutralOpen = pulse(false)
+const busyOpen = pulse(false)
+const busyBusy = pulse(false)
 
 const a11y = [
   'Dialog renders only while open, keeping inert content out of the accessibility tree',
@@ -38,11 +42,11 @@ const a11y = [
   'Danger mode styles the confirm action for destructive flows without changing keyboard order',
 ]
 
-function handleConfirmDemo() {
-  playBusy.set(true)
+function handleBusyConfirmDemo() {
+  busyBusy.set(true)
   setTimeout(() => {
-    playBusy.set(false)
-    playOpen.set(false)
+    busyBusy.set(false)
+    busyOpen.set(false)
   }, 900)
 }
 
@@ -112,43 +116,43 @@ export <view>
     </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Destructive confirm'} :code=${basic} :filename=${'confirm-basic.jcr'} :layout=${'stack'}>
-      <Button :variant=${'danger'} on-press=${() => playOpen.set(true)}>Delete</Button>
+      <Button :variant=${'danger'} on-press=${() => basicOpen.set(true)}>Delete</Button>
       <Confirm
-        bind-open=${playOpen}
+        bind-open=${basicOpen}
         :title=${'Delete item'}
         :message=${'This cannot be undone.'}
         :danger=${true}
         :confirmLabel=${'Delete'}
-        on-confirm=${() => playOpen.set(false)}
-        on-cancel=${() => playOpen.set(false)}
+        on-confirm=${() => basicOpen.set(false)}
+        on-cancel=${() => basicOpen.set(false)}
       />
     </Demo>
 
     <DocsSection :id=${'neutral'} :title=${'Neutral confirm'}>
       <Demo :id=${'neutral-demo'} :title=${'Leave page'} :code=${neutral} :filename=${'confirm-neutral.jcr'} :layout=${'bleed'}>
-        <Button on-press=${() => playOpen.set(true)}>Leave page</Button>
+        <Button on-press=${() => neutralOpen.set(true)}>Leave page</Button>
         <Confirm
-          bind-open=${playOpen}
+          bind-open=${neutralOpen}
           :title=${'Leave without saving?'}
           :message=${'Unsaved changes will be lost.'}
           :danger=${false}
-          on-confirm=${() => playOpen.set(false)}
-          on-cancel=${() => playOpen.set(false)}
+          on-confirm=${() => neutralOpen.set(false)}
+          on-cancel=${() => neutralOpen.set(false)}
         />
       </Demo>
     </DocsSection>
 
     <DocsSection :id=${'busy'} :title=${'Busy state'}>
       <Demo :id=${'busy-demo'} :title=${'Async confirm'} :code=${busy} :filename=${'confirm-busy.jcr'} :layout=${'stack'}>
-        <Button :variant=${'danger'} on-press=${() => playOpen.set(true)}>Delete</Button>
+        <Button :variant=${'danger'} on-press=${() => busyOpen.set(true)}>Delete</Button>
         <Confirm
-          bind-open=${playOpen}
+          bind-open=${busyOpen}
           :title=${'Delete item'}
           :message=${'Working…'}
           :danger=${true}
-          :busy=${playBusy}
-          on-confirm=${handleConfirmDemo}
-          on-cancel=${() => playOpen.set(false)}
+          :busy=${busyBusy}
+          on-confirm=${handleBusyConfirmDemo}
+          on-cancel=${() => busyOpen.set(false)}
         />
       </Demo>
     </DocsSection>

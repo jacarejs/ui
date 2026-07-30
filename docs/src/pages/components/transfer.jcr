@@ -27,6 +27,7 @@ const data = [
 const playValue = pulse(['2', '4'])
 const playFilterable = pulse(false)
 const playDisabled = pulse(false)
+const basicValue = pulse(['2', '4'])
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -75,7 +76,7 @@ export <view>
     </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'transfer-basic.jcr'}>
-      <Transfer :data=${data} bind-value=${playValue} />
+      <Transfer :data=${data} bind-value=${basicValue} />
     </Demo>
 
     <DocsSection :id=${'api'} :title=${'API'}>

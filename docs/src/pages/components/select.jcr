@@ -37,6 +37,13 @@ const playSearchable = pulse(true)
 const playMultiple = pulse(false)
 const playValue = pulse('')
 const playValueMultiple = pulse([])
+const basicValue = pulse('')
+const tagsValue = pulse('')
+const multipleValue = pulse([])
+const searchValue = pulse('')
+const statesRequiredValue = pulse('')
+const statesErrorValue = pulse('')
+const statesDisabledValue = pulse('')
 
 const a11y = [
   'Trigger exposes aria-haspopup="listbox" and aria-expanded via the native details/summary pair',
@@ -127,7 +134,7 @@ export <view>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'select-basic.jcr'} :layout=${'stack'}>
       <div style="width:min(20rem,100%)">
-        <Select :label=${'Fruit'} :options=${['Apple', 'Banana', 'Cherry']} bind-value=${playValue} />
+        <Select :label=${'Fruit'} :options=${['Apple', 'Banana', 'Cherry']} bind-value=${basicValue} />
       </div>
     </Demo>
 
@@ -142,7 +149,7 @@ export <view>
               { value: 'pro', label: 'Pro', tag: 'Popular' },
               { value: 'team', label: 'Team', tag: 'New' },
             ]}
-            bind-value=${playValue}
+            bind-value=${tagsValue}
           />
         </div>
       </Demo>
@@ -156,7 +163,7 @@ export <view>
             :label=${'Roles'}
             :multiple=${true}
             :options=${['Admin', 'Editor', 'Viewer']}
-            bind-value=${playValueMultiple}
+            bind-value=${multipleValue}
           />
         </div>
       </Demo>
@@ -170,7 +177,7 @@ export <view>
             :label=${'Country'}
             :options=${['Brazil', 'Canada', 'Germany', 'Japan', 'Portugal']}
             :searchable=${false}
-            bind-value=${playValue}
+            bind-value=${searchValue}
           />
         </div>
       </Demo>
@@ -180,9 +187,9 @@ export <view>
       <Demo :id=${'select-states'} :title=${'Required, error, and disabled'} :code=${states} :filename=${'select-states.jcr'} :layout=${'stack'}>
         <div style="width:min(20rem,100%)">
           <Stack :gap=${'md'}>
-            <Select :label=${'Required'} :required=${true} :options=${['One', 'Two']} bind-value=${playValue} />
-            <Select :label=${'Plan'} :error=${'Choose a plan to continue'} :options=${['free', 'pro']} bind-value=${playError} />
-            <Select :label=${'Locked plan'} :disabled=${true} :options=${['free', 'pro']} bind-value=${playValue} />
+            <Select :label=${'Required'} :required=${true} :options=${['One', 'Two']} bind-value=${statesRequiredValue} />
+            <Select :label=${'Plan'} :error=${'Choose a plan to continue'} :options=${['free', 'pro']} bind-value=${statesErrorValue} />
+            <Select :label=${'Locked plan'} :disabled=${true} :options=${['free', 'pro']} bind-value=${statesDisabledValue} />
           </Stack>
         </div>
       </Demo>

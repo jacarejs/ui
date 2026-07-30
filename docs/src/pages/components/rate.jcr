@@ -22,6 +22,7 @@ const playAllowHalf = pulse(false)
 const playClearable = pulse(true)
 const playShowText = pulse(false)
 const playDisabled = pulse(false)
+const basicValue = pulse(3)
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -78,7 +79,7 @@ export <view>
     </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'rate-basic.jcr'}>
-      <Rate bind-value=${playValue} />
+      <Rate bind-value=${basicValue} />
     </Demo>
 
     <DocsSection :id=${'api'} :title=${'API'}>

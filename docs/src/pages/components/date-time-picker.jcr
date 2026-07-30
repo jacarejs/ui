@@ -25,6 +25,7 @@ const playClearable = pulse(true)
 const playRequired = pulse(false)
 const playDisabled = pulse(false)
 const playError = pulse('')
+const basicValue = pulse('2026-07-28T14:30')
 const boundsValue = pulse('2026-07-15T10:00')
 
 const a11yItems = [
@@ -101,7 +102,7 @@ export <view>
       :code=${basic}
       :filename=${'date-time-picker-basic.jcr'}
     >
-      <DateTimePicker :label=${'Schedule'} bind-value=${playValue} />
+      <DateTimePicker :label=${'Schedule'} bind-value=${basicValue} />
     </Demo>
 
     <Demo

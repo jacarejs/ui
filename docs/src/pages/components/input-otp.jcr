@@ -21,6 +21,7 @@ const playValue = pulse('')
 const playLength = pulse('6')
 const playMask = pulse(false)
 const playDisabled = pulse(false)
+const basicValue = pulse('')
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -74,7 +75,7 @@ export <view>
     </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'input-otp-basic.jcr'}>
-      <InputOtp :label=${'Verification code'} :length=${6} bind-value=${playValue} />
+      <InputOtp :label=${'Verification code'} :length=${6} bind-value=${basicValue} />
     </Demo>
 
     <DocsSection :id=${'api'} :title=${'API'}>

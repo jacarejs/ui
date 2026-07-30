@@ -22,6 +22,7 @@ const playPlaceholder = pulse('Add a framework')
 const playMax = pulse('')
 const playClearable = pulse(true)
 const playDisabled = pulse(false)
+const basicValue = pulse(['vue', 'react'])
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -78,7 +79,7 @@ export <view>
     </DocsSection>
 
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'input-tag-basic.jcr'}>
-      <InputTag :label=${'Frameworks'} :placeholder=${'Add a framework'} bind-value=${playValue} />
+      <InputTag :label=${'Frameworks'} :placeholder=${'Add a framework'} bind-value=${basicValue} />
     </Demo>
 
     <DocsSection :id=${'api'} :title=${'API'}>
