@@ -209,11 +209,13 @@ export <view>
           if (read(disabled)) event.preventDefault()
         }}
       >
-        <span class="jui-tree-select__value" class-is-placeholder=${() => !hasSelection(value, multiple)}>${() => selectedLabel(value, data, multiple, placeholder)}</span>
-        #if read(clearable) && hasSelection(value, multiple) && !read(disabled)
-          <button type="button" class="jui-tree-select__clear" aria-label="Clear selection" on-click=${(event) => clearSelection(event, value, multiple, emit)}>×</button>
-        #end
-        <span class="jui-tree-select__chevron" aria-hidden="true"></span>
+        <span class="jui-tree-select__face">
+          <span class="jui-tree-select__value" class-is-placeholder=${() => !hasSelection(value, multiple)}>${() => selectedLabel(value, data, multiple, placeholder)}</span>
+          #if read(clearable) && hasSelection(value, multiple) && !read(disabled)
+            <button type="button" class="jui-tree-select__clear" aria-label="Clear selection" on-click=${(event) => clearSelection(event, value, multiple, emit)}>×</button>
+          #end
+          <span class="jui-tree-select__chevron" aria-hidden="true"></span>
+        </span>
       </summary>
 
       <div class="jui-tree-select__panel">
@@ -303,10 +305,11 @@ export <style>
 }
 
 .jui-tree-select__trigger {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.6rem;
+  gap: 0.65rem;
   width: 100%;
   min-height: 2.75rem;
   padding: 0.65rem 0.9rem;
@@ -315,13 +318,28 @@ export <style>
   outline: 0;
   color: var(--j-text);
   background: var(--j-surface-2);
+  font: inherit;
+  line-height: 1.2;
   cursor: pointer;
   list-style: none;
   transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 
-.jui-tree-select__trigger::-webkit-details-marker {
+.jui-tree-select__trigger::-webkit-details-marker,
+.jui-tree-select__trigger::marker {
   display: none;
+  content: '';
+}
+
+.jui-tree-select__face {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: inherit;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 1.2em;
+  width: 100%;
 }
 
 .jui-tree-select__trigger:focus,
@@ -341,6 +359,8 @@ export <style>
 .jui-tree-select__value {
   overflow: hidden;
   flex: 1 1 auto;
+  min-width: 0;
+  line-height: 1.2;
   color: var(--j-text);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -370,13 +390,24 @@ export <style>
 }
 
 .jui-tree-select__chevron {
+  box-sizing: border-box;
+  display: block;
   flex: 0 0 auto;
-  width: 1rem;
-  height: 1rem;
+  align-self: center;
+  width: 0.9rem;
+  height: 0.9rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
   color: var(--j-muted);
-  background: currentColor;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9 12 15 18 9'/%3E%3C/svg%3E") center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9 12 15 18 9'/%3E%3C/svg%3E") center / contain no-repeat;
+  background-color: currentColor;
+  background-image: none;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+  line-height: 0;
+  font-size: 0;
+  transform: none;
+  transform-origin: center center;
   transition: transform 120ms ease;
 }
 

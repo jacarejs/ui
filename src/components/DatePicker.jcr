@@ -357,8 +357,10 @@ export <view>
           disabled=${() => !!read(disabled)}
           on-click=${(event) => openPicker(event, value, min, max, range, autoApply, clearable, placeholder, emit)}
         >
-          <span class="jui-date__value" data-date-value class-is-placeholder=${() => normalizedSelection(value, true).length === 0}>${() => displayValue(value, range, placeholder)}</span>
-          <span class="jui-date__icon" aria-hidden="true"></span>
+          <span class="jui-date__face">
+            <span class="jui-date__value" data-date-value class-is-placeholder=${() => normalizedSelection(value, true).length === 0}>${() => displayValue(value, range, placeholder)}</span>
+            <span class="jui-date__icon" aria-hidden="true"></span>
+          </span>
         </button>
       #else
         <span class="jui-date__input-wrap">
@@ -543,10 +545,11 @@ export <style>
 }
 
 .jui-date__trigger {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.7rem;
+  gap: 0.65rem;
   width: 100%;
   min-height: 2.75rem;
   padding: 0.5rem 0.5rem 0.5rem 0.9rem;
@@ -556,9 +559,21 @@ export <style>
   color: var(--j-text);
   background: var(--j-surface-2);
   font: inherit;
+  line-height: 1.2;
   text-align: left;
   cursor: pointer;
   transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-date__face {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: inherit;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 1.2em;
+  width: 100%;
 }
 
 .jui-date__trigger:focus,
@@ -573,6 +588,15 @@ export <style>
 
 .jui-date__value.is-placeholder {
   color: var(--j-muted);
+}
+
+.jui-date__value {
+  overflow: hidden;
+  flex: 1 1 auto;
+  min-width: 0;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .jui-date__trigger .jui-date__icon {
@@ -630,9 +654,15 @@ export <style>
 
 .jui-date__head .jui-select__trigger {
   min-height: 2.2rem;
-  padding: 0.3rem 0.55rem;
+  padding: 0.35rem 0.65rem;
   font-size: 0.78rem;
   font-weight: 800;
+  line-height: 1.2;
+}
+
+.jui-date__head .jui-select__chevron {
+  width: 0.75rem;
+  height: 0.75rem;
 }
 
 .jui-date__head .jui-select__panel {

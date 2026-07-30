@@ -272,9 +272,15 @@ export <style>
 
 .jui-date-panel__head .jui-select__trigger {
   min-height: 2.2rem;
-  padding: 0.3rem 0.55rem;
+  padding: 0.35rem 0.65rem;
   font-size: 0.78rem;
   font-weight: 800;
+  line-height: 1.2;
+}
+
+.jui-date-panel__head .jui-select__chevron {
+  width: 0.75rem;
+  height: 0.75rem;
 }
 
 .jui-date-panel__head .jui-select__panel {
