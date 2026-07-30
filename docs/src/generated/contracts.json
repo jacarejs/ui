@@ -997,6 +997,23 @@
       "remove-tag"
     ]
   },
+  "LocaleToggle": {
+    "props": {
+      "locales": {
+        "type": "any",
+        "default": null
+      },
+      "labels": {
+        "type": "object",
+        "default": null
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
   "Mention": {
     "props": {
       "label": {

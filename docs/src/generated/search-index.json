@@ -394,6 +394,16 @@
     ]
   },
   {
+    "title": "LocaleToggle",
+    "section": "Components",
+    "href": "/components/locale-toggle",
+    "keywords": [
+      "localetoggle",
+      "locales",
+      "labels"
+    ]
+  },
+  {
     "title": "Mention",
     "section": "Components",
     "href": "/components/mention",

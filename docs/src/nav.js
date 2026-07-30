@@ -12,6 +12,7 @@ export const nav = createNav({
     '/quick-start': { use: lazy(() => import('./pages/quick-start.jcr')), title: 'Quick start · Jacaré UI' },
     '/theme': { use: lazy(() => import('./pages/theme.jcr')), title: 'Theme · Jacaré UI' },
     '/dark-mode': { use: lazy(() => import('./pages/dark-mode.jcr')), title: 'Dark mode · Jacaré UI' },
+    '/i18n': { use: lazy(() => import('./pages/i18n.jcr')), title: 'i18n · Jacaré UI' },
     '/tokens': { use: lazy(() => import('./pages/tokens.jcr')), title: 'Tokens · Jacaré UI' },
     '/layouts': { use: lazy(() => import('./pages/layouts.jcr')), title: 'Layouts · Jacaré UI' },
     '/accessibility': { use: lazy(() => import('./pages/accessibility.jcr')), title: 'Accessibility · Jacaré UI' },

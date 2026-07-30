@@ -16,8 +16,8 @@ export const componentGroupOrder = [
   'Primitives',
 ]
 
-const navHiddenComponents = ['ThemeScope', 'ThemeToggle', 'VisuallyHidden', 'FormItem']
-const catalogHiddenComponents = ['ThemeScope', 'ThemeToggle', 'VisuallyHidden']
+const navHiddenComponents = ['ThemeScope', 'ThemeToggle', 'LocaleToggle', 'VisuallyHidden', 'FormItem']
+const catalogHiddenComponents = ['ThemeScope', 'ThemeToggle', 'LocaleToggle', 'VisuallyHidden']
 
 export const shippedComponents = [
   { name: 'Alert', group: 'Feedback', blurb: 'Inline status for info, success, warn, danger' },
@@ -61,6 +61,7 @@ export const shippedComponents = [
   { name: 'Textarea', group: 'Forms', blurb: 'Multiline field with count and resize' },
   { name: 'ThemeScope', group: 'Primitives', blurb: 'Scoped light/dark theme island' },
   { name: 'ThemeToggle', group: 'Primitives', blurb: 'Light, dark, or system control' },
+  { name: 'LocaleToggle', group: 'Primitives', blurb: 'Switch active i18n locale' },
   { name: 'TimePicker', group: 'Forms', blurb: 'Hour, minute, and optional second spinner' },
   { name: 'TimeSelect', group: 'Forms', blurb: 'Discrete time options from a step list' },
   { name: 'Transfer', group: 'Forms', blurb: 'Move items between source and target lists' },
@@ -111,6 +112,7 @@ export const docsNav = [
     items: [
       { href: '/theme', label: 'Theme', blurb: 'Tokens, fonts, density, motion, Tailwind' },
       { href: '/dark-mode', label: 'Dark mode', blurb: 'ThemeToggle, ThemeScope, data-j-theme' },
+      { href: '/i18n', label: 'i18n', blurb: 'createI18n, t(), LocaleToggle — simple translations' },
       { href: '/tokens', label: 'Token reference', blurb: 'Brand, semantic, space, density, motion' },
       { href: '/layouts', label: 'Layouts', blurb: 'Shell, sidebar, split, and gallery models' },
       { href: '/accessibility', label: 'Accessibility', blurb: 'Focus, keyboard, motion, ARIA baseline' },

@@ -38,6 +38,29 @@ applyDensity('comfortable')
 applyMotion('system')
 ```
 
+## i18n
+
+Simple translations (vue-i18n-like, much smaller). Create once, use `t()` in templates:
+
+```js
+import { createI18n, t, setLocale } from '@jacare/ui/i18n'
+
+createI18n({
+  locale: 'en',
+  fallbackLocale: 'en',
+  messages: {
+    en: { hello: 'Hello, {name}!', save: 'Save' },
+    'pt-BR': { hello: 'Olá, {name}!', save: 'Salvar' },
+  },
+})
+
+t('hello', { name: 'Heber' }) // Hello, Heber!
+setLocale('pt-BR')
+```
+
+In `.jcr` views use a getter so text updates when the locale changes: `${() => t('save')}`.
+`LocaleToggle` switches locales; see the [i18n docs](https://jacarejs.github.io/ui/i18n).
+
 ## Usage
 
 ```javascript
@@ -105,6 +128,7 @@ Full catalog with live demos: [Components overview](https://jacarejs.github.io/u
 | `Text` | Typography helper |
 | `Textarea` | Multiline field with count |
 | `ThemeScope` / `ThemeToggle` | Scoped theme + light/dark/system control |
+| `LocaleToggle` | Switch active i18n locale |
 | `TimePicker` / `TimeSelect` | Time spinners and discrete lists |
 | `Transfer` | Move items between lists |
 | `TreeSelect` | Select a node from a tree |
@@ -147,10 +171,10 @@ Latest `yarn test:coverage` result (scoped to theme helpers, docs stores, naviga
 
 | Metric | Result |
 |--------|--------|
-| Statements | **100%** (1709/1709) |
-| Branches | **100%** (268/268) |
-| Functions | **100%** (59/59) |
-| Lines | **100%** (1709/1709) |
+| Statements | **100%** (1844/1844) |
+| Branches | **100%** (355/355) |
+| Functions | **100%** (83/83) |
+| Lines | **100%** (1844/1844) |
 
 Thresholds in `vitest.config.js`: lines/functions/statements ≥ 80, branches **100**.
 
