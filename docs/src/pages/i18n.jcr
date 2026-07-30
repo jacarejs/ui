@@ -10,41 +10,26 @@ import CodeBlock from '../ui/CodeBlock.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
 import { previousNext } from '../nav-data.js'
 import {
-  createI18n,
   t,
   locale,
   setLocale,
 } from '@jacare/ui/i18n/index.js'
+import { setupI18n } from '../examples/i18n/setup.js'
 import {
   bootScript,
   componentLabels,
   createI18nBoot,
+  lazyLocale,
+  localeEn,
+  localePtBR,
+  localesIndex,
   localeToggleDemo,
+  treeLayout,
   useI18nHelper,
   useInTemplate,
 } from '../examples/i18n.js'
 
-createI18n({
-  locale: 'en',
-  fallbackLocale: 'en',
-  persist: false,
-  messages: {
-    en: {
-      hello: 'Hello, {name}!',
-      save: 'Save',
-      cancel: 'Cancel',
-      app: { title: 'My app' },
-      lead: 'Switch language — copy updates instantly.',
-    },
-    'pt-BR': {
-      hello: 'Olá, {name}!',
-      save: 'Salvar',
-      cancel: 'Cancelar',
-      app: { title: 'Meu app' },
-      lead: 'Troque o idioma — o texto atualiza na hora.',
-    },
-  },
-})
+setupI18n()
 
 const navLinks = previousNext('/i18n')
 const demoValue = pulse('')
@@ -54,13 +39,23 @@ export <view>
     <DocsHero
       :kicker=${'Foundations'}
       :title=${'i18n'}
-      :description=${'Simple translations for Jacaré apps — createI18n once, call t() in templates, switch locale with setLocale or LocaleToggle. Nested keys, {params}, and a fallback locale. No Vue plugin, no virtual DOM glue.'}
+      :description=${'Simple translations for Jacaré apps — one locale file per language, createI18n once, t() in templates, LocaleToggle to switch. Nested keys, {params}, and a fallback locale.'}
     />
+
+    <DocsSection :id=${'layout'} :title=${'File layout'}>
+      <p class="docs-lead">
+        Keep each language in its own file under <code>locales/</code>, then wire them in <code>locales/index.js</code> and pass that bag to <code>createI18n</code>.
+      </p>
+      <CodeBlock :code=${treeLayout} :filename=${'src/'} :language=${'text'} />
+      <CodeBlock :code=${localeEn} :filename=${'locales/en.js'} :language=${'javascript'} />
+      <CodeBlock :code=${localePtBR} :filename=${'locales/pt-BR.js'} :language=${'javascript'} />
+      <CodeBlock :code=${localesIndex} :filename=${'locales/index.js'} :language=${'javascript'} />
+    </DocsSection>
 
     <DocsSection :id=${'quick'} :title=${'Quick start'}>
       <p class="docs-lead">
-        One call at boot. Messages are plain objects. Dot keys like <code>app.title</code> work.
-        Use a getter in templates — <code>${"() => t('key')"}</code> — so the text updates when the locale changes.
+        Boot with the folder messages. Dot keys like <code>app.title</code> work.
+        In templates use a getter — <code>${"() => t('key')"}</code> — so copy updates when the locale changes.
       </p>
       <CodeBlock :code=${createI18nBoot} :filename=${'i18n.js'} :language=${'javascript'} />
       <CodeBlock :code=${useInTemplate} :filename=${'app.jcr'} :language=${'javascript'} />
@@ -70,9 +65,9 @@ export <view>
       <Demo
         :id=${'i18n-live'}
         :title=${'LocaleToggle + t()'}
-        :lead=${'Flip EN / PT — labels and fields update from the same message bag.'}
+        :lead=${'Same folder messages as above — flip EN / PT and the UI updates.'}
         :code=${localeToggleDemo}
-        :filename=${'locale-demo.jcr'}
+        :filename=${'app.jcr'}
       >
         <Stack :gap=${'md'}>
           <LocaleToggle
@@ -135,7 +130,7 @@ export <view>
             </tr>
             <tr>
               <td><code>addMessages(locale, bag)</code></td>
-              <td>Merge more strings for a locale (lazy-loaded packs).</td>
+              <td>Merge more strings for a locale (lazy-loaded packs from <code>locales/</code>).</td>
             </tr>
             <tr>
               <td><code>LocaleToggle</code></td>
@@ -151,10 +146,16 @@ export <view>
       <CodeBlock :code=${useI18nHelper} :filename=${'use-i18n.js'} :language=${'javascript'} />
     </DocsSection>
 
+    <DocsSection :id=${'lazy'} :title=${'Lazy locale packs'}>
+      <p class="docs-lead">
+        Start with the folders you need. Load another language file later with <code>addMessages</code>.
+      </p>
+      <CodeBlock :code=${lazyLocale} :filename=${'load-es.js'} :language=${'javascript'} />
+    </DocsSection>
+
     <DocsSection :id=${'components'} :title=${'With UI components'}>
       <p class="docs-lead">
-        Jacaré components take text through props. Pass getters so labels stay in sync with the locale —
-        the same pattern as reactive theme tokens.
+        Jacaré components take text through props. Pass getters so labels stay in sync with the locale — put those strings in the same <code>locales/*.js</code> files.
       </p>
       <CodeBlock :code=${componentLabels} :filename=${'translated-chrome.jcr'} :language=${'javascript'} />
     </DocsSection>
@@ -170,10 +171,11 @@ export <view>
 
     <DocsSection :id=${'rules'} :title=${'Rules of thumb'}>
       <ul class="docs-checklist">
+        <li>One file per locale under <code>locales/</code>; re-export them from <code>locales/index.js</code>.</li>
         <li>Call <code>createI18n</code> once before any <code>t</code> / <code>LocaleToggle</code>.</li>
         <li>In <code>.jcr</code> templates, wrap translations in a getter: <code>${"\${() => t('key')}"}</code>.</li>
         <li>Missing keys return the key string; missing locales fall back to <code>fallbackLocale</code>.</li>
-        <li>Keep message files flat objects — nest only when it helps (<code>app.title</code>).</li>
+        <li>Nest only when it helps (<code>app.title</code>); keep packs easy to scan.</li>
         <li>Component built-in English defaults stay English unless you pass translated props.</li>
       </ul>
     </DocsSection>

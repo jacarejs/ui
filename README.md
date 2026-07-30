@@ -40,19 +40,35 @@ applyMotion('system')
 
 ## i18n
 
-Simple translations (vue-i18n-like, much smaller). Create once, use `t()` in templates:
+Simple translations (vue-i18n-like, much smaller). Keep one file per locale, then boot once:
+
+```text
+src/
+├── i18n.js
+├── app.jcr
+└── locales/
+    ├── index.js
+    ├── en.js
+    └── pt-BR.js
+```
 
 ```js
-import { createI18n, t, setLocale } from '@jacare/ui/i18n'
+// locales/en.js
+export default { hello: 'Hello, {name}!', save: 'Save', app: { title: 'My app' } }
 
-createI18n({
-  locale: 'en',
-  fallbackLocale: 'en',
-  messages: {
-    en: { hello: 'Hello, {name}!', save: 'Save' },
-    'pt-BR': { hello: 'Olá, {name}!', save: 'Salvar' },
-  },
-})
+// locales/pt-BR.js
+export default { hello: 'Olá, {name}!', save: 'Salvar', app: { title: 'Meu app' } }
+
+// locales/index.js
+import en from './en.js'
+import ptBR from './pt-BR.js'
+export const messages = { en, 'pt-BR': ptBR }
+
+// i18n.js
+import { createI18n, t, setLocale } from '@jacare/ui/i18n'
+import { messages } from './locales/index.js'
+
+createI18n({ locale: 'en', fallbackLocale: 'en', messages })
 
 t('hello', { name: 'Heber' }) // Hello, Heber!
 setLocale('pt-BR')

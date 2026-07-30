@@ -1,22 +1,46 @@
+export const treeLayout = `src/
+├── i18n.js
+├── app.jcr
+└── locales/
+    ├── index.js
+    ├── en.js
+    └── pt-BR.js`
+
+export const localeEn = `export default {
+  hello: 'Hello, {name}!',
+  save: 'Save',
+  cancel: 'Cancel',
+  lead: 'Switch language — copy updates instantly.',
+  app: {
+    title: 'My app',
+  },
+}`
+
+export const localePtBR = `export default {
+  hello: 'Olá, {name}!',
+  save: 'Salvar',
+  cancel: 'Cancelar',
+  lead: 'Troque o idioma — o texto atualiza na hora.',
+  app: {
+    title: 'Meu app',
+  },
+}`
+
+export const localesIndex = `import en from './en.js'
+import ptBR from './pt-BR.js'
+
+export const messages = {
+  en,
+  'pt-BR': ptBR,
+}`
+
 export const createI18nBoot = `import { createI18n } from '@jacare/ui/i18n'
+import { messages } from './locales/index.js'
 
 createI18n({
   locale: 'en',
   fallbackLocale: 'en',
-  messages: {
-    en: {
-      hello: 'Hello, {name}!',
-      save: 'Save',
-      cancel: 'Cancel',
-      app: { title: 'My app' },
-    },
-    'pt-BR': {
-      hello: 'Olá, {name}!',
-      save: 'Salvar',
-      cancel: 'Cancelar',
-      app: { title: 'Meu app' },
-    },
-  },
+  messages,
 })`
 
 export const useInTemplate = `import Button from '@jacare/ui/Button'
@@ -43,7 +67,7 @@ export <view>
   <p>\${() => t('hello', { name: 'Jacaré' })}</p>
 </view>`
 
-export const useI18nHelper = `import { useI18n } from '@jacare/ui/i18n'
+export const useI18nHelper = `import { useI18n, translate } from '@jacare/ui/i18n'
 
 const { t, locale, setLocale, addMessages } = useI18n()
 
@@ -53,7 +77,8 @@ addMessages('es', {
 })
 
 setLocale('es')
-console.log(t('hello', { name: 'Heber' }), locale())`
+console.log(translate('hello', { name: 'Heber' }), locale())
+console.log(t('save')())`
 
 export const bootScript = `import { localeBootScript } from '@jacare/ui/i18n'
 
@@ -68,16 +93,24 @@ import { t } from '@jacare/ui/i18n'
 
 export <view>
   <ThemeToggle
-    :labels=\${() => ({
+    :labels=\${{
       light: t('theme.light'),
       dark: t('theme.dark'),
       system: t('theme.system'),
-    })}
+    }}
   />
   <Confirm
-    :title=\${() => t('confirm.title')}
-    :message=\${() => t('confirm.message')}
+    :title=\${t('confirm.title')}
+    :message=\${t('confirm.message')}
     :confirmLabel=\${() => t('save')}
-    :cancelLabel=\${() => t('cancel')}
+    :cancelLabel=\${t('cancel')}
   />
 </view>`
+
+export const lazyLocale = `import { addMessages, setLocale } from '@jacare/ui/i18n'
+
+async function loadSpanish() {
+  const bag = (await import('./locales/es.js')).default
+  addMessages('es', bag)
+  setLocale('es')
+}`
