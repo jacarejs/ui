@@ -2,6 +2,7 @@ import Button from '@jacare/ui/components/Button.jcr'
 import Field from '@jacare/ui/components/Field.jcr'
 import LocaleToggle from '@jacare/ui/components/LocaleToggle.jcr'
 import Stack from '@jacare/ui/components/Stack.jcr'
+import { pulse } from '@jacare/core'
 import DocsHero from '../ui/DocsHero.jcr'
 import DocsSection from '../ui/DocsSection.jcr'
 import Demo from '../ui/Demo.jcr'
@@ -46,6 +47,7 @@ createI18n({
 })
 
 const navLinks = previousNext('/i18n')
+const demoValue = pulse('')
 
 export <view>
   <article class="docs-page">
@@ -92,6 +94,7 @@ export <view>
             :label=${() => t('app.title')}
             :placeholder=${() => t('hello', { name: '…' })}
             :hint=${() => `locale: ${locale()}`}
+            bind-value=${demoValue}
           />
         </Stack>
       </Demo>
@@ -116,7 +119,7 @@ export <view>
             </tr>
             <tr>
               <td><code>t(key, params?)</code></td>
-              <td>Translate a key. Supports nested keys and <code>{name}</code> params.</td>
+              <td>Translate a key. Supports nested keys and <code>${'{name}'}</code> params.</td>
             </tr>
             <tr>
               <td><code>te(key)</code></td>
@@ -128,7 +131,7 @@ export <view>
             </tr>
             <tr>
               <td><code>useI18n()</code></td>
-              <td>Returns <code>{ t, te, locale, setLocale, addMessages, availableLocales }</code>.</td>
+              <td>Returns <code>${'{ t, te, locale, setLocale, addMessages, availableLocales }'}</code>.</td>
             </tr>
             <tr>
               <td><code>addMessages(locale, bag)</code></td>
@@ -168,7 +171,7 @@ export <view>
     <DocsSection :id=${'rules'} :title=${'Rules of thumb'}>
       <ul class="docs-checklist">
         <li>Call <code>createI18n</code> once before any <code>t</code> / <code>LocaleToggle</code>.</li>
-        <li>In <code>.jcr</code> templates, wrap translations: <code>\${() =&gt; t('key')}</code>.</li>
+        <li>In <code>.jcr</code> templates, wrap translations in a getter: <code>${"\${() => t('key')}"}</code>.</li>
         <li>Missing keys return the key string; missing locales fall back to <code>fallbackLocale</code>.</li>
         <li>Keep message files flat objects — nest only when it helps (<code>app.title</code>).</li>
         <li>Component built-in English defaults stay English unless you pass translated props.</li>
