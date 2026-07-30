@@ -283,7 +283,7 @@ export <view>
     </DocsSection>
 
     <DocsSection :id=${'auto'} :title=${'Auto-fit'}>
-      <p class="docs-lead">Cards reflow with <code>columns="auto"</code> — no media queries.</p>
+      <p class="docs-lead">Cards reflow with <code>columns="auto"</code>${' '}— no media queries.</p>
       <Demo
         :id=${'auto-demo'}
         :title=${'Responsive catalog'}

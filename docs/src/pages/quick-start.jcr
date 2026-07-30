@@ -19,21 +19,21 @@ export <view>
 
     <DocsSection :id=${'install'} :title=${'1. Install packages'}>
       <p class="docs-lead">
-        Add <code>@jacare/ui</code> with its peer <code>@jacare/core</code>, plus the compiler tooling for Vite.
+        Add <code>@jacare/ui</code>${' '}with its peer <code>@jacare/core</code>, plus the compiler tooling for Vite.
       </p>
       <CodeBlock :code=${install} :filename=${'terminal'} :language=${'bash'} />
     </DocsSection>
 
     <DocsSection :id=${'vite'} :title=${'2. Add the Vite plugin'}>
       <p class="docs-lead">
-        Register <code>jacare()</code> so <code>.jcr</code> files compile during development and production builds.
+        Register <code>jacare()</code>${' '}so <code>.jcr</code>${' '}files compile during development and production builds.
       </p>
       <CodeBlock :code=${viteConfig} :filename=${'vite.config.js'} :language=${'javascript'} />
     </DocsSection>
 
     <DocsSection :id=${'boot'} :title=${'3. Import the theme and mount'}>
       <p class="docs-lead">
-        Import <code>theme.css</code> once at the app entry, call <code>applyTheme</code>, then mount your root view.
+        Import <code>theme.css</code>${' '}once at the app entry, call <code>applyTheme</code>, then mount your root view.
       </p>
       <CodeBlock :code=${boot} :filename=${'boot.js'} :language=${'javascript'} />
     </DocsSection>

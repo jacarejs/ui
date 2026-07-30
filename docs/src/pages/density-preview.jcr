@@ -38,7 +38,7 @@ export <view>
       <p class="docs-lead">
         Current multiplier:
         <strong>${() => `${active().value}×`}</strong>
-        · Token <code>--j-density</code> via <code>data-j-density="${() => density()}"</code>
+        · Token <code>--j-density</code>${' '}via <code>data-j-density="${() => density()}"</code>
       </p>
 
       <div class="docs-pkg-tabs" role="tablist" aria-label="Density">
@@ -84,7 +84,7 @@ export <view>
 
     <DocsSection :id=${'apply'} :title=${'Apply in your app'}>
       <p class="docs-lead">
-        Call <code>applyDensity</code> from <code>@jacare/ui/theme</code>, or set <code>data-j-density</code> on <code>:root</code> / a subtree.
+        Call <code>applyDensity</code>${' '}from <code>@jacare/ui/theme</code>, or set <code>data-j-density</code>${' '}on <code>:root</code>${' '}/ a subtree.
       </p>
       <CodeBlock :code=${exportCode} :filename=${'density.js'} :language=${'javascript'} />
     </DocsSection>

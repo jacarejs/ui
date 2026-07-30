@@ -142,7 +142,7 @@ export <view>
     </Demo>
 
     <DocsSection :id=${'range'} :title=${'Date range'}>
-      <p class="docs-lead">Set <code>range</code> and bind an array of two ISO dates.</p>
+      <p class="docs-lead">Set <code>range</code>${' '}and bind an array of two ISO dates.</p>
       <Demo :id=${'range-demo'} :title=${'Trip dates'} :code=${rangeExample} :filename=${'date-picker-range.jcr'} :layout=${'bleed'}>
         <div style="width:min(22rem,100%)">
           <DatePicker :label=${'Trip dates'} :range=${true} bind-value=${rangeValue} />
@@ -151,7 +151,7 @@ export <view>
     </DocsSection>
 
     <DocsSection :id=${'bounds'} :title=${'Min and max'}>
-      <p class="docs-lead">Clamp selectable days with ISO <code>min</code> and <code>max</code>.</p>
+      <p class="docs-lead">Clamp selectable days with ISO <code>min</code>${' '}and <code>max</code>.</p>
       <Demo :id=${'bounds-demo'} :title=${'Bounded appointment'} :code=${bounds} :filename=${'date-picker-bounds.jcr'} :layout=${'rail'}>
         <div style="width:min(20rem,100%)">
           <DatePicker :label=${'Appointment'} :min=${'2026-01-01'} :max=${'2026-12-31'} bind-value=${boundsValue} />
@@ -160,7 +160,7 @@ export <view>
     </DocsSection>
 
     <DocsSection :id=${'manual-apply'} :title=${'Manual apply'}>
-      <p class="docs-lead">Turn off <code>autoApply</code> in range mode to confirm with Apply.</p>
+      <p class="docs-lead">Turn off <code>autoApply</code>${' '}in range mode to confirm with Apply.</p>
       <Demo :id=${'manual-apply-demo'} :title=${'Billing period'} :code=${manualApply} :filename=${'date-picker-manual-apply.jcr'} :layout=${'stack'}>
         <div style="width:min(22rem,100%)">
           <DatePicker :label=${'Billing period'} :range=${true} :autoApply=${false} bind-value=${manualApplyValue} />

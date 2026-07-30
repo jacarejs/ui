@@ -121,7 +121,7 @@ export <view>
 
     <DocsSection :id=${'motion'} :title=${'Reduced motion'}>
       <p class="docs-lead">
-        Components that animate should read <code>--j-duration-*</code>. Call <code>applyMotion('reduce')</code> to force zero durations, or leave <code>system</code> so the OS preference wins. Scrub timings in Motion Lab; validate thumb UX in Viewport Lab.
+        Components that animate should read <code>--j-duration-*</code>. Call <code>applyMotion('reduce')</code>${' '}to force zero durations, or leave <code>system</code>${' '}so the OS preference wins. Scrub timings in Motion Lab; validate thumb UX in Viewport Lab.
       </p>
       <CodeBlock :code=${motionBoot} :filename=${'motion.js'} :language=${'javascript'} />
       <div class="docs-hero-actions">

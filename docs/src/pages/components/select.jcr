@@ -139,7 +139,7 @@ export <view>
     </Demo>
 
     <DocsSection :id=${'tags'} :title=${'Object options with tags'}>
-      <p class="docs-lead">Pass <code>{'{value, label, tag}'}</code> objects to badge an option, like plan tiers.</p>
+      <p class="docs-lead">Pass <code>{'{value, label, tag}'}</code>${' '}objects to badge an option, like plan tiers.</p>
       <Demo :id=${'tags-demo'} :title=${'Plan tags'} :code=${tags} :filename=${'select-tags.jcr'} :layout=${'bleed'}>
         <div style="width:min(20rem,100%)">
           <Select

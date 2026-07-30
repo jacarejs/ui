@@ -187,7 +187,7 @@ export <view>
     <DocsSection :id=${'export'} :title=${'Export CSS'}>
       <p class="docs-lead">
         Paste into your app stylesheet after importing <code>@jacare/ui/theme.css</code>. Use
-        <code>applyMotion('reduce' | 'full' | 'system')</code> to mirror the preference toggle.
+        <code>applyMotion('reduce' | 'full' | 'system')</code>${' '}to mirror the preference toggle.
       </p>
       <CodeBlock :code=${exportCode} :filename=${'motion.js'} :language=${'javascript'} />
     </DocsSection>

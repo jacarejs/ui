@@ -33,8 +33,8 @@ export <view>
 
     <DocsSection :id=${'boot'} :title=${'Boot the theme'}>
       <p class="docs-lead">
-        Import <code>@jacare/ui/theme.css</code> once. Tokens live on <code>:root</code> and
-        <code>[data-j-theme="dark"]</code>. Call <code>applyTheme</code> early so the first paint matches the stored preference.
+        Import <code>@jacare/ui/theme.css</code>${' '}once. Tokens live on <code>:root</code>${' '}and
+        <code>[data-j-theme="dark"]</code>. Call <code>applyTheme</code>${' '}early so the first paint matches the stored preference.
       </p>
       <CodeBlock :code=${themeBoot} :filename=${'theme.js'} :language=${'javascript'} />
       <CodeBlock :code=${applyModes} :filename=${'modes.js'} :language=${'javascript'} />
@@ -49,7 +49,7 @@ export <view>
 
     <DocsSection :id=${'fonts'} :title=${'Use other fonts'}>
       <p class="docs-lead">
-        Typography is controlled by <code>--j-font</code> and <code>--j-font-mono</code>. Load any webfont (Google Fonts, Bunny, self-hosted files), then override those tokens — components pick them up automatically.
+        Typography is controlled by <code>--j-font</code>${' '}and <code>--j-font-mono</code>. Load any webfont (Google Fonts, Bunny, self-hosted files), then override those tokens — components pick them up automatically.
       </p>
       <CodeBlock :code=${customFonts} :filename=${'fonts.css'} :language=${'css'} />
       <CodeBlock :code=${customFontsBody} :filename=${'base.css'} :language=${'css'} />
@@ -60,7 +60,7 @@ export <view>
 
     <DocsSection :id=${'density'} :title=${'Density'}>
       <p class="docs-lead">
-        <code>--j-density</code> scales control height and padding. Use <code>applyDensity</code> or set <code>data-j-density</code> on <code>:root</code> / a subtree. Button, Field, Input, and Card read the control tokens.
+        <code>--j-density</code>${' '}scales control height and padding. Use <code>applyDensity</code>${' '}or set <code>data-j-density</code>${' '}on <code>:root</code>${' '}/ a subtree. Button, Field, Input, and Card read the control tokens.
       </p>
       <CodeBlock :code=${densityBoot} :filename=${'density.js'} :language=${'javascript'} />
       <CodeBlock :code=${densityTokens} :filename=${'density.css'} :language=${'css'} />
@@ -71,7 +71,7 @@ export <view>
 
     <DocsSection :id=${'motion'} :title=${'Motion'}>
       <p class="docs-lead">
-        Durations and eases live on <code>--j-duration-*</code> and <code>--j-ease-*</code>. <code>applyMotion('reduce')</code> zeros durations on the target; <code>system</code> honors <code>prefers-reduced-motion</code>.
+        Durations and eases live on <code>--j-duration-*</code>${' '}and <code>--j-ease-*</code>. <code>applyMotion('reduce')</code>${' '}zeros durations on the target; <code>system</code>${' '}honors <code>prefers-reduced-motion</code>.
       </p>
       <CodeBlock :code=${motionBoot} :filename=${'motion.js'} :language=${'javascript'} />
       <CodeBlock :code=${motionTokens} :filename=${'motion.css'} :language=${'css'} />
@@ -82,7 +82,7 @@ export <view>
 
     <DocsSection :id=${'tailwind'} :title=${'Use with Tailwind CSS'}>
       <p class="docs-lead">
-        Jacaré UI does not depend on Tailwind. You can still use Tailwind for layout and utility classes alongside <code>theme.css</code>. Bridge Jacaré tokens into Tailwind so <code>bg-primary</code> / <code>font-sans</code> stay in sync with the design system.
+        Jacaré UI does not depend on Tailwind. You can still use Tailwind for layout and utility classes alongside <code>theme.css</code>. Bridge Jacaré tokens into Tailwind so <code>bg-primary</code>${' '}/ <code>font-sans</code>${' '}stay in sync with the design system.
       </p>
       <p class="docs-lead">
         Official Tailwind install guide:
@@ -90,11 +90,11 @@ export <view>
       </p>
       <CodeBlock :code=${tailwindBridge} :filename=${'app.css'} :language=${'css'} />
       <p class="docs-lead">
-        On Tailwind v3, map the same tokens in <code>tailwind.config.js</code> instead of <code>@theme</code>:
+        On Tailwind v3, map the same tokens in <code>tailwind.config.js</code>${' '}instead of <code>@theme</code>:
       </p>
       <CodeBlock :code=${tailwindV3Config} :filename=${'tailwind.config.js'} :language=${'javascript'} />
       <p class="docs-lead">
-        Import order matters: load <code>@jacare/ui/theme.css</code> before Tailwind so <code>var(--j-*)</code> values resolve when utilities are generated.
+        Import order matters: load <code>@jacare/ui/theme.css</code>${' '}before Tailwind so <code>var(--j-*)</code>${' '}values resolve when utilities are generated.
       </p>
     </DocsSection>
 
@@ -107,7 +107,7 @@ export <view>
 
     <DocsSection :id=${'tools'} :title=${'Tune live'}>
       <p class="docs-lead">
-        Use the Theme Editor to draft token changes and export CSS, open the Token reference for the full <code>--j-*</code> catalog, or try Viewport Lab for mobile frames.
+        Use the Theme Editor to draft token changes and export CSS, open the Token reference for the full <code>--j-*</code>${' '}catalog, or try Viewport Lab for mobile frames.
       </p>
       <div class="docs-hero-actions">
         <Button :variant=${'primary'} on-press=${() => goDocs('/theme-editor')}>Open Theme Editor</Button>

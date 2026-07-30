@@ -29,11 +29,11 @@ export <view>
     <section class="docs-home-strip" aria-label="What you get">
       <div class="docs-home-strip__item">
         <h2>Theme tokens</h2>
-        <p>One <code>--j-*</code> sheet for color, density, motion, and type — shared by every control.</p>
+        <p>One <code>--j-*</code>${' '}sheet for color, density, motion, and type — shared by every control.</p>
       </div>
       <div class="docs-home-strip__item">
         <h2>Contracts first</h2>
-        <p>Props, slots, and emits live in the <code>.jcr</code> — docs tables stay honest.</p>
+        <p>Props, slots, and emits live in the <code>.jcr</code>${' '}— docs tables stay honest.</p>
       </div>
       <div class="docs-home-strip__item">
         <h2>Pulse updates</h2>

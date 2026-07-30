@@ -63,7 +63,7 @@ export <view>
 
     <DocsSection :id=${'tooling'} :title=${'Compiler tooling'}>
       <p class="docs-lead">
-        For Vite apps that compile <code>.jcr</code> files, also add the Jacaré Vite plugin and compiler
+        For Vite apps that compile <code>.jcr</code>${' '}files, also add the Jacaré Vite plugin and compiler
         as development dependencies.
       </p>
       <CodeBlock :code=${toolsCode} :filename=${installFile} :language=${'bash'} />
@@ -72,7 +72,7 @@ export <view>
 
     <DocsSection :id=${'theme'} :title=${'Import the theme'}>
       <p class="docs-lead">
-        Import the theme once at your app entry, then call <code>applyTheme</code>, <code>applyDensity</code>, and <code>applyMotion</code> so light/dark, control density, and reduced motion resolve before the first paint.
+        Import the theme once at your app entry, then call <code>applyTheme</code>, <code>applyDensity</code>, and <code>applyMotion</code>${' '}so light/dark, control density, and reduced motion resolve before the first paint.
         For fonts, Tailwind bridges, and deeper token guidance, see the
         <a jacare-go="/theme" href=${docsHref('/theme')}>Theme</a> page
         (<a href=${docsHref('/theme') + '#fonts'}>fonts</a>,
@@ -85,7 +85,7 @@ export <view>
 
     <DocsSection :id=${'imports'} :title=${'Import components'}>
       <p class="docs-lead">
-        Prefer deep imports like <code>@jacare/ui/Button</code> — that is the canonical path used across the docs. The package barrel also exports named members if you prefer a single import site.
+        Prefer deep imports like <code>@jacare/ui/Button</code>${' '}— that is the canonical path used across the docs. The package barrel also exports named members if you prefer a single import site.
       </p>
       <CodeBlock :code=${componentImports} :filename=${'app.jcr'} :language=${'javascript'} />
     </DocsSection>

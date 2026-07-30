@@ -22,7 +22,7 @@ export <view>
 
     <DocsSection :id=${'boot'} :title=${'Persist preference'}>
       <p class="docs-lead">
-        <code>applyTheme</code> writes <code>data-j-theme</code> and stores light, dark, or system in <code>localStorage</code>. Read the stored value on boot so reloads keep the user’s choice.
+        <code>applyTheme</code>${' '}writes <code>data-j-theme</code>${' '}and stores light, dark, or system in <code>localStorage</code>. Read the stored value on boot so reloads keep the user’s choice.
       </p>
       <CodeBlock :code=${applyThemeBoot} :filename=${'boot.js'} :language=${'javascript'} />
     </DocsSection>
