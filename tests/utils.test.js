@@ -14,6 +14,13 @@ describe('internal utils', () => {
     expect(read(() => translated)).toBe('Salvar')
   })
 
+  it('stops unwrapping after nested function depth limit', () => {
+    const tooDeep = () => () => () => () => () => 'bottom'
+    const value = read(tooDeep)
+    expect(typeof value).toBe('function')
+    expect(value()).toBe('bottom')
+  })
+
   it('joins truthy class parts', () => {
     expect(cx('a', false, null, 'b', '', 'c')).toBe('a b c')
   })
