@@ -11,6 +11,7 @@ export default defineConfig({
       reportsDirectory: './coverage',
       include: [
         'src/theme/**/*.js',
+        'src/i18n/**/*.js',
         'src/internal/**/*.js',
         'docs/src/theme-editor-store.js',
         'docs/src/navigate.js',

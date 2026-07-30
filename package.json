@@ -39,6 +39,10 @@
       "types": "./dist/theme/index.d.ts",
       "import": "./dist/theme/index.js"
     },
+    "./i18n": {
+      "types": "./dist/i18n/index.d.ts",
+      "import": "./dist/i18n/index.js"
+    },
     "./package.json": "./package.json",
     "./*": {
       "types": "./dist/*.d.ts",

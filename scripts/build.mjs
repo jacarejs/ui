@@ -17,12 +17,15 @@ rmSync(distDir, { recursive: true, force: true })
 mkdirSync(distDir, { recursive: true })
 mkdirSync(join(distDir, 'internal'), { recursive: true })
 mkdirSync(join(distDir, 'theme'), { recursive: true })
+mkdirSync(join(distDir, 'i18n'), { recursive: true })
 
 copyFileSync(join(srcDir, 'theme', 'index.css'), join(distDir, 'theme.css'))
 cpSync(join(srcDir, 'theme'), join(distDir, 'theme'), { recursive: true })
+cpSync(join(srcDir, 'i18n'), join(distDir, 'i18n'), { recursive: true })
 copyFileSync(join(srcDir, 'internal', 'utils.js'), join(distDir, 'internal', 'utils.js'))
 writeFileSync(join(distDir, 'internal', 'utils.d.ts'), utilsDts())
 writeFileSync(join(distDir, 'theme', 'index.d.ts'), themeDts())
+writeFileSync(join(distDir, 'i18n', 'index.d.ts'), i18nDts())
 
 // Flatten published theme.css so consumers do not need nested @imports
 writeFileSync(
@@ -49,6 +52,7 @@ for (const name of COMPONENT_NAMES) {
   })
 
   let code = result.code.replaceAll("from '../theme/index.js'", "from './theme/index.js'")
+  code = code.replaceAll("from '../i18n/index.js'", "from './i18n/index.js'")
   code = code.replace(/from ['"]\.\/([A-Za-z0-9]+)\.jcr['"]/g, "from './$1.js'")
   writeFileSync(join(distDir, `${name}.js`), code)
   if (result.map) {
@@ -68,6 +72,7 @@ function barrelJs(names) {
   const lines = names.map((name) => `export { default as ${name} } from './${name}.js'`)
   lines.push(`export * from './internal/utils.js'`)
   lines.push(`export * from './theme/index.js'`)
+  lines.push(`export * from './i18n/index.js'`)
   return lines.join('\n') + '\n'
 }
 
@@ -75,6 +80,7 @@ function barrelDts(names) {
   const lines = names.map((name) => `export { default as ${name} } from './${name}.js'`)
   lines.push(`export * from './internal/utils.js'`)
   lines.push(`export * from './theme/index.js'`)
+  lines.push(`export * from './i18n/index.js'`)
   return lines.join('\n') + '\n'
 }
 
@@ -101,6 +107,42 @@ export const motionModes: { system: 'system'; full: 'full'; reduce: 'reduce' }
 export function resolveMotion(mode?: 'system' | 'full' | 'reduce'): 'system' | 'full' | 'reduce'
 export function applyMotion(mode?: 'system' | 'full' | 'reduce', target?: HTMLElement | null): 'system' | 'full' | 'reduce'
 export function readStoredMotion(fallback?: 'system' | 'full' | 'reduce'): 'system' | 'full' | 'reduce'
+`
+}
+
+function i18nDts() {
+  return `export const LOCALE_STORAGE_KEY: 'j-locale'
+export type I18nMessages = Record<string, Record<string, unknown>>
+export type I18nParams = Record<string, string | number | boolean | null | undefined>
+export interface I18nInstance {
+  t(key: string, params?: I18nParams): string
+  te(key: string): boolean
+  locale: { (): string; set(value: string): void }
+  setLocale(locale: string): string
+  addMessages(locale: string, messages: Record<string, unknown>): Record<string, unknown>
+  availableLocales(): string[]
+  messages: I18nMessages
+  fallbackLocale: string
+}
+export interface CreateI18nOptions {
+  locale?: string
+  fallbackLocale?: string
+  messages?: I18nMessages
+  persist?: boolean
+}
+export function readStoredLocale(fallback?: string): string
+export function writeStoredLocale(locale: string): void
+export function localeBootScript(storageKey?: string): string
+export function createI18n(options?: CreateI18nOptions): I18nInstance
+export function resetI18n(): void
+export function useI18n(): I18nInstance
+export function getI18n(): I18nInstance | null
+export function t(key: string, params?: I18nParams): string
+export function te(key: string): boolean
+export function locale(): string
+export function setLocale(locale: string): string
+export function addMessages(locale: string, messages: Record<string, unknown>): Record<string, unknown> | null
+export function availableLocales(): string[]
 `
 }
 

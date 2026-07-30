@@ -1,0 +1,107 @@
+import { useI18n } from '../i18n/index.js'
+
+export <contract>
+  props: {
+    locales: { type: 'any', default: null }
+    labels: { type: 'object', default: null }
+  }
+  emits: ['change']
+</contract>
+
+function read(value) {
+  return typeof value === 'function' ? value() : value
+}
+
+function labelFor(id, labels, fallback) {
+  const map = read(labels)
+  if (map && typeof map === 'object' && map[id]) return map[id]
+  return fallback
+}
+
+function optionList(locales, labels) {
+  const i18n = useI18n()
+  i18n.locale()
+  const custom = read(locales)
+  if (Array.isArray(custom) && custom.length) {
+    return custom
+      .map((item) => {
+        if (typeof item === 'string') {
+          return { id: item, label: labelFor(item, labels, item) }
+        }
+        const id = String(item?.id || item?.value || '')
+        return {
+          id,
+          label: item?.label || labelFor(id, labels, id),
+        }
+      })
+      .filter((item) => item.id)
+  }
+  return i18n.availableLocales().map((id) => ({
+    id,
+    label: labelFor(id, labels, id),
+  }))
+}
+
+function isActive(id) {
+  return useI18n().locale() === id
+}
+
+function pickLocale(id, emitFn) {
+  useI18n().setLocale(id)
+  emitFn('change', id)
+}
+
+export <view>
+  <div class="jui-locale-toggle" role="group" aria-label="Locale">
+    #for optionList(locales, labels) as item (item.id)
+      <button
+        type="button"
+        class="jui-locale-toggle__btn"
+        class-is-active=${() => isActive(item.id)}
+        aria-pressed=${() => isActive(item.id)}
+        on-click=${() => pickLocale(item.id, emit)}
+      >
+        ${() => item.label}
+      </button>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-locale-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--j-radius-pill);
+  border: 1px solid var(--j-border);
+  background: var(--j-bg-elevated, var(--j-surface-2));
+}
+
+.jui-locale-toggle__btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--j-fg-muted, var(--j-muted));
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--j-radius-pill);
+  cursor: pointer;
+  transition: background var(--j-duration-fast, 120ms) var(--j-ease-out, ease), color var(--j-duration-fast, 120ms) var(--j-ease-out, ease);
+}
+
+.jui-locale-toggle__btn:hover {
+  color: var(--j-fg, var(--j-text));
+}
+
+.jui-locale-toggle__btn.is-active {
+  background: var(--j-accent, var(--j-primary));
+  color: #fff;
+}
+
+.jui-locale-toggle__btn:focus-visible {
+  outline: none;
+  box-shadow: var(--j-ring, var(--j-focus));
+}
+</style>
