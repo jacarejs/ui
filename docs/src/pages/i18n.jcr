@@ -60,7 +60,7 @@ export <view>
     <DocsSection :id=${'quick'} :title=${'Quick start'}>
       <p class="docs-lead">
         One call at boot. Messages are plain objects. Dot keys like <code>app.title</code> work.
-        Use <code>() =&gt; t('key')</code> in templates so the text updates when the locale changes.
+        Use a getter in templates — <code>${"() => t('key')"}</code> — so the text updates when the locale changes.
       </p>
       <CodeBlock :code=${createI18nBoot} :filename=${'i18n.js'} :language=${'javascript'} />
       <CodeBlock :code=${useInTemplate} :filename=${'app.jcr'} :language=${'javascript'} />
