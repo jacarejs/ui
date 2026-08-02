@@ -1,6 +1,9 @@
 import { derive, pulse } from '@jacare/core'
+import { mergeUiMessages, uiMessages } from './locales/index.js'
+import { read } from '../internal/utils.js'
 
 export const LOCALE_STORAGE_KEY = 'j-locale'
+export { en, ptBR, uiMessages, mergeUiMessages, deepMergeMessages } from './locales/index.js'
 
 let active = null
 
@@ -135,7 +138,11 @@ function createInstance(options = {}) {
 }
 
 export function createI18n(options = {}) {
-  active = createInstance(options)
+  const includeUi = options.includeUiMessages !== false
+  const messages = includeUi
+    ? mergeUiMessages(options.messages || {}, uiMessages)
+    : { ...readMessages(options.messages) }
+  active = createInstance({ ...options, messages })
   return active
 }
 
@@ -183,4 +190,23 @@ export function addMessages(locale, bag) {
 
 export function availableLocales() {
   return active ? active.availableLocales() : []
+}
+
+export function localeText(key, fallback = '', params) {
+  if (active) {
+    active.locale()
+    if (active.te(key)) return translate(key, params)
+  }
+  return interpolate(fallback, params)
+}
+
+export function localeT(key, fallback = '', params) {
+  return derive(() => localeText(key, fallback, params))
+}
+
+export function propText(prop, key, fallback, params) {
+  const raw = read(prop)
+  const value = raw == null ? '' : String(raw)
+  if (value && value !== fallback) return value
+  return localeText(key, fallback || value, params)
 }
