@@ -1,12 +1,17 @@
 export <contract>
   props: {
     previous: { type: 'object', default: null }
+    prev: { type: 'object', default: null }
     next: { type: 'object', default: null }
   }
 </contract>
 
 function read(value) {
   return typeof value === 'function' ? value() : value
+}
+
+function linkItem(previousValue, prevValue) {
+  return read(previousValue) || read(prevValue) || null
 }
 
 function linkHref(value) {
@@ -21,10 +26,10 @@ function linkLabel(value) {
 
 export <view>
   <nav class="docs-prevnext" aria-label="Previous and next">
-    #if read(previous)
-      <a jacare-go=${linkHref(previous)} href=${linkHref(previous)}>
+    #if linkItem(previous, prev)
+      <a jacare-go=${linkHref(linkItem(previous, prev))} href=${linkHref(linkItem(previous, prev))}>
         <span>Previous</span>
-        <strong>${linkLabel(previous)}</strong>
+        <strong>${linkLabel(linkItem(previous, prev))}</strong>
       </a>
     #else
       <span></span>

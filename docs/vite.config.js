@@ -19,6 +19,10 @@ export default defineConfig({
         replacement: resolve(repoRoot, 'src/theme/index.css'),
       },
       {
+        find: /^@jacare\/ui\/components\/([A-Za-z0-9]+)\.jcr$/,
+        replacement: resolve(repoRoot, 'src/components/$1.jcr'),
+      },
+      {
         find: '@jacare/ui',
         replacement: resolve(repoRoot, 'src'),
       },

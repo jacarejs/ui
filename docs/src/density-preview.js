@@ -2,19 +2,19 @@ export const densityModes = [
   {
     id: 'compact',
     label: 'Compact',
-    blurb: '0.84× controls — denser tables and toolbars',
+    blurb: '0.84× · tables & toolbars',
     value: 0.84,
   },
   {
     id: 'comfortable',
     label: 'Comfortable',
-    blurb: 'Default 1× control height and padding',
+    blurb: '1× · default controls',
     value: 1,
   },
   {
     id: 'spacious',
     label: 'Spacious',
-    blurb: '1.12× — roomier touch and marketing surfaces',
+    blurb: '1.12× · touch & marketing',
     value: 1.12,
   },
 ]

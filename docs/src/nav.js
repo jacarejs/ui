@@ -2,6 +2,27 @@ import { createNav, lazy, screen } from '@jacare/core'
 import Shell from './shell.jcr'
 import Home from './pages/home.jcr'
 import NotFound from './pages/not-found.jcr'
+import { componentHref, shippedComponents } from './nav-data.js'
+
+const componentPages = import.meta.glob('./pages/components/*.jcr')
+
+const componentScreens = Object.fromEntries(
+  shippedComponents.map(({ name }) => {
+    const slug = name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+    const pagePath = `./pages/components/${slug}.jcr`
+    const loader = componentPages[pagePath]
+    if (!loader) {
+      throw new Error(`Missing docs page for ${name}`)
+    }
+    return [
+      componentHref(name),
+      {
+        use: lazy(loader),
+        title: `${name} · Jacaré UI`,
+      },
+    ]
+  }),
+)
 
 export const nav = createNav({
   base: import.meta.env.BASE_URL,
@@ -10,56 +31,16 @@ export const nav = createNav({
     '/': { use: screen(Home), title: 'Jacaré UI' },
     '/install': { use: lazy(() => import('./pages/install.jcr')), title: 'Install · Jacaré UI' },
     '/quick-start': { use: lazy(() => import('./pages/quick-start.jcr')), title: 'Quick start · Jacaré UI' },
+    '/island': { use: lazy(() => import('./pages/island.jcr')), title: 'Island · Jacaré UI' },
     '/theme': { use: lazy(() => import('./pages/theme.jcr')), title: 'Theme · Jacaré UI' },
     '/dark-mode': { use: lazy(() => import('./pages/dark-mode.jcr')), title: 'Dark mode · Jacaré UI' },
     '/i18n': { use: lazy(() => import('./pages/i18n.jcr')), title: 'i18n · Jacaré UI' },
+    '/validation': { use: lazy(() => import('./pages/validation.jcr')), title: 'Validation · Jacaré UI' },
     '/tokens': { use: lazy(() => import('./pages/tokens.jcr')), title: 'Tokens · Jacaré UI' },
     '/layouts': { use: lazy(() => import('./pages/layouts.jcr')), title: 'Layouts · Jacaré UI' },
     '/accessibility': { use: lazy(() => import('./pages/accessibility.jcr')), title: 'Accessibility · Jacaré UI' },
     '/components': { use: lazy(() => import('./pages/components-index.jcr')), title: 'Components · Jacaré UI' },
-    '/components/alert': { use: lazy(() => import('./pages/components/alert.jcr')), title: 'Alert · Jacaré UI' },
-    '/components/autocomplete': { use: lazy(() => import('./pages/components/autocomplete.jcr')), title: 'Autocomplete · Jacaré UI' },
-    '/components/avatar': { use: lazy(() => import('./pages/components/avatar.jcr')), title: 'Avatar · Jacaré UI' },
-    '/components/badge': { use: lazy(() => import('./pages/components/badge.jcr')), title: 'Badge · Jacaré UI' },
-    '/components/button': { use: lazy(() => import('./pages/components/button.jcr')), title: 'Button · Jacaré UI' },
-    '/components/card': { use: lazy(() => import('./pages/components/card.jcr')), title: 'Card · Jacaré UI' },
-    '/components/cascader': { use: lazy(() => import('./pages/components/cascader.jcr')), title: 'Cascader · Jacaré UI' },
-    '/components/checkbox': { use: lazy(() => import('./pages/components/checkbox.jcr')), title: 'Checkbox · Jacaré UI' },
-    '/components/color-picker': { use: lazy(() => import('./pages/components/color-picker.jcr')), title: 'ColorPicker · Jacaré UI' },
-    '/components/color-picker-panel': { use: lazy(() => import('./pages/components/color-picker-panel.jcr')), title: 'ColorPickerPanel · Jacaré UI' },
-    '/components/confirm': { use: lazy(() => import('./pages/components/confirm.jcr')), title: 'Confirm · Jacaré UI' },
-    '/components/date-picker': { use: lazy(() => import('./pages/components/date-picker.jcr')), title: 'DatePicker · Jacaré UI' },
-    '/components/date-picker-panel': { use: lazy(() => import('./pages/components/date-picker-panel.jcr')), title: 'DatePickerPanel · Jacaré UI' },
-    '/components/date-time-picker': { use: lazy(() => import('./pages/components/date-time-picker.jcr')), title: 'DateTimePicker · Jacaré UI' },
-    '/components/dialog': { use: lazy(() => import('./pages/components/dialog.jcr')), title: 'Dialog · Jacaré UI' },
-    '/components/divider': { use: lazy(() => import('./pages/components/divider.jcr')), title: 'Divider · Jacaré UI' },
-    '/components/field': { use: lazy(() => import('./pages/components/field.jcr')), title: 'Field · Jacaré UI' },
-    '/components/flex': { use: lazy(() => import('./pages/components/flex.jcr')), title: 'Flex · Jacaré UI' },
-    '/components/form': { use: lazy(() => import('./pages/components/form.jcr')), title: 'Form · Jacaré UI' },
-    '/components/grid': { use: lazy(() => import('./pages/components/grid.jcr')), title: 'Grid · Jacaré UI' },
-    '/components/icon': { use: lazy(() => import('./pages/components/icon.jcr')), title: 'Icon · Jacaré UI' },
-    '/components/input': { use: lazy(() => import('./pages/components/input.jcr')), title: 'Input · Jacaré UI' },
-    '/components/input-number': { use: lazy(() => import('./pages/components/input-number.jcr')), title: 'InputNumber · Jacaré UI' },
-    '/components/input-otp': { use: lazy(() => import('./pages/components/input-otp.jcr')), title: 'InputOtp · Jacaré UI' },
-    '/components/input-tag': { use: lazy(() => import('./pages/components/input-tag.jcr')), title: 'InputTag · Jacaré UI' },
-    '/components/mention': { use: lazy(() => import('./pages/components/mention.jcr')), title: 'Mention · Jacaré UI' },
-    '/components/progress': { use: lazy(() => import('./pages/components/progress.jcr')), title: 'Progress · Jacaré UI' },
-    '/components/radio': { use: lazy(() => import('./pages/components/radio.jcr')), title: 'Radio · Jacaré UI' },
-    '/components/radio-group': { use: lazy(() => import('./pages/components/radio-group.jcr')), title: 'RadioGroup · Jacaré UI' },
-    '/components/rate': { use: lazy(() => import('./pages/components/rate.jcr')), title: 'Rate · Jacaré UI' },
-    '/components/select': { use: lazy(() => import('./pages/components/select.jcr')), title: 'Select · Jacaré UI' },
-    '/components/select-v2': { use: lazy(() => import('./pages/components/select-v2.jcr')), title: 'SelectV2 · Jacaré UI' },
-    '/components/slider': { use: lazy(() => import('./pages/components/slider.jcr')), title: 'Slider · Jacaré UI' },
-    '/components/spinner': { use: lazy(() => import('./pages/components/spinner.jcr')), title: 'Spinner · Jacaré UI' },
-    '/components/stack': { use: lazy(() => import('./pages/components/stack.jcr')), title: 'Stack · Jacaré UI' },
-    '/components/switch': { use: lazy(() => import('./pages/components/switch.jcr')), title: 'Switch · Jacaré UI' },
-    '/components/text': { use: lazy(() => import('./pages/components/text.jcr')), title: 'Text · Jacaré UI' },
-    '/components/textarea': { use: lazy(() => import('./pages/components/textarea.jcr')), title: 'Textarea · Jacaré UI' },
-    '/components/time-picker': { use: lazy(() => import('./pages/components/time-picker.jcr')), title: 'TimePicker · Jacaré UI' },
-    '/components/time-select': { use: lazy(() => import('./pages/components/time-select.jcr')), title: 'TimeSelect · Jacaré UI' },
-    '/components/transfer': { use: lazy(() => import('./pages/components/transfer.jcr')), title: 'Transfer · Jacaré UI' },
-    '/components/tree-select': { use: lazy(() => import('./pages/components/tree-select.jcr')), title: 'TreeSelect · Jacaré UI' },
-    '/components/upload': { use: lazy(() => import('./pages/components/upload.jcr')), title: 'Upload · Jacaré UI' },
+    ...componentScreens,
     '/theme-editor': { use: lazy(() => import('./pages/theme-editor.jcr')), title: 'Theme Editor · Jacaré UI' },
     '/viewport-lab': { use: lazy(() => import('./pages/viewport-lab.jcr')), title: 'Viewport Lab · Jacaré UI' },
     '/density-preview': { use: lazy(() => import('./pages/density-preview.jcr')), title: 'Density Preview · Jacaré UI' },

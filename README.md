@@ -25,7 +25,7 @@ Accessible, themeable Jacaré components powered by signals — no virtual DOM.
 yarn add @jacare/ui @jacare/core
 ```
 
-Peer dependency: `@jacare/core` — always use the latest published release (minimum `^0.1.15`).
+Peer dependency: `@jacare/core` — always use the latest published release (minimum `^0.1.16`).
 
 Import the theme once at your app entry, then boot theme / density / motion preferences:
 
@@ -114,6 +114,7 @@ Full catalog with live demos: [Components overview](https://jacarejs.github.io/u
 | Component | Role |
 |-----------|------|
 | `Alert` | Inline status banner |
+| `AnimateOnScroll` | Viewport enter/leave animations |
 | `Autocomplete` | Text field with filtered suggestions |
 | `Avatar` | Initials or image avatar |
 | `Badge` | Compact tone pills |
@@ -123,29 +124,47 @@ Full catalog with live demos: [Components overview](https://jacarejs.github.io/u
 | `Checkbox` | Two-way boolean control |
 | `ColorPicker` | Hex + swatch color field |
 | `ColorPickerPanel` | Standalone color panel |
+| `Compare` | Before/after image slider |
 | `Confirm` | Modal confirmation (`open` model) |
+| `DataTable` | Sortable selectable data table |
+| `DataView` | List/grid cards with pagination |
+| `Gallery` | Thumbnails + lightbox viewer |
+| `Hover` | Hover/focus state wrapper |
+| `MeterGroup` | Segmented meter with legend |
+| `OrderList` | Reorderable selection list |
+| `OrganizationChart` | Hierarchical org chart |
+| `Parallax` | Scroll-linked background image |
+| `ProgressCircle` | Circular progress indicator |
+| `Ripple` | Pointer ripple wrapper |
 | `DatePicker` | Typed or calendar date / range picker |
-| `DatePickerPanel` | Inline calendar surface |
+| `DatePickerPanel` | Inline calendar (single, range, or multiple) |
 | `DateTimePicker` | Composed `DatePicker` + `TimePicker` |
-| `Dialog` | General modal (`open` model, body/footer slots) |
+| `Dialog` | Lightweight focus-trapped modal |
 | `Divider` | Horizontal / vertical rule |
+| `Drawer` | Side / bottom overlay panel |
 | `Field` | Labeled text input (`model` value) |
 | `Flex` | Full flexbox positioning |
 | `Form` / `FormItem` | Form layout and labeled rows |
 | `Grid` | CSS grid tracks for layout |
 | `Icon` | Stroke icon set (`name`, sizes, tones) |
 | `Input` | Text field with clear, sizes, affixes |
+| `InputMask` | Pattern mask (CPF, phone, CEP, card, custom) |
+| `InputMoney` | Currency amount with locale formatting |
 | `InputNumber` | Numeric stepper |
 | `InputOtp` | One-time code boxes |
 | `InputTag` | Tag chips from keyboard input |
 | `Mention` | Textarea with `@` suggestions |
+| `MessageBox` | Alert / confirm / prompt dialogs |
+| `Modal` | Full modal with footer, sheet mobile, scroll lock |
 | `Progress` | Signal-driven progress bar |
 | `Radio` / `RadioGroup` | Single-choice controls |
 | `Rate` | Star rating |
 | `Select` / `SelectV2` | Dropdown select (virtualized option) |
+| `Skeleton` / `SkeletonItem` | Loading placeholders with optional shimmer |
 | `Slider` | Continuous or range track |
 | `Spinner` | Indeterminate loading indicator |
 | `Stack` | Simple flex gap helper |
+| `Statistic` | Metrics with optional count-up |
 | `Switch` | Immediate on/off toggle |
 | `Text` | Typography helper |
 | `Textarea` | Multiline field with count |
@@ -165,7 +184,7 @@ Full catalog with live demos: [Components overview](https://jacarejs.github.io/u
 | `applyDensity('compact' \| 'comfortable' \| 'spacious')` | Scale control height/padding via `--j-density` |
 | `applyMotion('system' \| 'full' \| 'reduce')` | Honor or override reduced motion |
 
-Core tokens live in `@jacare/ui/theme.css` (`--j-primary`, `--j-surface`, `--j-font`, `--j-duration-*`, …). Override any token on `:root` or a subtree. See the [Theme](https://jacarejs.github.io/ui/theme), [Token reference](https://jacarejs.github.io/ui/tokens), and docs tools (Theme Editor, Density Preview, Motion Lab, Viewport Lab).
+Core tokens live in `@jacare/ui/theme.css` (`--j-primary`, `--j-surface`, `--j-font`, `--j-duration-*`, `--j-touch-target`, `--j-bp-*`, `--j-safe-*`, …). Override any token on `:root` or a subtree. See the [Theme](https://jacarejs.github.io/ui/theme), [Token reference](https://jacarejs.github.io/ui/tokens), and docs tools (Theme Editor, Density Preview, Motion Lab, Viewport Lab).
 
 ## Local development
 

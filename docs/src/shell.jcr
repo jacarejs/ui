@@ -67,7 +67,7 @@ export <view>
       </button>
 
       <div class="docs-topbar-actions">
-        <span class="docs-version">v0.1.1</span>
+        <span class="docs-version">v0.1.3</span>
         <ThemeToggle />
         <a class="docs-github" href=${() => docsSiteUrl} target="_blank" rel="noreferrer">Docs</a>
         <a class="docs-github" href=${() => uiRepoUrl} target="_blank" rel="noreferrer">GitHub</a>

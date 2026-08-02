@@ -2,7 +2,7 @@ import '../../src/theme/index.css'
 import './app.css'
 import { effect } from '@jacare/core'
 import { restoreThemeEditorFromStorage } from './theme-editor-store.js'
-import { scrollDocsToTop } from './navigate.js'
+import { scrollDocsNavToActive, scrollDocsToTop } from './navigate.js'
 import { nav } from './nav.js'
 
 restoreThemeEditorFromStorage()
@@ -14,15 +14,25 @@ let dispose = null
 let stopScroll = null
 let lastPath = null
 
+function syncDocsChrome(pathChanged) {
+  if (pathChanged) {
+    scrollDocsToTop()
+    requestAnimationFrame(scrollDocsToTop)
+  }
+  requestAnimationFrame(() => {
+    scrollDocsNavToActive()
+    requestAnimationFrame(scrollDocsNavToActive)
+  })
+}
+
 function boot() {
   dispose = nav.attach(root)
   stopScroll = effect(() => {
     const place = nav.where()
-    if (lastPath !== null && lastPath !== place.path) {
-      scrollDocsToTop()
-      requestAnimationFrame(scrollDocsToTop)
-    }
+    const pathChanged = lastPath !== null && lastPath !== place.path
+    const firstPaint = lastPath === null
     lastPath = place.path
+    if (pathChanged || firstPaint) syncDocsChrome(pathChanged)
   })
 }
 

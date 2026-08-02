@@ -22,6 +22,13 @@ export function scrollDocsToTop() {
   if (main) main.scrollTop = 0
 }
 
+export function scrollDocsNavToActive() {
+  if (typeof document === 'undefined') return
+  const link = document.querySelector('.docs-sidebar a.jacare-here, .docs-nav a.jacare-here')
+  if (!link || typeof link.scrollIntoView !== 'function') return
+  link.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+}
+
 export function goDocs(path = '/') {
   history.pushState({}, '', docsHref(path))
   window.dispatchEvent(new PopStateEvent('popstate'))

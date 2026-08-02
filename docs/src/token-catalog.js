@@ -87,13 +87,21 @@ export const tokenGroups = [
   {
     id: 'controls',
     title: 'Control sizing',
-    blurb: 'Density-aware height and padding used by Button, Field, Input, and related controls.',
+    blurb: 'Density-aware height, padding, touch targets, breakpoints, and safe-area insets.',
     layout: 'space',
     items: [
       { name: '--j-density', kind: 'space', role: 'Density multiplier' },
       { name: '--j-control-height', kind: 'space', role: 'Control min-height' },
       { name: '--j-control-padding-x', kind: 'space', role: 'Control padding X' },
       { name: '--j-control-padding-y', kind: 'space', role: 'Control padding Y' },
+      { name: '--j-touch-target', kind: 'space', role: 'Touch target (44px)' },
+      { name: '--j-touch-target-sm', kind: 'space', role: 'Touch target sm' },
+      { name: '--j-bp-sm', kind: 'space', role: 'Breakpoint sm (640px)' },
+      { name: '--j-bp-md', kind: 'space', role: 'Breakpoint md (768px)' },
+      { name: '--j-safe-top', kind: 'space', role: 'Safe area top' },
+      { name: '--j-safe-right', kind: 'space', role: 'Safe area right' },
+      { name: '--j-safe-bottom', kind: 'space', role: 'Safe area bottom' },
+      { name: '--j-safe-left', kind: 'space', role: 'Safe area left' },
     ],
   },
   {
