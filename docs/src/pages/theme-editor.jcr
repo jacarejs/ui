@@ -401,12 +401,12 @@ export <view>
 
     <DocsSection :id=${'how'} :title=${'How it works'}>
       <p class="docs-lead">
-        <strong>Library</strong> lists built-in and custom presets — filter, preview, and Apply to publish tokens to the page.
-        <strong>Edit</strong> tweaks the selected palette (built-ins save as overrides; customs update in place).
-        <strong>Create</strong> starts a named custom theme. Export CSS from the preview panel when you are ready to paste into an app stylesheet.
+        <strong>Library</strong>${' '}lists built-in and custom presets — filter, preview, and Apply to publish tokens to the page.
+        <strong>Edit</strong>${' '}tweaks the selected palette (built-ins save as overrides; customs update in place).
+        <strong>Create</strong>${' '}starts a named custom theme. Export CSS from the preview panel when you are ready to paste into an app stylesheet.
       </p>
       <p class="docs-lead">
-        State persists in this browser under <code>jui-theme-editor</code>, <code>jui-theme-editor-custom</code>, and <code>jui-theme-editor-overrides</code>.
+        State persists in this browser under <code>jui-theme-editor</code>,${' '}<code>jui-theme-editor-custom</code>, and <code>jui-theme-editor-overrides</code>.
       </p>
     </DocsSection>
 

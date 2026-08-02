@@ -1,8 +1,9 @@
 import DocsHero from '../ui/DocsHero.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
-import { previousNext } from '../nav-data.js'
+import { previousNext, shippedComponents } from '../nav-data.js'
 
 const navLinks = previousNext('/changelog')
+const shippedCount = shippedComponents.length
 
 export <view>
   <article class="docs-page">
@@ -14,18 +15,39 @@ export <view>
 
     <div class="docs-panel" style="padding:1.25rem">
       <h2 class="docs-section-title" style="margin-top:0">Unreleased</h2>
-      <p class="docs-lead" style="margin-top:0">Forms suite, theme density/motion, and docs tools.</p>
+      <p class="docs-lead" style="margin-top:0">Modal overlay, mobile touch pass, calendar selection modes, and motion polish — catalog at <strong>${shippedCount}</strong>${' '}components.</p>
       <ul class="docs-checklist">
-        <li>Forms — Autocomplete, Cascader, ColorPickerPanel, DatePickerPanel, DateTimePicker (composes DatePicker + TimePicker), Form/FormItem, Input family, Mention, Radio, Rate, SelectV2, Slider, TimePicker, TimeSelect, Transfer, TreeSelect, Upload</li>
-        <li>Theme — <code>--j-density</code>, control sizing tokens, <code>--j-duration-slow</code>, <code>--j-ease-in-out</code>, <code>applyDensity</code>, <code>applyMotion</code></li>
+        <li><code>Hover</code>,${' '}<code>ProgressCircle</code>,${' '}<code>Parallax</code>${' '}— utility and media primitives</li>
+        <li><code>OrderList</code>,${' '}<code>DataView</code>,${' '}<code>DataTable</code>,${' '}<code>OrganizationChart</code>${' '}— data surfaces</li>
+        <li><code>Compare</code>,${' '}<code>Gallery</code>,${' '}<code>AnimateOnScroll</code>,${' '}<code>MeterGroup</code>,${' '}<code>Ripple</code>${' '}— media and interaction utilities</li>
+        <li>Docs catalog — component library page with search, stats, and preview cards</li>
+        <li><code>Editable</code>,${' '}<code>NumberRange</code>,${' '}<code>FilterBar</code>${' '}— inline edit, linked min/max, and list filter chrome</li>
+        <li><code>SignaturePad</code>,${' '}<code>Nps</code>,${' '}<code>Likert</code>${' '}— touch signature and survey scales</li>
+        <li><code>MonthPicker</code>,${' '}<code>YearPicker</code>,${' '}<code>DurationPicker</code>${' '}— competence, year, and SLA durations</li>
+        <li><code>LocationPicker</code>,${' '}<code>AvatarUpload</code>,${' '}<code>CodeInput</code>${' '}— coords/geolocation, circular crop upload, short code/JSON</li>
+        <li><code>CheckboxGroup</code>${' '}— multi-select options with select-all and indeterminate state (RadioGroup mirror)</li>
+        <li><code>InputPassword</code>${' '}— show/hide toggle and strength meter</li>
+        <li><code>InputSearch</code>${' '}— debounce, clear, and optional submit for filter bars</li>
+        <li><code>FormList</code>${' '}— dynamic rows with add/remove/reorder</li>
+        <li><code>FormActions</code>${' '}— sticky Cancel / Save / Submit bar with loading</li>
+        <li><code>FormSection</code>${' '}— accessible fieldset grouping with title and description</li>
+        <li><code>InputMask</code>${' '}— pattern masks (<code>#</code>${' '}/${' '}<code>A</code>${' '}/${' '}<code>*</code>) with presets for CPF, CNPJ, phone, CEP, card, and custom text</li>
+        <li><code>InputMoney</code>${' '}— currency amounts with locale formatting; model stays a number</li>
+        <li><code>Modal</code>${' '}— full overlay with title, description, <code>ModalFooter</code>${' '}/${' '}<code>ModalHeader</code>, scroll lock, Escape/backdrop controls, sizes (<code>sm</code>${' '}–${' '}<code>full</code>), auto/bottom sheet placement, and swipe-down dismiss on touch</li>
+        <li><code>DatePickerPanel</code>${' '}— <code>range</code>${' '}and <code>multiple</code>${' '}selection (ISO string arrays), hint text, and Clear</li>
+        <li><code>Statistic</code>${' '}— built-in count-up animation via <code>duration</code>${' '}(respects reduced motion); emits <code>finish</code></li>
+        <li><code>Skeleton</code>${' '}/${' '}<code>SkeletonItem</code>${' '}— shimmer works under scoped CSS; pass <code>animated</code>${' '}through to items</li>
+        <li>Mobile — touch targets (<code>--j-touch-target</code>), safe-area tokens, Carousel swipe, Splitter 44px hit area, Dropdown/Popover/Tooltip hover→tap fallback, Drawer full-bleed ≤640px, Form label-left stacks, Container/Aside/Space fluid layouts</li>
+        <li>Theme tokens — <code>--j-touch-target</code>,${' '}<code>--j-bp-sm</code>${' '}/${' '}<code>--j-bp-md</code>,${' '}<code>--j-safe-*</code></li>
+        <li>Docs — Modal demos, DatePickerPanel range/multiple, Statistic/Skeleton animation examples, Viewport Lab for mobile frames</li>
+        <li>Catalog — <strong>${shippedCount}</strong>${' '}shipped components (docs shell version + overview count aligned)</li>
+        <li>Overlay — Dialog/Confirm focus trap, focus restore, and unique title ids</li>
+        <li>Forms — Autocomplete, Cascader, ColorPickerPanel, DatePickerPanel, DateTimePicker, Form/FormItem, Input family, Mention, Radio, Rate, SelectV2, Slider, TimePicker, TimeSelect, Transfer, TreeSelect, Upload</li>
+        <li>Theme — <code>--j-density</code>, control sizing tokens, <code>--j-duration-slow</code>,${' '}<code>--j-ease-in-out</code>,${' '}<code>applyDensity</code>,${' '}<code>applyMotion</code></li>
         <li>Docs tools — Viewport Lab (320/390/768 + Tap River checklist), Density Preview, Motion Lab</li>
-        <li>Theme docs — custom fonts, Tailwind bridge, density and motion guides</li>
-        <li>Theme Editor — expanded presets, sticky live preview, custom themes in localStorage</li>
-        <li>Token reference — catalog with filter, copy, and motion/density tokens</li>
-        <li>i18n — <code>@jacare/ui/i18n</code>${' '}with <code>createI18n</code>, reactive <code>t()</code>${' '}(no arrow in templates), <code>translate()</code>, nested keys, <code>{params}</code>, fallback locale, persist, and <code>LocaleToggle</code>; docs show a <code>locales/</code>${' '}folder layout</li>
-        <li>Docs brand — Jacaré SVG logo in the shell, home hero, and Theme Editor preview; colors follow <code>--j-primary</code>, <code>--j-leaf</code>, and <code>--j-surface-2</code></li>
-        <li>Cascader — on ≤640px opens as a bottom sheet with single-column drill-down, Back nav, larger touch targets, and safe-area padding</li>
-        <li>Unit tests — <code>yarn test:coverage</code>${' '}at <strong>100%</strong> statements, branches, functions, and lines (theme helpers, docs stores, navigate, and critical components); branch threshold enforced at 100%</li>
+        <li>i18n — <code>@jacare/ui/i18n</code>${' '}with <code>createI18n</code>, reactive <code>t()</code>, nested keys, and <code>LocaleToggle</code></li>
+        <li>Cascader — on ≤640px opens as a bottom sheet with single-column drill-down and safe-area padding</li>
+        <li>Unit tests — <code>yarn test:coverage</code>${' '}at <strong>100%</strong>${' '}statements, branches, functions, and lines</li>
       </ul>
     </div>
 
@@ -34,15 +56,15 @@ export <view>
       <p class="docs-lead" style="margin-top:0">Layout primitives and composition models on the canopy palette.</p>
       <ul class="docs-checklist">
         <li><code>Flex</code>${' '}— full flexbox positioning with reverse axes, justify, wrap, and inline</li>
-        <li><code>Grid</code>${' '}— CSS grid tracks (<code>1</code>–<code>12</code>, <code>auto</code>) with dense packing</li>
+        <li><code>Grid</code>${' '}— CSS grid tracks (<code>1</code>${' '}–${' '}<code>12</code>,${' '}<code>auto</code>) with dense packing</li>
         <li><code>Select</code>${' '}— searchable single/multi dropdown with string or tagged options</li>
         <li><code>DatePicker</code>${' '}— typed or calendar date input with range and bounds support</li>
         <li><code>Confirm</code>${' '}— modal confirmation dialog with danger and busy states</li>
         <li><code>Icon</code>${' '}— stroke icon set with sizes, tones, and accessible labels</li>
         <li><code>Textarea</code>${' '}— multiline field with character count and resize</li>
         <li><code>RadioGroup</code>${' '}— single-choice list or selectable cards</li>
-        <li><code>Dialog</code>${' '}— general modal with body and footer slots</li>
-        <li>Docs demos — Element Plus–style stage card, Show/Hide source, stacked examples</li>
+        <li><code>Dialog</code>${' '}— general modal with body content and three sizes</li>
+        <li>Docs demos — stage card, Show/Hide source, stacked examples</li>
         <li>Docs shell polish — brand-first home, clearer nav, overlay stacking above code</li>
         <li>Layouts docs — shell, sidebar, split, gallery, and toolbar recipes using canopy tokens</li>
         <li>Docs fixes for Pages mounts, logo base path, CodeBlock spacing/copy state, and <code>boot.js</code>${' '}filenames</li>

@@ -1,0 +1,317 @@
+import { pulse } from '@jacare/core'
+import { createForm } from '@jacare/ui'
+import Button from '@jacare/ui/components/Button.jcr'
+import Form from '@jacare/ui/components/Form.jcr'
+import FormItem from '@jacare/ui/components/FormItem.jcr'
+import Input from '@jacare/ui/components/Input.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import DocsHero from '../ui/DocsHero.jcr'
+import DocsSection from '../ui/DocsSection.jcr'
+import Demo from '../ui/Demo.jcr'
+import CodeBlock from '../ui/CodeBlock.jcr'
+import PreviousNext from '../ui/PreviousNext.jcr'
+import { previousNext } from '../nav-data.js'
+import {
+  createFormBoot,
+  customValidator,
+  fieldApi,
+  liveForm,
+  ruleShape,
+  triggerRules,
+  typesExample,
+  usageRules,
+  wireForm,
+} from '../examples/validation.js'
+
+const navLinks = previousNext('/validation')
+const status = pulse('')
+
+const demoForm = createForm({
+  model: {
+    name: pulse(''),
+    email: pulse(''),
+  },
+  rules: {
+    name: [
+      { required: true, message: 'Name is required', trigger: 'blur' },
+      { min: 2, message: 'Use at least 2 characters', trigger: 'change' },
+    ],
+    email: [
+      { required: true, message: 'Email is required', trigger: 'blur' },
+      { type: 'email', message: 'Enter a valid email', trigger: ['blur', 'change'] },
+    ],
+  },
+})
+
+const matchForm = createForm({
+  model: {
+    password: pulse(''),
+    confirm: pulse(''),
+  },
+  rules: {
+    password: [{ required: true, min: 6, message: 'Min 6 characters' }],
+    confirm: [
+      { required: true, message: 'Confirm your password' },
+      {
+        validator: (rule, value, callback) => {
+          if (value !== matchForm.model.password()) callback(new Error('Passwords must match'))
+          else callback()
+        },
+        trigger: 'blur',
+      },
+    ],
+  },
+})
+
+async function submitDemo() {
+  try {
+    await demoForm.validate()
+    status.set('Form is valid')
+  } catch {
+    status.set('Fix the highlighted fields')
+  }
+}
+
+async function submitMatch() {
+  try {
+    await matchForm.validate()
+    status.set('Passwords match')
+  } catch {
+    status.set('Passwords still need attention')
+  }
+}
+
+function resetDemo() {
+  demoForm.resetFields()
+  status.set('')
+}
+
+function clearDemo() {
+  demoForm.clearValidate()
+  status.set('')
+}
+
+function resetMatch() {
+  matchForm.resetFields()
+  status.set('')
+}
+
+export <view>
+  <article class="docs-page">
+    <DocsHero
+      :kicker=${'Foundations'}
+      :title=${'Validation'}
+      :description=${'Form rules for Jacaré UI. createForm owns the model and rules, FormItem binds each control by prop, and validate runs on blur, change, or submit.'}
+    />
+
+    <DocsSection :id=${'overview'} :title=${'How it fits together'}>
+      <p class="docs-lead">
+        Validation ships from <code>@jacare/ui</code>${' '}and <code>@jacare/ui/validation</code>.
+        <code>createForm</code>${' '}holds the reactive model and rule map.
+        <code>Form</code>${' '}hosts the controller.
+        <code>FormItem</code>${' '}registers a field with <code>prop</code>${' '}and shows the error under the control.
+      </p>
+      <ol class="docs-checklist">
+        <li>Build <code>${'createForm({ model, rules })'}</code>${' '}with pulse fields.</li>
+        <li>Pass <code>${':form=${form}'}</code>${' '}to <code>Form</code>.</li>
+        <li>Set matching <code>FormItem</code>${' '}<code>prop</code>${' '}keys and bind inputs to <code>${'form.model.*'}</code>.</li>
+        <li>Call <code>${'await form.validate()'}</code>${' '}on submit. Blur and change validate automatically.</li>
+      </ol>
+      <CodeBlock :code=${createFormBoot} :filename=${'form.js'} :language=${'javascript'} />
+      <CodeBlock :code=${wireForm} :filename=${'app.jcr'} :language=${'javascript'} />
+    </DocsSection>
+
+    <DocsSection :id=${'live'} :title=${'Live demo'}>
+      <Demo
+        :id=${'validation-live'}
+        :title=${'Required + email rules'}
+        :lead=${'Blur required fields, type to check min length and email format, then submit.'}
+        :code=${liveForm}
+        :filename=${'validation-live.jcr'}
+      >
+        <Stack :gap=${'md'}>
+          <Form :form=${demoForm}>
+            <FormItem :prop=${'name'} :label=${'Name'} :required=${true}>
+              <Input bind-value=${demoForm.model.name} />
+            </FormItem>
+            <FormItem :prop=${'email'} :label=${'Email'} :required=${true}>
+              <Input :type=${'email'} bind-value=${demoForm.model.email} />
+            </FormItem>
+            <Stack :direction=${'row'} :wrap=${true}>
+              <Button on-press=${submitDemo}>Submit</Button>
+              <Button :variant=${'secondary'} on-press=${resetDemo}>Reset</Button>
+              <Button :variant=${'ghost'} on-press=${clearDemo}>Clear errors</Button>
+            </Stack>
+          </Form>
+          #if status()
+            <p class="docs-lead" style="margin:0">${status}</p>
+          #end
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'rules'} :title=${'Rule shape'}>
+      <p class="docs-lead">
+        Each key in <code>rules</code>${' '}is a field path. The value is one rule or an array of rules.
+        Rules run in order. The first failing message wins for that field.
+      </p>
+      <CodeBlock :code=${ruleShape} :filename=${'rules.js'} :language=${'javascript'} />
+      <div class="docs-table-wrap">
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>required</code></td>
+              <td>Fail when empty. Strings also trim unless whitespace is false.</td>
+            </tr>
+            <tr>
+              <td><code>type</code></td>
+              <td>email, url, string, number, integer, boolean, array, or other typeof checks.</td>
+            </tr>
+            <tr>
+              <td><code>min</code>${' '}/ <code>max</code>${' '}/ <code>len</code></td>
+              <td>Length for strings and arrays.</td>
+            </tr>
+            <tr>
+              <td><code>pattern</code></td>
+              <td>RegExp or string pattern tested against the stringified value.</td>
+            </tr>
+            <tr>
+              <td><code>trigger</code></td>
+              <td>blur, change, or both. Default is blur and change. Submit always runs.</td>
+            </tr>
+            <tr>
+              <td><code>message</code></td>
+              <td>Error copy shown under the field.</td>
+            </tr>
+            <tr>
+              <td><code>validator</code></td>
+              <td>Custom async or sync check via callback or a returned Promise.</td>
+            </tr>
+            <tr>
+              <td><code>label</code></td>
+              <td>Used in default messages when message is omitted.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <CodeBlock :code=${typesExample} :filename=${'types.js'} :language=${'javascript'} />
+    </DocsSection>
+
+    <DocsSection :id=${'triggers'} :title=${'Triggers'}>
+      <p class="docs-lead">
+        FormItem listens for control blur and change, then validates that field with the matching trigger.
+        Submit validation ignores per-rule trigger filters and runs every rule.
+      </p>
+      <CodeBlock :code=${triggerRules} :filename=${'triggers.js'} :language=${'javascript'} />
+      <ul class="docs-checklist">
+        <li><code>blur</code>${' '}— required and cross-field checks after the user leaves the control.</li>
+        <li><code>change</code>${' '}— min, max, and format feedback while typing.</li>
+        <li><code>submit</code>${' '}— always included when you call <code>${'form.validate()'}</code>.</li>
+      </ul>
+    </DocsSection>
+
+    <DocsSection :id=${'custom'} :title=${'Custom validators'}>
+      <Demo
+        :id=${'validation-custom'}
+        :title=${'Password match'}
+        :lead=${'validator receives rule, value, callback, and model. Call callback() on success or callback(error) on failure.'}
+        :code=${customValidator}
+        :filename=${'validation-custom.jcr'}
+      >
+        <Form :form=${matchForm}>
+          <FormItem :prop=${'password'} :label=${'Password'} :required=${true}>
+            <Input :type=${'password'} bind-value=${matchForm.model.password} />
+          </FormItem>
+          <FormItem :prop=${'confirm'} :label=${'Confirm'} :required=${true}>
+            <Input :type=${'password'} bind-value=${matchForm.model.confirm} />
+          </FormItem>
+          <Stack :direction=${'row'} :gap=${'sm'}>
+            <Button on-press=${submitMatch}>Validate</Button>
+            <Button :variant=${'secondary'} on-press=${resetMatch}>Reset</Button>
+          </Stack>
+        </Form>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'createForm API'}>
+      <p class="docs-lead">
+        The controller returned by <code>createForm</code>${' '}is what you pass to <code>Form</code>${' '}and call from submit handlers.
+      </p>
+      <CodeBlock :code=${fieldApi} :filename=${'api.js'} :language=${'javascript'} />
+      <div class="docs-table-wrap">
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Method / field</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>model</code></td>
+              <td>Reactive bag of pulse fields.</td>
+            </tr>
+            <tr>
+              <td><code>rules</code></td>
+              <td>Pulse of the rules map. Can be updated later.</td>
+            </tr>
+            <tr>
+              <td><code>errors</code></td>
+              <td>Pulse of prop to message.</td>
+            </tr>
+            <tr>
+              <td><code>validate()</code></td>
+              <td>Validate every registered field. Resolves true or throws with fields.</td>
+            </tr>
+            <tr>
+              <td><code>validateField</code></td>
+              <td>Validate one or many props. Trigger defaults to submit.</td>
+            </tr>
+            <tr>
+              <td><code>resetFields</code></td>
+              <td>Restore the initial snapshot and clear those errors.</td>
+            </tr>
+            <tr>
+              <td><code>clearValidate</code></td>
+              <td>Clear error state without changing values.</td>
+            </tr>
+            <tr>
+              <td><code>scrollToField</code></td>
+              <td>Scroll the registered FormItem into view.</td>
+            </tr>
+            <tr>
+              <td><code>getFieldValue</code>${' '}/ <code>setFieldValue</code></td>
+              <td>Read or write by prop path, including nested keys.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </DocsSection>
+
+    <DocsSection :id=${'usage'} :title=${'Usage rules'}>
+      <p class="docs-lead">
+        Keep form validation predictable by following these rules in every screen.
+      </p>
+      <ol class="docs-checklist">
+        #for usageRules as rule
+          <li>${rule}</li>
+        #end
+      </ol>
+      <p class="docs-lead">
+        Component docs for layout props live on
+        <a jacare-go="/components/form" href="/components/form">Form</a>${' '}
+        and
+        <a jacare-go="/components/form-item" href="/components/form-item">FormItem</a>.
+        This page is the source of truth for validation behavior.
+      </p>
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

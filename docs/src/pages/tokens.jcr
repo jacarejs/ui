@@ -60,14 +60,14 @@ export <view>
     <DocsHero
       :kicker=${'Foundations'}
       :title=${'Token reference'}
-      :description=${'Live catalog of --j-* brand, semantic, shape, space, and motion tokens. Switch Light / Dark in the header to compare canopy themes — every swatch and value updates from the document.'}
+      :description=${'Live catalog of --j-* brand, semantic, shape, space, touch, breakpoint, safe-area, and motion tokens. Switch Light / Dark in the header to compare canopy themes — every swatch and value updates from the document.'}
     />
 
     <div class="docs-tokens-intro docs-panel">
       <div class="docs-tokens-intro__copy">
         <p>
           Change a token once and every component that references it updates. Prefer editing brand tokens
-          (<code>--j-primary</code>, <code>--j-leaf</code>) before restyling primitives.
+          (<code>--j-primary</code>,${' '}<code>--j-leaf</code>) before restyling primitives.
         </p>
         <div class="docs-hero-actions">
           <Button :variant=${'primary'} :size=${'sm'} on-press=${() => goDocs('/theme-editor')}>Theme Editor</Button>

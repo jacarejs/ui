@@ -5,6 +5,7 @@ import Demo from '../ui/Demo.jcr'
 import CodeBlock from '../ui/CodeBlock.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
 import { previousNext } from '../nav-data.js'
+import { docsHref } from '../navigate.js'
 import { install, viteConfig, boot, firstComponent } from '../examples/quick-start.js'
 
 const navLinks = previousNext('/quick-start')
@@ -54,6 +55,9 @@ export <view>
       <ul class="docs-checklist">
         <li>Browse the component catalog for playgrounds and API tables</li>
         <li>Tune tokens in Theme, or try live edits in the Theme Editor</li>
+        <li>Embed UI into an existing host page with
+          <a jacare-go="/island" href=${docsHref('/island')}>Island</a>
+        </li>
         <li>Follow Accessibility for focus, labels, and reduced motion</li>
       </ul>
     </DocsSection>

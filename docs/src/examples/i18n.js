@@ -37,8 +37,9 @@ export const messages = {
 export const createI18nBoot = `import { createI18n } from '@jacare/ui/i18n'
 import { messages } from './locales/index.js'
 
+// Built-in j.* component chrome (en + pt-BR) is merged automatically.
 createI18n({
-  locale: 'en',
+  locale: 'pt-BR',
   fallbackLocale: 'en',
   messages,
 })`
@@ -87,24 +88,20 @@ const script = document.createElement('script')
 script.textContent = localeBootScript()
 document.head.appendChild(script)`
 
-export const componentLabels = `import Confirm from '@jacare/ui/Confirm'
-import ThemeToggle from '@jacare/ui/ThemeToggle'
-import { t } from '@jacare/ui/i18n'
+export const componentLabels = `import ConfigProvider from '@jacare/ui/ConfigProvider'
+import Cascader from '@jacare/ui/Cascader'
+import Empty from '@jacare/ui/Empty'
+import Pagination from '@jacare/ui/Pagination'
+import { createI18n } from '@jacare/ui/i18n'
+
+createI18n({ locale: 'pt-BR' })
 
 export <view>
-  <ThemeToggle
-    :labels=\${{
-      light: t('theme.light'),
-      dark: t('theme.dark'),
-      system: t('theme.system'),
-    }}
-  />
-  <Confirm
-    :title=\${t('confirm.title')}
-    :message=\${t('confirm.message')}
-    :confirmLabel=\${t('save')}
-    :cancelLabel=\${t('cancel')}
-  />
+  <ConfigProvider :locale=\${'pt-BR'}>
+    <Empty />
+    <Cascader :options=\${[]} />
+    <Pagination :total=\${120} />
+  </ConfigProvider>
 </view>`
 
 export const lazyLocale = `import { addMessages, setLocale } from '@jacare/ui/i18n'

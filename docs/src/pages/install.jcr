@@ -39,7 +39,7 @@ export <view>
     <DocsSection :id=${'package'} :title=${'Package'}>
       <p class="docs-lead">
         Pick your package manager. All of these install the UI library and its peer dependency
-        <a href=${() => coreRepoUrl} target="_blank" rel="noreferrer"><code>@jacare/core</code></a>
+        <a href=${() => coreRepoUrl} target="_blank" rel="noreferrer"><code>@jacare/core</code></a>${' '}
         — always the latest published release (minimum <code>^0.1.15</code>).
       </p>
 
@@ -72,9 +72,9 @@ export <view>
 
     <DocsSection :id=${'theme'} :title=${'Import the theme'}>
       <p class="docs-lead">
-        Import the theme once at your app entry, then call <code>applyTheme</code>, <code>applyDensity</code>, and <code>applyMotion</code>${' '}so light/dark, control density, and reduced motion resolve before the first paint.
+        Import the theme once at your app entry, then call <code>applyTheme</code>,${' '}<code>applyDensity</code>, and <code>applyMotion</code>${' '}so light/dark, control density, and reduced motion resolve before the first paint.
         For fonts, Tailwind bridges, and deeper token guidance, see the
-        <a jacare-go="/theme" href=${docsHref('/theme')}>Theme</a> page
+        <a jacare-go="/theme" href=${docsHref('/theme')}>Theme</a>${' '}page
         (<a href=${docsHref('/theme') + '#fonts'}>fonts</a>,
         <a href=${docsHref('/theme') + '#density'}>density</a>,
         <a href=${docsHref('/theme') + '#motion'}>motion</a>,

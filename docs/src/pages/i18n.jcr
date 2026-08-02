@@ -110,7 +110,19 @@ export <view>
           <tbody>
             <tr>
               <td><code>createI18n(options)</code></td>
-              <td>Create the app instance (call once). Options: <code>locale</code>, <code>fallbackLocale</code>, <code>messages</code>, <code>persist</code>.</td>
+              <td>Create the app instance (call once). Options: <code>locale</code>,${' '}<code>fallbackLocale</code>,${' '}<code>messages</code>,${' '}<code>persist</code>,${' '}<code>includeUiMessages</code> (default true — merges built-in <code>j.*</code> component strings for <code>en</code>${' '}/ <code>pt-BR</code>).</td>
+            </tr>
+            <tr>
+              <td><code>localeText(key, fallback, params?)</code></td>
+              <td>Resolve a UI string with English fallback when i18n is off or the key is missing.</td>
+            </tr>
+            <tr>
+              <td><code>propText(prop, key, fallback, params?)</code></td>
+              <td>Use an explicit prop override when it differs from the English default; otherwise use the active locale.</td>
+            </tr>
+            <tr>
+              <td><code>uiMessages</code> / <code>en</code> / <code>ptBR</code></td>
+              <td>Built-in component chrome packs. Import from <code>@jacare/ui/i18n</code>${' '}or <code>@jacare/ui/locale</code>.</td>
             </tr>
             <tr>
               <td><code>t(key, params?)</code></td>
@@ -159,16 +171,16 @@ export <view>
 
     <DocsSection :id=${'components'} :title=${'With UI components'}>
       <p class="docs-lead">
-        Pass <code>t('key')</code>${' '}straight into props — no arrow. Keep the copy in the same <code>locales/*.js</code>${' '}files.
+        After <code>createI18n</code>, built-in chrome (placeholders, Clear, Cancel, pagination, empty states, …) follows the active locale under <code>j.*</code> keys.
+        Set the language with <code>setLocale</code>, <code>LocaleToggle</code>, or <code>ConfigProvider :locale</code>.
+        Pass <code>t('key')</code>${' '}into props only when you want app-specific copy instead of the library default.
       </p>
       <CodeBlock :code=${componentLabels} :filename=${'translated-chrome.jcr'} :language=${'javascript'} />
     </DocsSection>
 
     <DocsSection :id=${'persist'} :title=${'Persist locale'}>
       <p class="docs-lead">
-        With <code>persist: true</code>${' '}(default), <code>setLocale</code>${' '}writes <code>localStorage['j-locale']</code>.
-        On the next <code>createI18n</code>, that value wins over <code>options.locale</code>.
-        Optional early paint:
+        With <code>persist: true</code>${' '}(default), <code>setLocale</code>${' '}writes <code>localStorage['j-locale']</code>.${' '}On the next <code>createI18n</code>, that value wins over <code>options.locale</code>.${' '}Optional early paint:
       </p>
       <CodeBlock :code=${bootScript} :filename=${'index.html'} :language=${'html'} />
     </DocsSection>
@@ -181,7 +193,8 @@ export <view>
         <li>In plain JS, use <code>translate('key')</code>${' '}(or <code>t('key')()</code>) when you need the string now.</li>
         <li>Missing keys return the key string; missing locales fall back to <code>fallbackLocale</code>.</li>
         <li>Nest only when it helps (<code>app.title</code>); keep packs easy to scan.</li>
-        <li>Component built-in English defaults stay English unless you pass translated props.</li>
+        <li>Component chrome uses <code>j.*</code>${' '}keys from the active locale; override any prop to keep a custom string.</li>
+        <li><code>ConfigProvider :locale="pt-BR"</code>${' '}calls <code>setLocale</code>${' '}when i18n is already booted.</li>
       </ul>
     </DocsSection>
 

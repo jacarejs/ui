@@ -1,10 +1,11 @@
 import Button from '@jacare/ui/components/Button.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
-import { previousNext, docsSiteUrl, coreRepoUrl } from '../nav-data.js'
+import { previousNext, docsSiteUrl, coreRepoUrl, shippedComponents } from '../nav-data.js'
 import { goDocs } from '../navigate.js'
 import JacareLogo from '../ui/JacareLogo.jcr'
 
 const navLinks = previousNext('/')
+const shippedCount = shippedComponents.length
 
 export <view>
   <article class="docs-page">
@@ -43,7 +44,7 @@ export <view>
 
     <section class="docs-home-meta">
       <p class="docs-lead" style="margin:0">
-        Forms suite · Theme Editor · Viewport / Density / Motion labs ·
+        <strong>${shippedCount}</strong>${' '}components · Modal & sheets · Forms suite · Theme Editor · Viewport / Density / Motion labs ·
         <a href=${() => docsSiteUrl} target="_blank" rel="noreferrer">GitHub Pages</a>
         ·
         <a href=${() => coreRepoUrl} target="_blank" rel="noreferrer">Jacaré Core</a>

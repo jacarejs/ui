@@ -4,7 +4,9 @@ import Field from '@jacare/ui/components/Field.jcr'
 import Input from '@jacare/ui/components/Input.jcr'
 import Card from '@jacare/ui/components/Card.jcr'
 import Switch from '@jacare/ui/components/Switch.jcr'
-import Alert from '@jacare/ui/components/Alert.jcr'
+import Tag from '@jacare/ui/components/Tag.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import Space from '@jacare/ui/components/Space.jcr'
 import DocsHero from '../ui/DocsHero.jcr'
 import DocsSection from '../ui/DocsSection.jcr'
 import CodeBlock from '../ui/CodeBlock.jcr'
@@ -17,7 +19,6 @@ const density = pulse('comfortable')
 const name = pulse('Jacaré')
 const email = pulse('you@jacare.dev')
 const notify = pulse(true)
-const alertOpen = pulse(true)
 
 const active = derive(() => densityModes.find((item) => item.id === density()) || densityModes[1])
 const exportCode = derive(() => densityExportCss(density()))
@@ -35,48 +36,58 @@ export <view>
     />
 
     <DocsSection :id=${'modes'} :title=${'Density modes'}>
-      <p class="docs-lead">
-        Current multiplier:
-        <strong>${() => `${active().value}×`}</strong>
-        · Token <code>--j-density</code>${' '}via <code>data-j-density="${() => density()}"</code>
-      </p>
+      <div class="docs-density-toolbar">
+        <div class="docs-density-status">
+          <Tag :type=${'success'}>${() => active().label}</Tag>
+          <p class="docs-density-status__meta">
+            <strong>${() => `${active().value}×`}</strong>
+            <span aria-hidden="true">·</span>
+            <code>data-j-density="${() => density()}"</code>
+          </p>
+        </div>
 
-      <div class="docs-pkg-tabs" role="tablist" aria-label="Density">
-        #for densityModes as item (item.id)
-          <button
-            type="button"
-            class="docs-pkg-tab"
-            class-is-active=${() => density() === item.id}
-            role="tab"
-            aria-selected=${() => density() === item.id}
-            on-click=${() => setDensity(item.id)}
-          >
-            ${item.label}
-            <span class="docs-viewport-tab-blurb">${item.blurb}</span>
-          </button>
-        #end
+        <div class="docs-density-tabs" role="tablist" aria-label="Density">
+          #for densityModes as item (item.id)
+            <button
+              type="button"
+              class="docs-density-tab"
+              class-is-active=${() => density() === item.id}
+              role="tab"
+              aria-selected=${() => density() === item.id}
+              on-click=${() => setDensity(item.id)}
+            >
+              <span class="docs-density-tab__label">${item.label}</span>
+              <span class="docs-density-tab__blurb">${item.blurb}</span>
+            </button>
+          #end
+        </div>
       </div>
 
       <div class="docs-density-stage docs-panel" data-j-density=${() => density()}>
-        <div class="docs-gallery docs-density-gallery">
-          <Alert
-            bind-open=${alertOpen}
-            :tone=${'info'}
-            :title=${'Density island'}
-            :dismissible=${true}
-          >
-            Padding and control height follow <code>--j-density</code>.
-          </Alert>
+        <div class="docs-density-stage__bar">
+          <Text :weight=${'bold'}>Live island</Text>
+          <Text :tone=${'muted'}>Padding and control height follow <code>--j-density</code></Text>
+        </div>
 
-          <Card :title=${'Profile'} :subtitle=${() => `${active().label} density`}>
-            <div class="docs-gallery-row">
-              <Button :variant=${'primary'}>Save</Button>
-              <Button :variant=${'secondary'}>Cancel</Button>
-              <Button :variant=${'outline'} :size=${'sm'}>More</Button>
+        <div class="docs-gallery docs-density-gallery">
+          <Card :title=${'Profile'} :subtitle=${() => `${active().label} density`} :padding=${'lg'}>
+            <div class="docs-density-form">
+              <Space :wrap=${true} :size=${'md'}>
+                <Button :variant=${'primary'}>Save</Button>
+                <Button :variant=${'secondary'}>Cancel</Button>
+                <Button :variant=${'outline'} :size=${'sm'}>More</Button>
+              </Space>
+
+              <div class="docs-density-fields">
+                <Field :label=${'Display name'} bind-value=${name} />
+                <Input :label=${'Email'} bind-value=${email} :placeholder=${'you@jacare.dev'} :clearable=${true} />
+                <Switch :label=${'Email me updates'} bind-checked=${notify} />
+              </div>
+
+              <p class="docs-density-footnote">
+                Field min-height and button padding track <code>--j-control-height</code> / <code>--j-control-padding-*</code>.
+              </p>
             </div>
-            <Field :label=${'Display name'} bind-value=${name} :hint=${'Field min-height tracks density'} />
-            <Input :label=${'Email'} bind-value=${email} :placeholder=${'you@jacare.dev'} :clearable=${true} />
-            <Switch :label=${'Email me updates'} bind-checked=${notify} />
           </Card>
         </div>
       </div>

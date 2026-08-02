@@ -34,7 +34,7 @@ export <view>
     <DocsSection :id=${'boot'} :title=${'Boot the theme'}>
       <p class="docs-lead">
         Import <code>@jacare/ui/theme.css</code>${' '}once. Tokens live on <code>:root</code>${' '}and
-        <code>[data-j-theme="dark"]</code>. Call <code>applyTheme</code>${' '}early so the first paint matches the stored preference.
+        <code>[data-j-theme="dark"]</code>.${' '}Call <code>applyTheme</code>${' '}early so the first paint matches the stored preference.
       </p>
       <CodeBlock :code=${themeBoot} :filename=${'theme.js'} :language=${'javascript'} />
       <CodeBlock :code=${applyModes} :filename=${'modes.js'} :language=${'javascript'} />
@@ -42,14 +42,14 @@ export <view>
 
     <DocsSection :id=${'override'} :title=${'Override brand tokens'}>
       <p class="docs-lead">
-        Change a few root tokens and every component that references them updates. Prefer overriding brand tokens (<code>--j-primary</code>, <code>--j-leaf</code>) rather than restyling each primitive.
+        Change a few root tokens and every component that references them updates. Prefer overriding brand tokens (<code>--j-primary</code>,${' '}<code>--j-leaf</code>) rather than restyling each primitive.
       </p>
       <CodeBlock :code=${overrideTokens} :filename=${'app.css'} :language=${'css'} />
     </DocsSection>
 
     <DocsSection :id=${'fonts'} :title=${'Use other fonts'}>
       <p class="docs-lead">
-        Typography is controlled by <code>--j-font</code>${' '}and <code>--j-font-mono</code>. Load any webfont (Google Fonts, Bunny, self-hosted files), then override those tokens — components pick them up automatically.
+        Typography is controlled by <code>--j-font</code>${' '}and <code>--j-font-mono</code>.${' '}Load any webfont (Google Fonts, Bunny, self-hosted files), then override those tokens — components pick them up automatically.
       </p>
       <CodeBlock :code=${customFonts} :filename=${'fonts.css'} :language=${'css'} />
       <CodeBlock :code=${customFontsBody} :filename=${'base.css'} :language=${'css'} />
@@ -82,7 +82,7 @@ export <view>
 
     <DocsSection :id=${'tailwind'} :title=${'Use with Tailwind CSS'}>
       <p class="docs-lead">
-        Jacaré UI does not depend on Tailwind. You can still use Tailwind for layout and utility classes alongside <code>theme.css</code>. Bridge Jacaré tokens into Tailwind so <code>bg-primary</code>${' '}/ <code>font-sans</code>${' '}stay in sync with the design system.
+        Jacaré UI does not depend on Tailwind. You can still use Tailwind for layout and utility classes alongside <code>theme.css</code>.${' '}Bridge Jacaré tokens into Tailwind so <code>bg-primary</code>${' '}/ <code>font-sans</code>${' '}stay in sync with the design system.
       </p>
       <p class="docs-lead">
         Official Tailwind install guide:
@@ -103,6 +103,13 @@ export <view>
         Semantic aliases map brand tokens to roles like background, foreground, and accent. Components read the roles so your brand sheet stays the single source of truth.
       </p>
       <CodeBlock :code=${semanticAliases} :filename=${'semantic.css'} :language=${'css'} />
+    </DocsSection>
+
+    <DocsSection :id=${'touch'} :title=${'Touch and viewport'}>
+      <p class="docs-lead">
+        Mobile layouts read <code>--j-touch-target</code>${' '}(44px), breakpoints <code>--j-bp-sm</code>${' '}/${' '}<code>--j-bp-md</code>, and <code>--j-safe-*</code>${' '}insets.
+        Overlays (Modal, Drawer, Cascader sheet) and hit areas (Carousel, Splitter) use these tokens so tap targets stay comfortable on phone.
+      </p>
     </DocsSection>
 
     <DocsSection :id=${'tools'} :title=${'Tune live'}>
