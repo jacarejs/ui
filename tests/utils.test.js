@@ -1,8 +1,19 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi, afterEach } from 'vitest'
 import { pulse } from '@jacare/core'
-import { coalesce, cx, read } from '../src/internal/utils.js'
+import {
+  canHoverTrigger,
+  coalesce,
+  cx,
+  isCoarsePointer,
+  isNarrowViewport,
+  read,
+} from '../src/internal/utils.js'
 
 describe('internal utils', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it('reads plain values, thunks, and pulses', () => {
     expect(read('ok')).toBe('ok')
     expect(read(() => 42)).toBe(42)
@@ -29,5 +40,27 @@ describe('internal utils', () => {
     expect(coalesce(undefined, null, '', 'first', 'second')).toBe('first')
     expect(coalesce(undefined, null, '')).toBeUndefined()
     expect(coalesce(0)).toBe(0)
+  })
+
+  it('detects narrow, coarse, and hover-capable pointers via matchMedia', () => {
+    const matchMedia = vi.fn((query) => ({
+      matches:
+        query.includes('max-width') ||
+        query.includes('pointer: coarse') ||
+        query.includes('hover: hover'),
+    }))
+    vi.stubGlobal('matchMedia', matchMedia)
+
+    expect(isNarrowViewport()).toBe(true)
+    expect(isCoarsePointer()).toBe(true)
+    expect(canHoverTrigger()).toBe(true)
+    expect(matchMedia).toHaveBeenCalled()
+  })
+
+  it('returns safe defaults when matchMedia is unavailable', () => {
+    vi.stubGlobal('matchMedia', undefined)
+    expect(isNarrowViewport()).toBe(false)
+    expect(isCoarsePointer()).toBe(false)
+    expect(canHoverTrigger()).toBe(true)
   })
 })

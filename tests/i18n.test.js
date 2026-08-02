@@ -7,12 +7,15 @@ import {
   getI18n,
   locale,
   localeBootScript,
+  localeText,
+  propText,
   readStoredLocale,
   resetI18n,
   setLocale,
   t,
   te,
   translate,
+  uiMessages,
   useI18n,
   writeStoredLocale,
 } from '../src/i18n/index.js'
@@ -102,9 +105,9 @@ describe('i18n', () => {
       persist: false,
       messages: { en: { a: 'A' } },
     })
-    expect(addMessages('en', { b: 'B' })).toEqual({ a: 'A', b: 'B' })
+    expect(addMessages('en', { b: 'B' })).toMatchObject({ a: 'A', b: 'B' })
     expect(addMessages('es', { hola: 'Hola' })).toEqual({ hola: 'Hola' })
-    expect(addMessages('', { z: 'Z' })).toEqual({ a: 'A', b: 'B', z: 'Z' })
+    expect(addMessages('', { z: 'Z' })).toMatchObject({ a: 'A', b: 'B', z: 'Z' })
     expect(availableLocales()).toContain('es')
     expect(useI18n().t('b')()).toBe('B')
     expect(getI18n()).toBeTruthy()
@@ -192,8 +195,9 @@ describe('i18n', () => {
   it('defaults options and covers inactive helpers', () => {
     createI18n({})
     expect(t('x')()).toBe('x')
+    expect(te('j.common.select')).toBe(true)
     expect(setLocale('')).toBe('en')
-    expect(addMessages(null, null)).toEqual({})
+    expect(addMessages(null, null)).toMatchObject(uiMessages.en)
 
     resetI18n()
     expect(getI18n()).toBeNull()
@@ -209,13 +213,42 @@ describe('i18n', () => {
     expect(() => useI18n()).toThrow(/createI18n/)
   })
 
-  it('accepts non-object messages bags', () => {
+  it('accepts non-object messages bags and still ships UI strings', () => {
     createI18n({
       locale: 'en',
       persist: false,
       messages: null,
     })
-    expect(availableLocales()).toEqual([])
+    expect(availableLocales()).toEqual(['en', 'pt-BR'])
+    expect(t('j.common.cancel')()).toBe('Cancel')
     expect(t('x')()).toBe('x')
+  })
+
+  it('localizes component chrome via localeText and propText', () => {
+    createI18n({
+      locale: 'en',
+      persist: false,
+      messages: { en: { app: { title: 'App' } } },
+    })
+    expect(localeText('j.common.select', 'Select')).toBe('Select')
+    expect(propText('Select', 'j.common.select', 'Select')).toBe('Select')
+    expect(propText('Custom', 'j.common.select', 'Select')).toBe('Custom')
+    setLocale('pt-BR')
+    expect(localeText('j.common.select', 'Select')).toBe('Selecionar')
+    expect(propText('Select', 'j.common.select', 'Select')).toBe('Selecionar')
+    expect(propText('Custom', 'j.common.select', 'Select')).toBe('Custom')
+    expect(t('app.title')()).toBe('App')
+  })
+
+  it('can disable UI message packs', () => {
+    createI18n({
+      locale: 'en',
+      persist: false,
+      includeUiMessages: false,
+      messages: { en: { hello: 'Hi' } },
+    })
+    expect(te('j.common.select')).toBe(false)
+    expect(localeText('j.common.select', 'Select')).toBe('Select')
+    expect(t('hello')()).toBe('Hi')
   })
 })

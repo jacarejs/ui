@@ -54,10 +54,19 @@ describe('nav-data', () => {
     expect(componentLinks).toContain('Button')
   })
 
+  it('includes Validation in Foundations', () => {
+    const foundations = docsNav.find((section) => section.title === 'Foundations')
+    expect(foundations?.items.some((item) => item.href === '/validation')).toBe(true)
+    expect(previousNext('/i18n').next?.href).toBe('/validation')
+    expect(previousNext('/validation').previous?.href).toBe('/i18n')
+    expect(previousNext('/validation').next?.href).toBe('/tokens')
+  })
+
   it('returns previous and next links for a route', () => {
     const links = flatNavLinks()
     expect(links.length).toBeGreaterThan(10)
-    expect(shippedComponents.length).toBeGreaterThan(20)
+    expect(shippedComponents.length).toBeGreaterThan(140)
+    expect(new Set(shippedComponents.map((item) => item.name)).size).toBe(shippedComponents.length)
 
     const mid = links.find((item) => item.href === '/install')
     expect(mid).toBeTruthy()
