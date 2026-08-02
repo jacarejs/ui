@@ -1,0 +1,132 @@
+import Button from '@jacare/ui/components/Button.jcr'
+import Card from '@jacare/ui/components/Card.jcr'
+import ProgressCircle from '@jacare/ui/components/ProgressCircle.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../ui/DocsHero.jcr'
+import DocsSection from '../ui/DocsSection.jcr'
+import Demo from '../ui/Demo.jcr'
+import CodeBlock from '../ui/CodeBlock.jcr'
+import PreviousNext from '../ui/PreviousNext.jcr'
+import { previousNext, coreRepoUrl } from '../nav-data.js'
+import { docsHref } from '../navigate.js'
+import {
+  boot,
+  hostHtml,
+  install,
+  reactHost,
+  shadowBoot,
+  viteConfig,
+  vueHost,
+  widget,
+} from '../examples/island.js'
+
+const navLinks = previousNext('/island')
+const coreIslandDocs = `${coreRepoUrl}/blob/main/docs/island.md`
+
+export <view>
+  <article class="docs-page">
+    <DocsHero
+      :kicker=${'Foundations'}
+      :title=${'Island'}
+      :description=${'Embed @jacare/ui widgets into an existing page — static HTML, WordPress, Rails, React, Vue, or Angular — with mountIsland from @jacare/core/island. Jacaré does not need to own the app shell.'}
+      :status=${'stable'}
+    />
+
+    <p class="docs-lead">
+      Island kit lives in Core:
+      <a href=${() => coreIslandDocs} target="_blank" rel="noreferrer">docs/island.md</a>
+      ${' '}· Import from the thin subpath <code>@jacare/core/island</code>${' '}so nav, forms, and DevTools stay out of the island bundle.
+    </p>
+
+    <DocsSection :id=${'when'} :title=${'When to use an island'}>
+      <ul class="docs-checklist">
+        <li>Drop a Jacaré UI checkout, tip, or progress widget into a host page you do not control as a full SPA</li>
+        <li>Keep the host framework (React, Vue, Angular, Rails templates) and mount only the island root</li>
+        <li>Prefer full <code>mount</code>${' '}+ <code>createNav</code>${' '}when Jacaré owns the whole app — see
+          <a jacare-go="/quick-start" href=${docsHref('/quick-start')}>Quick start</a>
+        </li>
+      </ul>
+    </DocsSection>
+
+    <DocsSection :id=${'install'} :title=${'1. Install packages'}>
+      <p class="docs-lead">
+        Same stack as a normal UI app: <code>@jacare/ui</code>, peer <code>@jacare/core</code>, and the Vite plugin so your island <code>.jcr</code>${' '}compiles.
+      </p>
+      <CodeBlock :code=${install} :filename=${'terminal'} :language=${'bash'} />
+      <CodeBlock :code=${viteConfig} :filename=${'vite.config.js'} :language=${'javascript'} />
+    </DocsSection>
+
+    <DocsSection :id=${'theme'} :title=${'2. Load the theme once'}>
+      <p class="docs-lead">
+        Import <code>@jacare/ui/theme.css</code>${' '}and call <code>applyTheme</code>${' '}/ <code>applyDensity</code>${' '}/ <code>applyMotion</code>${' '}in the island boot module before <code>mountIsland</code>.
+        Token variables inherit into the island (including shadow roots) from the host document.
+        Deeper token guidance:
+        <a jacare-go="/theme" href=${docsHref('/theme')}>Theme</a>.
+      </p>
+    </DocsSection>
+
+    <DocsSection :id=${'widget'} :title=${'3. Build a UI widget'}>
+      <p class="docs-lead">
+        An island is a normal <code>.jcr</code>${' '}view. Deep-import components from <code>@jacare/ui</code>, declare a contract for host props, and keep the root self-contained.
+      </p>
+      <Demo
+        :id=${'widget-demo'}
+        :title=${'Checkout island preview'}
+        :lead=${'This is the widget surface the host will mount — Card, ProgressCircle, and Button on Jacaré tokens.'}
+        :code=${widget}
+        :filename=${'CheckoutIsland.jcr'}
+        :align=${'center'}
+      >
+        <Card>
+          <Stack :gap=${'md'} :align=${'center'}>
+            <Text :weight=${'bold'}>Checkout</Text>
+            <ProgressCircle :value=${72} />
+            <Button :variant=${'primary'}>Continue</Button>
+          </Stack>
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'mount'} :title=${'4. Mount into the host'}>
+      <p class="docs-lead">
+        Leave a slot in the host HTML, then call <code>mountIsland</code>${' '}from a module entry. Plain props become live pulses by default; use <code>dispose.update(next)</code>${' '}to push changes without remounting.
+      </p>
+      <CodeBlock :code=${hostHtml} :filename=${'index.html'} :language=${'html'} />
+      <CodeBlock :code=${boot} :filename=${'boot.js'} :language=${'javascript'} />
+    </DocsSection>
+
+    <DocsSection :id=${'shadow'} :title=${'Shadow isolation'}>
+      <p class="docs-lead">
+        When the host page has aggressive global CSS, set <code>shadow: true</code>. Component styles inject into the shadow root; Jacaré theme tokens still inherit as CSS variables from the host.
+        Prefer light mounts when the host CSS is already well-scoped.
+      </p>
+      <CodeBlock :code=${shadowBoot} :filename=${'boot.js'} :language=${'javascript'} />
+    </DocsSection>
+
+    <DocsSection :id=${'hosts'} :title=${'Host frameworks'}>
+      <p class="docs-lead">
+        Mount once on attach, push props with <code>update</code>, dispose on unmount. That keeps focus and internal island state across host re-renders.
+      </p>
+      <CodeBlock :code=${reactHost} :filename=${'CheckoutSlot.jsx'} :language=${'javascript'} />
+      <CodeBlock :code=${vueHost} :filename=${'CheckoutSlot.vue'} :language=${'javascript'} />
+      <p class="docs-lead">
+        Angular follows the same lifecycle: <code>ngAfterViewInit</code>${' '}→ mount, <code>ngOnChanges</code>${' '}→ <code>update</code>, <code>ngOnDestroy</code>${' '}→ dispose.
+        Working demos ship in the Core repo under <code>examples/jacare-island</code>, <code>jacare-island-react</code>, <code>jacare-island-vue</code>, and <code>jacare-island-angular</code>.
+      </p>
+    </DocsSection>
+
+    <DocsSection :id=${'notes'} :title=${'Notes'}>
+      <ul class="docs-checklist">
+        <li>Import <code>mountIsland</code>${' '}from <code>@jacare/core/island</code>, not the full <code>@jacare/core</code>${' '}barrel</li>
+        <li>Do not <code>eval</code>${' '}host HTML into the island</li>
+        <li>Overlays that portal to <code>document.body</code>${' '}(Modal, Message, Notification) still work from an island, but paint above the host page — plan stacking contexts accordingly</li>
+        <li>For scoped light/dark surfaces inside one page (not host embeds), use
+          <a jacare-go="/dark-mode" href=${docsHref('/dark-mode')}>ThemeScope</a>
+        </li>
+      </ul>
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>
