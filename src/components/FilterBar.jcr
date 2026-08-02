@@ -1,0 +1,190 @@
+import InputSearch from './InputSearch.jcr'
+import { propText } from '../i18n/index.js'
+import Select from './Select.jcr'
+import Tag from './Tag.jcr'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    query: { type: 'string', default: '', model: true }
+    sort: { type: 'any', model: true }
+    chips: { type: 'object', default: [], model: true }
+    sortOptions: { type: 'object', default: [] }
+    placeholder: { type: 'string', default: 'Search…' }
+    sortPlaceholder: { type: 'string', default: 'Sort' }
+    debounce: { type: 'number', default: 250 }
+    disabled: { type: 'boolean', default: false }
+  }
+  slots: ['actions']
+  emits: ['search', 'change', 'remove-chip', 'clear-chips']
+</contract>
+
+function chipList(chipsValue) {
+  const list = read(chipsValue)
+  if (!Array.isArray(list)) return []
+  return list.map((chip, index) => {
+    if (chip && typeof chip === 'object') {
+      return {
+        key: String(chip.key ?? chip.value ?? index),
+        label: String(chip.label ?? chip.text ?? chip.value ?? index),
+      }
+    }
+    return { key: String(chip), label: String(chip) }
+  })
+}
+
+function removeChip(chip, chipsValue, emitFn) {
+  const current = read(chipsValue)
+  if (!Array.isArray(current)) {
+    emitFn('remove-chip', chip)
+    return
+  }
+  const next = current.filter((item, index) => {
+    const key = item && typeof item === 'object' ? String(item.key ?? item.value ?? index) : String(item)
+    return key !== chip.key
+  })
+  if (chipsValue && typeof chipsValue.set === 'function') chipsValue.set(next)
+  emitFn('remove-chip', chip)
+  emitFn('change', { chips: next, query: read(emitFn.__juiFilterQuery), sort: read(emitFn.__juiFilterSort) })
+}
+
+function clearChips(chipsValue, emitFn) {
+  if (chipsValue && typeof chipsValue.set === 'function') chipsValue.set([])
+  emitFn('clear-chips')
+  emitFn('change', { chips: [], query: read(emitFn.__juiFilterQuery), sort: read(emitFn.__juiFilterSort) })
+}
+
+function onSearch(next, emitFn) {
+  emitFn('search', next)
+  emitFn('change', { chips: chipList(emitFn.__juiFilterChips), query: next, sort: read(emitFn.__juiFilterSort) })
+}
+
+function onSort(next, emitFn) {
+  emitFn('change', { chips: chipList(emitFn.__juiFilterChips), query: read(emitFn.__juiFilterQuery), sort: next })
+}
+
+function bindRefs(queryProp, sortProp, chipsProp, emitFn) {
+  emitFn.__juiFilterQuery = queryProp
+  emitFn.__juiFilterSort = sortProp
+  emitFn.__juiFilterChips = chipsProp
+  return true
+}
+
+export <view>
+  <div
+    class="jui-filter-bar"
+    class-is-disabled=${() => !!read(disabled)}
+    data-armed=${() => bindRefs(query, sort, chips, emit)}
+  >
+    <div class="jui-filter-bar__row">
+      <div class="jui-filter-bar__search">
+        <InputSearch
+          :placeholder=${() => propText(placeholder, 'j.filterBar.placeholder', 'Search…')}
+          :debounce=${debounce}
+          :disabled=${disabled}
+          :clearable=${true}
+          bind-value=${query}
+          on-search=${(next) => onSearch(next, emit)}
+        />
+      </div>
+      #if read(sortOptions) && read(sortOptions).length
+        <div class="jui-filter-bar__sort">
+          <Select
+            :placeholder=${sortPlaceholder}
+            :options=${sortOptions}
+            :disabled=${disabled}
+            bind-value=${sort}
+            on-change=${(next) => onSort(next, emit)}
+          />
+        </div>
+      #end
+      <div class="jui-filter-bar__actions">
+        <slot name="actions" />
+      </div>
+    </div>
+
+    #if chipList(chips).length
+      <div class="jui-filter-bar__chips" aria-label="Active filters">
+        #for chipList(chips) as chip (chip.key)
+          <Tag
+            :text=${chip.label}
+            :closable=${true}
+            :size=${'sm'}
+            :type=${'primary'}
+            on-close=${() => removeChip(chip, chips, emit)}
+          />
+        #end
+        <button
+          type="button"
+          class="jui-filter-bar__clear"
+          disabled=${() => !!read(disabled)}
+          on-click=${() => clearChips(chips, emit)}
+        >
+          Clear filters
+        </button>
+      </div>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-filter-bar {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.jui-filter-bar__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(8rem, 12rem) auto;
+  gap: 0.65rem;
+  align-items: start;
+}
+
+.jui-filter-bar__search,
+.jui-filter-bar__sort {
+  min-width: 0;
+}
+
+.jui-filter-bar__actions:empty {
+  display: none;
+}
+
+.jui-filter-bar__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.jui-filter-bar__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.jui-filter-bar__clear {
+  border: 0;
+  background: transparent;
+  color: var(--j-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.2rem 0.35rem;
+}
+
+.jui-filter-bar__clear:hover:not(:disabled) {
+  color: var(--j-danger);
+}
+
+.jui-filter-bar.is-disabled {
+  opacity: 0.65;
+}
+
+@media (max-width: 720px) {
+  .jui-filter-bar__row {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

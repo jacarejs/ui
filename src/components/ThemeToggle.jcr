@@ -1,4 +1,5 @@
 import { applyTheme, readStoredTheme } from '../theme/index.js'
+import { localeText } from '../i18n/index.js'
 import { pulse } from '@jacare/core'
 import { read } from '../internal/utils.js'
 
@@ -26,7 +27,7 @@ function modeLabel(map, key, fallback) {
 }
 
 export <view>
-  <div class="jui-theme-toggle" role="group" aria-label="Theme">
+  <div class="jui-theme-toggle" role="group" aria-label=${() => localeText('j.themeToggle.label', 'Theme')}>
     <button
       type="button"
       class="jui-theme-toggle__btn"
@@ -38,7 +39,7 @@ export <view>
         emit('change', 'light')
       }}
     >
-      ${modeLabel(labels, 'light', 'Light')}
+      ${() => modeLabel(labels, 'light', localeText('j.themeToggle.light', 'Light'))}
     </button>
     <button
       type="button"
@@ -51,7 +52,7 @@ export <view>
         emit('change', 'dark')
       }}
     >
-      ${modeLabel(labels, 'dark', 'Dark')}
+      ${() => modeLabel(labels, 'dark', localeText('j.themeToggle.dark', 'Dark'))}
     </button>
     <button
       type="button"
@@ -64,7 +65,7 @@ export <view>
         emit('change', 'system')
       }}
     >
-      ${modeLabel(labels, 'system', 'System')}
+      ${() => modeLabel(labels, 'system', localeText('j.themeToggle.system', 'System'))}
     </button>
   </div>
 </view>

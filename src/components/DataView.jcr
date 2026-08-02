@@ -1,0 +1,318 @@
+import { effect, pulse, untrack } from '@jacare/core'
+import { propText } from '../i18n/index.js'
+import { read } from '../internal/utils.js'
+import Empty from './Empty.jcr'
+import Pagination from './Pagination.jcr'
+
+export <contract>
+  props: {
+    data: { type: 'object', default: [] }
+    layout: { type: 'string', default: 'list', model: true }
+    rows: { type: 'number', default: 0 }
+    page: { type: 'number', default: 1, model: true }
+    emptyText: { type: 'string', default: 'No data' }
+  }
+  emits: ['change']
+</contract>
+
+function layoutOf(value) {
+  const next = String(read(value) || 'list')
+  return next === 'grid' ? 'grid' : 'list'
+}
+
+function rowsOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) && next > 0 ? Math.round(next) : 0
+}
+
+function pageOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) && next > 0 ? Math.round(next) : 1
+}
+
+function resolveModel(modelProp, emitFn, key, initial) {
+  if (modelProp && typeof modelProp.set === 'function') return modelProp
+  if (!emitFn[key]) emitFn[key] = pulse(initial)
+  return emitFn[key]
+}
+
+function layoutModel(layoutProp, emitFn) {
+  return resolveModel(layoutProp, emitFn, '__juiDataViewLayout', layoutOf(layoutProp))
+}
+
+function pageModel(pageProp, emitFn) {
+  return resolveModel(pageProp, emitFn, '__juiDataViewPage', pageOf(pageProp))
+}
+
+function pageSizeModel(rowsProp, emitFn) {
+  if (!emitFn.__juiDataViewPageSize) {
+    emitFn.__juiDataViewPageSize = pulse(Math.max(1, rowsOf(rowsProp) || 10))
+    effect(() => {
+      const next = rowsOf(rowsProp)
+      if (next <= 0) return
+      if (untrack(() => emitFn.__juiDataViewPageSize()) === next) return
+      emitFn.__juiDataViewPageSize.set(next)
+    })
+  }
+  return emitFn.__juiDataViewPageSize
+}
+
+function normalizeData(source) {
+  const list = read(source)
+  if (!Array.isArray(list)) return []
+  return list.map((item, index) => ({
+    key: String(item?.key ?? index),
+    title: item?.title ?? '',
+    description: item?.description ?? '',
+    image: item?.image ?? '',
+    meta: item?.meta ?? '',
+  }))
+}
+
+function totalItems(dataProp) {
+  return normalizeData(dataProp).length
+}
+
+function pageCount(dataProp, rowsProp) {
+  const total = totalItems(dataProp)
+  const rows = rowsOf(rowsProp)
+  if (rows <= 0) return 1
+  return Math.max(1, Math.ceil(total / rows) || 1)
+}
+
+function currentPage(dataProp, rowsProp, pageProp, emitFn) {
+  const pages = pageCount(dataProp, rowsProp)
+  return Math.min(Math.max(1, pageOf(pageModel(pageProp, emitFn))), pages)
+}
+
+function visibleItems(dataProp, rowsProp, pageProp, emitFn) {
+  const items = normalizeData(dataProp)
+  const rows = rowsOf(rowsProp)
+  if (rows <= 0) return items
+  const page = currentPage(dataProp, rowsProp, pageProp, emitFn)
+  const start = (page - 1) * rows
+  return items.slice(start, start + rows)
+}
+
+function setLayout(next, layoutProp, emitFn) {
+  layoutModel(layoutProp, emitFn).set(next === 'grid' ? 'grid' : 'list')
+  emitFn('change', { layout: next === 'grid' ? 'grid' : 'list' })
+}
+
+function showPagination(rowsProp) {
+  return rowsOf(rowsProp) > 0
+}
+
+function activeLayout(layoutProp, emitFn) {
+  return layoutOf(layoutModel(layoutProp, emitFn))
+}
+
+export <view>
+  <div
+    class="jui-data-view"
+    class-jui-data-view--grid=${() => activeLayout(layout, emit) === 'grid'}
+    class-jui-data-view--list=${() => activeLayout(layout, emit) === 'list'}
+  >
+    <div class="jui-data-view__toolbar">
+      <div class="jui-data-view__layout" role="group" aria-label="Layout">
+        <button
+          type="button"
+          class="jui-data-view__layout-btn"
+          aria-label="List layout"
+          aria-pressed=${() => (activeLayout(layout, emit) === 'list' ? 'true' : 'false')}
+          class-is-active=${() => activeLayout(layout, emit) === 'list'}
+          on-click=${() => setLayout('list', layout, emit)}
+        >List</button>
+        <button
+          type="button"
+          class="jui-data-view__layout-btn"
+          aria-label="Grid layout"
+          aria-pressed=${() => (activeLayout(layout, emit) === 'grid' ? 'true' : 'false')}
+          class-is-active=${() => activeLayout(layout, emit) === 'grid'}
+          on-click=${() => setLayout('grid', layout, emit)}
+        >Grid</button>
+      </div>
+    </div>
+
+    #if totalItems(data) === 0
+      <Empty :description=${() => propText(emptyText, 'j.table.emptyText', 'No data')} />
+    #else
+      <div class="jui-data-view__items">
+        #for visibleItems(data, rows, page, emit) as item (item.key)
+          <article class="jui-data-view__item">
+            #if item.image
+              <div class="jui-data-view__media">
+                <img class="jui-data-view__img" src=${item.image} alt="" loading="lazy" />
+              </div>
+            #end
+            <div class="jui-data-view__content">
+              #if item.meta
+                <p class="jui-data-view__meta">${item.meta}</p>
+              #end
+              #if item.title
+                <h3 class="jui-data-view__title">${item.title}</h3>
+              #end
+              #if item.description
+                <p class="jui-data-view__description">${item.description}</p>
+              #end
+            </div>
+          </article>
+        #end
+      </div>
+
+      #if showPagination(rows)
+        <div class="jui-data-view__pager">
+          <Pagination
+            :total=${() => totalItems(data)}
+            bind-pageSize=${pageSizeModel(rows, emit)}
+            bind-currentPage=${pageModel(page, emit)}
+            :hideOnSinglePage=${true}
+            :showTotal=${true}
+          />
+        </div>
+      #end
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-data-view {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.jui-data-view__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.jui-data-view__layout {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+}
+
+.jui-data-view__layout-btn {
+  appearance: none;
+  min-height: 2rem;
+  padding: 0 0.75rem;
+  border: 1px solid transparent;
+  border-radius: calc(var(--j-radius-sm) - 2px);
+  color: var(--j-forest);
+  background: transparent;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.jui-data-view__layout-btn.is-active {
+  background: var(--j-primary);
+  border-color: var(--j-primary);
+  color: #ffffff;
+}
+
+.jui-data-view__layout-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-data-view__items {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.jui-data-view--list .jui-data-view__items {
+  grid-template-columns: 1fr;
+}
+
+.jui-data-view--grid .jui-data-view__items {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr));
+}
+
+.jui-data-view__item {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.85rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+}
+
+.jui-data-view--list .jui-data-view__item {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.jui-data-view--list .jui-data-view__item:not(:has(.jui-data-view__media)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.jui-data-view--grid .jui-data-view__item {
+  grid-template-columns: 1fr;
+  align-content: start;
+}
+
+.jui-data-view__media {
+  width: 4.5rem;
+  height: 4.5rem;
+  overflow: hidden;
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+  flex-shrink: 0;
+}
+
+.jui-data-view--grid .jui-data-view__media {
+  width: 100%;
+  height: 9rem;
+}
+
+.jui-data-view__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.jui-data-view__content {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.jui-data-view__meta {
+  margin: 0;
+  color: var(--j-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.jui-data-view__title {
+  margin: 0;
+  color: var(--j-forest);
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.jui-data-view__description {
+  margin: 0;
+  color: var(--j-text);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.jui-data-view__pager {
+  display: flex;
+  justify-content: center;
+}
+</style>

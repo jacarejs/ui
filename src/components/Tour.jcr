@@ -1,0 +1,477 @@
+import { effect, pulse } from '@jacare/core'
+import { localeText } from '../i18n/index.js'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    open: { type: 'boolean', default: false, model: true }
+    mask: { type: 'boolean', default: true }
+    closeOnMask: { type: 'boolean', default: true }
+  }
+  slots: ['default']
+  emits: ['close', 'finish', 'change']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+const PAD = 8
+
+function openState(openProp, emitFn) {
+  if (openProp && typeof openProp.set === 'function') return openProp
+  if (!emitFn.__juiTourOpen) emitFn.__juiTourOpen = pulse(read(openProp) === true)
+  return emitFn.__juiTourOpen
+}
+
+function isOpen(openProp, emitFn) {
+  return read(openState(openProp, emitFn)) === true
+}
+
+function indexState(emitFn) {
+  if (!emitFn.__juiTourIndex) emitFn.__juiTourIndex = pulse(0)
+  return emitFn.__juiTourIndex
+}
+
+function stepsState(emitFn) {
+  if (!emitFn.__juiTourSteps) emitFn.__juiTourSteps = pulse([])
+  return emitFn.__juiTourSteps
+}
+
+function layoutState(emitFn) {
+  if (!emitFn.__juiTourLayout) {
+    emitFn.__juiTourLayout = pulse({
+      hasTarget: false,
+      top: 'inset:0;height:0',
+      bottom: 'inset:0;height:0',
+      left: 'inset:0;width:0',
+      right: 'inset:0;width:0',
+      card: 'top:50%;left:50%;transform:translate(-50%,-50%)',
+    })
+  }
+  return emitFn.__juiTourLayout
+}
+
+function tourKey(emitFn) {
+  if (!emitFn.__juiTourKey) {
+    emitFn.__juiTourKey = `jui-tour-${Math.random().toString(36).slice(2, 9)}`
+  }
+  return emitFn.__juiTourKey
+}
+
+function currentIndex(emitFn) {
+  return Number(read(indexState(emitFn))) || 0
+}
+
+function stepsEqual(left, right) {
+  if (left.length !== right.length) return false
+  for (let i = 0; i < left.length; i += 1) {
+    const a = left[i]
+    const b = right[i]
+    if (
+      a.id !== b.id ||
+      a.target !== b.target ||
+      a.title !== b.title ||
+      a.description !== b.description
+    ) {
+      return false
+    }
+  }
+  return true
+}
+
+function collectDomSteps(root) {
+  return [...root.querySelectorAll('.jui-tour-step')].map((node, index) => ({
+    id: node.getAttribute('data-step-id') || `dom-step-${index}`,
+    target: node.getAttribute('data-target') || '',
+    title: node.getAttribute('data-title') || '',
+    description: node.getAttribute('data-description') || '',
+  }))
+}
+
+function syncDomSteps(root, stepsPulse) {
+  if (!root || !stepsPulse) return
+  const next = collectDomSteps(root)
+  const current = read(stepsPulse) || []
+  if (stepsEqual(current, next)) return
+  stepsPulse.set(next)
+}
+
+function clearTourTargetClass() {
+  if (typeof document === 'undefined') return
+  document.querySelectorAll('.jui-tour-target-active').forEach((node) => {
+    node.classList.remove('jui-tour-target-active')
+    if (node.__juiTourPrevZ != null) {
+      node.style.zIndex = node.__juiTourPrevZ
+      delete node.__juiTourPrevZ
+    } else {
+      node.style.removeProperty('z-index')
+    }
+  })
+}
+
+function resolveTarget(selector) {
+  const value = String(selector || '').trim()
+  if (!value || typeof document === 'undefined') return null
+  try {
+    return document.querySelector(value)
+  } catch {
+    return null
+  }
+}
+
+function placeCard(rect) {
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  const cardW = Math.min(352, vw - 32)
+  const cardH = 190
+  const gap = 14
+  let top = rect.bottom + gap
+  let left = Math.min(Math.max(16, rect.left), vw - cardW - 16)
+  if (top + cardH > vh - 16) top = Math.max(16, rect.top - cardH - gap)
+  if (top < 16) top = 16
+  return `top:${Math.round(top)}px;left:${Math.round(left)}px;transform:none;width:min(100%,${cardW}px)`
+}
+
+function bandsAround(rect) {
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  const top = Math.max(0, rect.top - PAD)
+  const left = Math.max(0, rect.left - PAD)
+  const right = Math.min(vw, rect.right + PAD)
+  const bottom = Math.min(vh, rect.bottom + PAD)
+  return {
+    top: `top:0;left:0;width:100%;height:${Math.round(top)}px`,
+    bottom: `top:${Math.round(bottom)}px;left:0;width:100%;height:${Math.max(0, Math.round(vh - bottom))}px`,
+    left: `top:${Math.round(top)}px;left:0;width:${Math.round(left)}px;height:${Math.max(0, Math.round(bottom - top))}px`,
+    right: `top:${Math.round(top)}px;left:${Math.round(right)}px;width:${Math.max(0, Math.round(vw - right))}px;height:${Math.max(0, Math.round(bottom - top))}px`,
+  }
+}
+
+function updateLayout(emitFn) {
+  const layout = layoutState(emitFn)
+  const step = activeStep(emitFn)
+  clearTourTargetClass()
+  if (!step) {
+    layout.set({
+      hasTarget: false,
+      top: 'inset:0',
+      bottom: 'height:0',
+      left: 'height:0',
+      right: 'height:0',
+      card: 'top:50%;left:50%;transform:translate(-50%,-50%)',
+    })
+    return
+  }
+  const target = resolveTarget(step.target)
+  if (!target) {
+    layout.set({
+      hasTarget: false,
+      top: 'inset:0',
+      bottom: 'height:0',
+      left: 'height:0',
+      right: 'height:0',
+      card: 'top:50%;left:50%;transform:translate(-50%,-50%)',
+    })
+    return
+  }
+  if (!target.classList.contains('jui-tour-target-active')) {
+    target.__juiTourPrevZ = target.style.zIndex || ''
+  }
+  target.classList.add('jui-tour-target-active')
+  target.style.zIndex = '2402'
+  target.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
+  const rect = target.getBoundingClientRect()
+  const bands = bandsAround(rect)
+  layout.set({
+    hasTarget: true,
+    top: bands.top,
+    bottom: bands.bottom,
+    left: bands.left,
+    right: bands.right,
+    card: placeCard(rect),
+  })
+}
+
+function attachTour(root, emitFn, openProp) {
+  if (!root) return
+  emitFn.__juiTourRoot = root
+  root.dataset.juiTourKey = tourKey(emitFn)
+  root.tourOpen = openState(openProp, emitFn)
+  root.tourIndex = indexState(emitFn)
+  root.tourSteps = stepsState(emitFn)
+  root.tourEmit = emitFn
+  syncDomSteps(root, stepsState(emitFn))
+}
+
+function resolveTourRoot(emitFn) {
+  if (emitFn.__juiTourRoot?.isConnected) return emitFn.__juiTourRoot
+  if (typeof document === 'undefined') return null
+  return document.querySelector(`[data-jui-tour-key="${tourKey(emitFn)}"]`)
+}
+
+function bindTour(emitFn, openProp) {
+  const open = openState(openProp, emitFn)
+  const wasOpen = emitFn.__juiTourWasOpen === true
+  const nowOpen = read(open) === true
+  read(indexState(emitFn))
+  read(stepsState(emitFn))
+  const root = resolveTourRoot(emitFn)
+  if (root) attachTour(root, emitFn, openProp)
+  if (nowOpen && !wasOpen) {
+    indexState(emitFn).set(0)
+    if (root) syncDomSteps(root, stepsState(emitFn))
+  }
+  if (nowOpen) updateLayout(emitFn)
+  else clearTourTargetClass()
+  emitFn.__juiTourWasOpen = nowOpen
+  return ''
+}
+
+function ensureTourTargetStyle() {
+  if (typeof document === 'undefined' || document.getElementById('jui-tour-target-style')) return
+  const style = document.createElement('style')
+  style.id = 'jui-tour-target-style'
+  style.textContent =
+    '.jui-tour-target-active{outline:3px solid color-mix(in srgb,var(--j-primary) 70%,transparent);outline-offset:3px;border-radius:var(--j-radius-sm);box-shadow:0 0 0 6px color-mix(in srgb,var(--j-surface-2) 88%,transparent)}'
+  document.head.appendChild(style)
+}
+
+function armTour(root, emitFn, openProp) {
+  attachTour(root, emitFn, openProp)
+  ensureTourTargetStyle()
+  if (root.__juiTourLayoutArmed) return
+  root.__juiTourLayoutArmed = true
+  root.__juiTourLayoutDispose = effect(() => {
+    const open = read(openState(openProp, emitFn)) === true
+    read(indexState(emitFn))
+    read(stepsState(emitFn))
+    if (!open) {
+      clearTourTargetClass()
+      return () => {}
+    }
+    updateLayout(emitFn)
+    const onResize = () => updateLayout(emitFn)
+    window.addEventListener('resize', onResize)
+    window.addEventListener('scroll', onResize, true)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('scroll', onResize, true)
+    }
+  })
+}
+
+function closeTour(openProp, emitFn) {
+  openState(openProp, emitFn).set(false)
+  clearTourTargetClass()
+  emitFn('close')
+}
+
+function finishTour(openProp, emitFn) {
+  openState(openProp, emitFn).set(false)
+  clearTourTargetClass()
+  emitFn('finish')
+}
+
+function goTo(next, openProp, emitFn) {
+  const steps = read(stepsState(emitFn)) || []
+  const max = Math.max(0, steps.length - 1)
+  const index = Math.min(Math.max(0, next), max)
+  indexState(emitFn).set(index)
+  emitFn('change', index)
+  requestAnimationFrame(() => updateLayout(emitFn))
+}
+
+function nextStep(openProp, emitFn) {
+  const steps = read(stepsState(emitFn)) || []
+  const index = currentIndex(emitFn)
+  if (index >= steps.length - 1) {
+    finishTour(openProp, emitFn)
+    return
+  }
+  goTo(index + 1, openProp, emitFn)
+}
+
+function prevStep(openProp, emitFn) {
+  goTo(currentIndex(emitFn) - 1, openProp, emitFn)
+}
+
+function activeStep(emitFn) {
+  const steps = read(stepsState(emitFn)) || []
+  return steps[currentIndex(emitFn)] || null
+}
+
+function maskClick(openProp, emitFn, closeOnMaskProp) {
+  if (read(closeOnMaskProp) === false) return
+  closeTour(openProp, emitFn)
+}
+
+function layoutOf(emitFn) {
+  return (
+    read(layoutState(emitFn)) || {
+      hasTarget: false,
+      top: 'inset:0',
+      bottom: 'height:0',
+      left: 'height:0',
+      right: 'height:0',
+      card: 'top:50%;left:50%;transform:translate(-50%,-50%)',
+    }
+  )
+}
+
+export <view>
+  <div class="jui-tour" data-jui-tour-key=${() => tourKey(emit)}>
+    <img
+      class="jui-tour__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armTour(event.currentTarget.closest('.jui-tour'), emit, open)}
+    />
+    <span class="jui-tour__bind" aria-hidden="true">${() => bindTour(emit, open)}</span>
+    <div class="jui-tour__steps" hidden aria-hidden="true"><slot /></div>
+    #if isOpen(open, emit) && activeStep(emit)
+      <div class="jui-tour__layer" aria-hidden="false">
+        #if read(mask)
+          #if layoutOf(emit).hasTarget
+            <div class="jui-tour__band" style=${() => layoutOf(emit).top} on-click=${() => maskClick(open, emit, closeOnMask)}></div>
+            <div class="jui-tour__band" style=${() => layoutOf(emit).bottom} on-click=${() => maskClick(open, emit, closeOnMask)}></div>
+            <div class="jui-tour__band" style=${() => layoutOf(emit).left} on-click=${() => maskClick(open, emit, closeOnMask)}></div>
+            <div class="jui-tour__band" style=${() => layoutOf(emit).right} on-click=${() => maskClick(open, emit, closeOnMask)}></div>
+          #else
+            <div class="jui-tour__band jui-tour__band--full" on-click=${() => maskClick(open, emit, closeOnMask)}></div>
+          #end
+        #end
+        <section
+          class="jui-tour__card"
+          role="dialog"
+          aria-modal="true"
+          style=${() => layoutOf(emit).card}
+        >
+          #if activeStep(emit).title
+            <h3 class="jui-tour__title">${() => activeStep(emit).title}</h3>
+          #end
+          #if activeStep(emit).description
+            <p class="jui-tour__desc">${() => activeStep(emit).description}</p>
+          #end
+          <div class="jui-tour__footer">
+            <span class="jui-tour__count">${() => currentIndex(emit) + 1} / ${() => (read(stepsState(emit)) || []).length}</span>
+            <div class="jui-tour__actions">
+              #if currentIndex(emit) > 0
+                <button type="button" class="jui-tour__btn" on-click=${() => prevStep(open, emit)}>Back</button>
+              #end
+              <button type="button" class="jui-tour__btn jui-tour__btn--primary" on-click=${() => nextStep(open, emit)}>
+                ${() => (currentIndex(emit) >= (read(stepsState(emit)) || []).length - 1 ? localeText('j.tour.done', 'Done') : localeText('j.tour.next', 'Next'))}
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-tour {
+  position: relative;
+  min-width: 0;
+}
+
+.jui-tour__boot,
+.jui-tour__bind,
+.jui-tour__steps {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-tour__layer {
+  position: fixed;
+  inset: 0;
+  z-index: 2400;
+  pointer-events: none;
+}
+
+.jui-tour__band {
+  position: fixed;
+  z-index: 2400;
+  background: color-mix(in srgb, var(--j-deep) 52%, transparent);
+  pointer-events: auto;
+}
+
+.jui-tour__band--full {
+  inset: 0;
+}
+
+.jui-tour__card {
+  position: fixed;
+  z-index: 2401;
+  width: min(100%, 22rem);
+  padding: 1.1rem 1.15rem;
+  border: 1px solid var(--j-border);
+  border-radius: calc(var(--j-radius) + 2px);
+  background: var(--j-surface-2);
+  box-shadow: var(--j-shadow);
+  color: var(--j-text);
+  pointer-events: auto;
+}
+
+.jui-tour__title {
+  margin: 0 0 0.45rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--j-forest, var(--j-text));
+}
+
+.jui-tour__desc {
+  margin: 0;
+  color: var(--j-muted);
+  line-height: 1.45;
+}
+
+.jui-tour__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.jui-tour__count {
+  color: var(--j-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.jui-tour__actions {
+  display: inline-flex;
+  gap: 0.45rem;
+}
+
+.jui-tour__btn {
+  appearance: none;
+  min-height: 2rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+  color: var(--j-forest, var(--j-text));
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.jui-tour__btn--primary {
+  border-color: transparent;
+  background: var(--j-primary);
+  color: #ffffff;
+}
+
+.jui-tour__btn:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+</style>

@@ -1,0 +1,138 @@
+import Cascader from './Cascader.jcr'
+import { propText } from '../i18n/index.js'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'any', default: null, model: true }
+    options: { type: 'any', required: true }
+    optionLabel: { type: 'string', default: 'label' }
+    optionValue: { type: 'string', default: 'value' }
+    optionGroupLabel: { type: 'string', default: 'label' }
+    optionGroupChildren: { type: 'any', default: 'children' }
+    placeholder: { type: 'string', default: 'Select' }
+    clearable: { type: 'boolean', default: true }
+    disabled: { type: 'boolean', default: false }
+    loading: { type: 'boolean', default: false }
+    size: { type: 'string', default: 'md' }
+    fluid: { type: 'boolean', default: false }
+    separator: { type: 'string', default: ' — ' }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change']
+</contract>
+
+function childKeyAt(groupChildren, depth) {
+  const next = read(groupChildren)
+  if (Array.isArray(next)) return next[depth] || ''
+  if (typeof next === 'string' && next) return next
+  return 'children'
+}
+
+function normalizeNodes(list, optionLabelProp, optionValueProp, optionGroupLabelProp, groupChildren, depth = 0) {
+  if (!Array.isArray(list)) return []
+  const labelKey = String(read(optionLabelProp) || 'label')
+  const valueKey = String(read(optionValueProp) || 'value')
+  const groupLabelKey = String(read(optionGroupLabelProp) || labelKey)
+  const childKey = childKeyAt(groupChildren, depth)
+
+  return list.map((item, index) => {
+    if (item == null || typeof item !== 'object') {
+      return { value: item, label: String(item ?? index), children: [] }
+    }
+
+    const rawChildren = childKey ? item[childKey] : item.children
+    const hasChildren = Array.isArray(rawChildren) && rawChildren.length > 0
+    const label = hasChildren
+      ? (item[groupLabelKey] ?? item[labelKey] ?? item.name ?? item.label ?? String(item[valueKey] ?? index))
+      : (item[labelKey] ?? item.cname ?? item.name ?? item.label ?? String(item[valueKey] ?? index))
+    const value = item[valueKey] ?? item.code ?? item.value ?? label
+
+    return {
+      value,
+      label: String(label),
+      children: hasChildren
+        ? normalizeNodes(rawChildren, optionLabelProp, optionValueProp, optionGroupLabelProp, groupChildren, depth + 1)
+        : [],
+    }
+  })
+}
+
+function treeOf(optionsProp, optionLabelProp, optionValueProp, optionGroupLabelProp, groupChildren) {
+  return normalizeNodes(
+    read(optionsProp),
+    optionLabelProp,
+    optionValueProp,
+    optionGroupLabelProp,
+    groupChildren,
+  )
+}
+
+function onChange(next, emitFn) {
+  emitFn('change', next)
+}
+
+export <view>
+  <div class="jui-cascadeselect">
+    <Cascader
+      :label=${label}
+      :options=${() => treeOf(options, optionLabel, optionValue, optionGroupLabel, optionGroupChildren)}
+      :placeholder=${() => propText(placeholder, 'j.cascadeSelect.placeholder', 'Select')}
+      :clearable=${clearable}
+      :disabled=${disabled}
+      :loading=${loading}
+      :size=${size}
+      :fluid=${fluid}
+      :separator=${separator}
+      :hint=${hint}
+      :error=${error}
+      :emitPath=${false}
+      :showAllLevels=${true}
+      :filterable=${false}
+      :changeOnSelect=${false}
+      :multiple=${false}
+      :expandTrigger=${'click'}
+      bind-value=${value}
+      on-change=${(next) => onChange(next, emit)}
+    />
+  </div>
+</view>
+
+export <style>
+.jui-cascadeselect {
+  display: block;
+  min-width: 0;
+}
+
+.jui-cascadeselect .jui-cascader__trigger {
+  border-radius: var(--j-radius-pill);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--j-surface-2) 88%, var(--j-mint)), var(--j-surface-2));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--j-border) 70%, transparent);
+}
+
+.jui-cascadeselect .jui-cascader__trigger[aria-expanded='true'] {
+  box-shadow: var(--j-focus);
+}
+
+.jui-cascadeselect .jui-cascader__panel {
+  border-radius: calc(var(--j-radius) + 4px);
+  padding: 0.65rem;
+  background: color-mix(in srgb, var(--j-surface-2) 92%, var(--j-mint));
+}
+
+.jui-cascadeselect .jui-cascader__columns {
+  border-radius: var(--j-radius);
+  overflow: hidden;
+}
+
+.jui-cascadeselect .jui-cascader__option.is-selected {
+  background: color-mix(in srgb, var(--j-primary) 14%, var(--j-surface));
+}
+
+.jui-cascadeselect .jui-cascader__footer {
+  display: none;
+}
+</style>

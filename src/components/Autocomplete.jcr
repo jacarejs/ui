@@ -1,4 +1,5 @@
 import { read } from '../internal/utils.js'
+import { propText } from '../i18n/index.js'
 
 export <contract>
   props: {
@@ -9,10 +10,12 @@ export <contract>
     disabled: { type: 'boolean', default: false }
     clearable: { type: 'boolean', default: true }
     debounce: { type: 'number', default: 150 }
+    loading: { type: 'boolean', default: false }
+    remote: { type: 'boolean', default: false }
     hint: { type: 'string', default: '' }
     error: { type: 'string', default: '' }
   }
-  emits: ['change', 'select']
+  emits: ['change', 'select', 'search']
 </contract>
 
 function normalizedSuggestions(source) {
@@ -40,27 +43,61 @@ function applyFilter(input) {
   })
   const empty = root.querySelector('[data-ac-empty]')
   if (empty) empty.hidden = visible > 0
-  root.querySelector('[data-ac-panel]').hidden = false
+  const panel = root.querySelector('[data-ac-panel]')
+  if (panel) panel.hidden = false
+  input.setAttribute('aria-expanded', 'true')
 }
 
-function debouncedFilter(event, delayValue) {
+function showAllOptions(root) {
+  if (!root) return
+  root.querySelectorAll('[data-ac-option]').forEach((button) => {
+    const item = button.closest('li')
+    if (item) item.hidden = false
+  })
+  const empty = root.querySelector('[data-ac-empty]')
+  if (empty) {
+    const count = root.querySelectorAll('[data-ac-option]').length
+    empty.hidden = count > 0 || !!root.querySelector('[data-ac-loading]')
+  }
+}
+
+function debouncedInput(event, delayValue, remoteProp, model, emitFn) {
   const input = event.currentTarget
+  const query = String(input.value || '')
+  commitValue(model, query, emitFn)
+  openPanel(event)
+
   window.clearTimeout(input.__juiAcTimer)
   const delay = Number(read(delayValue)) || 0
-  if (delay <= 0) {
+  const remote = !!read(remoteProp)
+
+  const run = () => {
+    if (remote) {
+      const root = input.closest('[data-autocomplete]')
+      showAllOptions(root)
+      emitFn('search', query.trim())
+      return
+    }
     applyFilter(input)
+  }
+
+  if (delay <= 0) {
+    run()
     return
   }
-  input.__juiAcTimer = window.setTimeout(() => applyFilter(input), delay)
+  input.__juiAcTimer = window.setTimeout(run, delay)
 }
 
 function openPanel(event) {
   const root = event.currentTarget.closest('[data-autocomplete]')
-  if (!root || event.currentTarget.disabled) return
+  if (!root || event.currentTarget.disabled || root.__juiAcSkipOpen) return
   root.acController?.abort()
   const controller = new AbortController()
   root.acController = controller
-  root.querySelector('[data-ac-panel]').hidden = false
+  const panel = root.querySelector('[data-ac-panel]')
+  if (panel) panel.hidden = false
+  const input = root.querySelector('[data-ac-input]')
+  if (input) input.setAttribute('aria-expanded', 'true')
   document.addEventListener('pointerdown', (pointerEvent) => {
     if (!root.contains(pointerEvent.target)) closePanel(root)
   }, { signal: controller.signal })
@@ -70,29 +107,50 @@ function closePanel(root) {
   if (!root) return
   const panel = root.querySelector('[data-ac-panel]')
   if (panel) panel.hidden = true
+  const input = root.querySelector('[data-ac-input]')
+  if (input) input.setAttribute('aria-expanded', 'false')
   root.acController?.abort()
 }
 
 function selectSuggestion(option, event, model, emitFn) {
+  event.preventDefault()
   const root = event.currentTarget.closest('[data-autocomplete]')
   const input = root?.querySelector('[data-ac-input]')
   if (input) input.value = option.label
   commitValue(model, option.label, emitFn)
   emitFn('select', option)
+  if (root) root.__juiAcSkipOpen = true
   closePanel(root)
-  input?.focus()
+  if (input) {
+    input.focus({ preventScroll: true })
+    queueMicrotask(() => {
+      if (root) root.__juiAcSkipOpen = false
+      closePanel(root)
+    })
+  }
 }
 
-function clearValue(event, model, emitFn) {
+function clearValue(event, model, remoteProp, emitFn) {
   const root = event.currentTarget.closest('[data-autocomplete]')
   const input = root?.querySelector('[data-ac-input]')
   if (input) input.value = ''
   commitValue(model, '', emitFn)
+  if (read(remoteProp)) emitFn('search', '')
   input?.focus()
 }
 
+function hasSuggestions(source) {
+  return normalizedSuggestions(source).length > 0
+}
+
 export <view>
-  <div class="jui-autocomplete" data-autocomplete class-has-error=${() => !!read(error)} class-is-disabled=${() => !!read(disabled)}>
+  <div
+    class="jui-autocomplete"
+    data-autocomplete
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
+    class-is-loading=${() => !!read(loading)}
+  >
     #if read(label)
       <span class="jui-autocomplete__label">${() => read(label)}</span>
     #end
@@ -106,31 +164,38 @@ export <view>
           role="combobox"
           aria-autocomplete="list"
           aria-expanded="false"
+          aria-busy=${() => (read(loading) ? 'true' : 'false')}
           autocomplete="off"
-          placeholder=${() => read(placeholder)}
+          placeholder=${() => propText(placeholder, 'j.autocomplete.placeholder', 'Search...')}
           value=${() => read(value)}
           disabled=${() => !!read(disabled)}
           aria-invalid=${() => !!read(error)}
           on-focus=${openPanel}
-          on-input=${(event) => {
-            commitValue(value, event.target.value, emit)
-            debouncedFilter(event, debounce)
-          }}
+          on-input=${(event) => debouncedInput(event, debounce, remote, value, emit)}
           on-keydown=${(event) => {
             if (event.key === 'Escape') closePanel(event.currentTarget.closest('[data-autocomplete]'))
           }}
         />
-        #if read(clearable) && read(value)
+        #if read(loading)
+          <span class="jui-autocomplete__spinner" aria-hidden="true"></span>
+        #elif read(clearable) && read(value)
           <button
             type="button"
             class="jui-autocomplete__clear"
             aria-label="Clear"
-            on-click=${(event) => clearValue(event, value, emit)}
+            on-click=${(event) => clearValue(event, value, remote, emit)}
           >×</button>
         #end
       </div>
 
       <ul class="jui-autocomplete__panel" data-ac-panel role="listbox" hidden>
+        #if read(loading)
+          <li class="jui-autocomplete__loading" data-ac-loading aria-live="polite">
+            <span class="jui-autocomplete__spinner" aria-hidden="true"></span>
+            <span>Searching…</span>
+          </li>
+        #end
+
         #for normalizedSuggestions(suggestions) as option (option.value)
           <li>
             <button
@@ -139,11 +204,17 @@ export <view>
               class="jui-autocomplete__option"
               data-ac-option
               data-search=${() => String(option.label).toLowerCase()}
+              on-pointerdown=${(event) => event.preventDefault()}
               on-click=${(event) => selectSuggestion(option, event, value, emit)}
             >${option.label}</button>
           </li>
         #end
-        <li class="jui-autocomplete__empty" data-ac-empty hidden>No matches</li>
+
+        #if !read(loading) && !hasSuggestions(suggestions)
+          <li class="jui-autocomplete__empty" data-ac-empty>No matches</li>
+        #elif !read(remote)
+          <li class="jui-autocomplete__empty" data-ac-empty hidden>No matches</li>
+        #end
       </ul>
     </div>
 
@@ -216,13 +287,17 @@ export <style>
   opacity: 0.65;
 }
 
-.jui-autocomplete__clear {
+.jui-autocomplete__clear,
+.jui-autocomplete__field > .jui-autocomplete__spinner {
   position: absolute;
   right: 0.5rem;
   display: grid;
   place-items: center;
   width: 1.9rem;
   height: 1.9rem;
+}
+
+.jui-autocomplete__clear {
   border: 0;
   border-radius: var(--j-radius-sm);
   color: var(--j-muted);
@@ -235,6 +310,16 @@ export <style>
 .jui-autocomplete__clear:hover {
   background: var(--j-mint);
   color: var(--j-text);
+}
+
+.jui-autocomplete__spinner {
+  box-sizing: border-box;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 2px solid color-mix(in srgb, var(--j-primary) 25%, var(--j-border));
+  border-right-color: var(--j-primary);
+  border-radius: 50%;
+  animation: jui-ac-spin 0.7s linear infinite;
 }
 
 .jui-autocomplete__panel {
@@ -277,10 +362,15 @@ export <style>
   background: var(--j-mint);
 }
 
+.jui-autocomplete__loading,
 .jui-autocomplete__empty {
-  padding: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.85rem 0.8rem;
   color: var(--j-muted);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   text-align: center;
 }
 
@@ -296,5 +386,17 @@ export <style>
 .jui-autocomplete__error {
   color: var(--j-danger);
   font-weight: 600;
+}
+
+@keyframes jui-ac-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-autocomplete__spinner {
+    animation: none;
+    border-right-color: currentColor;
+    opacity: 0.55;
+  }
 }
 </style>

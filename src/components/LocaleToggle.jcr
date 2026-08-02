@@ -1,4 +1,4 @@
-import { useI18n } from '../i18n/index.js'
+import { useI18n, localeText } from '../i18n/index.js'
 import { read } from '../internal/utils.js'
 
 export <contract>
@@ -49,7 +49,7 @@ function pickLocale(id, emitFn) {
 }
 
 export <view>
-  <div class="jui-locale-toggle" role="group" aria-label="Locale">
+  <div class="jui-locale-toggle" role="group" aria-label=${() => localeText('j.localeToggle.label', 'Locale')}>
     #for optionList(locales, labels) as item (item.id)
       <button
         type="button"

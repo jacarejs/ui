@@ -1,0 +1,93 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    direction: { type: 'string', default: 'horizontal' }
+    size: { type: 'string', default: 'md' }
+    wrap: { type: 'boolean', default: false }
+    align: { type: 'string', default: 'center' }
+  }
+  slots: ['default']
+</contract>
+
+function directionOf(value) {
+  return read(value) === 'vertical' ? 'vertical' : 'horizontal'
+}
+
+function sizeToken(value) {
+  const next = String(read(value) ?? 'md')
+  if (next === 'sm' || next === 'md' || next === 'lg') return next
+  return 'custom'
+}
+
+function customGap(value) {
+  const next = String(read(value) ?? 'md')
+  if (next === 'sm' || next === 'md' || next === 'lg') return undefined
+  if (/^\d+(\.\d+)?$/.test(next)) return `${next}px`
+  return next
+}
+
+function alignOf(value) {
+  const next = read(value)
+  if (next === 'start' || next === 'end' || next === 'stretch' || next === 'baseline') return next
+  return 'center'
+}
+
+export <view>
+  <div
+    class="jui-space"
+    class-jui-space--vertical=${() => directionOf(direction) === 'vertical'}
+    class-jui-space--size-sm=${() => sizeToken(size) === 'sm'}
+    class-jui-space--size-lg=${() => sizeToken(size) === 'lg'}
+    class-jui-space--wrap=${() => !!read(wrap)}
+    class-jui-space--align-start=${() => alignOf(align) === 'start'}
+    class-jui-space--align-end=${() => alignOf(align) === 'end'}
+    class-jui-space--align-stretch=${() => alignOf(align) === 'stretch'}
+    class-jui-space--align-baseline=${() => alignOf(align) === 'baseline'}
+    :style=${() => {
+      const gap = customGap(size)
+      return gap ? `gap:${gap}` : undefined
+    }}
+  >
+    <slot />
+  </div>
+</view>
+
+export <style>
+.jui-space {
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--j-space-4);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.jui-space > span {
+  display: contents;
+}
+
+.jui-space--vertical {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.jui-space--wrap {
+  flex-wrap: wrap;
+}
+
+.jui-space--size-sm { gap: var(--j-space-2); }
+.jui-space--size-lg { gap: var(--j-space-5); }
+
+.jui-space--align-start { align-items: flex-start; }
+.jui-space--align-end { align-items: flex-end; }
+.jui-space--align-stretch { align-items: stretch; }
+.jui-space--align-baseline { align-items: baseline; }
+
+@media (max-width: 640px) {
+  .jui-space:not(.jui-space--vertical) {
+    flex-wrap: wrap;
+  }
+}
+</style>

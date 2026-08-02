@@ -1,0 +1,255 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    size: { type: 'string', default: '' }
+    min: { type: 'string', default: '0' }
+    max: { type: 'string', default: '' }
+    resizable: { type: 'boolean', default: true }
+  }
+  slots: ['default']
+  emits: ['resize']
+</contract>
+
+function liveSize(sizeProp, emitFn) {
+  if (!emitFn.__juiPanelSize) {
+    emitFn.__juiPanelSize = pulse(String(read(sizeProp) || ''))
+  }
+  return emitFn.__juiPanelSize
+}
+
+function sizeValue(sizeProp, emitFn) {
+  const live = String(read(liveSize(sizeProp, emitFn)) || '')
+  if (live) return live
+  return String(read(sizeProp) || '')
+}
+
+function parseLength(value, total) {
+  const raw = String(value || '').trim()
+  if (!raw) return null
+  if (raw.endsWith('%')) {
+    const pct = Number(raw.slice(0, -1))
+    if (!Number.isFinite(pct) || total <= 0) return null
+    return (pct / 100) * total
+  }
+  const px = Number(String(raw).replace(/px$/i, ''))
+  return Number.isFinite(px) ? px : null
+}
+
+function formatLength(px, original) {
+  const raw = String(original || '').trim()
+  if (raw.endsWith('%')) {
+    return raw
+  }
+  return `${Math.round(px)}px`
+}
+
+function clampLength(px, minProp, maxProp, total) {
+  let next = px
+  const min = parseLength(read(minProp), total)
+  const max = parseLength(read(maxProp), total)
+  if (min != null) next = Math.max(min, next)
+  if (max != null) next = Math.min(max, next)
+  return Math.max(0, next)
+}
+
+function panelStyle(sizeProp, minProp, maxProp, emitFn) {
+  const size = sizeValue(sizeProp, emitFn)
+  const min = String(read(minProp) || '0')
+  const max = String(read(maxProp) || '')
+  const parts = []
+  if (size) {
+    parts.push(`flex:0 0 ${size}`)
+    parts.push(`flex-basis:${size}`)
+  } else {
+    parts.push('flex:1 1 0%')
+    parts.push('flex-basis:0%')
+  }
+  if (min) {
+    parts.push(`min-width:${min}`)
+    parts.push(`min-height:${min}`)
+  }
+  if (max) {
+    parts.push(`max-width:${max}`)
+    parts.push(`max-height:${max}`)
+  }
+  return parts.join(';')
+}
+
+function isVertical(panel) {
+  return !!panel?.closest?.('.jui-splitter--vertical')
+}
+
+function beginResize(event, sizeProp, minProp, maxProp, resizableProp, emitFn) {
+  if (!read(resizableProp)) return
+  if (event.pointerType === 'mouse' && event.button !== 0) return
+  const handle = event.currentTarget
+  const panel = handle.closest('.jui-splitter-panel')
+  const root = panel?.closest?.('.jui-splitter')
+  if (!panel || !root) return
+  event.preventDefault()
+  event.stopPropagation()
+
+  const vertical = isVertical(panel)
+  const rect = panel.getBoundingClientRect()
+  const rootRect = root.getBoundingClientRect()
+  const total = vertical ? rootRect.height : rootRect.width
+  const startPos = vertical ? event.clientY : event.clientX
+  const startSize = vertical ? rect.height : rect.width
+  const original = sizeValue(sizeProp, emitFn) || `${Math.round(startSize)}px`
+  const state = liveSize(sizeProp, emitFn)
+
+  panel.classList.add('is-resizing')
+  root.classList.add('is-resizing')
+  if (typeof handle.setPointerCapture === 'function') {
+    handle.setPointerCapture(event.pointerId)
+  }
+
+  const onMove = (moveEvent) => {
+    const pos = vertical ? moveEvent.clientY : moveEvent.clientX
+    const delta = pos - startPos
+    const nextPx = clampLength(startSize + delta, minProp, maxProp, total)
+    const next = original.endsWith('%') && total > 0
+      ? `${Math.round((nextPx / total) * 1000) / 10}%`
+      : formatLength(nextPx, original)
+    state.set(next)
+    panel.style.flexBasis = next
+    panel.style.flex = `0 0 ${next}`
+    const sizes = [...root.querySelectorAll('.jui-splitter-panel')].map((node) => {
+      return node.style.flexBasis || getComputedStyle(node).flexBasis
+    })
+    emitFn('resize', { sizes })
+    root.dispatchEvent(new CustomEvent('jui-splitter-resize', { bubbles: true, detail: { sizes } }))
+  }
+
+  const onUp = () => {
+    panel.classList.remove('is-resizing')
+    root.classList.remove('is-resizing')
+    handle.removeEventListener('pointermove', onMove)
+    handle.removeEventListener('pointerup', onUp)
+    handle.removeEventListener('pointercancel', onUp)
+    if (typeof handle.releasePointerCapture === 'function') {
+      try {
+        handle.releasePointerCapture(event.pointerId)
+      } catch {
+        undefined
+      }
+    }
+    const sizes = [...root.querySelectorAll('.jui-splitter-panel')].map((node) => {
+      return node.style.flexBasis || getComputedStyle(node).flexBasis
+    })
+    emitFn('resize', { sizes })
+    root.dispatchEvent(new CustomEvent('jui-splitter-resize', { bubbles: true, detail: { sizes } }))
+  }
+
+  handle.addEventListener('pointermove', onMove)
+  handle.addEventListener('pointerup', onUp)
+  handle.addEventListener('pointercancel', onUp)
+}
+
+export <view>
+  <div
+    class="jui-splitter-panel"
+    class-is-resizable=${() => read(resizable) !== false}
+    :style=${() => panelStyle(size, min, max, emit)}
+    data-jui-splitter-panel
+  >
+    <div class="jui-splitter-panel__content">
+      <slot />
+    </div>
+    #if read(resizable) !== false
+      <div
+        class="jui-splitter-panel__handle"
+        data-jui-splitter-handle
+        role="separator"
+        aria-orientation="vertical"
+        tabindex="0"
+        on-pointerdown=${(event) => beginResize(event, size, min, max, resizable, emit)}
+      ></div>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-splitter-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--j-surface-2);
+}
+
+.jui-splitter-panel__content {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.jui-splitter-panel__content > span {
+  display: contents;
+}
+
+.jui-splitter-panel__handle {
+  position: absolute;
+  z-index: 2;
+  background: transparent;
+  touch-action: none;
+}
+
+.jui-splitter-panel__handle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  transition: background var(--j-duration-fast, 120ms) var(--j-ease-out, ease);
+}
+
+.jui-splitter-panel__handle:hover::after,
+.jui-splitter-panel.is-resizing > .jui-splitter-panel__handle::after {
+  background: color-mix(in srgb, var(--j-primary) 45%, transparent);
+}
+
+.jui-splitter:not(.jui-splitter--vertical) .jui-splitter-panel__handle {
+  top: 0;
+  right: calc(var(--j-touch-target, 2.75rem) / -2);
+  width: var(--j-touch-target, 2.75rem);
+  height: 100%;
+  cursor: col-resize;
+}
+
+.jui-splitter:not(.jui-splitter--vertical) .jui-splitter-panel__handle::after {
+  inset: 0 auto 0 auto;
+  left: 50%;
+  width: 6px;
+  transform: translateX(-50%);
+}
+
+.jui-splitter--vertical .jui-splitter-panel__handle {
+  left: 0;
+  bottom: calc(var(--j-touch-target, 2.75rem) / -2);
+  width: 100%;
+  height: var(--j-touch-target, 2.75rem);
+  cursor: row-resize;
+}
+
+.jui-splitter--vertical .jui-splitter-panel__handle::after {
+  inset: auto 0 auto 0;
+  top: 50%;
+  height: 6px;
+  transform: translateY(-50%);
+}
+
+.jui-splitter-panel:last-child .jui-splitter-panel__handle {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .jui-splitter-panel__handle::after {
+    background: color-mix(in srgb, var(--j-primary) 28%, transparent);
+  }
+}
+</style>

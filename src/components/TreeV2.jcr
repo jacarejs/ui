@@ -1,0 +1,32 @@
+import Tree from './Tree.jcr'
+
+export <contract>
+  props: {
+    data: { type: 'any', default: [] }
+    value: { type: 'any', default: '', model: true }
+    showCheckbox: { type: 'boolean', default: false }
+    defaultExpandAll: { type: 'boolean', default: false }
+    accordion: { type: 'boolean', default: false }
+  }
+  emits: ['change', 'expand']
+</contract>
+
+export <view>
+  <div class="jui-tree-v2" data-jui-tree-v2="alias">
+    <Tree
+      :data=${data}
+      bind-value=${value}
+      :showCheckbox=${showCheckbox}
+      :defaultExpandAll=${defaultExpandAll}
+      :accordion=${accordion}
+      on-change=${(next) => emit('change', next)}
+      on-expand=${(payload) => emit('expand', payload)}
+    />
+  </div>
+</view>
+
+export <style>
+.jui-tree-v2 {
+  min-width: 0;
+}
+</style>

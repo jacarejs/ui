@@ -1,0 +1,121 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    title: { type: 'string', default: '' }
+    subTitle: { type: 'string', default: '' }
+    icon: { type: 'string', default: 'info' }
+  }
+  slots: ['default', 'icon', 'title', 'subtitle']
+</contract>
+
+function toneOf(value) {
+  const next = String(read(value) || 'info')
+  if (next === 'success' || next === 'warning' || next === 'error' || next === 'primary' || next === 'info') return next
+  if (next === 'warn') return 'warning'
+  if (next === 'danger') return 'error'
+  return 'info'
+}
+
+function glyphOf(value) {
+  const tone = toneOf(value)
+  if (tone === 'success') return '✓'
+  if (tone === 'warning') return '!'
+  if (tone === 'error') return '×'
+  if (tone === 'primary') return '★'
+  return 'i'
+}
+
+export <view>
+  <div
+    class="jui-result"
+    class-jui-result--success=${() => toneOf(icon) === 'success'}
+    class-jui-result--warning=${() => toneOf(icon) === 'warning'}
+    class-jui-result--error=${() => toneOf(icon) === 'error'}
+    class-jui-result--primary=${() => toneOf(icon) === 'primary'}
+    class-jui-result--info=${() => toneOf(icon) === 'info'}
+  >
+    <div class="jui-result__icon" aria-hidden="true">
+      <slot name="icon" />
+      <span class="jui-result__glyph">${() => glyphOf(icon)}</span>
+    </div>
+    <div class="jui-result__title">
+      <slot name="title" />
+      ${() => read(title)}
+    </div>
+    <div class="jui-result__subtitle">
+      <slot name="subtitle" />
+      ${() => read(subTitle)}
+    </div>
+    <div class="jui-result__extra"><slot /></div>
+  </div>
+</view>
+
+export <style>
+.jui-result {
+  --jui-result-accent: var(--j-info);
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1.25rem;
+  text-align: center;
+}
+
+.jui-result--success { --jui-result-accent: var(--j-success, var(--j-primary)); }
+.jui-result--warning { --jui-result-accent: var(--j-warn); }
+.jui-result--error { --jui-result-accent: var(--j-danger); }
+.jui-result--primary { --jui-result-accent: var(--j-primary); }
+.jui-result--info { --jui-result-accent: var(--j-info); }
+
+.jui-result__icon {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--jui-result-accent) 14%, var(--j-surface));
+  color: var(--jui-result-accent);
+  box-shadow: var(--j-shadow-sm);
+}
+
+.jui-result__glyph {
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.jui-result__icon:has(:not(.jui-result__glyph)) .jui-result__glyph {
+  display: none;
+}
+
+.jui-result__title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--j-forest);
+}
+
+.jui-result__title:empty,
+.jui-result__subtitle:empty {
+  display: none;
+}
+
+.jui-result__subtitle {
+  max-width: 32rem;
+  color: var(--j-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.jui-result__extra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: center;
+  margin-top: 0.35rem;
+}
+
+.jui-result__extra:empty {
+  display: none;
+}
+</style>

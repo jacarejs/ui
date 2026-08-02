@@ -1,4 +1,5 @@
 import { pulse } from '@jacare/core'
+import { propText } from '../i18n/index.js'
 import { read } from '../internal/utils.js'
 
 export <contract>
@@ -14,8 +15,11 @@ export <contract>
     hint: { type: 'string', default: '' }
     height: { type: 'number', default: 274 }
     itemSize: { type: 'number', default: 44 }
+    loading: { type: 'boolean', default: false }
+    remote: { type: 'boolean', default: false }
+    debounce: { type: 'number', default: 150 }
   }
-  emits: ['change']
+  emits: ['change', 'search']
 </contract>
 
 function normalizedOptions(source) {
@@ -29,20 +33,26 @@ function queryPulse(emitFn) {
   return emitFn.__juiSelectV2Query
 }
 
+function filterQueryPulse(emitFn) {
+  if (!emitFn.__juiSelectV2FilterQuery) emitFn.__juiSelectV2FilterQuery = pulse('')
+  return emitFn.__juiSelectV2FilterQuery
+}
+
 function scrollPulse(emitFn) {
   if (!emitFn.__juiSelectV2Scroll) emitFn.__juiSelectV2Scroll = pulse(0)
   return emitFn.__juiSelectV2Scroll
 }
 
-function filteredOptions(source, emitFn) {
-  const query = String(queryPulse(emitFn)() || '').trim().toLowerCase()
+function filteredOptions(source, emitFn, remoteProp) {
   const list = normalizedOptions(source)
+  if (read(remoteProp)) return list
+  const query = String(filterQueryPulse(emitFn)() || '').trim().toLowerCase()
   if (!query) return list
   return list.filter((option) => `${option.label} ${option.tag}`.toLowerCase().includes(query))
 }
 
-function windowedOptions(source, emitFn, heightValue, itemSizeValue) {
-  const list = filteredOptions(source, emitFn)
+function windowedOptions(source, emitFn, heightValue, itemSizeValue, remoteProp) {
+  const list = filteredOptions(source, emitFn, remoteProp)
   const itemSize = Math.max(28, Number(read(itemSizeValue)) || 44)
   const height = Math.max(itemSize * 3, Number(read(heightValue)) || 274)
   const scrollTop = Number(scrollPulse(emitFn)()) || 0
@@ -66,7 +76,7 @@ function selectedOption(model, source) {
 }
 
 function selectedLabel(model, source, placeholderValue) {
-  return selectedOption(model, source)?.label || read(placeholderValue)
+  return selectedOption(model, source)?.label || propText(placeholderValue, 'j.select.placeholder', 'Select')
 }
 
 function commitValue(model, next, emitFn) {
@@ -74,7 +84,30 @@ function commitValue(model, next, emitFn) {
   emitFn('change', next)
 }
 
-function handleToggle(event, emitFn) {
+function handleSearchInput(event, emitFn, debounceProp, remoteProp) {
+  const input = event.currentTarget
+  const query = String(event.target.value || '')
+  queryPulse(emitFn).set(query)
+  scrollPulse(emitFn).set(0)
+
+  window.clearTimeout(input.__juiSelectV2Timer)
+  const delay = Number(read(debounceProp)) || 0
+  const run = () => {
+    if (read(remoteProp)) {
+      emitFn('search', query.trim())
+      return
+    }
+    filterQueryPulse(emitFn).set(query)
+  }
+
+  if (delay <= 0) {
+    run()
+    return
+  }
+  input.__juiSelectV2Timer = window.setTimeout(run, delay)
+}
+
+function handleToggle(event, emitFn, remoteProp) {
   const current = event.currentTarget
   if (!current.open) {
     current.outsideController?.abort()
@@ -84,7 +117,9 @@ function handleToggle(event, emitFn) {
     if (details !== current) details.removeAttribute('open')
   })
   queryPulse(emitFn).set('')
+  filterQueryPulse(emitFn).set('')
   scrollPulse(emitFn).set(0)
+  if (read(remoteProp)) emitFn('search', '')
   current.outsideController?.abort()
   const controller = new AbortController()
   current.outsideController = controller
@@ -101,19 +136,26 @@ function chooseOption(option, event, model, emitFn) {
   commitValue(model, option.value, emitFn)
   details?.removeAttribute('open')
   queryPulse(emitFn).set('')
+  filterQueryPulse(emitFn).set('')
   scrollPulse(emitFn).set(0)
 }
 
 export <view>
-  <div class="jui-select-v2" class-has-error=${() => !!read(error)} class-is-disabled=${() => !!read(disabled)}>
+  <div
+    class="jui-select-v2"
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
+    class-is-loading=${() => !!read(loading)}
+  >
     #if read(label)
       <span class="jui-select-v2__label">${() => read(label)}</span>
     #end
 
-    <details class="jui-select-v2__control" on-toggle=${(event) => handleToggle(event, emit)}>
+    <details class="jui-select-v2__control" on-toggle=${(event) => handleToggle(event, emit, remote)}>
       <summary
         class="jui-select-v2__trigger"
         aria-haspopup="listbox"
+        aria-busy=${() => (read(loading) ? 'true' : 'false')}
         tabindex=${() => read(disabled) ? '-1' : '0'}
         on-click=${(event) => {
           if (read(disabled)) event.preventDefault()
@@ -121,7 +163,11 @@ export <view>
       >
         <span class="jui-select-v2__face">
           <span class="jui-select-v2__value">${() => selectedLabel(value, options, placeholder)}</span>
-          <span class="jui-select-v2__chevron" aria-hidden="true"></span>
+          #if read(loading)
+            <span class="jui-select-v2__spinner" aria-hidden="true"></span>
+          #else
+            <span class="jui-select-v2__chevron" aria-hidden="true"></span>
+          #end
         </span>
       </summary>
 
@@ -130,46 +176,51 @@ export <view>
           <input
             class="jui-select-v2__search"
             type="search"
-            placeholder=${() => read(searchPlaceholder)}
+            placeholder=${() => propText(searchPlaceholder, 'j.select.searchPlaceholder', 'Search...')}
             value=${() => queryPulse(emit)()}
-            on-input=${(event) => {
-              queryPulse(emit).set(event.target.value)
-              scrollPulse(emit).set(0)
-            }}
+            aria-busy=${() => (read(loading) ? 'true' : 'false')}
+            on-input=${(event) => handleSearchInput(event, emit, debounce, remote)}
             on-keydown=${(event) => {
               if (event.key === 'Escape') event.currentTarget.closest('details').removeAttribute('open')
             }}
           />
         #end
 
-        <div
-          class="jui-select-v2__viewport"
-          role="listbox"
-          :style=${() => `height:${windowedOptions(options, emit, height, itemSize).height}px`}
-          on-scroll=${(event) => scrollPulse(emit).set(event.currentTarget.scrollTop)}
-        >
-          <div :style=${() => `height:${windowedOptions(options, emit, height, itemSize).padTop}px`}></div>
-          #for windowedOptions(options, emit, height, itemSize).list as option (option.value)
-            <button
-              type="button"
-              role="option"
-              class="jui-select-v2__option"
-              class-is-active=${() => String(read(value) ?? '') === String(option.value)}
-              aria-selected=${() => String(read(value) ?? '') === String(option.value)}
-              :style=${() => `height:${windowedOptions(options, emit, height, itemSize).itemSize}px`}
-              on-click=${(event) => chooseOption(option, event, value, emit)}
-            >
-              <span>${option.label}</span>
-              #if option.tag
-                <small class="jui-select-v2__tag">${option.tag}</small>
-              #end
-            </button>
-          #end
-          <div :style=${() => `height:${windowedOptions(options, emit, height, itemSize).padBottom}px`}></div>
-          #if windowedOptions(options, emit, height, itemSize).total === 0
-            <div class="jui-select-v2__empty">No results</div>
-          #end
-        </div>
+        #if read(loading)
+          <div class="jui-select-v2__loading" aria-live="polite">
+            <span class="jui-select-v2__spinner" aria-hidden="true"></span>
+            <span>Searching…</span>
+          </div>
+        #else
+          <div
+            class="jui-select-v2__viewport"
+            role="listbox"
+            :style=${() => `height:${windowedOptions(options, emit, height, itemSize, remote).height}px`}
+            on-scroll=${(event) => scrollPulse(emit).set(event.currentTarget.scrollTop)}
+          >
+            <div :style=${() => `height:${windowedOptions(options, emit, height, itemSize, remote).padTop}px`}></div>
+            #for windowedOptions(options, emit, height, itemSize, remote).list as option (option.value)
+              <button
+                type="button"
+                role="option"
+                class="jui-select-v2__option"
+                class-is-active=${() => String(read(value) ?? '') === String(option.value)}
+                aria-selected=${() => String(read(value) ?? '') === String(option.value)}
+                :style=${() => `height:${windowedOptions(options, emit, height, itemSize, remote).itemSize}px`}
+                on-click=${(event) => chooseOption(option, event, value, emit)}
+              >
+                <span>${option.label}</span>
+                #if option.tag
+                  <small class="jui-select-v2__tag">${option.tag}</small>
+                #end
+              </button>
+            #end
+            <div :style=${() => `height:${windowedOptions(options, emit, height, itemSize, remote).padBottom}px`}></div>
+            #if windowedOptions(options, emit, height, itemSize, remote).total === 0
+              <div class="jui-select-v2__empty">No results</div>
+            #end
+          </div>
+        #end
       </div>
     </details>
 
@@ -289,6 +340,17 @@ export <style>
   transform: rotate(180deg);
 }
 
+.jui-select-v2__spinner {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 2px solid color-mix(in srgb, var(--j-primary) 25%, var(--j-border));
+  border-right-color: var(--j-primary);
+  border-radius: 50%;
+  animation: jui-select-v2-spin 0.7s linear infinite;
+}
+
 .jui-select-v2__panel {
   position: absolute;
   z-index: 80;
@@ -357,6 +419,17 @@ export <style>
   text-transform: uppercase;
 }
 
+.jui-select-v2__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 5rem;
+  padding: 0.8rem;
+  color: var(--j-muted);
+  font-size: 0.85rem;
+}
+
 .jui-select-v2__empty {
   padding: 0.8rem;
   color: var(--j-muted);
@@ -376,5 +449,17 @@ export <style>
 .jui-select-v2__error {
   color: var(--j-danger);
   font-weight: 600;
+}
+
+@keyframes jui-select-v2-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-select-v2__spinner {
+    animation: none;
+  }
 }
 </style>

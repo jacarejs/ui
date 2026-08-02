@@ -1,0 +1,40 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    padding: { type: 'string', default: '' }
+  }
+  slots: ['default']
+</contract>
+
+function paddingOf(value) {
+  const next = String(read(value) || '')
+  return next || undefined
+}
+
+export <view>
+  <main
+    class="jui-main"
+    style---jui-main-padding=${() => paddingOf(padding)}
+  >
+    <slot />
+  </main>
+</view>
+
+export <style>
+.jui-main {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  box-sizing: border-box;
+  padding: var(--jui-main-padding, 0);
+  background: var(--j-surface);
+  color: var(--j-text);
+}
+
+.jui-main > span {
+  display: contents;
+}
+</style>

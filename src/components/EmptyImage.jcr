@@ -1,0 +1,202 @@
+import { effect } from '@jacare/core'
+import {
+  buildEmptyImageDataUrl,
+  downloadEmptyImage,
+  sizeOfEmptyImage,
+  svgDataUrlToPng,
+  typeOfEmptyImage,
+} from '../internal/empty-image.js'
+import { read } from '../internal/utils.js'
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+export <contract>
+  props: {
+    type: { type: 'string', default: 'default' }
+    size: { type: 'number', default: 160 }
+    color: { type: 'string', default: '' }
+    background: { type: 'string', default: '' }
+    halo: { type: 'boolean', default: true }
+    label: { type: 'string', default: '' }
+    alt: { type: 'string', default: '' }
+    hint: { type: 'string', default: '' }
+    downloadable: { type: 'boolean', default: false }
+    downloadLabel: { type: 'string', default: 'Download SVG' }
+    downloadFormat: { type: 'string', default: 'svg' }
+  }
+  emits: ['ready']
+</contract>
+
+function colorOf(value) {
+  return String(read(value) || '').trim()
+}
+
+function formatOf(value) {
+  return String(read(value) || 'svg').toLowerCase() === 'png' ? 'png' : 'svg'
+}
+
+function altOf(altProp, typeProp, labelProp) {
+  const custom = String(read(altProp) || '').trim()
+  if (custom) return custom
+  const label = String(read(labelProp) || '').trim()
+  if (label) return label
+  return `Empty illustration (${typeOfEmptyImage(read(typeProp))})`
+}
+
+function optionsOf(typeProp, sizeProp, colorProp, backgroundProp, haloProp) {
+  return {
+    type: typeOfEmptyImage(read(typeProp)),
+    size: sizeOfEmptyImage(read(sizeProp)),
+    color: colorOf(colorProp) || undefined,
+    background: colorOf(backgroundProp) || undefined,
+    halo: read(haloProp) !== false,
+  }
+}
+
+function armEmptyImage(root, typeProp, sizeProp, colorProp, backgroundProp, haloProp, emitFn) {
+  if (!root || root.__juiEmptyImageArmed) return
+  root.__juiEmptyImageArmed = true
+  const preview = root.querySelector('[data-jui-empty-image-preview]')
+  root.__juiEmptyImageDispose = effect(() => {
+    const options = optionsOf(typeProp, sizeProp, colorProp, backgroundProp, haloProp)
+    const dataUrl = buildEmptyImageDataUrl(options)
+    root.__juiEmptyImageDataUrl = dataUrl
+    root.__juiEmptyImageSize = options.size
+    root.dataset.type = options.type
+    if (preview) {
+      preview.src = dataUrl
+      preview.width = options.size
+      preview.height = options.size
+    }
+    root.style.setProperty('--jui-empty-image-size', `${options.size}px`)
+    emitFn('ready', dataUrl)
+  })
+}
+
+function downloadCurrent(event) {
+  const root = event.currentTarget.closest('[data-jui-empty-image]')
+  if (!root) return
+  const dataUrl = root.__juiEmptyImageDataUrl
+  const size = root.__juiEmptyImageSize || 160
+  const type = root.dataset.type || 'default'
+  const format = formatOf(root.dataset.downloadFormat)
+  if (!dataUrl) return
+  if (format === 'png') {
+    svgDataUrlToPng(dataUrl, size, (pngUrl) => {
+      if (pngUrl) downloadEmptyImage(pngUrl, `empty-${type}.png`)
+    })
+    return
+  }
+  downloadEmptyImage(dataUrl, `empty-${type}.svg`)
+}
+
+export <view>
+  <div
+    class="jui-empty-image"
+    data-jui-empty-image
+    data-download-format=${() => formatOf(downloadFormat)}
+    style=${() => `--jui-empty-image-size:${sizeOfEmptyImage(read(size))}px`}
+  >
+    <img
+      class="jui-empty-image__boot"
+      alt=""
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armEmptyImage(
+        event.currentTarget.closest('[data-jui-empty-image]'),
+        type,
+        size,
+        color,
+        background,
+        halo,
+        emit,
+      )}
+    />
+
+    #if read(label)
+      <span class="jui-empty-image__label">${() => read(label)}</span>
+    #end
+
+    <img
+      class="jui-empty-image__preview"
+      data-jui-empty-image-preview
+      alt=${() => altOf(alt, type, label)}
+      width=${() => sizeOfEmptyImage(read(size))}
+      height=${() => sizeOfEmptyImage(read(size))}
+    />
+
+    #if read(downloadable)
+      <button type="button" class="jui-empty-image__download" on-click=${downloadCurrent}>
+        ${() => read(downloadLabel) || (formatOf(downloadFormat) === 'png' ? 'Download PNG' : 'Download SVG')}
+      </button>
+    #end
+
+    #if read(hint)
+      <span class="jui-empty-image__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-empty-image {
+  display: inline-grid;
+  justify-items: start;
+  gap: 0.55rem;
+  min-width: 0;
+  color: var(--j-text);
+}
+
+.jui-empty-image__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-empty-image__label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest, var(--j-text));
+}
+
+.jui-empty-image__preview {
+  display: block;
+  width: var(--jui-empty-image-size, 160px);
+  height: var(--jui-empty-image-size, 160px);
+  border: 1px solid var(--j-border);
+  border-radius: calc(var(--j-radius) + 4px);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--j-mint, #dcefe8) 35%, var(--j-surface)), var(--j-surface-2, var(--j-surface)));
+  object-fit: contain;
+}
+
+.jui-empty-image__download {
+  min-height: var(--j-touch-target, 2.75rem);
+  padding: 0 0.95rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+  color: var(--j-primary);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.jui-empty-image__download:hover {
+  border-color: color-mix(in srgb, var(--j-primary) 40%, var(--j-border));
+  background: color-mix(in srgb, var(--j-primary) 8%, var(--j-surface));
+}
+
+.jui-empty-image__download:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-empty-image__hint {
+  font-size: 0.85rem;
+  color: var(--j-muted);
+  max-width: 20rem;
+  line-height: 1.4;
+}
+</style>

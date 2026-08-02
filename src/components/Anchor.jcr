@@ -1,0 +1,263 @@
+import { effect, pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    offset: { type: 'number', default: 0 }
+    bounds: { type: 'number', default: 8 }
+    direction: { type: 'string', default: 'vertical' }
+    type: { type: 'string', default: 'default' }
+    affix: { type: 'boolean', default: false }
+    marker: { type: 'boolean', default: true }
+  }
+  slots: ['default']
+  emits: ['change']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function offsetOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) ? next : 0
+}
+
+function directionOf(value) {
+  return read(value) === 'horizontal' ? 'horizontal' : 'vertical'
+}
+
+function typeOf(value) {
+  return read(value) === 'underline' ? 'underline' : 'default'
+}
+
+function boundsOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) ? Math.max(0, next) : 8
+}
+
+function activeState(emitFn) {
+  if (!emitFn.__juiAnchorActive) emitFn.__juiAnchorActive = pulse('')
+  return emitFn.__juiAnchorActive
+}
+
+function bindAnchor(emitFn, offsetProp) {
+  const root = emitFn.__juiAnchorRoot
+  if (root) {
+    root.anchorOffset = offsetProp
+    root.juiAnchorEmit = emitFn
+    root.juiAnchorActive = activeState(emitFn)
+  }
+  read(offsetProp)
+  read(activeState(emitFn))
+  return ''
+}
+
+function linkHref(link) {
+  return String(link.getAttribute('href') || '')
+}
+
+function targetIdFromHref(href) {
+  if (!href.startsWith('#')) return ''
+  return href.slice(1)
+}
+
+function overflowYOf(node) {
+  const style = getComputedStyle(node)
+  return style.overflowY || style.overflow || node.style?.overflowY || node.style?.overflow || ''
+}
+
+function scrollParentOf(el) {
+  let node = el?.parentElement
+  while (node && node !== document.body && node !== document.documentElement) {
+    const oy = overflowYOf(node)
+    if ((oy === 'auto' || oy === 'scroll' || oy === 'overlay') && node.scrollHeight > node.clientHeight + 1) {
+      return node
+    }
+    node = node.parentElement
+  }
+  return window
+}
+
+function setActive(root, href, emitChange) {
+  if (!root) return
+  const active = root.juiAnchorActive
+  const next = String(href || '')
+  const prev = active ? String(read(active) || '') : ''
+  if (active && prev !== next) active.set(next)
+  for (const link of root.querySelectorAll('.jui-anchor-link')) {
+    const on = linkHref(link) === next
+    link.classList.toggle('is-active', on)
+    if (on) link.setAttribute('aria-current', 'location')
+    else link.removeAttribute('aria-current')
+  }
+  if (emitChange && prev !== next && typeof root.juiAnchorEmit === 'function') {
+    root.juiAnchorEmit('change', next)
+  }
+}
+
+function collectTargets(root) {
+  const items = []
+  for (const link of root.querySelectorAll('.jui-anchor-link')) {
+    const href = linkHref(link)
+    const id = targetIdFromHref(href)
+    if (!id) continue
+    const target = document.getElementById(id)
+    if (!target) continue
+    items.push({ href, target })
+  }
+  return items
+}
+
+function syncActiveFromScroll(root) {
+  const items = collectTargets(root)
+  if (!items.length) return
+  const offset = offsetOf(root.anchorOffset)
+  const bounds = boundsOf(root.anchorBounds)
+  const scroller = scrollParentOf(items[0].target)
+  let current = items[0].href
+  if (scroller === window) {
+    const y = window.scrollY + offset + bounds + 1
+    for (const item of items) {
+      const top = item.target.getBoundingClientRect().top + window.scrollY
+      if (top <= y) current = item.href
+    }
+  } else {
+    const y = scroller.scrollTop + offset + bounds + 1
+    const scrollerTop = scroller.getBoundingClientRect().top
+    for (const item of items) {
+      const top = item.target.getBoundingClientRect().top - scrollerTop + scroller.scrollTop
+      if (top <= y) current = item.href
+    }
+  }
+  setActive(root, current, true)
+}
+
+function armAnchor(root, emitFn, offsetProp, boundsProp) {
+  if (!root) return
+  emitFn.__juiAnchorRoot = root
+  root.anchorOffset = offsetProp
+  root.anchorBounds = boundsProp
+  root.juiAnchorEmit = emitFn
+  root.juiAnchorActive = activeState(emitFn)
+  root.juiAnchorSetActive = (href, emitChange = true) => setActive(root, href, emitChange)
+  if (root.anchorArmed) return
+  root.anchorArmed = true
+  root.anchorDispose = effect(() => {
+    read(offsetProp)
+    read(boundsProp)
+    const items = collectTargets(root)
+    const scroller = items[0] ? scrollParentOf(items[0].target) : window
+    const listenerTarget = scroller === window ? window : scroller
+    const onScroll = () => syncActiveFromScroll(root)
+    syncActiveFromScroll(root)
+    listenerTarget.addEventListener('scroll', onScroll, { passive: true })
+    return () => listenerTarget.removeEventListener('scroll', onScroll)
+  })
+}
+
+export <view>
+  <nav
+    class="jui-anchor"
+    class-jui-anchor--horizontal=${() => directionOf(direction) === 'horizontal'}
+    class-jui-anchor--underline=${() => typeOf(type) === 'underline'}
+    class-jui-anchor--affix=${() => !!read(affix)}
+    class-jui-anchor--marker=${() => !!read(marker) && directionOf(direction) === 'vertical'}
+    :style=${() => `--jui-anchor-offset:${offsetOf(offset)}px`}
+  >
+    <img
+      class="jui-anchor__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) =>
+        armAnchor(event.currentTarget.closest('.jui-anchor'), emit, offset, bounds)}
+    />
+    <span class="jui-anchor__bind" aria-hidden="true">${() => bindAnchor(emit, offset)}</span>
+    <div class="jui-anchor__list">
+      <slot />
+    </div>
+  </nav>
+</view>
+
+export <style>
+.jui-anchor {
+  --jui-anchor-offset: 0px;
+  position: relative;
+  min-width: 0;
+}
+
+.jui-anchor__boot,
+.jui-anchor__bind {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-anchor__list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.jui-anchor--marker .jui-anchor__list {
+  padding-left: 0.85rem;
+}
+
+.jui-anchor--marker .jui-anchor__list::before {
+  content: '';
+  position: absolute;
+  top: 0.2rem;
+  bottom: 0.2rem;
+  left: 0.2rem;
+  width: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--j-border) 85%, transparent);
+}
+
+.jui-anchor--horizontal .jui-anchor__list {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.85rem;
+  padding-left: 0;
+}
+
+.jui-anchor--horizontal.jui-anchor--marker .jui-anchor__list::before {
+  display: none;
+}
+
+.jui-anchor__list > span {
+  display: contents;
+}
+
+.jui-anchor--underline .jui-anchor-link__title {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.jui-anchor--affix {
+  position: sticky;
+  top: var(--jui-anchor-offset, 0px);
+  z-index: 2;
+  align-self: start;
+}
+
+.jui-anchor--marker .jui-anchor-link.is-active {
+  position: relative;
+}
+
+.jui-anchor--marker .jui-anchor-link.is-active::before {
+  content: '';
+  position: absolute;
+  top: 0.45rem;
+  bottom: 0.45rem;
+  left: -0.72rem;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--j-primary);
+}
+</style>

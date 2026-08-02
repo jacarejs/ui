@@ -1,0 +1,81 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    gutter: { type: 'any', default: 0 }
+    justify: { type: 'string', default: 'start' }
+    align: { type: 'string', default: 'top' }
+  }
+  slots: ['default']
+</contract>
+
+function gutterOf(value) {
+  const next = read(value)
+  if (next === undefined || next === null || next === '') return '0px'
+  if (typeof next === 'number' && Number.isFinite(next)) return `${next}px`
+  const raw = String(next)
+  if (/^\d+(\.\d+)?$/.test(raw)) return `${raw}px`
+  return raw
+}
+
+function justifyOf(value) {
+  const next = read(value)
+  if (
+    next === 'center' ||
+    next === 'end' ||
+    next === 'between' ||
+    next === 'around' ||
+    next === 'evenly'
+  ) {
+    return next
+  }
+  return 'start'
+}
+
+function alignOf(value) {
+  const next = read(value)
+  if (next === 'middle' || next === 'bottom') return next
+  return 'top'
+}
+
+export <view>
+  <div
+    class="jui-row"
+    class-jui-row--justify-center=${() => justifyOf(justify) === 'center'}
+    class-jui-row--justify-end=${() => justifyOf(justify) === 'end'}
+    class-jui-row--justify-between=${() => justifyOf(justify) === 'between'}
+    class-jui-row--justify-around=${() => justifyOf(justify) === 'around'}
+    class-jui-row--justify-evenly=${() => justifyOf(justify) === 'evenly'}
+    class-jui-row--align-middle=${() => alignOf(align) === 'middle'}
+    class-jui-row--align-bottom=${() => alignOf(align) === 'bottom'}
+    style---jui-row-gutter=${() => gutterOf(gutter)}
+  >
+    <slot />
+  </div>
+</view>
+
+export <style>
+.jui-row {
+  --jui-row-gutter: 0px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-width: 0;
+  margin-inline: calc(var(--jui-row-gutter) / -2);
+  row-gap: var(--jui-row-gutter);
+}
+
+.jui-row > span {
+  display: contents;
+}
+
+.jui-row--justify-center { justify-content: center; }
+.jui-row--justify-end { justify-content: flex-end; }
+.jui-row--justify-between { justify-content: space-between; }
+.jui-row--justify-around { justify-content: space-around; }
+.jui-row--justify-evenly { justify-content: space-evenly; }
+
+.jui-row--align-middle { align-items: center; }
+.jui-row--align-bottom { align-items: flex-end; }
+</style>

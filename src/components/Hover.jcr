@@ -1,0 +1,70 @@
+import { canHoverTrigger, read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    value: { type: 'boolean', default: false, model: true }
+    disabled: { type: 'boolean', default: false }
+  }
+  slots: ['default']
+  emits: ['change']
+</contract>
+
+function hoverState(emitFn) {
+  if (!emitFn.__juiHoverState) {
+    emitFn.__juiHoverState = { pointer: false, focus: false }
+  }
+  return emitFn.__juiHoverState
+}
+
+function syncHover(model, emitFn, disabledProp) {
+  if (read(disabledProp)) return
+  const state = hoverState(emitFn)
+  const next = state.pointer || state.focus
+  const current = !!read(model)
+  if (current === next) return
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function setPointer(inside, model, emitFn, disabledProp) {
+  hoverState(emitFn).pointer = inside
+  syncHover(model, emitFn, disabledProp)
+}
+
+function setFocus(inside, model, emitFn, disabledProp) {
+  hoverState(emitFn).focus = inside
+  syncHover(model, emitFn, disabledProp)
+}
+
+function isHovered(model) {
+  return !!read(model)
+}
+
+export <view>
+  <span
+    class="jui-hover"
+    data-hovered=${() => (isHovered(value) ? '' : undefined)}
+    on-mouseenter=${() => setPointer(true, value, emit, disabled)}
+    on-mouseleave=${() => setPointer(false, value, emit, disabled)}
+    on-focusin=${() => setFocus(true, value, emit, disabled)}
+    on-focusout=${() => setFocus(false, value, emit, disabled)}
+    on-pointerenter=${() => {
+      if (!canHoverTrigger()) setPointer(true, value, emit, disabled)
+    }}
+    on-pointerleave=${() => {
+      if (!canHoverTrigger()) setPointer(false, value, emit, disabled)
+    }}
+  >
+    <slot />
+  </span>
+</view>
+
+export <style>
+.jui-hover {
+  display: contents;
+}
+
+.jui-hover[data-hovered] > * {
+  outline-color: var(--j-primary);
+}
+</style>

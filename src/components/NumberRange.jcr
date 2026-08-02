@@ -1,0 +1,179 @@
+import { effect, pulse, untrack } from '@jacare/core'
+import InputNumber from './InputNumber.jcr'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'object', default: { min: 0, max: 0 }, model: true }
+    min: { type: 'number', default: null }
+    max: { type: 'number', default: null }
+    step: { type: 'number', default: 1 }
+    precision: { type: 'number', default: null }
+    minLabel: { type: 'string', default: 'Min' }
+    maxLabel: { type: 'string', default: 'Max' }
+    disabled: { type: 'boolean', default: false }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change']
+</contract>
+
+function rangeOf(model) {
+  const next = read(model)
+  if (Array.isArray(next)) {
+    return {
+      min: Number.isFinite(Number(next[0])) ? Number(next[0]) : 0,
+      max: Number.isFinite(Number(next[1])) ? Number(next[1]) : 0,
+    }
+  }
+  if (next && typeof next === 'object') {
+    return {
+      min: Number.isFinite(Number(next.min)) ? Number(next.min) : 0,
+      max: Number.isFinite(Number(next.max)) ? Number(next.max) : 0,
+    }
+  }
+  return { min: 0, max: 0 }
+}
+
+function commit(model, next, emitFn) {
+  const payload = { min: next.min, max: Math.max(next.min, next.max) }
+  if (model && typeof model.set === 'function') model.set(payload)
+  emitFn('change', payload)
+}
+
+function ensureParts(model, emitFn) {
+  if (emitFn.__juiNumberRange) return emitFn.__juiNumberRange
+
+  const initial = rangeOf(model)
+  const minPulse = pulse(initial.min)
+  const maxPulse = pulse(initial.max)
+  let syncing = false
+
+  effect(() => {
+    const next = rangeOf(model)
+    if (syncing) return
+    syncing = true
+    if (untrack(() => minPulse()) !== next.min) minPulse.set(next.min)
+    if (untrack(() => maxPulse()) !== next.max) maxPulse.set(next.max)
+    syncing = false
+  })
+
+  effect(() => {
+    const minValue = minPulse()
+    const maxValue = maxPulse()
+    if (syncing) return
+    const current = untrack(() => rangeOf(model))
+    if (current.min === minValue && current.max === maxValue) return
+    syncing = true
+    commit(model, { min: minValue, max: maxValue }, emitFn)
+    if (maxValue < minValue) maxPulse.set(minValue)
+    syncing = false
+  })
+
+  emitFn.__juiNumberRange = { minPulse, maxPulse }
+  return emitFn.__juiNumberRange
+}
+
+function minModel(model, emitFn) {
+  return ensureParts(model, emitFn).minPulse
+}
+
+function maxModel(model, emitFn) {
+  return ensureParts(model, emitFn).maxPulse
+}
+
+export <view>
+  <div
+    class="jui-number-range"
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
+  >
+    #if read(label)
+      <span class="jui-number-range__label">${() => read(label)}</span>
+    #end
+
+    <div class="jui-number-range__row">
+      <InputNumber
+        :label=${() => read(minLabel) || 'Min'}
+        :min=${min}
+        :max=${max}
+        :step=${step}
+        :precision=${precision}
+        :disabled=${disabled}
+        bind-value=${minModel(value, emit)}
+      />
+      <span class="jui-number-range__sep" aria-hidden="true">–</span>
+      <InputNumber
+        :label=${() => read(maxLabel) || 'Max'}
+        :min=${min}
+        :max=${max}
+        :step=${step}
+        :precision=${precision}
+        :disabled=${disabled}
+        bind-value=${maxModel(value, emit)}
+      />
+    </div>
+
+    #if read(error)
+      <span class="jui-number-range__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-number-range__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-number-range {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.jui-number-range__label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-number-range__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.55rem;
+  align-items: end;
+}
+
+.jui-number-range__sep {
+  padding-bottom: 0.7rem;
+  color: var(--j-muted);
+  font-weight: 700;
+}
+
+.jui-number-range.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-number-range__hint,
+.jui-number-range__error {
+  font-size: 0.8rem;
+}
+
+.jui-number-range__hint {
+  color: var(--j-muted);
+}
+
+.jui-number-range__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .jui-number-range__row {
+    grid-template-columns: 1fr;
+  }
+
+  .jui-number-range__sep {
+    display: none;
+  }
+}
+</style>

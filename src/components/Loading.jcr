@@ -1,0 +1,96 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    loading: { type: 'boolean', default: false }
+    text: { type: 'string', default: '' }
+    background: { type: 'string', default: '' }
+    fullscreen: { type: 'boolean', default: false }
+  }
+  slots: ['default']
+</contract>
+
+function overlayStyle(value) {
+  const next = String(read(value) || '')
+  return next ? `background:${next}` : ''
+}
+
+export <view>
+  <div
+    class="jui-loading"
+    class-jui-loading--fullscreen=${() => !!read(fullscreen)}
+    aria-busy=${() => !!read(loading)}
+  >
+    <slot />
+    #if read(loading)
+      <div
+        class="jui-loading__overlay"
+        class-jui-loading__overlay--fullscreen=${() => !!read(fullscreen)}
+        :style=${() => overlayStyle(background)}
+        role="status"
+        aria-live="polite"
+      >
+        <span class="jui-loading__spinner" aria-hidden="true"></span>
+        #if read(text)
+          <span class="jui-loading__text">${() => read(text)}</span>
+        #end
+      </div>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-loading {
+  position: relative;
+}
+
+.jui-loading__overlay {
+  position: absolute;
+  z-index: 70;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-width: 3rem;
+  min-height: 3rem;
+  background: color-mix(in srgb, var(--j-surface-2) 78%, transparent);
+  color: var(--j-primary);
+}
+
+.jui-loading__overlay--fullscreen {
+  position: fixed;
+  z-index: 2000;
+}
+
+.jui-loading__spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid color-mix(in srgb, var(--j-primary) 25%, transparent);
+  border-top-color: var(--j-primary);
+  border-radius: 50%;
+  animation: jui-loading-spin 0.75s linear infinite;
+}
+
+.jui-loading__text {
+  max-width: min(24rem, 80vw);
+  color: var(--j-forest);
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+
+@keyframes jui-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-loading__spinner {
+    animation-duration: 1.5s;
+  }
+}
+</style>

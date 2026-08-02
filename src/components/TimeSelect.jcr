@@ -1,4 +1,5 @@
 import { read } from '../internal/utils.js'
+import { propText } from '../i18n/index.js'
 
 export <contract>
   props: {
@@ -88,7 +89,7 @@ export <view>
         }}
       >
         <span class="jui-time-select__face">
-          <span class="jui-time-select__value" class-is-placeholder=${() => !read(value)}>${() => read(value) || read(placeholder)}</span>
+          <span class="jui-time-select__value" class-is-placeholder=${() => !read(value)}>${() => read(value) || propText(placeholder, 'j.timeSelect.placeholder', 'Select time')}</span>
           <span class="jui-time-select__chevron" aria-hidden="true"></span>
         </span>
       </summary>
@@ -102,7 +103,7 @@ export <view>
               class="jui-time-select__option"
               class-is-active=${() => !read(value)}
               on-click=${(event) => chooseTime('', event, value, emit)}
-            >${() => read(placeholder)}</button>
+            >${() => propText(placeholder, 'j.timeSelect.placeholder', 'Select time')}</button>
           </li>
         #end
         #for timeOptions(start, end, step) as time (time)

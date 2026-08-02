@@ -1,0 +1,74 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    layout: { type: 'string', default: 'horizontal' }
+  }
+  slots: ['default']
+  emits: ['resize']
+</contract>
+
+function layoutOf(value) {
+  return read(value) === 'vertical' ? 'vertical' : 'horizontal'
+}
+
+function sizesPulse(emitFn) {
+  if (!emitFn.__juiSplitterSizes) {
+    emitFn.__juiSplitterSizes = pulse([])
+  }
+  return emitFn.__juiSplitterSizes
+}
+
+function handlePanelResize(event, emitFn) {
+  const sizes = event.detail?.sizes || []
+  sizesPulse(emitFn).set(sizes)
+  emitFn('resize', { sizes })
+}
+
+export <view>
+  <div
+    class="jui-splitter"
+    class-jui-splitter--vertical=${() => layoutOf(layout) === 'vertical'}
+    class-jui-splitter--horizontal=${() => layoutOf(layout) === 'horizontal'}
+    data-jui-splitter
+    on-jui-splitter-resize=${(event) => handlePanelResize(event, emit)}
+  >
+    <slot />
+  </div>
+</view>
+
+export <style>
+.jui-splitter {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--j-surface);
+}
+
+.jui-splitter > span {
+  display: contents;
+}
+
+.jui-splitter--horizontal {
+  flex-direction: row;
+}
+
+.jui-splitter--vertical {
+  flex-direction: column;
+}
+
+.jui-splitter.is-resizing {
+  user-select: none;
+  cursor: col-resize;
+}
+
+.jui-splitter--vertical.is-resizing {
+  cursor: row-resize;
+}
+</style>

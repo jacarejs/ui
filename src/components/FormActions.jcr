@@ -1,0 +1,129 @@
+import { read } from '../internal/utils.js'
+import { propText } from '../i18n/index.js'
+import Button from './Button.jcr'
+
+export <contract>
+  props: {
+    cancelLabel: { type: 'string', default: 'Cancel' }
+    saveLabel: { type: 'string', default: 'Save' }
+    submitLabel: { type: 'string', default: 'Submit' }
+    showCancel: { type: 'boolean', default: true }
+    showSave: { type: 'boolean', default: true }
+    showSubmit: { type: 'boolean', default: true }
+    loading: { type: 'boolean', default: false }
+    disabled: { type: 'boolean', default: false }
+    sticky: { type: 'boolean', default: true }
+    align: { type: 'string', default: 'end' }
+  }
+  slots: ['default', 'start']
+  emits: ['cancel', 'save', 'submit']
+</contract>
+
+function alignOf(value) {
+  const next = read(value)
+  if (next === 'start' || next === 'between' || next === 'center') return next
+  return 'end'
+}
+
+function fire(eventName, disabledValue, loadingValue, emitFn) {
+  if (read(disabledValue) || read(loadingValue)) return
+  emitFn(eventName)
+}
+
+export <view>
+  <div
+    class="jui-form-actions"
+    class-jui-form-actions--sticky=${() => !!read(sticky)}
+    class-jui-form-actions--start=${() => alignOf(align) === 'start'}
+    class-jui-form-actions--center=${() => alignOf(align) === 'center'}
+    class-jui-form-actions--between=${() => alignOf(align) === 'between'}
+    class-is-disabled=${() => !!read(disabled)}
+  >
+    <div class="jui-form-actions__start">
+      <slot name="start" />
+      #if read(showCancel)
+        <Button
+          :variant=${'ghost'}
+          :disabled=${() => !!(read(disabled) || read(loading))}
+          on-press=${() => fire('cancel', disabled, loading, emit)}
+        >
+          ${() => propText(cancelLabel, 'j.formActions.cancel', 'Cancel')}
+        </Button>
+      #end
+    </div>
+
+    <div class="jui-form-actions__end">
+      <slot />
+      #if read(showSave)
+        <Button
+          :variant=${'secondary'}
+          :disabled=${() => !!(read(disabled) || read(loading))}
+          on-press=${() => fire('save', disabled, loading, emit)}
+        >
+          ${() => propText(saveLabel, 'j.formActions.save', 'Save')}
+        </Button>
+      #end
+      #if read(showSubmit)
+        <Button
+          :variant=${'primary'}
+          :type=${'submit'}
+          :loading=${loading}
+          :disabled=${() => !!read(disabled)}
+          on-press=${() => fire('submit', disabled, loading, emit)}
+        >
+          ${() => propText(submitLabel, 'j.formActions.submit', 'Submit')}
+        </Button>
+      #end
+    </div>
+  </div>
+</view>
+
+export <style>
+.jui-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.85rem;
+  padding: 1rem 0;
+}
+
+.jui-form-actions--start {
+  justify-content: flex-start;
+}
+
+.jui-form-actions--center {
+  justify-content: center;
+}
+
+.jui-form-actions--between {
+  justify-content: space-between;
+}
+
+.jui-form-actions--sticky {
+  position: sticky;
+  bottom: 0;
+  z-index: 8;
+  margin-top: 0.35rem;
+  padding: 0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--j-border);
+  background: color-mix(in srgb, var(--j-surface) 88%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.jui-form-actions__start,
+.jui-form-actions__end {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.jui-form-actions--between .jui-form-actions__start {
+  margin-right: auto;
+}
+
+.jui-form-actions.is-disabled {
+  opacity: 0.7;
+}
+</style>

@@ -1,0 +1,103 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    span: { type: 'number', default: 24 }
+    offset: { type: 'number', default: 0 }
+    xs: { type: 'string', default: '' }
+    sm: { type: 'string', default: '' }
+    md: { type: 'string', default: '' }
+    lg: { type: 'string', default: '' }
+    xl: { type: 'string', default: '' }
+  }
+  slots: ['default']
+</contract>
+
+function clampSpan(value, fallback) {
+  const next = Number(read(value))
+  if (!Number.isFinite(next)) return fallback
+  return Math.min(24, Math.max(0, Math.round(next)))
+}
+
+function spanOf(value) {
+  return clampSpan(value, 24)
+}
+
+function offsetOf(value) {
+  return clampSpan(value, 0)
+}
+
+function responsiveOf(value) {
+  const raw = read(value)
+  if (raw === undefined || raw === null || raw === '') return undefined
+  const next = Number(raw)
+  if (!Number.isFinite(next)) return undefined
+  return String(Math.min(24, Math.max(0, Math.round(next))))
+}
+
+export <view>
+  <div
+    class="jui-col"
+    style---jui-span=${() => String(spanOf(span))}
+    style---jui-offset=${() => String(offsetOf(offset))}
+    style---jui-xs=${() => responsiveOf(xs)}
+    style---jui-sm=${() => responsiveOf(sm)}
+    style---jui-md=${() => responsiveOf(md)}
+    style---jui-lg=${() => responsiveOf(lg)}
+    style---jui-xl=${() => responsiveOf(xl)}
+  >
+    <slot />
+  </div>
+</view>
+
+export <style>
+.jui-col {
+  --jui-span: 24;
+  --jui-offset: 0;
+  box-sizing: border-box;
+  flex: 0 0 calc(100% * var(--jui-span) / 24);
+  max-width: calc(100% * var(--jui-span) / 24);
+  margin-left: calc(100% * var(--jui-offset) / 24);
+  padding-inline: calc(var(--jui-row-gutter, 0px) / 2);
+  min-width: 0;
+}
+
+.jui-col > span {
+  display: contents;
+}
+
+@media (max-width: 767px) {
+  .jui-col {
+    flex-basis: calc(100% * var(--jui-xs, var(--jui-span)) / 24);
+    max-width: calc(100% * var(--jui-xs, var(--jui-span)) / 24);
+  }
+}
+
+@media (min-width: 768px) {
+  .jui-col {
+    flex-basis: calc(100% * var(--jui-sm, var(--jui-span)) / 24);
+    max-width: calc(100% * var(--jui-sm, var(--jui-span)) / 24);
+  }
+}
+
+@media (min-width: 992px) {
+  .jui-col {
+    flex-basis: calc(100% * var(--jui-md, var(--jui-sm, var(--jui-span))) / 24);
+    max-width: calc(100% * var(--jui-md, var(--jui-sm, var(--jui-span))) / 24);
+  }
+}
+
+@media (min-width: 1200px) {
+  .jui-col {
+    flex-basis: calc(100% * var(--jui-lg, var(--jui-md, var(--jui-sm, var(--jui-span)))) / 24);
+    max-width: calc(100% * var(--jui-lg, var(--jui-md, var(--jui-sm, var(--jui-span)))) / 24);
+  }
+}
+
+@media (min-width: 1920px) {
+  .jui-col {
+    flex-basis: calc(100% * var(--jui-xl, var(--jui-lg, var(--jui-md, var(--jui-sm, var(--jui-span))))) / 24);
+    max-width: calc(100% * var(--jui-xl, var(--jui-lg, var(--jui-md, var(--jui-sm, var(--jui-span))))) / 24);
+  }
+}
+</style>

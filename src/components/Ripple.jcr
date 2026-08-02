@@ -1,0 +1,123 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    disabled: { type: 'boolean', default: false }
+    color: { type: 'string', default: '' }
+    centered: { type: 'boolean', default: false }
+    block: { type: 'boolean', default: false }
+  }
+  slots: ['default']
+</contract>
+
+function spawnRipple(event, host, colorProp, centeredProp) {
+  if (!host) return
+  const rect = host.getBoundingClientRect()
+  if (!rect.width || !rect.height) return
+  const size = Math.max(rect.width, rect.height) * 2.2
+  const ink = document.createElement('span')
+  ink.className = 'jui-ripple__ink'
+  ink.setAttribute('aria-hidden', 'true')
+  ink.style.width = `${size}px`
+  ink.style.height = `${size}px`
+  if (read(centeredProp)) {
+    ink.style.left = `${rect.width / 2 - size / 2}px`
+    ink.style.top = `${rect.height / 2 - size / 2}px`
+  } else {
+    const x = event.clientX != null ? event.clientX : rect.left + rect.width / 2
+    const y = event.clientY != null ? event.clientY : rect.top + rect.height / 2
+    ink.style.left = `${x - rect.left - size / 2}px`
+    ink.style.top = `${y - rect.top - size / 2}px`
+  }
+  const color = String(read(colorProp) || '').trim()
+  if (color) ink.style.background = color
+  host.appendChild(ink)
+  const remove = () => {
+    if (ink.isConnected) ink.remove()
+  }
+  ink.addEventListener('animationend', remove, { once: true })
+  window.setTimeout(remove, 700)
+}
+
+function handlePointerDown(event, disabledProp, colorProp, centeredProp) {
+  if (read(disabledProp)) return
+  if (event.button != null && event.button !== 0) return
+  if (event.pointerType === 'mouse' && event.buttons === 0) return
+  const host = event.currentTarget
+  spawnRipple(event, host, colorProp, centeredProp)
+}
+
+export <view>
+  <span
+    class="jui-ripple"
+    class-is-disabled=${() => !!read(disabled)}
+    class-is-centered=${() => !!read(centered)}
+    class-is-block=${() => !!read(block)}
+    on-pointerdown=${(event) => handlePointerDown(event, disabled, color, centered)}
+  >
+    <slot />
+  </span>
+</view>
+
+export <style>
+.jui-ripple {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+  overflow: hidden;
+  isolation: isolate;
+  min-width: 0;
+  max-width: 100%;
+  border-radius: inherit;
+  color: inherit;
+  cursor: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.jui-ripple > :not(.jui-ripple__ink) {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.jui-ripple__ink {
+  position: absolute;
+  z-index: 2;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: scale(0);
+  opacity: 0.32;
+  background: currentColor;
+  animation: jui-ripple-spread 0.55s var(--j-ease-out, ease-out) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes jui-ripple-spread {
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+.jui-ripple.is-block {
+  display: flex;
+  width: 100%;
+}
+
+.jui-ripple.is-block > :not(.jui-ripple__ink) {
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+.jui-ripple.is-disabled {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-ripple__ink {
+    animation: none;
+    opacity: 0;
+  }
+}
+</style>

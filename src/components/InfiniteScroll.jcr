@@ -1,0 +1,90 @@
+import { effect } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    disabled: { type: 'boolean', default: false }
+    distance: { type: 'number', default: 0 }
+    height: { type: 'string', default: '' }
+  }
+  slots: ['default']
+  emits: ['load']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function distanceOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) && next >= 0 ? next : 0
+}
+
+function dimOf(value) {
+  const next = String(read(value) || '')
+  return next || undefined
+}
+
+function armScroll(root, disabledProp, distanceProp, emitFn) {
+  if (!root || root.infiniteArmed) return
+  root.infiniteArmed = true
+  let locked = false
+  const onScroll = () => {
+    if (read(disabledProp) || locked) return
+    const remain = root.scrollHeight - root.scrollTop - root.clientHeight
+    if (remain <= distanceOf(distanceProp)) {
+      locked = true
+      emitFn('load')
+      requestAnimationFrame(() => {
+        locked = false
+      })
+    }
+  }
+  root.addEventListener('scroll', onScroll, { passive: true })
+  root.infiniteDispose = effect(() => {
+    read(disabledProp)
+    read(distanceProp)
+    return () => {}
+  })
+}
+
+export <view>
+  <div
+    class="jui-infinite-scroll"
+    style---jui-infinite-height=${() => dimOf(height)}
+  >
+    <img
+      class="jui-infinite-scroll__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armScroll(event.currentTarget.closest('.jui-infinite-scroll'), disabled, distance, emit)}
+    />
+    <slot />
+  </div>
+</view>
+
+export <style>
+.jui-infinite-scroll {
+  --jui-infinite-height: auto;
+  position: relative;
+  box-sizing: border-box;
+  height: var(--jui-infinite-height);
+  min-width: 0;
+  min-height: 0;
+  max-height: 100%;
+  overflow: auto;
+}
+
+.jui-infinite-scroll__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-infinite-scroll > span {
+  display: contents;
+}
+</style>

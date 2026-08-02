@@ -1,0 +1,404 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    value: { type: 'object', default: [], model: true }
+    header: { type: 'string', default: '' }
+    filterable: { type: 'boolean', default: false }
+    disabled: { type: 'boolean', default: false }
+  }
+  emits: ['change']
+</contract>
+
+function normalizeItems(source) {
+  const list = read(source)
+  if (!Array.isArray(list)) return []
+  return list.map((item, index) => ({
+    key: String(item?.key ?? index),
+    label: item?.label ?? String(item?.key ?? index),
+    disabled: !!item?.disabled,
+  }))
+}
+
+function queryState(emitFn) {
+  if (!emitFn.__juiOrderListQuery) emitFn.__juiOrderListQuery = pulse('')
+  return emitFn.__juiOrderListQuery
+}
+
+function checkedState(emitFn) {
+  if (!emitFn.__juiOrderListChecked) emitFn.__juiOrderListChecked = pulse(new Set())
+  return emitFn.__juiOrderListChecked
+}
+
+function matchesQuery(item, query) {
+  if (!query) return true
+  return item.label.toLowerCase().includes(query) || item.key.toLowerCase().includes(query)
+}
+
+function visibleItems(valueProp, emitFn) {
+  const query = String(read(queryState(emitFn)) || '').trim().toLowerCase()
+  return normalizeItems(valueProp).filter((item) => matchesQuery(item, query))
+}
+
+function isChecked(key, checkedPulse) {
+  return read(checkedPulse).has(key)
+}
+
+function toggleChecked(key, itemDisabled, disabledProp, checkedPulse) {
+  if (read(disabledProp) || itemDisabled) return
+  const next = new Set(read(checkedPulse))
+  if (next.has(key)) next.delete(key)
+  else next.add(key)
+  checkedPulse.set(next)
+}
+
+function selectableKeys(items) {
+  return items.filter((item) => !item.disabled).map((item) => item.key)
+}
+
+function checkedKeys(items, checkedPulse) {
+  const checked = read(checkedPulse)
+  return items.filter((item) => checked.has(item.key)).map((item) => item.key)
+}
+
+function commitValue(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function selectedIndices(items, checkedPulse) {
+  const checked = read(checkedPulse)
+  const indices = []
+  items.forEach((item, index) => {
+    if (checked.has(item.key)) indices.push(index)
+  })
+  return indices
+}
+
+function canMoveUp(valueProp, checkedPulse) {
+  const items = normalizeItems(valueProp)
+  const checked = read(checkedPulse)
+  return items.some((item, index) => checked.has(item.key) && index > 0 && !checked.has(items[index - 1].key))
+}
+
+function canMoveDown(valueProp, checkedPulse) {
+  const items = normalizeItems(valueProp)
+  const checked = read(checkedPulse)
+  return items.some(
+    (item, index) =>
+      checked.has(item.key) &&
+      index < items.length - 1 &&
+      !checked.has(items[index + 1].key),
+  )
+}
+
+function hasSelection(valueProp, checkedPulse) {
+  return checkedKeys(normalizeItems(valueProp), checkedPulse).length > 0
+}
+
+function moveToTop(valueProp, checkedPulse, disabledProp, emitFn) {
+  if (read(disabledProp)) return
+  const items = normalizeItems(valueProp)
+  const indices = new Set(selectedIndices(items, checkedPulse))
+  if (!indices.size) return
+  const selectedItems = items.filter((item, index) => indices.has(index))
+  const rest = items.filter((item, index) => !indices.has(index))
+  commitValue(valueProp, [...selectedItems, ...rest], emitFn)
+}
+
+function moveUp(valueProp, checkedPulse, disabledProp, emitFn) {
+  if (read(disabledProp) || !canMoveUp(valueProp, checkedPulse)) return
+  const items = [...normalizeItems(valueProp)]
+  const checked = read(checkedPulse)
+  for (let index = 0; index < items.length; index += 1) {
+    if (checked.has(items[index].key) && index > 0 && !checked.has(items[index - 1].key)) {
+      const prev = items[index - 1]
+      items[index - 1] = items[index]
+      items[index] = prev
+    }
+  }
+  commitValue(valueProp, items, emitFn)
+}
+
+function moveDown(valueProp, checkedPulse, disabledProp, emitFn) {
+  if (read(disabledProp) || !canMoveDown(valueProp, checkedPulse)) return
+  const items = [...normalizeItems(valueProp)]
+  const checked = read(checkedPulse)
+  for (let index = items.length - 1; index >= 0; index -= 1) {
+    if (
+      checked.has(items[index].key) &&
+      index < items.length - 1 &&
+      !checked.has(items[index + 1].key)
+    ) {
+      const next = items[index + 1]
+      items[index + 1] = items[index]
+      items[index] = next
+    }
+  }
+  commitValue(valueProp, items, emitFn)
+}
+
+function moveToBottom(valueProp, checkedPulse, disabledProp, emitFn) {
+  if (read(disabledProp)) return
+  const items = normalizeItems(valueProp)
+  const indices = new Set(selectedIndices(items, checkedPulse))
+  if (!indices.size) return
+  const selectedItems = items.filter((item, index) => indices.has(index))
+  const rest = items.filter((item, index) => !indices.has(index))
+  commitValue(valueProp, [...rest, ...selectedItems], emitFn)
+}
+
+export <view>
+  <div class="jui-order-list" class-is-disabled=${() => !!read(disabled)}>
+    #if read(header)
+      <div class="jui-order-list__header">${header}</div>
+    #end
+
+    #if read(filterable)
+      <input
+        class="jui-order-list__search"
+        type="search"
+        placeholder="Filter..."
+        disabled=${() => !!read(disabled)}
+        on-input=${(event) => queryState(emit).set(event.target.value)}
+      />
+    #end
+
+    <div class="jui-order-list__body">
+      <ul class="jui-order-list__list" role="listbox" aria-label=${() => read(header) || 'Order list'}>
+        #for visibleItems(value, emit) as item (item.key)
+          <li>
+            <label class="jui-order-list__item" class-is-disabled=${() => !!item.disabled}>
+              <input
+                type="checkbox"
+                disabled=${() => !!(read(disabled) || item.disabled)}
+                checked=${() => isChecked(item.key, checkedState(emit))}
+                on-change=${() => toggleChecked(item.key, item.disabled, disabled, checkedState(emit))}
+              />
+              <span class="jui-order-list__box" aria-hidden="true"></span>
+              <span class="jui-order-list__label">${item.label}</span>
+            </label>
+          </li>
+        #end
+        #if visibleItems(value, emit).length === 0
+          <li class="jui-order-list__empty">No items</li>
+        #end
+      </ul>
+
+      <div class="jui-order-list__ops">
+        <button
+          type="button"
+          class="jui-order-list__op-btn"
+          aria-label="Move to top"
+          disabled=${() => !!(read(disabled) || !hasSelection(value, checkedState(emit)))}
+          on-click=${() => moveToTop(value, checkedState(emit), disabled, emit)}
+        >Top</button>
+        <button
+          type="button"
+          class="jui-order-list__op-btn"
+          aria-label="Move up"
+          disabled=${() => !!(read(disabled) || !canMoveUp(value, checkedState(emit)))}
+          on-click=${() => moveUp(value, checkedState(emit), disabled, emit)}
+        >Up</button>
+        <button
+          type="button"
+          class="jui-order-list__op-btn"
+          aria-label="Move down"
+          disabled=${() => !!(read(disabled) || !canMoveDown(value, checkedState(emit)))}
+          on-click=${() => moveDown(value, checkedState(emit), disabled, emit)}
+        >Down</button>
+        <button
+          type="button"
+          class="jui-order-list__op-btn"
+          aria-label="Move to bottom"
+          disabled=${() => !!(read(disabled) || !hasSelection(value, checkedState(emit)))}
+          on-click=${() => moveToBottom(value, checkedState(emit), disabled, emit)}
+        >Bottom</button>
+      </div>
+    </div>
+  </div>
+</view>
+
+export <style>
+.jui-order-list {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 0;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  overflow: hidden;
+}
+
+.jui-order-list.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-order-list__header {
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid var(--j-border);
+  color: var(--j-forest);
+  font-size: 0.85rem;
+  font-weight: 800;
+  background: var(--j-surface);
+}
+
+.jui-order-list__search {
+  margin: 0.65rem 0.75rem 0;
+  min-height: 2.25rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  outline: 0;
+  color: var(--j-text);
+  background: var(--j-surface-2);
+}
+
+.jui-order-list__search:focus {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-order-list__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem 0.75rem;
+}
+
+.jui-order-list__list {
+  display: grid;
+  align-content: start;
+  gap: 0.1rem;
+  min-height: 12rem;
+  max-height: 18rem;
+  margin: 0;
+  padding: 0.35rem;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+}
+
+.jui-order-list__item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.35rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--j-radius-sm);
+  cursor: pointer;
+  user-select: none;
+}
+
+.jui-order-list__item:hover {
+  background: var(--j-mint);
+}
+
+.jui-order-list__item.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.jui-order-list__item input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-order-list__box {
+  position: relative;
+  flex: 0 0 auto;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 1.5px solid var(--j-border);
+  border-radius: 0.3rem;
+  background: var(--j-surface-2);
+  transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+input:checked + .jui-order-list__box {
+  background: var(--j-primary);
+  border-color: var(--j-primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5 6.5 11.5 12.5 4.5'/%3E%3C/svg%3E");
+  background-size: 0.8rem;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+input:focus-visible + .jui-order-list__box {
+  box-shadow: var(--j-focus);
+}
+
+input:disabled + .jui-order-list__box {
+  opacity: 0.6;
+}
+
+.jui-order-list__label {
+  overflow: hidden;
+  color: var(--j-text);
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jui-order-list__empty {
+  padding: 1.2rem 0.5rem;
+  color: var(--j-muted);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.jui-order-list__ops {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.jui-order-list__op-btn {
+  display: grid;
+  place-items: center;
+  min-width: 4.5rem;
+  min-height: 2.35rem;
+  padding: 0 0.65rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  color: var(--j-forest);
+  background: var(--j-surface);
+  font-weight: 800;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.jui-order-list__op-btn:hover:not(:disabled) {
+  border-color: var(--j-primary);
+  color: var(--j-primary);
+  background: var(--j-mint);
+}
+
+.jui-order-list__op-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-order-list__op-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .jui-order-list__body {
+    grid-template-columns: 1fr;
+  }
+
+  .jui-order-list__ops {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+</style>

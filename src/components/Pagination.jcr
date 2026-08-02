@@ -1,0 +1,353 @@
+import { pulse } from '@jacare/core'
+import { localeText } from '../i18n/index.js'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    total: { type: 'number', default: 0 }
+    pageSize: { type: 'number', default: 10, model: true }
+    currentPage: { type: 'number', default: 1, model: true }
+    pagerCount: { type: 'number', default: 7 }
+    background: { type: 'boolean', default: false }
+    disabled: { type: 'boolean', default: false }
+    hideOnSinglePage: { type: 'boolean', default: false }
+    showTotal: { type: 'boolean', default: true }
+    pageSizes: { type: 'any', default: null }
+  }
+  emits: ['change']
+</contract>
+
+function totalOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) && next > 0 ? Math.round(next) : 0
+}
+
+function sizeOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) && next > 0 ? Math.round(next) : 10
+}
+
+function pageOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) && next > 0 ? Math.round(next) : 1
+}
+
+function pagerCountOf(value) {
+  const next = Number(read(value))
+  const rounded = Number.isFinite(next) && next > 0 ? Math.round(next) : 7
+  return Math.max(5, rounded % 2 === 1 ? rounded : rounded + 1)
+}
+
+function sizesOf(value) {
+  const list = read(value)
+  if (!Array.isArray(list)) return []
+  return list
+    .map((item) => Number(item))
+    .filter((item) => Number.isFinite(item) && item > 0)
+    .map((item) => Math.round(item))
+}
+
+function resolveModel(modelProp, emitFn, key, fallback) {
+  if (modelProp && typeof modelProp.set === 'function') return modelProp
+  if (!emitFn[key]) emitFn[key] = pulse(read(modelProp) ?? fallback)
+  return emitFn[key]
+}
+
+function pageCount(totalProp, pageSizeProp) {
+  const total = totalOf(totalProp)
+  const size = sizeOf(pageSizeProp)
+  return Math.max(1, Math.ceil(total / size) || 1)
+}
+
+function currentOf(currentProp, totalProp, pageSizeProp) {
+  const pages = pageCount(totalProp, pageSizeProp)
+  return Math.min(Math.max(1, pageOf(currentProp)), pages)
+}
+
+function commit(currentModel, sizeModel, page, size, emitFn) {
+  if (currentModel && typeof currentModel.set === 'function') currentModel.set(page)
+  if (sizeModel && typeof sizeModel.set === 'function') sizeModel.set(size)
+  emitFn('change', { page, pageSize: size })
+}
+
+function models(emitFn, currentProp, sizeProp) {
+  return {
+    current: resolveModel(currentProp, emitFn, '__juiPaginationPage', pageOf(currentProp)),
+    size: resolveModel(sizeProp, emitFn, '__juiPaginationSize', sizeOf(sizeProp)),
+  }
+}
+
+function goTo(page, currentProp, pageSizeProp, totalProp, disabledProp, emitFn) {
+  if (read(disabledProp)) return
+  const { current, size } = models(emitFn, currentProp, pageSizeProp)
+  const nextSize = sizeOf(size)
+  const pages = pageCount(totalProp, size)
+  const next = Math.min(Math.max(1, page), pages)
+  if (next === currentOf(current, totalProp, size)) return
+  commit(current, size, next, nextSize, emitFn)
+}
+
+function changeSize(nextSize, currentProp, pageSizeProp, totalProp, disabledProp, emitFn) {
+  if (read(disabledProp)) return
+  const { current, size } = models(emitFn, currentProp, pageSizeProp)
+  const resolved = Math.max(1, Number(nextSize) || sizeOf(size))
+  const pages = Math.max(1, Math.ceil(totalOf(totalProp) / resolved) || 1)
+  const page = Math.min(currentOf(current, totalProp, size), pages)
+  commit(current, size, page, resolved, emitFn)
+}
+
+function pagerItems(currentProp, totalProp, pageSizeProp, pagerCountProp, emitFn) {
+  const { current, size } = models(emitFn, currentProp, pageSizeProp)
+  const pages = pageCount(totalProp, size)
+  const active = currentOf(current, totalProp, size)
+  const pagerCount = pagerCountOf(pagerCountProp)
+  if (pages <= pagerCount) {
+    return Array.from({ length: pages }, (item, index) => ({ type: 'page', value: index + 1 }))
+  }
+  const items = [{ type: 'page', value: 1 }]
+  const side = Math.floor((pagerCount - 3) / 2)
+  let start = Math.max(2, active - side)
+  let end = Math.min(pages - 1, active + side)
+  if (active - 1 <= side) end = pagerCount - 2
+  if (pages - active <= side) start = pages - (pagerCount - 3)
+  if (start > 2) items.push({ type: 'ellipsis', value: 'left' })
+  for (let page = start; page <= end; page += 1) items.push({ type: 'page', value: page })
+  if (end < pages - 1) items.push({ type: 'ellipsis', value: 'right' })
+  items.push({ type: 'page', value: pages })
+  return items
+}
+
+function isHidden(totalProp, pageSizeProp, hideProp, emitFn, currentProp) {
+  if (!read(hideProp)) return false
+  const { size } = models(emitFn, currentProp, pageSizeProp)
+  return pageCount(totalProp, size) <= 1
+}
+
+function activePage(currentProp, totalProp, pageSizeProp, emitFn) {
+  const { current, size } = models(emitFn, currentProp, pageSizeProp)
+  return currentOf(current, totalProp, size)
+}
+
+function activeSize(pageSizeProp, emitFn, currentProp) {
+  const { size } = models(emitFn, currentProp, pageSizeProp)
+  return sizeOf(size)
+}
+
+function rangeLabel(currentProp, totalProp, pageSizeProp, emitFn) {
+  const total = totalOf(totalProp)
+  if (total <= 0) return localeText('j.pagination.totalZero', 'Total 0')
+  const { current, size } = models(emitFn, currentProp, pageSizeProp)
+  const page = currentOf(current, totalProp, size)
+  const pageSize = sizeOf(size)
+  const start = (page - 1) * pageSize + 1
+  const end = Math.min(page * pageSize, total)
+  return localeText('j.pagination.range', '{start}–{end} of {total}', { start, end, total })
+}
+
+export <view>
+  #if !isHidden(total, pageSize, hideOnSinglePage, emit, currentPage)
+    <nav
+      class="jui-pagination"
+      class-jui-pagination--background=${() => !!read(background)}
+      class-is-disabled=${() => !!read(disabled)}
+      aria-label=${() => localeText('j.pagination.label', 'Pagination')}
+    >
+      #if read(showTotal) !== false
+        <span class="jui-pagination__total">${() => rangeLabel(currentPage, total, pageSize, emit)}</span>
+      #end
+      #if sizesOf(pageSizes).length
+        <label class="jui-pagination__sizes">
+          <span class="jui-pagination__sizes-label">${() => localeText('j.pagination.perPage', 'Per page')}</span>
+          <select
+            class="jui-pagination__select"
+            disabled=${() => !!read(disabled)}
+            value=${() => String(activeSize(pageSize, emit, currentPage))}
+            on-change=${(event) =>
+              changeSize(event.currentTarget.value, currentPage, pageSize, total, disabled, emit)}
+          >
+            #for sizesOf(pageSizes) as size (size)
+              <option value=${String(size)}>${() => localeText('j.pagination.pageSize', '{size} / page', { size })}</option>
+            #end
+          </select>
+        </label>
+      #end
+      <button
+        type="button"
+        class="jui-pagination__btn"
+        aria-label=${() => localeText('j.pagination.previous', 'Previous page')}
+        disabled=${() => !!(read(disabled) || activePage(currentPage, total, pageSize, emit) <= 1)}
+        on-click=${() =>
+          goTo(activePage(currentPage, total, pageSize, emit) - 1, currentPage, pageSize, total, disabled, emit)}
+      >‹</button>
+      <div class="jui-pagination__pager">
+        #for pagerItems(currentPage, total, pageSize, pagerCount, emit) as item (item.type === 'page' ? item.value : item.value)
+          #if item.type === 'ellipsis'
+            <span class="jui-pagination__ellipsis" aria-hidden="true">…</span>
+          #else
+            <button
+              type="button"
+              class="jui-pagination__page"
+              class-is-active=${() => activePage(currentPage, total, pageSize, emit) === item.value}
+              aria-current=${() =>
+                activePage(currentPage, total, pageSize, emit) === item.value ? 'page' : undefined}
+              disabled=${() => !!read(disabled)}
+              on-click=${() => goTo(item.value, currentPage, pageSize, total, disabled, emit)}
+            >${item.value}</button>
+          #end
+        #end
+      </div>
+      <button
+        type="button"
+        class="jui-pagination__btn"
+        aria-label=${() => localeText('j.pagination.next', 'Next page')}
+        disabled=${() =>
+          !!(
+            read(disabled) ||
+            activePage(currentPage, total, pageSize, emit) >= pageCount(total, models(emit, currentPage, pageSize).size)
+          )}
+        on-click=${() =>
+          goTo(activePage(currentPage, total, pageSize, emit) + 1, currentPage, pageSize, total, disabled, emit)}
+      >›</button>
+    </nav>
+  #end
+</view>
+
+export <style>
+.jui-pagination {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  color: var(--j-text);
+  font-size: 0.9rem;
+}
+
+.jui-pagination.is-disabled {
+  opacity: 0.6;
+}
+
+.jui-pagination__total {
+  margin-right: 0.2rem;
+  color: var(--j-muted);
+  font-weight: 600;
+}
+
+.jui-pagination__sizes {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.jui-pagination__sizes-label {
+  color: var(--j-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.jui-pagination__select {
+  appearance: none;
+  min-height: 2rem;
+  padding: 0 1.75rem 0 0.65rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background:
+    linear-gradient(45deg, transparent 50%, var(--j-muted) 50%) calc(100% - 12px) calc(50% - 2px) / 5px 5px no-repeat,
+    linear-gradient(135deg, var(--j-muted) 50%, transparent 50%) calc(100% - 8px) calc(50% - 2px) / 5px 5px no-repeat,
+    var(--j-surface-2);
+  color: var(--j-forest);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.jui-pagination__select:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.jui-pagination__select:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-pagination__pager {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.jui-pagination__btn,
+.jui-pagination__page {
+  appearance: none;
+  display: inline-grid;
+  place-items: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.45rem;
+  border: 1px solid transparent;
+  border-radius: var(--j-radius-sm);
+  background: transparent;
+  color: var(--j-forest);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.jui-pagination--background .jui-pagination__btn,
+.jui-pagination--background .jui-pagination__page {
+  background: var(--j-surface-2);
+  border-color: var(--j-border);
+}
+
+.jui-pagination__page.is-active {
+  background: var(--j-primary);
+  border-color: var(--j-primary);
+  color: #ffffff;
+}
+
+.jui-pagination__btn:hover:not(:disabled),
+.jui-pagination__page:hover:not(:disabled):not(.is-active) {
+  color: var(--j-primary);
+}
+
+.jui-pagination__btn:focus-visible,
+.jui-pagination__page:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-pagination__btn:disabled,
+.jui-pagination__page:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.jui-pagination__ellipsis {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.5rem;
+  color: var(--j-muted);
+}
+
+@media (max-width: 640px) {
+  .jui-pagination {
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+  }
+}
+
+@media (pointer: coarse) {
+  .jui-pagination__btn,
+  .jui-pagination__page,
+  .jui-pagination__select {
+    min-width: var(--j-touch-target, 2.75rem);
+    min-height: var(--j-touch-target, 2.75rem);
+    height: var(--j-touch-target, 2.75rem);
+  }
+
+  .jui-pagination__ellipsis {
+    min-width: var(--j-touch-target, 2.75rem);
+    min-height: var(--j-touch-target, 2.75rem);
+  }
+}
+</style>

@@ -1,0 +1,117 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    name: { type: 'string', required: true }
+    label: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+  }
+  slots: ['default']
+  emits: ['activate']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function readyState(emitFn) {
+  if (!emitFn.__juiTabPaneReady) emitFn.__juiTabPaneReady = pulse(0)
+  return emitFn.__juiTabPaneReady
+}
+
+function paneId(emitFn) {
+  if (!emitFn.__juiTabPaneId) {
+    emitFn.__juiTabPaneId = `jui-tab-pane-${Math.random().toString(36).slice(2, 10)}`
+  }
+  return emitFn.__juiTabPaneId
+}
+
+function paneRoot(emitFn) {
+  read(readyState(emitFn))
+  return emitFn.__juiTabPaneRoot
+}
+
+function parentOf(emitFn) {
+  return paneRoot(emitFn)?.closest('.jui-tabs')
+}
+
+function isActive(nameProp, emitFn) {
+  const parent = parentOf(emitFn)
+  if (parent?.tabsReady) read(parent.tabsReady)
+  return read(parent?.tabsModel) === read(nameProp)
+}
+
+function registerPane(root, nameProp, labelProp, disabledProp, emitFn, retry = true) {
+  if (!root) return
+  const parent = root.closest('.jui-tabs')
+  if (!parent?.tabsRegistry || !parent?.tabsReady || !parent?.tabsModel) {
+    if (retry) requestAnimationFrame(() => registerPane(root, nameProp, labelProp, disabledProp, emitFn, false))
+    return
+  }
+  const id = paneId(emitFn)
+  const record = {
+    id,
+    name: read(nameProp),
+    label: String(read(labelProp) || read(nameProp) || ''),
+    disabled: !!read(disabledProp),
+  }
+  const registry = read(parent.tabsRegistry)
+  const index = registry.findIndex((item) => item.id === id)
+  const next = index === -1
+    ? [...registry, record]
+    : registry.map((item) => item.id === id ? record : item)
+  parent.tabsRegistry.set(next)
+  const current = read(parent.tabsModel)
+  if ((current === undefined || current === null || current === '') && next.length) {
+    parent.tabsModel.set(next[0].name)
+  }
+  parent.tabsReady.set(read(parent.tabsReady) + 1)
+}
+
+function armPane(root, nameProp, labelProp, disabledProp, emitFn) {
+  if (!root) return
+  emitFn.__juiTabPaneRoot = root
+  const ready = readyState(emitFn)
+  ready.set(read(ready) + 1)
+  registerPane(root, nameProp, labelProp, disabledProp, emitFn)
+}
+
+export <view>
+  <section
+    class="jui-tab-pane"
+    class-is-active=${() => isActive(name, emit)}
+    id=${() => paneId(emit)}
+    role="tabpanel"
+    aria-hidden=${() => (isActive(name, emit) ? 'false' : 'true')}
+  >
+    <img
+      class="jui-tab-pane__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armPane(event.currentTarget.closest('.jui-tab-pane'), name, label, disabled, emit)}
+    />
+    <slot />
+  </section>
+</view>
+
+export <style>
+.jui-tab-pane {
+  position: relative;
+  display: none;
+  min-width: 0;
+}
+
+.jui-tab-pane.is-active {
+  display: block;
+}
+
+.jui-tab-pane__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+</style>

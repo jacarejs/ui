@@ -1,0 +1,554 @@
+import Icon from './Icon.jcr'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    items: { type: 'any', default: [] }
+    visible: { type: 'boolean', default: false, model: true }
+    type: { type: 'string', default: 'linear' }
+    direction: { type: 'string', default: 'up' }
+    radius: { type: 'number', default: 0 }
+    transitionDelay: { type: 'number', default: 30 }
+    mask: { type: 'boolean', default: false }
+    disabled: { type: 'boolean', default: false }
+    hideOnClickOutside: { type: 'boolean', default: true }
+    rotateAnimation: { type: 'boolean', default: true }
+    tooltip: { type: 'boolean', default: false }
+    ariaLabel: { type: 'string', default: 'Speed dial' }
+    ariaLabelledby: { type: 'string', default: '' }
+  }
+  emits: ['show', 'hide', 'click', 'select']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+const MATH_PI = 3.14159265358979
+const KNOWN_ICONS = new Set([
+  'check', 'close', 'chevron-down', 'chevron-right', 'search', 'calendar',
+  'alert', 'info', 'user', 'external-link', 'plus', 'minus', 'menu',
+])
+
+function numberOr(value, fallback) {
+  const next = Number(read(value))
+  return Number.isFinite(next) ? next : fallback
+}
+
+function typeOf(value) {
+  const next = String(read(value) || 'linear').toLowerCase()
+  if (next === 'circle' || next === 'semi-circle' || next === 'quarter-circle') return next
+  return 'linear'
+}
+
+function directionOf(value) {
+  const next = String(read(value) || 'up').toLowerCase()
+  if (['up', 'down', 'left', 'right', 'up-left', 'up-right', 'down-left', 'down-right'].includes(next)) {
+    return next
+  }
+  return 'up'
+}
+
+function isOpen(visibleProp) {
+  return !!read(visibleProp)
+}
+
+function menuId(emitFn) {
+  if (!emitFn.__juiSpeedDialId) {
+    emitFn.__juiSpeedDialId = `jui-speed-dial-${Math.random().toString(36).slice(2, 9)}`
+  }
+  return emitFn.__juiSpeedDialId
+}
+
+function normalizeItems(itemsProp) {
+  const list = read(itemsProp)
+  if (!Array.isArray(list)) return []
+  return list
+    .map((item, index) => {
+      if (item == null || typeof item !== 'object') {
+        return {
+          key: String(index),
+          label: String(item ?? index),
+          icon: '',
+          disabled: false,
+          visible: true,
+          command: null,
+          raw: item,
+          index,
+        }
+      }
+      const visible = typeof item.visible === 'function' ? !!item.visible() : item.visible !== false
+      return {
+        key: String(item.key ?? item.id ?? item.label ?? index),
+        label: String(item.label ?? item.name ?? index),
+        icon: String(item.icon || ''),
+        disabled: !!item.disabled,
+        visible,
+        command: typeof item.command === 'function' ? item.command : null,
+        raw: item,
+        index,
+      }
+    })
+    .filter((item) => item.visible)
+}
+
+function radiusOf(radiusProp, count) {
+  const next = numberOr(radiusProp, 0)
+  return next > 0 ? next : Math.max(count, 1) * 20
+}
+
+function orbit(value) {
+  return `calc(${value}px - 1.25rem)`
+}
+
+function pointStyle(index, count, typeProp, directionProp, radiusProp) {
+  const type = typeOf(typeProp)
+  if (type === 'linear' || count < 1) return {}
+  const radius = radiusOf(radiusProp, count)
+  const direction = directionOf(directionProp)
+
+  if (type === 'circle') {
+    const step = (2 * MATH_PI) / count
+    return {
+      left: orbit(radius * Math.cos(step * index)),
+      top: orbit(radius * Math.sin(step * index)),
+    }
+  }
+
+  if (type === 'semi-circle') {
+    const step = count > 1 ? MATH_PI / (count - 1) : 0
+    const x = orbit(radius * Math.cos(step * index))
+    const y = orbit(radius * Math.sin(step * index))
+    if (direction === 'up') return { left: x, bottom: y }
+    if (direction === 'down') return { left: x, top: y }
+    if (direction === 'left') return { right: y, top: x }
+    if (direction === 'right') return { left: y, top: x }
+    return { left: x, bottom: y }
+  }
+
+  if (type === 'quarter-circle') {
+    const step = count > 1 ? MATH_PI / (2 * (count - 1)) : 0
+    const x = orbit(radius * Math.cos(step * index))
+    const y = orbit(radius * Math.sin(step * index))
+    if (direction === 'up-left') return { right: x, bottom: y }
+    if (direction === 'up-right') return { left: x, bottom: y }
+    if (direction === 'down-left') return { right: y, top: x }
+    if (direction === 'down-right') return { left: y, top: x }
+    return { left: x, bottom: y }
+  }
+
+  return {}
+}
+
+function itemStyle(index, count, typeProp, directionProp, radiusProp, delayProp, visibleProp) {
+  const delay = numberOr(delayProp, 30)
+  const open = isOpen(visibleProp)
+  const transitionDelay = `${(open ? index : count - index - 1) * delay}ms`
+  const point = pointStyle(index, count, typeProp, directionProp, radiusProp)
+  const parts = [`transition-delay:${transitionDelay}`]
+  for (const [key, value] of Object.entries(point)) {
+    parts.push(`${key}:${value}`)
+  }
+  return parts.join(';')
+}
+
+function itemsView(itemsProp, typeProp, directionProp, radiusProp, delayProp, visibleProp) {
+  const list = normalizeItems(itemsProp)
+  return list.map((item, index) => ({
+    ...item,
+    index,
+    style: itemStyle(index, list.length, typeProp, directionProp, radiusProp, delayProp, visibleProp),
+  }))
+}
+
+function hasKnownIcon(icon) {
+  return KNOWN_ICONS.has(String(icon || '').trim())
+}
+
+function glyphOf(item) {
+  if (item.icon && !hasKnownIcon(item.icon)) return String(item.icon).slice(0, 2)
+  const label = String(item.label || '').trim()
+  return label ? label.slice(0, 1).toUpperCase() : '•'
+}
+
+function setOpen(visibleProp, next, emitFn) {
+  const open = !!next
+  if (visibleProp && typeof visibleProp.set === 'function') visibleProp.set(open)
+  emitFn(open ? 'show' : 'hide')
+}
+
+function toggle(event, visibleProp, disabledProp, emitFn) {
+  if (read(disabledProp)) return
+  emitFn('click', event)
+  setOpen(visibleProp, !isOpen(visibleProp), emitFn)
+}
+
+function close(visibleProp, emitFn) {
+  if (!isOpen(visibleProp)) return
+  setOpen(visibleProp, false, emitFn)
+}
+
+function onItemClick(event, item, visibleProp, disabledProp, emitFn) {
+  event.preventDefault()
+  event.stopPropagation()
+  if (read(disabledProp) || item.disabled) return
+  if (item.command) item.command({ originalEvent: event, item: item.raw })
+  emitFn('select', item.raw)
+  close(visibleProp, emitFn)
+}
+
+function onButtonKeydown(event, root, visibleProp, disabledProp, emitFn) {
+  if (read(disabledProp)) return
+  switch (event.code) {
+    case 'ArrowDown':
+    case 'ArrowLeft':
+      event.preventDefault()
+      setOpen(visibleProp, true, emitFn)
+      focusItem(root, 0)
+      break
+    case 'ArrowUp':
+    case 'ArrowRight':
+      event.preventDefault()
+      setOpen(visibleProp, true, emitFn)
+      focusItem(root, -1)
+      break
+    case 'Escape':
+      event.preventDefault()
+      close(visibleProp, emitFn)
+      break
+    default:
+      break
+  }
+}
+
+function onMenuKeydown(event, root, visibleProp, emitFn) {
+  const items = [...root.querySelectorAll('[data-jui-speed-dial-action]:not(:disabled)')]
+  const current = items.indexOf(document.activeElement)
+  switch (event.code) {
+    case 'ArrowDown':
+    case 'ArrowRight':
+      event.preventDefault()
+      focusItem(root, current < 0 ? 0 : current + 1)
+      break
+    case 'ArrowUp':
+    case 'ArrowLeft':
+      event.preventDefault()
+      focusItem(root, current < 0 ? items.length - 1 : current - 1)
+      break
+    case 'Home':
+      event.preventDefault()
+      focusItem(root, 0)
+      break
+    case 'End':
+      event.preventDefault()
+      focusItem(root, -1)
+      break
+    case 'Escape':
+      event.preventDefault()
+      close(visibleProp, emitFn)
+      root.querySelector('.jui-speed-dial__button')?.focus()
+      break
+    default:
+      break
+  }
+}
+
+function focusItem(root, index) {
+  const items = [...root.querySelectorAll('[data-jui-speed-dial-action]:not(:disabled)')]
+  if (!items.length) return
+  const next = index < 0 ? items.length - 1 : index % items.length
+  items[next]?.focus()
+}
+
+function armOutside(root, visibleProp, hideOutsideProp, emitFn) {
+  if (!root || root.__juiSpeedDialArmed) return
+  root.__juiSpeedDialArmed = true
+  const onDocClick = (event) => {
+    if (!read(hideOutsideProp)) return
+    if (!isOpen(visibleProp)) return
+    if (root.contains(event.target)) return
+    close(visibleProp, emitFn)
+  }
+  document.addEventListener('click', onDocClick)
+  root.__juiSpeedDialDispose = () => document.removeEventListener('click', onDocClick)
+}
+
+export <view>
+  <div
+    class="jui-speed-dial"
+    class-jui-speed-dial--linear=${() => typeOf(type) === 'linear'}
+    class-jui-speed-dial--circle=${() => typeOf(type) === 'circle'}
+    class-jui-speed-dial--semi-circle=${() => typeOf(type) === 'semi-circle'}
+    class-jui-speed-dial--quarter-circle=${() => typeOf(type) === 'quarter-circle'}
+    class-jui-speed-dial--up=${() => directionOf(direction) === 'up'}
+    class-jui-speed-dial--down=${() => directionOf(direction) === 'down'}
+    class-jui-speed-dial--left=${() => directionOf(direction) === 'left'}
+    class-jui-speed-dial--right=${() => directionOf(direction) === 'right'}
+    class-jui-speed-dial--up-left=${() => directionOf(direction) === 'up-left'}
+    class-jui-speed-dial--up-right=${() => directionOf(direction) === 'up-right'}
+    class-jui-speed-dial--down-left=${() => directionOf(direction) === 'down-left'}
+    class-jui-speed-dial--down-right=${() => directionOf(direction) === 'down-right'}
+    class-is-open=${() => isOpen(visible)}
+    class-is-disabled=${() => !!read(disabled)}
+    class-has-mask=${() => !!read(mask)}
+    data-jui-speed-dial
+  >
+    <img
+      class="jui-speed-dial__boot"
+      alt=""
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armOutside(event.currentTarget.closest('[data-jui-speed-dial]'), visible, hideOnClickOutside, emit)}
+    />
+
+    #if read(mask)
+      <div
+        class="jui-speed-dial__mask"
+        class-is-visible=${() => isOpen(visible)}
+        aria-hidden="true"
+      ></div>
+    #end
+
+    <button
+      type="button"
+      class="jui-speed-dial__button"
+      class-is-rotate=${() => !!read(rotateAnimation)}
+      disabled=${() => !!read(disabled)}
+      aria-expanded=${() => (isOpen(visible) ? 'true' : 'false')}
+      aria-haspopup="menu"
+      aria-controls=${() => `${menuId(emit)}_list`}
+      aria-label=${() => (read(ariaLabelledby) ? undefined : (read(ariaLabel) || 'Speed dial'))}
+      aria-labelledby=${() => read(ariaLabelledby) || undefined}
+      on-click=${(event) => {
+        event.stopPropagation()
+        toggle(event, visible, disabled, emit)
+      }}
+      on-keydown=${(event) => onButtonKeydown(event, event.currentTarget.closest('[data-jui-speed-dial]'), visible, disabled, emit)}
+    >
+      <Icon :name=${'plus'} :size=${'md'} :label=${''} />
+    </button>
+
+    <ul
+      class="jui-speed-dial__list"
+      id=${() => `${menuId(emit)}_list`}
+      role="menu"
+      tabindex="-1"
+      on-keydown=${(event) => onMenuKeydown(event, event.currentTarget.closest('[data-jui-speed-dial]'), visible, emit)}
+    >
+      #for itemsView(items, type, direction, radius, transitionDelay, visible) as item (item.key)
+        <li class="jui-speed-dial__item" role="none" :style=${() => item.style}>
+          <button
+            type="button"
+            class="jui-speed-dial__action"
+            data-jui-speed-dial-action
+            role="menuitem"
+            tabindex="-1"
+            title=${() => (read(tooltip) ? item.label : undefined)}
+            aria-label=${() => item.label}
+            disabled=${() => !!(read(disabled) || item.disabled)}
+            on-click=${(event) => onItemClick(event, item, visible, disabled, emit)}
+          >
+            #if hasKnownIcon(item.icon)
+              <Icon :name=${item.icon} :size=${'sm'} :label=${''} />
+            #else
+              <span class="jui-speed-dial__glyph" aria-hidden="true">${() => glyphOf(item)}</span>
+            #end
+          </button>
+        </li>
+      #end
+    </ul>
+  </div>
+</view>
+
+export <style>
+.jui-speed-dial {
+  --jui-speed-dial-gap: 0.5rem;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--jui-speed-dial-gap);
+  min-width: 0;
+}
+
+.jui-speed-dial__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-speed-dial--up {
+  flex-direction: column-reverse;
+}
+
+.jui-speed-dial--down {
+  flex-direction: column;
+}
+
+.jui-speed-dial--left {
+  flex-direction: row-reverse;
+}
+
+.jui-speed-dial--right {
+  flex-direction: row;
+}
+
+.jui-speed-dial__button {
+  position: relative;
+  z-index: 2;
+  display: inline-grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--j-primary);
+  color: #fff;
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--j-primary) 35%, transparent);
+  cursor: pointer;
+  transition:
+    transform 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    background var(--j-duration-fast, 120ms) ease,
+    box-shadow var(--j-duration-fast, 120ms) ease;
+}
+
+.jui-speed-dial__button:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus), 0 10px 28px color-mix(in srgb, var(--j-primary) 35%, transparent);
+}
+
+.jui-speed-dial.is-open .jui-speed-dial__button.is-rotate {
+  transform: rotate(45deg);
+}
+
+.jui-speed-dial__list {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--jui-speed-dial-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+  outline: none;
+}
+
+.jui-speed-dial--up .jui-speed-dial__list,
+.jui-speed-dial--down .jui-speed-dial__list {
+  flex-direction: inherit;
+}
+
+.jui-speed-dial--left .jui-speed-dial__list,
+.jui-speed-dial--right .jui-speed-dial__list {
+  flex-direction: inherit;
+}
+
+.jui-speed-dial--circle,
+.jui-speed-dial--semi-circle,
+.jui-speed-dial--quarter-circle {
+  overflow: visible;
+  width: 3rem;
+  height: 3rem;
+}
+
+.jui-speed-dial--circle .jui-speed-dial__list,
+.jui-speed-dial--semi-circle .jui-speed-dial__list,
+.jui-speed-dial--quarter-circle .jui-speed-dial__list {
+  position: absolute;
+  inset: 0;
+  width: 0;
+  height: 0;
+  margin: auto;
+}
+
+.jui-speed-dial--circle .jui-speed-dial__item,
+.jui-speed-dial--semi-circle .jui-speed-dial__item,
+.jui-speed-dial--quarter-circle .jui-speed-dial__item {
+  position: absolute;
+}
+
+.jui-speed-dial__item {
+  transform: scale(0);
+  opacity: 0;
+  transition:
+    transform 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.8s;
+  will-change: transform;
+}
+
+.jui-speed-dial.is-open .jui-speed-dial__list {
+  pointer-events: auto;
+}
+
+.jui-speed-dial.is-open .jui-speed-dial__item {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.jui-speed-dial__action {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--j-border);
+  border-radius: 999px;
+  background: var(--j-surface-2, var(--j-surface));
+  color: var(--j-text);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+  cursor: pointer;
+  transition:
+    background var(--j-duration-fast, 120ms) ease,
+    transform var(--j-duration-fast, 120ms) ease,
+    border-color var(--j-duration-fast, 120ms) ease;
+}
+
+.jui-speed-dial__action:hover:not(:disabled) {
+  border-color: var(--j-primary);
+  color: var(--j-primary);
+}
+
+.jui-speed-dial__action:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-speed-dial__action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jui-speed-dial__glyph {
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.jui-speed-dial__mask {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: color-mix(in srgb, #0f172a 35%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+
+.jui-speed-dial__mask.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.jui-speed-dial.is-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.jui-speed-dial.has-mask {
+  z-index: 3;
+}
+</style>

@@ -1,5 +1,7 @@
 import { effect, pulse } from '@jacare/core'
+import { propText, localeText } from '../i18n/index.js'
 import { read } from '../internal/utils.js'
+import { activateFocusTrap, uniqueId } from '../internal/overlay.js'
 
 export <contract>
   props: {
@@ -26,12 +28,22 @@ function isOpen(openProp, emitFn) {
   return read(openState(openProp, emitFn)) === true
 }
 
+function confirmId(emitFn) {
+  return uniqueId('jui-confirm', emitFn)
+}
+
+function titleId(emitFn) {
+  return `${confirmId(emitFn)}-title`
+}
+
 function closeConfirm(openProp, emitFn) {
   openState(openProp, emitFn).set(false)
 }
 
 function confirmLabelText(busyValue, labelValue) {
-  return read(busyValue) ? 'Please wait…' : read(labelValue)
+  return read(busyValue)
+    ? localeText('j.confirm.pleaseWait', 'Please wait…')
+    : propText(labelValue, 'j.confirm.confirm', 'Confirm')
 }
 
 function handleBackdrop(event, openProp, emitFn, busyValue) {
@@ -56,17 +68,27 @@ function handleConfirm(event, emitFn, busyValue) {
   emitFn('confirm')
 }
 
-function armEscape(openProp, emitFn, busyValue) {
-  if (!emitFn.__juiConfirmEscape) {
-    emitFn.__juiConfirmEscape = effect(() => {
-      if (!isOpen(openProp, emitFn)) return
-      const handler = (event) => {
-        if (event.key !== 'Escape' || read(busyValue)) return
-        closeConfirm(openProp, emitFn)
-        emitFn('cancel')
+function armOverlay(openProp, emitFn, busyValue) {
+  if (!emitFn.__juiConfirmOverlay) {
+    emitFn.__juiConfirmOverlay = effect(() => {
+      if (!isOpen(openProp, emitFn)) return undefined
+      const id = confirmId(emitFn)
+      let release = () => {}
+      const frame = requestAnimationFrame(() => {
+        const root = document.querySelector(`[data-jui-confirm="${id}"]`)
+        if (!root) return
+        release = activateFocusTrap(root, {
+          onEscape: () => {
+            if (read(busyValue)) return
+            closeConfirm(openProp, emitFn)
+            emitFn('cancel')
+          },
+        })
+      })
+      return () => {
+        cancelAnimationFrame(frame)
+        release()
       }
-      document.addEventListener('keydown', handler)
-      return () => document.removeEventListener('keydown', handler)
     })
   }
   return ''
@@ -79,11 +101,12 @@ export <view>
         class="jui-confirm"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="jui-confirm-title"
+        data-jui-confirm=${() => confirmId(emit)}
+        aria-labelledby=${() => titleId(emit)}
         on-click=${(event) => event.stopPropagation()}
       >
         <header class="jui-confirm__head">
-          <h2 class="jui-confirm__title" id="jui-confirm-title">${() => read(title)}</h2>
+          <h2 class="jui-confirm__title" id=${() => titleId(emit)}>${() => propText(title, 'j.confirm.title', 'Confirm')}</h2>
           <button
             type="button"
             class="jui-confirm__close"
@@ -107,7 +130,7 @@ export <view>
             class="jui-confirm__btn jui-confirm__btn--cancel"
             disabled=${() => !!read(busy)}
             on-click=${(event) => handleCancel(event, open, emit, busy)}
-          >${() => read(cancelLabel)}</button>
+          >${() => propText(cancelLabel, 'j.confirm.cancel', 'Cancel')}</button>
           <button
             type="button"
             class="jui-confirm__btn jui-confirm__btn--confirm"
@@ -123,7 +146,7 @@ export <view>
           </button>
         </footer>
 
-        <span class="jui-confirm__arm" aria-hidden="true">${() => armEscape(open, emit, busy)}</span>
+        <span class="jui-confirm__arm" aria-hidden="true">${() => armOverlay(open, emit, busy)}</span>
       </section>
     </div>
   #end

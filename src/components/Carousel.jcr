@@ -1,0 +1,423 @@
+import { effect, pulse } from '@jacare/core'
+import Icon from './Icon.jcr'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    height: { type: 'string', default: '200px' }
+    autoplay: { type: 'boolean', default: true }
+    interval: { type: 'number', default: 3000 }
+    initialIndex: { type: 'number', default: 0 }
+    arrow: { type: 'string', default: 'hover' }
+    indicatorPosition: { type: 'string', default: 'inside' }
+  }
+  slots: ['default']
+  emits: ['change']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function heightStyle(value) {
+  return `--jui-carousel-height:${String(read(value) || '200px')}`
+}
+
+function arrowOf(value) {
+  const next = String(read(value) || 'hover')
+  if (next === 'always' || next === 'never' || next === 'hover') return next
+  return 'hover'
+}
+
+function indicatorOf(value) {
+  const next = String(read(value) || 'inside')
+  if (next === 'outside' || next === 'none' || next === 'inside') return next
+  return 'inside'
+}
+
+function stateOf(emitFn, initialIndex) {
+  if (!emitFn.__juiCarousel) {
+    const start = Math.max(0, Number(read(initialIndex)) || 0)
+    emitFn.__juiCarousel = {
+      active: pulse(start),
+      count: pulse(0),
+    }
+  }
+  return emitFn.__juiCarousel
+}
+
+function activeIndex(emitFn, initialIndex) {
+  return read(stateOf(emitFn, initialIndex).active)
+}
+
+function slideCount(emitFn, initialIndex) {
+  return Number(read(stateOf(emitFn, initialIndex).count)) || 0
+}
+
+function trackStyle(emitFn, initialIndex) {
+  const index = activeIndex(emitFn, initialIndex)
+  return `transform:translateX(-${index * 100}%)`
+}
+
+function indicators(emitFn, initialIndex) {
+  const total = slideCount(emitFn, initialIndex)
+  return Array.from({ length: total }, (item, index) => index)
+}
+
+function goTo(index, emitFn, initialIndex, root) {
+  const state = stateOf(emitFn, initialIndex)
+  const host = root || emitFn.__juiCarouselRoot
+  const total = syncSlideCount(host, state) || Number(read(state.count)) || 0
+  if (total <= 0) return
+  const next = ((index % total) + total) % total
+  if (read(state.active) === next) return
+  state.active.set(next)
+  emitFn('change', next)
+}
+
+function step(delta, emitFn, initialIndex, root) {
+  goTo(activeIndex(emitFn, initialIndex) + delta, emitFn, initialIndex, root)
+}
+
+function syncSlideCount(root, state) {
+  if (!root || !state) return 0
+  const track = root.querySelector('[data-carousel-track]')
+  const items = track ? track.querySelectorAll('.jui-carousel__item') : []
+  const total = items.length
+  if (Number(read(state.count)) !== total) state.count.set(total)
+  if (total > 0 && read(state.active) >= total) state.active.set(total - 1)
+  return total
+}
+
+function armCarousel(root, autoplayProp, intervalProp, initialIndex, emitFn) {
+  if (!root) return
+  const state = stateOf(emitFn, initialIndex)
+  if (root.carouselArmed) {
+    syncSlideCount(root, state)
+    return
+  }
+  root.carouselArmed = true
+  const syncCount = () => syncSlideCount(root, state)
+  syncCount()
+  root.carouselSync = syncCount
+  root.carouselObserver = typeof MutationObserver !== 'undefined'
+    ? new MutationObserver(syncCount)
+    : null
+  const track = root.querySelector('[data-carousel-track]')
+  if (root.carouselObserver && track) {
+    root.carouselObserver.observe(track, { childList: true, subtree: true })
+  }
+  root.carouselDispose = effect(() => {
+    const enabled = !!read(autoplayProp)
+    const wait = Number(read(intervalProp)) || 3000
+    const total = Number(read(state.count)) || 0
+    read(state.active)
+    if (!enabled || total <= 1 || wait <= 0 || root.carouselSwiping) return
+    const id = setInterval(() => step(1, emitFn, initialIndex, root), wait)
+    return () => clearInterval(id)
+  })
+}
+
+function beginSwipe(event, emitFn, initialIndex) {
+  if (event.pointerType === 'mouse' && event.button !== 0) return
+  if (event.target?.closest?.('button')) return
+  const viewport = event.currentTarget
+  const root = viewport.closest('.jui-carousel')
+  if (!root || slideCount(emitFn, initialIndex) <= 1) return
+
+  const startX = event.clientX
+  const startY = event.clientY
+  let axis = ''
+  root.carouselSwiping = true
+
+  const onMove = (moveEvent) => {
+    const dx = moveEvent.clientX - startX
+    const dy = moveEvent.clientY - startY
+    if (!axis) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return
+      axis = Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y'
+      if (axis === 'y') {
+        finish()
+        return
+      }
+      if (typeof viewport.setPointerCapture === 'function') {
+        viewport.setPointerCapture(event.pointerId)
+      }
+    }
+    if (axis === 'x') moveEvent.preventDefault()
+  }
+
+  const onUp = (upEvent) => {
+    const dx = upEvent.clientX - startX
+    finish()
+    if (axis !== 'x' || Math.abs(dx) < 40) return
+    step(dx < 0 ? 1 : -1, emitFn, initialIndex, root)
+  }
+
+  const finish = () => {
+    root.carouselSwiping = false
+    viewport.removeEventListener('pointermove', onMove)
+    viewport.removeEventListener('pointerup', onUp)
+    viewport.removeEventListener('pointercancel', onUp)
+    if (typeof viewport.releasePointerCapture === 'function') {
+      try {
+        viewport.releasePointerCapture(event.pointerId)
+      } catch {
+        undefined
+      }
+    }
+  }
+
+  viewport.addEventListener('pointermove', onMove)
+  viewport.addEventListener('pointerup', onUp)
+  viewport.addEventListener('pointercancel', onUp)
+}
+
+export <view>
+  <div
+    class="jui-carousel"
+    class-jui-carousel--arrow-always=${() => arrowOf(arrow) === 'always'}
+    class-jui-carousel--arrow-never=${() => arrowOf(arrow) === 'never'}
+    class-jui-carousel--indicators-outside=${() => indicatorOf(indicatorPosition) === 'outside'}
+    class-jui-carousel--indicators-none=${() => indicatorOf(indicatorPosition) === 'none'}
+    :style=${() => heightStyle(height)}
+  >
+    <img
+      class="jui-carousel__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => {
+        const root = event.currentTarget.closest('.jui-carousel')
+        emit.__juiCarouselRoot = root
+        armCarousel(root, autoplay, interval, initialIndex, emit)
+      }}
+    />
+    <div
+      class="jui-carousel__viewport"
+      on-pointerdown=${(event) => beginSwipe(event, emit, initialIndex)}
+    >
+      <div
+        class="jui-carousel__track"
+        data-carousel-track
+        :style=${() => trackStyle(emit, initialIndex)}
+      >
+        <slot />
+      </div>
+      #if arrowOf(arrow) !== 'never'
+        <button
+          type="button"
+          class="jui-carousel__arrow jui-carousel__arrow--prev"
+          aria-label="Previous slide"
+          on-click=${(event) =>
+            step(-1, emit, initialIndex, event.currentTarget.closest('.jui-carousel'))}
+        >
+          <Icon :name=${'chevron-left'} :size=${'md'} />
+        </button>
+        <button
+          type="button"
+          class="jui-carousel__arrow jui-carousel__arrow--next"
+          aria-label="Next slide"
+          on-click=${(event) =>
+            step(1, emit, initialIndex, event.currentTarget.closest('.jui-carousel'))}
+        >
+          <Icon :name=${'chevron-right'} :size=${'md'} />
+        </button>
+      #end
+      #if indicatorOf(indicatorPosition) !== 'none'
+        <div class="jui-carousel__indicators" role="tablist" aria-label="Slides">
+          #for indicators(emit, initialIndex) as index (index)
+            <button
+              type="button"
+              class="jui-carousel__indicator"
+              class-is-active=${() => activeIndex(emit, initialIndex) === index}
+              aria-label=${`Slide ${index + 1}`}
+              aria-selected=${() => activeIndex(emit, initialIndex) === index}
+              on-click=${(event) =>
+                goTo(index, emit, initialIndex, event.currentTarget.closest('.jui-carousel'))}
+            ></button>
+          #end
+        </div>
+      #end
+    </div>
+  </div>
+</view>
+
+export <style>
+.jui-carousel {
+  --jui-carousel-height: 200px;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.jui-carousel__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-carousel__viewport {
+  position: relative;
+  height: var(--jui-carousel-height);
+  overflow: hidden;
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  border: 1px solid var(--j-border);
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.jui-carousel__track {
+  display: flex;
+  height: 100%;
+  transition: transform var(--j-duration-normal) var(--j-ease-out);
+  will-change: transform;
+}
+
+.jui-carousel__track > span,
+.jui-carousel__track > span > [data-jacare-s] {
+  display: contents;
+}
+
+.jui-carousel__arrow {
+  appearance: none;
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--j-border) 70%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--j-surface) 92%, transparent);
+  color: var(--j-forest);
+  line-height: 0;
+  cursor: pointer;
+  box-shadow: var(--j-shadow-sm);
+  backdrop-filter: blur(6px);
+  transform: translateY(-50%);
+  opacity: 0;
+  transition:
+    opacity 120ms ease,
+    background-color 120ms ease,
+    border-color 120ms ease,
+    transform 120ms ease;
+}
+
+.jui-carousel__arrow .jui-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.jui-carousel__arrow--prev { left: 0.7rem; }
+.jui-carousel__arrow--next { right: 0.7rem; }
+
+.jui-carousel:hover .jui-carousel__arrow,
+.jui-carousel--arrow-always .jui-carousel__arrow {
+  opacity: 1;
+}
+
+.jui-carousel__arrow:hover {
+  background: var(--j-surface);
+  border-color: color-mix(in srgb, var(--j-primary) 35%, var(--j-border));
+  color: var(--j-primary);
+}
+
+.jui-carousel--arrow-never .jui-carousel__arrow {
+  display: none;
+}
+
+.jui-carousel__arrow:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+  opacity: 1;
+}
+
+.jui-carousel__indicators {
+  position: absolute;
+  left: 50%;
+  bottom: 0.65rem;
+  z-index: 2;
+  display: inline-flex;
+  gap: 0.35rem;
+  transform: translateX(-50%);
+}
+
+.jui-carousel--indicators-outside .jui-carousel__indicators {
+  position: static;
+  transform: none;
+  justify-content: center;
+  margin-top: 0.65rem;
+}
+
+.jui-carousel--indicators-none .jui-carousel__indicators {
+  display: none;
+}
+
+.jui-carousel__indicator {
+  appearance: none;
+  width: 0.55rem;
+  height: 0.55rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--j-forest) 28%, transparent);
+  cursor: pointer;
+}
+
+.jui-carousel__indicator.is-active {
+  background: var(--j-primary);
+  transform: scale(1.15);
+}
+
+.jui-carousel__indicator:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-carousel__track { transition: none; }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .jui-carousel:not(.jui-carousel--arrow-never) .jui-carousel__arrow {
+    opacity: 1;
+    width: var(--j-touch-target, 2.75rem);
+    height: var(--j-touch-target, 2.75rem);
+  }
+
+  .jui-carousel__indicator {
+    min-width: var(--j-touch-target, 2.75rem);
+    min-height: var(--j-touch-target, 2.75rem);
+    width: auto;
+    height: auto;
+    display: grid;
+    place-items: center;
+    background: transparent;
+  }
+
+  .jui-carousel__indicator::before {
+    content: '';
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--j-forest) 28%, transparent);
+  }
+
+  .jui-carousel__indicator.is-active::before {
+    background: var(--j-primary);
+    transform: scale(1.15);
+  }
+
+  .jui-carousel__indicator.is-active {
+    background: transparent;
+    transform: none;
+  }
+}
+</style>

@@ -1,0 +1,248 @@
+import { read } from '../internal/utils.js'
+import { propText } from '../i18n/index.js'
+
+export <contract>
+  props: {
+    value: { type: 'string', default: '', model: true }
+    label: { type: 'string', default: '' }
+    height: { type: 'number', default: 180 }
+    disabled: { type: 'boolean', default: false }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+    clearLabel: { type: 'string', default: 'Clear' }
+  }
+  emits: ['change', 'clear']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function padHeight(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) && next > 80 ? Math.round(next) : 180
+}
+
+function styleOf(heightValue) {
+  return `--jui-signature-h:${padHeight(heightValue)}px`
+}
+
+function getCanvas(node) {
+  return node?.closest?.('[data-jui-signature]')?.querySelector('canvas') || null
+}
+
+function ensureCanvas(canvas) {
+  if (!canvas) return null
+  const width = Math.max(1, Math.round(canvas.clientWidth || 320))
+  const height = Math.max(1, Math.round(canvas.clientHeight || 180))
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width
+    canvas.height = height
+  }
+  const ctx = canvas.getContext('2d')
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  ctx.strokeStyle = getComputedStyle(canvas).color || '#111'
+  ctx.lineWidth = 2.2
+  return canvas
+}
+
+function eventPoint(canvas, event) {
+  const rect = canvas.getBoundingClientRect()
+  const touch = event.touches?.[0] || event.changedTouches?.[0]
+  const clientX = touch ? touch.clientX : event.clientX
+  const clientY = touch ? touch.clientY : event.clientY
+  return {
+    x: clientX - rect.left,
+    y: clientY - rect.top,
+  }
+}
+
+function startDraw(event, disabledValue) {
+  if (read(disabledValue)) return
+  const canvas = getCanvas(event.currentTarget)
+  if (!ensureCanvas(canvas)) return
+  event.preventDefault()
+  canvas.setPointerCapture?.(event.pointerId)
+  canvas.__juiDrawing = true
+  const point = eventPoint(canvas, event)
+  const ctx = canvas.getContext('2d')
+  ctx.beginPath()
+  ctx.moveTo(point.x, point.y)
+}
+
+function moveDraw(event, disabledValue) {
+  const canvas = getCanvas(event.currentTarget)
+  if (!canvas || !canvas.__juiDrawing || read(disabledValue)) return
+  event.preventDefault()
+  const point = eventPoint(canvas, event)
+  const ctx = canvas.getContext('2d')
+  ctx.lineTo(point.x, point.y)
+  ctx.stroke()
+}
+
+function endDraw(event, model, emitFn) {
+  const canvas = getCanvas(event.currentTarget)
+  if (!canvas || !canvas.__juiDrawing) return
+  canvas.__juiDrawing = false
+  try {
+    canvas.releasePointerCapture?.(event.pointerId)
+  } catch {}
+  const data = canvas.toDataURL('image/png')
+  if (model && typeof model.set === 'function') model.set(data)
+  emitFn('change', data)
+}
+
+function clearPad(event, model, emitFn) {
+  const canvas = getCanvas(event.currentTarget)
+  if (!ensureCanvas(canvas)) return
+  const ctx = canvas.getContext('2d')
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  if (model && typeof model.set === 'function') model.set('')
+  emitFn('clear')
+  emitFn('change', '')
+}
+
+function bootPad(event, model) {
+  const canvas = getCanvas(event.currentTarget)
+  if (!ensureCanvas(canvas)) return
+  const existing = String(read(model) || '')
+  if (!existing.startsWith('data:image')) return
+  const image = new Image()
+  image.onload = () => {
+    const ctx = canvas.getContext('2d')
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+  }
+  image.src = existing
+}
+
+export <view>
+  <div
+    class="jui-signature"
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
+    data-jui-signature
+    style=${() => styleOf(height)}
+  >
+    <img class="jui-signature__boot" alt="" width="0" height="0" aria-hidden="true" src=${BOOT_SRC} on-load=${(event) => bootPad(event, value)} />
+
+    #if read(label)
+      <span class="jui-signature__label">${() => read(label)}</span>
+    #end
+
+    <div class="jui-signature__frame">
+      <canvas
+        class="jui-signature__canvas"
+        role="img"
+        aria-label=${() => read(label) || 'Signature pad'}
+        on-pointerdown=${(event) => startDraw(event, disabled)}
+        on-pointermove=${(event) => moveDraw(event, disabled)}
+        on-pointerup=${(event) => endDraw(event, value, emit)}
+        on-pointerleave=${(event) => endDraw(event, value, emit)}
+        on-pointercancel=${(event) => endDraw(event, value, emit)}
+      ></canvas>
+    </div>
+
+    <div class="jui-signature__toolbar">
+      <button
+        type="button"
+        class="jui-signature__clear"
+        disabled=${() => !!read(disabled)}
+        on-click=${(event) => clearPad(event, value, emit)}
+      >
+        ${() => propText(clearLabel, 'j.signaturePad.clear', 'Clear')}
+      </button>
+    </div>
+
+    #if read(error)
+      <span class="jui-signature__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-signature__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-signature {
+  position: relative;
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  color: var(--j-text);
+}
+
+.jui-signature__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-signature__label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-signature__frame {
+  overflow: hidden;
+  border: 1px dashed var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background:
+    linear-gradient(to top, color-mix(in srgb, var(--j-border) 55%, transparent) 1px, transparent 1px) 0 calc(100% - 1.4rem) / 100% 1px no-repeat,
+    var(--j-surface-2);
+  touch-action: none;
+}
+
+.jui-signature__canvas {
+  display: block;
+  width: 100%;
+  height: var(--jui-signature-h, 180px);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.jui-signature__toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.jui-signature__clear {
+  min-height: 2.2rem;
+  padding: 0 0.8rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+  color: var(--j-muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.jui-signature__clear:hover:not(:disabled) {
+  color: var(--j-danger);
+  border-color: color-mix(in srgb, var(--j-danger) 40%, var(--j-border));
+}
+
+.jui-signature.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-signature.has-error .jui-signature__frame {
+  border-color: var(--j-danger);
+}
+
+.jui-signature__hint,
+.jui-signature__error {
+  font-size: 0.8rem;
+}
+
+.jui-signature__hint {
+  color: var(--j-muted);
+}
+
+.jui-signature__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

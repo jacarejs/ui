@@ -1,0 +1,116 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    mode: { type: 'string', default: 'vertical' }
+    defaultActive: { type: 'string', default: '' }
+    collapse: { type: 'boolean', default: false }
+  }
+  slots: ['default']
+  emits: ['select']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function modeOf(value) {
+  return read(value) === 'horizontal' ? 'horizontal' : 'vertical'
+}
+
+function activeState(emitFn, defaultActiveProp) {
+  if (!emitFn.__juiMenuActive) {
+    emitFn.__juiMenuActive = pulse(String(read(defaultActiveProp) || ''))
+  }
+  return emitFn.__juiMenuActive
+}
+
+function bindMenu(emitFn, defaultActiveProp, collapseProp) {
+  read(activeState(emitFn, defaultActiveProp))
+  const root = emitFn.__juiMenuRoot
+  if (root) {
+    root.menuActive = activeState(emitFn, defaultActiveProp)
+    root.menuEmit = emitFn
+    root.menuCollapse = collapseProp
+  }
+  read(defaultActiveProp)
+  read(collapseProp)
+  return ''
+}
+
+function armMenu(root, emitFn) {
+  if (!root) return
+  emitFn.__juiMenuRoot = root
+}
+
+export <view>
+  <nav
+    class="jui-menu"
+    class-jui-menu--horizontal=${() => modeOf(mode) === 'horizontal'}
+    class-jui-menu--collapse=${() => !!read(collapse)}
+    role="menubar"
+  >
+    <img
+      class="jui-menu__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armMenu(event.currentTarget.closest('.jui-menu'), emit)}
+    />
+    <span class="jui-menu__bind" aria-hidden="true">${() => bindMenu(emit, defaultActive, collapse)}</span>
+    <ul class="jui-menu__list">
+      <slot />
+    </ul>
+  </nav>
+</view>
+
+export <style>
+.jui-menu {
+  position: relative;
+  min-width: 0;
+  color: var(--j-text);
+  background: var(--j-surface-2);
+}
+
+.jui-menu__boot,
+.jui-menu__bind {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-menu__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0.45rem;
+  list-style: none;
+}
+
+.jui-menu--horizontal .jui-menu__list {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.jui-menu--collapse {
+  width: 3.5rem;
+}
+
+.jui-menu--collapse .jui-menu-item__label,
+.jui-menu--collapse .jui-sub-menu__title-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.jui-menu__list > span {
+  display: contents;
+}
+</style>

@@ -1,0 +1,15 @@
+export <contract>
+  slots: ['default']
+</contract>
+
+export <view>
+  <div class="jui-modal-footer-slot" data-jui-modal-slot="footer">
+    <slot />
+  </div>
+</view>
+
+export <style>
+.jui-modal-footer-slot {
+  display: contents;
+}
+</style>

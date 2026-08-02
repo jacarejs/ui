@@ -1,0 +1,208 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    value: { type: 'object', default: [] }
+    min: { type: 'number', default: 0 }
+    max: { type: 'number', default: 100 }
+    orientation: { type: 'string', default: 'horizontal' }
+    labelOrientation: { type: 'string', default: 'horizontal' }
+  }
+</contract>
+
+function numOf(value, fallback) {
+  const next = Number(read(value))
+  return Number.isFinite(next) ? next : fallback
+}
+
+function orientationOf(value) {
+  return read(value) === 'vertical' ? 'vertical' : 'horizontal'
+}
+
+function labelOrientationOf(value) {
+  return read(value) === 'vertical' ? 'vertical' : 'horizontal'
+}
+
+const DEFAULT_COLORS = [
+  'var(--j-primary)',
+  'color-mix(in srgb, var(--j-lime) 72%, var(--j-primary))',
+  'color-mix(in srgb, var(--j-forest) 55%, var(--j-primary))',
+  'color-mix(in srgb, var(--j-primary) 55%, #d97706)',
+  'color-mix(in srgb, var(--j-primary) 40%, #0f766e)',
+]
+
+function segmentsOf(valueProp, minProp, maxProp) {
+  const list = read(valueProp)
+  if (!Array.isArray(list)) return []
+  const min = numOf(minProp, 0)
+  const max = numOf(maxProp, 100)
+  const span = Math.max(max - min, 1)
+  const total = list.reduce((sum, item) => sum + Math.max(0, Number(item?.value) || 0), 0)
+  const scale = total > span ? span / total : 1
+  return list.map((item, index) => {
+    const raw = Math.max(0, Number(item?.value) || 0)
+    const pct = total ? (raw * scale / span) * 100 : 0
+    const label = String(item?.label ?? '')
+    return {
+      key: `${label || 'segment'}-${index}`,
+      label,
+      value: raw,
+      pct,
+      color: item?.color ? String(item.color) : DEFAULT_COLORS[index % DEFAULT_COLORS.length],
+      icon: item?.icon ? String(item.icon) : '',
+    }
+  })
+}
+
+function totalNow(valueProp, minProp, maxProp) {
+  return segmentsOf(valueProp, minProp, maxProp).reduce((sum, segment) => sum + segment.value, 0)
+}
+
+function segmentStyle(segment) {
+  const pct = `${Math.max(0, Math.min(100, Number(segment.pct) || 0))}%`
+  const color = segment.color ? `background:${segment.color};` : ''
+  return `${color}--pct:${pct}`
+}
+
+function markerStyle(segment) {
+  return segment.color ? `background:${segment.color}` : ''
+}
+
+export <view>
+  <div
+    class="jui-meter-group"
+    class-jui-meter-group--vertical=${() => orientationOf(orientation) === 'vertical'}
+    class-jui-meter-group--labels-vertical=${() => labelOrientationOf(labelOrientation) === 'vertical'}
+    role="group"
+    aria-label="Meter group"
+  >
+    <div
+      class="jui-meter-group__track"
+      role="meter"
+      aria-valuemin=${() => numOf(min, 0)}
+      aria-valuemax=${() => numOf(max, 100)}
+      aria-valuenow=${() => totalNow(value, min, max)}
+      aria-label="Meter total"
+    >
+      #for segmentsOf(value, min, max) as segment (segment.key)
+        <div
+          class="jui-meter-group__segment"
+          :style=${() => segmentStyle(segment)}
+          role="meter"
+          aria-valuemin="0"
+          aria-valuemax=${() => numOf(max, 100)}
+          aria-valuenow=${segment.value}
+          aria-label=${segment.label || 'Segment'}
+        ></div>
+      #end
+    </div>
+    <ul class="jui-meter-group__legend" aria-hidden="false">
+      #for segmentsOf(value, min, max) as segment (segment.key)
+        <li class="jui-meter-group__legend-item">
+          <span
+            class="jui-meter-group__marker"
+            :style=${() => markerStyle(segment)}
+          ></span>
+          #if segment.icon
+            <span class="jui-meter-group__icon" aria-hidden="true">${segment.icon}</span>
+          #end
+          <span class="jui-meter-group__label">${segment.label}</span>
+          <span class="jui-meter-group__amount">${segment.value}</span>
+        </li>
+      #end
+    </ul>
+  </div>
+</view>
+
+export <style>
+.jui-meter-group {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.jui-meter-group__track {
+  display: flex;
+  width: 100%;
+  min-height: 0.65rem;
+  border-radius: var(--j-radius-pill);
+  overflow: hidden;
+  background: var(--j-mint);
+}
+
+.jui-meter-group__segment {
+  flex: 0 0 var(--pct, 0%);
+  min-width: 0;
+  height: 100%;
+  background: var(--j-primary);
+  transition: flex-basis 0.25s ease;
+}
+
+.jui-meter-group__segment:not(:first-child) {
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.18);
+}
+
+.jui-meter-group--vertical .jui-meter-group__track {
+  flex-direction: column;
+  width: 0.65rem;
+  min-height: 8rem;
+  height: 8rem;
+}
+
+.jui-meter-group--vertical .jui-meter-group__segment {
+  flex: 0 0 var(--pct, 0%);
+  width: 100%;
+}
+
+.jui-meter-group__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jui-meter-group--labels-vertical .jui-meter-group__legend {
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.jui-meter-group__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  font-size: 0.82rem;
+  color: var(--j-muted);
+}
+
+.jui-meter-group__marker {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--j-primary);
+  flex-shrink: 0;
+}
+
+.jui-meter-group__icon {
+  line-height: 1;
+}
+
+.jui-meter-group__label {
+  color: var(--j-forest);
+  font-weight: 600;
+}
+
+.jui-meter-group__amount {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--j-forest);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-meter-group__segment {
+    transition: none;
+  }
+}
+</style>

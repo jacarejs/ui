@@ -1,0 +1,241 @@
+import { read } from '../internal/utils.js'
+import { formatMoney, parseMoneyInput } from '../internal/mask.js'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'number', default: 0, model: true }
+    currency: { type: 'string', default: 'BRL' }
+    locale: { type: 'string', default: 'pt-BR' }
+    precision: { type: 'number', default: 2 }
+    allowNegative: { type: 'boolean', default: false }
+    placeholder: { type: 'string', default: '' }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+    required: { type: 'boolean', default: false }
+    clearable: { type: 'boolean', default: false }
+    size: { type: 'string', default: 'md' }
+    name: { type: 'string', default: '' }
+  }
+  slots: ['prefix', 'suffix']
+  emits: ['change', 'clear']
+</contract>
+
+function sizeClass(value) {
+  const next = read(value)
+  if (next === 'sm' || next === 'lg') return next
+  return 'md'
+}
+
+function precisionOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) ? Math.max(0, Math.round(next)) : 2
+}
+
+function amountOf(model) {
+  const next = Number(read(model))
+  return Number.isFinite(next) ? next : 0
+}
+
+function displayOf(model, localeProp, currencyProp, precisionProp) {
+  return formatMoney(amountOf(model), {
+    locale: read(localeProp) || 'pt-BR',
+    currency: read(currencyProp) || 'BRL',
+    precision: precisionOf(precisionProp),
+  })
+}
+
+function commit(model, next, emitFn) {
+  const amount = Number.isFinite(next) ? next : 0
+  if (model && typeof model.set === 'function') model.set(amount)
+  emitFn('change', amount)
+}
+
+function clearValue(model, emitFn) {
+  commit(model, 0, emitFn)
+  emitFn('clear')
+}
+
+function onInput(event, model, precisionProp, allowNegativeProp, emitFn) {
+  const next = parseMoneyInput(event.target.value, precisionOf(precisionProp), !!read(allowNegativeProp))
+  commit(model, next, emitFn)
+}
+
+export <view>
+  <label
+    class="jui-input-money"
+    class-jui-input-money--sm=${() => sizeClass(size) === 'sm'}
+    class-jui-input-money--lg=${() => sizeClass(size) === 'lg'}
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
+  >
+    #if read(label)
+      <span class="jui-input-money__label">
+        ${() => read(label)}
+        #if read(required)
+          <span class="jui-input-money__req" aria-hidden="true">*</span>
+        #end
+      </span>
+    #end
+
+    <span class="jui-input-money__control">
+      <span class="jui-input-money__prefix"><slot name="prefix" /></span>
+      <input
+        class="jui-input-money__field"
+        type="text"
+        inputmode="decimal"
+        name=${() => read(name) || ''}
+        autocomplete="off"
+        placeholder=${() => read(placeholder) || ''}
+        disabled=${() => !!read(disabled)}
+        required=${() => !!read(required)}
+        aria-invalid=${() => !!read(error)}
+        value=${() => displayOf(value, locale, currency, precision)}
+        on-input=${(event) => {
+          onInput(event, value, precision, allowNegative, emit)
+          event.target.value = displayOf(value, locale, currency, precision)
+        }}
+      />
+      #if read(clearable) && !read(disabled) && amountOf(value) !== 0
+        <button type="button" class="jui-input-money__clear" aria-label="Clear" on-click=${() => clearValue(value, emit)}>×</button>
+      #end
+      <span class="jui-input-money__suffix"><slot name="suffix" /></span>
+    </span>
+
+    #if read(error)
+      <span class="jui-input-money__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-input-money__hint">${() => read(hint)}</span>
+    #end
+  </label>
+</view>
+
+export <style>
+.jui-input-money {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-input-money__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-text);
+}
+
+.jui-input-money__req {
+  color: var(--j-danger);
+}
+
+.jui-input-money__control {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-height: max(var(--j-touch-target-sm, 2.5rem), calc(var(--j-control-height, 2.5rem) + 0.25rem));
+  padding: 0 calc(var(--j-control-padding-x, 1.15rem) * 0.75);
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-input-money--sm .jui-input-money__control {
+  min-height: 2.1rem;
+  padding: 0 0.65rem;
+}
+
+.jui-input-money--lg .jui-input-money__control {
+  min-height: 3.1rem;
+  padding: 0 1rem;
+}
+
+.jui-input-money__control:focus-within {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-input-money__field {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  padding: 0.6rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--j-text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  outline: none;
+}
+
+.jui-input-money--sm .jui-input-money__field {
+  font-size: 0.875rem;
+}
+
+.jui-input-money--lg .jui-input-money__field {
+  font-size: 1.05rem;
+}
+
+.jui-input-money__field::placeholder {
+  color: color-mix(in srgb, var(--j-muted) 75%, white);
+}
+
+.jui-input-money__prefix:empty,
+.jui-input-money__suffix:empty {
+  display: none;
+}
+
+.jui-input-money__prefix,
+.jui-input-money__suffix {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  color: var(--j-muted);
+}
+
+.jui-input-money__clear {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--j-muted);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.jui-input-money__clear:hover {
+  color: var(--j-danger);
+}
+
+.jui-input-money.has-error .jui-input-money__control {
+  border-color: var(--j-danger);
+}
+
+.jui-input-money.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-input-money__hint,
+.jui-input-money__error {
+  font-size: 0.8rem;
+}
+
+.jui-input-money__hint {
+  color: var(--j-muted);
+}
+
+.jui-input-money__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

@@ -1,0 +1,410 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'number', default: null, model: true }
+    min: { type: 'number', default: 1970 }
+    max: { type: 'number', default: 2100 }
+    placeholder: { type: 'string', default: 'Select year' }
+    inline: { type: 'boolean', default: false }
+    disabled: { type: 'boolean', default: false }
+    clearable: { type: 'boolean', default: true }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change']
+</contract>
+
+function yearOf(value, fallback) {
+  const raw = read(value)
+  if (raw == null || raw === '') return fallback
+  const next = Number(raw)
+  return Number.isFinite(next) ? Math.round(next) : fallback
+}
+
+function displayYear(model, placeholderProp) {
+  const year = yearOf(model, NaN)
+  if (!Number.isFinite(year)) return String(read(placeholderProp) || 'Select year')
+  return String(year)
+}
+
+function decadeStart(model, emitFn) {
+  if (!emitFn.__juiYearDecade) {
+    const current = yearOf(model, new Date().getFullYear())
+    emitFn.__juiYearDecade = pulse(Math.floor(current / 10) * 10)
+  }
+  return emitFn.__juiYearDecade
+}
+
+function syncDecade(model, emitFn) {
+  const decadePulse = decadeStart(model, emitFn)
+  const current = yearOf(model, NaN)
+  if (Number.isFinite(current)) {
+    const next = Math.floor(current / 10) * 10
+    if (yearOf(decadePulse, next) !== next) decadePulse.set(next)
+  }
+  return decadePulse
+}
+
+function yearsInDecade(decadePulse) {
+  const start = yearOf(decadePulse, Math.floor(new Date().getFullYear() / 10) * 10)
+  return Array.from({ length: 12 }, (item, index) => start - 1 + index)
+}
+
+function isSelected(year, model) {
+  return yearOf(model, NaN) === year
+}
+
+function isDisabledYear(year, minProp, maxProp) {
+  const minimum = yearOf(minProp, 1970)
+  const maximum = yearOf(maxProp, 2100)
+  return year < minimum || year > maximum
+}
+
+function commit(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function closePicker(event) {
+  event.currentTarget.closest('details')?.removeAttribute('open')
+}
+
+function pick(year, model, minProp, maxProp, disabledValue, emitFn, event) {
+  if (read(disabledValue) || isDisabledYear(year, minProp, maxProp)) return
+  commit(model, year, emitFn)
+  if (event) closePicker(event)
+}
+
+function shiftDecade(delta, decadePulse, disabledValue) {
+  if (read(disabledValue)) return
+  decadePulse.set(yearOf(decadePulse, 2020) + delta * 10)
+}
+
+function clearValue(model, disabledValue, emitFn, event) {
+  if (read(disabledValue)) return
+  commit(model, null, emitFn)
+  if (event) closePicker(event)
+}
+
+function decadeLabel(decadePulse) {
+  const start = yearOf(decadePulse, 2020)
+  return `${start} – ${start + 9}`
+}
+
+function handleToggle(event) {
+  const current = event.currentTarget
+  if (!current.open) {
+    current.outsideController?.abort()
+    return
+  }
+  document.querySelectorAll('details.jui-year-picker__control[open]').forEach((details) => {
+    if (details !== current) details.removeAttribute('open')
+  })
+  current.outsideController?.abort()
+  const controller = new AbortController()
+  current.outsideController = controller
+  requestAnimationFrame(() => {
+    document.addEventListener('pointerdown', (pointerEvent) => {
+      if (!current.contains(pointerEvent.target)) current.removeAttribute('open')
+    }, { signal: controller.signal })
+  })
+}
+
+export <view>
+  <div
+    class="jui-year-picker"
+    class-is-inline=${() => !!read(inline)}
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
+  >
+    #if read(label)
+      <span class="jui-year-picker__label">${() => read(label)}</span>
+    #end
+
+    #if read(inline)
+      <div class="jui-year-picker__panel">
+        <div class="jui-year-picker__nav">
+          <button type="button" class="jui-year-picker__nav-btn" aria-label="Previous decade" disabled=${() => !!read(disabled)} on-click=${() => shiftDecade(-1, syncDecade(value, emit), disabled)}>‹</button>
+          <span class="jui-year-picker__decade">${() => decadeLabel(syncDecade(value, emit))}</span>
+          <button type="button" class="jui-year-picker__nav-btn" aria-label="Next decade" disabled=${() => !!read(disabled)} on-click=${() => shiftDecade(1, syncDecade(value, emit), disabled)}>›</button>
+        </div>
+
+        <div class="jui-year-picker__grid" role="listbox" aria-label="Year">
+          #for yearsInDecade(syncDecade(value, emit)) as year (year)
+            <button
+              type="button"
+              class="jui-year-picker__year"
+              class-is-active=${() => isSelected(year, value)}
+              class-is-outside=${() => year < yearOf(syncDecade(value, emit), 2020) || year > yearOf(syncDecade(value, emit), 2020) + 9}
+              role="option"
+              aria-selected=${() => isSelected(year, value)}
+              disabled=${() => !!(read(disabled) || isDisabledYear(year, min, max))}
+              on-click=${(event) => pick(year, value, min, max, disabled, emit, event)}
+            >
+              ${year}
+            </button>
+          #end
+        </div>
+
+        #if read(clearable) && read(value) != null
+          <button type="button" class="jui-year-picker__clear" disabled=${() => !!read(disabled)} on-click=${(event) => clearValue(value, disabled, emit, event)}>Clear</button>
+        #end
+      </div>
+    #else
+      <details class="jui-year-picker__control" on-toggle=${handleToggle}>
+        <summary
+          class="jui-year-picker__trigger"
+          aria-haspopup="dialog"
+          tabindex=${() => (read(disabled) ? '-1' : '0')}
+          on-click=${(event) => {
+            if (read(disabled)) event.preventDefault()
+          }}
+        >
+          <span class="jui-year-picker__face">
+            <span class="jui-year-picker__value" class-is-placeholder=${() => !Number.isFinite(yearOf(value, NaN))}>
+              ${() => displayYear(value, placeholder)}
+            </span>
+            <span class="jui-year-picker__chevron" aria-hidden="true"></span>
+          </span>
+        </summary>
+
+        <div class="jui-year-picker__panel" role="dialog" aria-label="Choose year">
+          <div class="jui-year-picker__nav">
+            <button type="button" class="jui-year-picker__nav-btn" aria-label="Previous decade" disabled=${() => !!read(disabled)} on-click=${() => shiftDecade(-1, syncDecade(value, emit), disabled)}>‹</button>
+            <span class="jui-year-picker__decade">${() => decadeLabel(syncDecade(value, emit))}</span>
+            <button type="button" class="jui-year-picker__nav-btn" aria-label="Next decade" disabled=${() => !!read(disabled)} on-click=${() => shiftDecade(1, syncDecade(value, emit), disabled)}>›</button>
+          </div>
+
+          <div class="jui-year-picker__grid" role="listbox" aria-label="Year">
+            #for yearsInDecade(syncDecade(value, emit)) as year (year)
+              <button
+                type="button"
+                class="jui-year-picker__year"
+                class-is-active=${() => isSelected(year, value)}
+                class-is-outside=${() => year < yearOf(syncDecade(value, emit), 2020) || year > yearOf(syncDecade(value, emit), 2020) + 9}
+                role="option"
+                aria-selected=${() => isSelected(year, value)}
+                disabled=${() => !!(read(disabled) || isDisabledYear(year, min, max))}
+                on-click=${(event) => pick(year, value, min, max, disabled, emit, event)}
+              >
+                ${year}
+              </button>
+            #end
+          </div>
+
+          #if read(clearable)
+            <button type="button" class="jui-year-picker__clear" disabled=${() => !!read(disabled)} on-click=${(event) => clearValue(value, disabled, emit, event)}>Clear</button>
+          #end
+        </div>
+      </details>
+    #end
+
+    #if read(error)
+      <span class="jui-year-picker__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-year-picker__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-year-picker {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.jui-year-picker__label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-year-picker.has-error .jui-year-picker__label {
+  color: var(--j-danger);
+}
+
+.jui-year-picker.has-error .jui-year-picker__trigger,
+.jui-year-picker.has-error .jui-year-picker__panel {
+  border-color: var(--j-danger);
+}
+
+.jui-year-picker__control {
+  position: relative;
+  min-width: 0;
+}
+
+.jui-year-picker__trigger {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: calc(var(--j-control-height, 2.5rem) + 0.25rem);
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  font: inherit;
+  cursor: pointer;
+  list-style: none;
+  outline: none;
+}
+
+.jui-year-picker__trigger::-webkit-details-marker,
+.jui-year-picker__trigger::marker {
+  display: none;
+}
+
+.jui-year-picker__trigger:focus,
+.jui-year-picker__control[open] .jui-year-picker__trigger {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-year-picker__face {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.jui-year-picker__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.jui-year-picker__value.is-placeholder {
+  color: var(--j-muted);
+  font-weight: 500;
+}
+
+.jui-year-picker__chevron {
+  flex: 0 0 auto;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-0.1rem);
+  opacity: 0.7;
+  transition: transform 120ms ease;
+}
+
+.jui-year-picker__control[open] .jui-year-picker__chevron {
+  transform: rotate(225deg) translateY(-0.05rem);
+}
+
+.jui-year-picker__control .jui-year-picker__panel {
+  position: absolute;
+  z-index: 40;
+  inset-inline-start: 0;
+  top: calc(100% + 0.35rem);
+  width: min(100%, 20rem);
+  min-width: 16rem;
+  box-shadow: var(--j-shadow-md, 0 10px 30px color-mix(in srgb, var(--j-text) 12%, transparent));
+}
+
+.jui-year-picker__control:not([open]) .jui-year-picker__panel {
+  display: none;
+}
+
+.jui-year-picker__panel {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.85rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+}
+
+.jui-year-picker__nav {
+  display: grid;
+  grid-template-columns: 2.4rem 1fr 2.4rem;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.jui-year-picker__nav-btn {
+  min-height: 2.4rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+  color: var(--j-text);
+  font: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.jui-year-picker__decade {
+  text-align: center;
+  font-weight: 750;
+}
+
+.jui-year-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.jui-year-picker__year {
+  min-height: var(--j-touch-target, 2.75rem);
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+  color: var(--j-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.jui-year-picker__year.is-outside {
+  opacity: 0.55;
+}
+
+.jui-year-picker__year.is-active {
+  border-color: var(--j-primary);
+  background: color-mix(in srgb, var(--j-mint) 55%, var(--j-surface));
+  box-shadow: var(--j-focus);
+}
+
+.jui-year-picker__year:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.jui-year-picker__clear {
+  justify-self: end;
+  border: 0;
+  background: transparent;
+  color: var(--j-muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.jui-year-picker.is-disabled {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.jui-year-picker__hint,
+.jui-year-picker__error {
+  font-size: 0.8rem;
+}
+
+.jui-year-picker__hint {
+  color: var(--j-muted);
+}
+
+.jui-year-picker__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

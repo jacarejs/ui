@@ -1,0 +1,116 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    index: { type: 'string', required: true }
+    title: { type: 'string', default: '' }
+  }
+  slots: ['default']
+  emits: ['toggle']
+</contract>
+
+function openState(emitFn) {
+  if (!emitFn.__juiSubMenuOpen) emitFn.__juiSubMenuOpen = pulse(false)
+  return emitFn.__juiSubMenuOpen
+}
+
+function isOpen(emitFn) {
+  return !!read(openState(emitFn))
+}
+
+function toggle(emitFn) {
+  const state = openState(emitFn)
+  state.set(!read(state))
+}
+
+function titleOf(value, indexProp) {
+  const title = String(read(value) || '').trim()
+  if (title) return title
+  return String(read(indexProp) || '')
+}
+
+export <view>
+  <li
+    class="jui-sub-menu"
+    class-is-open=${() => isOpen(emit)}
+    role="none"
+  >
+    <button
+      type="button"
+      class="jui-sub-menu__title"
+      aria-expanded=${() => isOpen(emit)}
+      on-click=${() => toggle(emit)}
+    >
+      <span class="jui-sub-menu__title-text">${() => titleOf(title, index)}</span>
+      <span class="jui-sub-menu__arrow" aria-hidden="true">›</span>
+    </button>
+    #if isOpen(emit)
+      <ul class="jui-sub-menu__list" role="menu">
+        <slot />
+      </ul>
+    #end
+  </li>
+</view>
+
+export <style>
+.jui-sub-menu {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jui-sub-menu__title {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+  width: 100%;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.75rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.jui-sub-menu__title:hover {
+  background: color-mix(in srgb, var(--j-muted) 10%, transparent);
+}
+
+.jui-sub-menu__title:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-sub-menu__arrow {
+  color: var(--j-muted);
+  transform: rotate(90deg);
+  transition: transform var(--j-duration-fast) var(--j-ease-out);
+}
+
+.jui-sub-menu.is-open .jui-sub-menu__arrow {
+  transform: rotate(-90deg);
+}
+
+.jui-sub-menu__list {
+  display: grid;
+  gap: 0.1rem;
+  margin: 0.15rem 0 0.25rem;
+  padding: 0 0 0 0.65rem;
+  list-style: none;
+}
+
+.jui-sub-menu__list > span {
+  display: contents;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-sub-menu__arrow { transition: none; }
+}
+</style>

@@ -1,0 +1,152 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    timestamp: { type: 'string', default: '' }
+    type: { type: 'string', default: 'default' }
+    tone: { type: 'string', default: '' }
+    hollow: { type: 'boolean', default: false }
+    placement: { type: 'string', default: 'bottom' }
+  }
+  slots: ['default']
+</contract>
+
+function toneOf(typeValue, toneValue) {
+  const next = String(read(toneValue) || read(typeValue) || 'default')
+  if (next === 'primary' || next === 'success' || next === 'info' || next === 'warning' || next === 'danger') return next
+  if (next === 'warn') return 'warning'
+  if (next === 'error') return 'danger'
+  return 'default'
+}
+
+function placementOf(value) {
+  return read(value) === 'top' ? 'top' : 'bottom'
+}
+
+export <view>
+  <li
+    class="jui-timeline-item"
+    class-jui-timeline-item--primary=${() => toneOf(type, tone) === 'primary'}
+    class-jui-timeline-item--success=${() => toneOf(type, tone) === 'success'}
+    class-jui-timeline-item--info=${() => toneOf(type, tone) === 'info'}
+    class-jui-timeline-item--warning=${() => toneOf(type, tone) === 'warning'}
+    class-jui-timeline-item--danger=${() => toneOf(type, tone) === 'danger'}
+    class-jui-timeline-item--hollow=${() => !!read(hollow)}
+    class-jui-timeline-item--top=${() => placementOf(placement) === 'top'}
+  >
+    <div class="jui-timeline-item__rail" aria-hidden="true">
+      <div class="jui-timeline-item__tail"></div>
+      <div class="jui-timeline-item__node"></div>
+    </div>
+    <div class="jui-timeline-item__wrapper">
+      #if read(timestamp) && placementOf(placement) === 'top'
+        <div class="jui-timeline-item__timestamp">${() => read(timestamp)}</div>
+      #end
+      <div class="jui-timeline-item__content"><slot /></div>
+      #if read(timestamp) && placementOf(placement) === 'bottom'
+        <div class="jui-timeline-item__timestamp">${() => read(timestamp)}</div>
+      #end
+    </div>
+  </li>
+</view>
+
+export <style>
+.jui-timeline-item {
+  --jui-timeline-color: var(--j-primary);
+  --jui-timeline-node: 0.8rem;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  column-gap: 1.1rem;
+  padding-bottom: var(--jui-timeline-gap, 1.65rem);
+}
+
+.jui-timeline-item--primary { --jui-timeline-color: var(--j-primary); }
+.jui-timeline-item--success { --jui-timeline-color: var(--j-success, var(--j-primary)); }
+.jui-timeline-item--info { --jui-timeline-color: var(--j-info); }
+.jui-timeline-item--warning { --jui-timeline-color: var(--j-warn); }
+.jui-timeline-item--danger { --jui-timeline-color: var(--j-danger); }
+
+.jui-timeline-item__rail {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-self: stretch;
+  width: 1.5rem;
+}
+
+.jui-timeline-item__tail {
+  position: absolute;
+  top: calc(var(--jui-timeline-node) + 0.5rem);
+  bottom: calc(var(--jui-timeline-gap, 1.65rem) * -1);
+  left: 50%;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--jui-timeline-color) 55%, var(--j-border)),
+    color-mix(in srgb, var(--j-border) 70%, var(--jui-timeline-color))
+  );
+  transform: translateX(-50%);
+}
+
+.jui-timeline--dashed .jui-timeline-item__tail {
+  width: 0;
+  background: transparent;
+  border-left: 2px dashed color-mix(in srgb, var(--jui-timeline-color) 50%, var(--j-border));
+}
+
+.jui-timeline-item__node {
+  position: relative;
+  z-index: 1;
+  width: var(--jui-timeline-node);
+  height: var(--jui-timeline-node);
+  margin-top: 0.35rem;
+  border-radius: 50%;
+  background: var(--jui-timeline-color);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--jui-timeline-color) 16%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--jui-timeline-color) 28%, transparent);
+}
+
+.jui-timeline-item--hollow .jui-timeline-item__node {
+  background: var(--j-surface);
+  border: 2px solid var(--jui-timeline-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--jui-timeline-color) 12%, transparent);
+}
+
+.jui-timeline-item__wrapper {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+  padding-top: 0.1rem;
+  padding-bottom: 0.15rem;
+}
+
+.jui-timeline-item__content {
+  color: var(--j-text);
+  font-size: 0.95rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.jui-timeline-item__content > * + * {
+  margin-top: 0.45rem;
+}
+
+.jui-timeline-item__content :where(p, span, small) {
+  font-weight: 450;
+}
+
+.jui-timeline-item__timestamp {
+  color: var(--j-muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.jui-timeline-item--top .jui-timeline-item__timestamp {
+  order: -1;
+  color: color-mix(in srgb, var(--jui-timeline-color) 55%, var(--j-muted));
+}
+</style>

@@ -1,3 +1,4 @@
+import { effect } from '@jacare/core'
 import { read } from '../internal/utils.js'
 
 export <contract>
@@ -10,17 +11,27 @@ export <contract>
     disabled: { type: 'boolean', default: false }
     required: { type: 'boolean', default: false }
     rows: { type: 'number', default: 4 }
+    maxRows: { type: 'number', default: 0 }
     maxLength: { type: 'number', default: 0 }
     showCount: { type: 'boolean', default: false }
+    autosize: { type: 'boolean', default: false }
     resize: { type: 'string', default: 'vertical' }
     name: { type: 'string', default: '' }
   }
 </contract>
 
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
 function rowCount(value) {
   const next = Number(read(value))
   if (!Number.isFinite(next) || next < 2) return 4
   return Math.min(24, Math.round(next))
+}
+
+function maxRowCount(value, minRows) {
+  const next = Number(read(value))
+  if (!Number.isFinite(next) || next <= 0) return 0
+  return Math.max(minRows, Math.min(48, Math.round(next)))
 }
 
 function maxChars(value) {
@@ -35,6 +46,11 @@ function resizeMode(value) {
   return 'vertical'
 }
 
+function resolvedResize(resize, autosizeProp) {
+  if (read(autosizeProp)) return 'none'
+  return resizeMode(resize)
+}
+
 function currentLength(model) {
   return String(read(model) ?? '').length
 }
@@ -45,12 +61,99 @@ function countLabel(model, maxValue) {
   return max > 0 ? `${length} / ${max}` : String(length)
 }
 
+function lineMetrics(textarea) {
+  const style = getComputedStyle(textarea)
+  let lineHeight = parseFloat(style.lineHeight)
+  if (!Number.isFinite(lineHeight)) {
+    const fontSize = parseFloat(style.fontSize) || 16
+    lineHeight = fontSize * 1.45
+  }
+  const padding =
+    (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0)
+  const border =
+    (parseFloat(style.borderTopWidth) || 0) + (parseFloat(style.borderBottomWidth) || 0)
+  return { lineHeight, padding, border }
+}
+
+function applyAutosize(textarea, rowsProp, maxRowsProp) {
+  if (!textarea) return
+  const minRows = rowCount(rowsProp)
+  const max = maxRowCount(maxRowsProp, minRows)
+  const { lineHeight, padding, border } = lineMetrics(textarea)
+  const minH = minRows * lineHeight + padding + border
+
+  textarea.style.height = '0px'
+  const scrollH = textarea.scrollHeight
+  let next = Math.max(minH, scrollH)
+
+  if (max > 0) {
+    const maxH = max * lineHeight + padding + border
+    if (scrollH > maxH) {
+      next = maxH
+      textarea.style.overflowY = 'auto'
+    } else {
+      textarea.style.overflowY = 'hidden'
+    }
+  } else {
+    textarea.style.overflowY = 'hidden'
+  }
+
+  textarea.style.height = `${next}px`
+}
+
+function clearAutosize(textarea) {
+  if (!textarea) return
+  textarea.style.height = ''
+  textarea.style.overflowY = ''
+}
+
+function armAutosize(root, value, rowsProp, maxRowsProp, autosizeProp) {
+  if (!root || root.juiTextareaAutosizeDispose) return
+  root.juiTextareaAutosizeDispose = effect(() => {
+    const enabled = !!read(autosizeProp)
+    const textarea = root.querySelector('textarea.jui-textarea__control')
+    read(value)
+    read(rowsProp)
+    read(maxRowsProp)
+    requestAnimationFrame(() => {
+      if (!enabled) {
+        clearAutosize(textarea)
+        return
+      }
+      applyAutosize(textarea, rowsProp, maxRowsProp)
+    })
+  })
+}
+
+function onTextareaInput(event, rowsProp, maxRowsProp, autosizeProp) {
+  if (!read(autosizeProp)) return
+  applyAutosize(event.currentTarget, rowsProp, maxRowsProp)
+}
+
 export <view>
   <label
     class="jui-textarea"
     class-has-error=${() => !!read(error)}
     class-is-disabled=${() => !!read(disabled)}
+    class-is-autosize=${() => !!read(autosize)}
+    data-jui-textarea
   >
+    <img
+      class="jui-textarea__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) =>
+        armAutosize(
+          event.currentTarget.closest('[data-jui-textarea]'),
+          value,
+          rows,
+          maxRows,
+          autosize,
+        )}
+    />
     <span class="jui-textarea__label">
       ${() => read(label)}
       #if read(required)
@@ -59,10 +162,11 @@ export <view>
     </span>
     <textarea
       class="jui-textarea__control"
-      class-jui-textarea__control--resize-none=${() => resizeMode(resize) === 'none'}
-      class-jui-textarea__control--resize-both=${() => resizeMode(resize) === 'both'}
-      class-jui-textarea__control--resize-horizontal=${() => resizeMode(resize) === 'horizontal'}
-      class-jui-textarea__control--resize-vertical=${() => resizeMode(resize) === 'vertical'}
+      class-jui-textarea__control--autosize=${() => !!read(autosize)}
+      class-jui-textarea__control--resize-none=${() => resolvedResize(resize, autosize) === 'none'}
+      class-jui-textarea__control--resize-both=${() => resolvedResize(resize, autosize) === 'both'}
+      class-jui-textarea__control--resize-horizontal=${() => resolvedResize(resize, autosize) === 'horizontal'}
+      class-jui-textarea__control--resize-vertical=${() => resolvedResize(resize, autosize) === 'vertical'}
       name=${() => read(name) || ''}
       rows=${() => rowCount(rows)}
       placeholder=${() => read(placeholder) || ''}
@@ -74,6 +178,7 @@ export <view>
       }}
       aria-invalid=${() => !!read(error)}
       bind-value=${value}
+      on-input=${(event) => onTextareaInput(event, rows, maxRows, autosize)}
     ></textarea>
     <span class="jui-textarea__meta">
       #if read(error)
@@ -95,6 +200,14 @@ export <style>
   display: grid;
   gap: 0.4rem;
   min-width: 0;
+}
+
+.jui-textarea__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .jui-textarea__label {
@@ -121,6 +234,13 @@ export <style>
   font: inherit;
   line-height: 1.45;
   transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-textarea__control--autosize {
+  min-height: 0;
+  overflow-x: hidden;
+  resize: none;
+  field-sizing: content;
 }
 
 .jui-textarea__control::placeholder {

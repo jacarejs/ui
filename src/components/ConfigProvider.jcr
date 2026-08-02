@@ -1,0 +1,82 @@
+import { effect } from '@jacare/core'
+import { getI18n, setLocale } from '../i18n/index.js'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    size: { type: 'string', default: 'default' }
+    locale: { type: 'string', default: '' }
+    theme: { type: 'string', default: '' }
+  }
+  slots: ['default']
+</contract>
+
+const BOOT_SRC =
+  'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=='
+
+function densityOf(value) {
+  const next = String(read(value) || 'default')
+  if (next === 'small' || next === 'sm') return 'compact'
+  if (next === 'large' || next === 'lg') return 'spacious'
+  return 'comfortable'
+}
+
+function themeOf(value) {
+  const next = String(read(value) || '')
+  if (next === 'light' || next === 'dark') return next
+  return undefined
+}
+
+function localeOf(value) {
+  const next = String(read(value) || '').trim()
+  return next || undefined
+}
+
+function armConfig(root, localeProp) {
+  if (!root || root.__juiConfigArmed) return
+  root.__juiConfigArmed = true
+  root.__juiConfigDispose = effect(() => {
+    const next = localeOf(localeProp)
+    if (!next) return
+    const i18n = getI18n()
+    if (i18n && i18n.locale() !== next) setLocale(next)
+  })
+}
+
+export <view>
+  <div
+    class="jui-config-provider"
+    data-j-density=${() => densityOf(size)}
+    data-j-theme=${() => themeOf(theme)}
+    data-locale=${() => localeOf(locale)}
+    data-jui-config
+  >
+    <img
+      class="jui-config-provider__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armConfig(event.currentTarget.closest('[data-jui-config]'), locale)}
+    />
+    <slot />
+  </div>
+</view>
+
+export <style>
+.jui-config-provider {
+  min-width: 0;
+  color: var(--j-fg, var(--j-text));
+  background: var(--j-bg, transparent);
+}
+
+.jui-config-provider__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+</style>

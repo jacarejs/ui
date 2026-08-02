@@ -1,5 +1,6 @@
 import { effect, pulse } from '@jacare/core'
 import { read } from '../internal/utils.js'
+import { activateFocusTrap, uniqueId } from '../internal/overlay.js'
 
 export <contract>
   props: {
@@ -23,6 +24,14 @@ function isOpen(openProp, emitFn) {
   return read(openState(openProp, emitFn)) === true
 }
 
+function dialogId(emitFn) {
+  return uniqueId('jui-dialog', emitFn)
+}
+
+function titleId(emitFn) {
+  return `${dialogId(emitFn)}-title`
+}
+
 function closeDialog(openProp, emitFn) {
   openState(openProp, emitFn).set(false)
   emitFn('close')
@@ -39,16 +48,23 @@ function sizeClass(value) {
   return 'md'
 }
 
-function armEscape(openProp, emitFn) {
-  if (!emitFn.__juiDialogEscape) {
-    emitFn.__juiDialogEscape = effect(() => {
-      if (!isOpen(openProp, emitFn)) return
-      const handler = (event) => {
-        if (event.key !== 'Escape') return
-        closeDialog(openProp, emitFn)
+function armOverlay(openProp, emitFn) {
+  if (!emitFn.__juiDialogOverlay) {
+    emitFn.__juiDialogOverlay = effect(() => {
+      if (!isOpen(openProp, emitFn)) return undefined
+      const id = dialogId(emitFn)
+      let release = () => {}
+      const frame = requestAnimationFrame(() => {
+        const root = document.querySelector(`[data-jui-dialog="${id}"]`)
+        if (!root) return
+        release = activateFocusTrap(root, {
+          onEscape: () => closeDialog(openProp, emitFn),
+        })
+      })
+      return () => {
+        cancelAnimationFrame(frame)
+        release()
       }
-      document.addEventListener('keydown', handler)
-      return () => document.removeEventListener('keydown', handler)
     })
   }
   return ''
@@ -64,12 +80,13 @@ export <view>
         class-jui-dialog--lg=${() => sizeClass(size) === 'lg'}
         role="dialog"
         aria-modal="true"
-        aria-labelledby=${() => (read(title) ? 'jui-dialog-title' : undefined)}
+        data-jui-dialog=${() => dialogId(emit)}
+        aria-labelledby=${() => (read(title) ? titleId(emit) : undefined)}
         on-click=${(event) => event.stopPropagation()}
       >
         <header class="jui-dialog__head">
           #if read(title)
-            <h2 class="jui-dialog__title" id="jui-dialog-title">${() => read(title)}</h2>
+            <h2 class="jui-dialog__title" id=${() => titleId(emit)}>${() => read(title)}</h2>
           #else
             <span class="jui-dialog__title-spacer"></span>
           #end
@@ -87,7 +104,7 @@ export <view>
           <slot />
         </div>
 
-        <span class="jui-dialog__arm" aria-hidden="true">${() => armEscape(open, emit)}</span>
+        <span class="jui-dialog__arm" aria-hidden="true">${() => armOverlay(open, emit)}</span>
       </section>
     </div>
   #end

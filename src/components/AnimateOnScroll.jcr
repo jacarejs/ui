@@ -1,0 +1,287 @@
+import { effect } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    enterClass: { type: 'string', default: '' }
+    leaveClass: { type: 'string', default: '' }
+    variant: { type: 'string', default: 'fade-up' }
+    threshold: { type: 'number', default: 0.15 }
+    rootMargin: { type: 'string', default: '0px 0px -8% 0px' }
+    root: { type: 'string', default: 'auto' }
+    once: { type: 'boolean', default: true }
+    disabled: { type: 'boolean', default: false }
+  }
+  slots: ['default']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+const VARIANTS = new Set(['fade', 'fade-up', 'fade-down', 'fade-left', 'fade-right', 'zoom', 'none'])
+
+function thresholdOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) ? Math.max(0, Math.min(1, next)) : 0.15
+}
+
+function rootMarginOf(value) {
+  const next = String(read(value) ?? '').trim()
+  return next || '0px'
+}
+
+function variantOf(value) {
+  const next = String(read(value) || 'fade-up').trim().toLowerCase()
+  return VARIANTS.has(next) ? next : 'fade-up'
+}
+
+function prefersReducedMotion() {
+  return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+function classToken(value) {
+  return String(read(value) || '').trim()
+}
+
+function overflowYOf(node) {
+  const style = getComputedStyle(node)
+  return style.overflowY || style.overflow || ''
+}
+
+function scrollRootOf(el) {
+  let node = el?.parentElement
+  while (node && node !== document.body && node !== document.documentElement) {
+    const oy = overflowYOf(node)
+    if (oy === 'auto' || oy === 'scroll' || oy === 'overlay') {
+      return node
+    }
+    node = node.parentElement
+  }
+  return null
+}
+
+function ioRootOf(el, rootProp) {
+  const mode = String(read(rootProp) || 'auto').trim().toLowerCase()
+  if (mode === 'viewport') return null
+  return scrollRootOf(el)
+}
+
+function setVisible(root, enterProp, leaveProp, visible, seen) {
+  const enterToken = classToken(enterProp)
+  const leaveToken = classToken(leaveProp)
+  root.classList.toggle('jui-aos--visible', visible)
+  root.classList.toggle('jui-aos--hidden', !visible)
+  if (enterToken) root.classList.toggle(enterToken, visible)
+  if (leaveToken) root.classList.toggle(leaveToken, seen && !visible)
+}
+
+function showContent(root, enterProp) {
+  setVisible(root, enterProp, '', true, true)
+}
+
+function armAos(
+  root,
+  enterProp,
+  leaveProp,
+  thresholdProp,
+  onceProp,
+  disabledProp,
+  rootMarginProp,
+  variantProp,
+  rootProp,
+) {
+  if (!root || root.aosArmed) return
+  root.aosArmed = true
+  root.aosDispose = effect(() => {
+    const disabled = !!read(disabledProp)
+    const reduced = prefersReducedMotion()
+    const variant = variantOf(variantProp)
+    root.dataset.juiAosVariant = variant
+    if (disabled || reduced || variant === 'none') {
+      root.classList.add('jui-aos--static')
+      showContent(root, enterProp)
+      return () => {}
+    }
+    root.classList.remove('jui-aos--static')
+    const threshold = thresholdOf(thresholdProp)
+    const once = read(onceProp) !== false
+    const margin = rootMarginOf(rootMarginProp)
+    const enterToken = classToken(enterProp)
+    const leaveToken = classToken(leaveProp)
+    root.classList.remove('jui-aos--visible')
+    root.classList.add('jui-aos--hidden')
+    if (enterToken) root.classList.remove(enterToken)
+    if (leaveToken) root.classList.remove(leaveToken)
+    if (typeof IntersectionObserver !== 'function') {
+      showContent(root, enterProp)
+      return () => {}
+    }
+    let seen = false
+    const ioRoot = ioRootOf(root, rootProp)
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const visible = entry.isIntersecting
+          if (visible) seen = true
+          if (once && !visible && seen) return
+          setVisible(root, enterProp, leaveProp, visible, seen)
+          if (visible && once) observer.disconnect()
+        })
+      },
+      { threshold, root: ioRoot, rootMargin: margin },
+    )
+    observer.observe(root)
+    return () => observer.disconnect()
+  })
+}
+
+function bootAos(
+  event,
+  enterProp,
+  leaveProp,
+  thresholdProp,
+  onceProp,
+  disabledProp,
+  rootMarginProp,
+  variantProp,
+  rootProp,
+) {
+  const img = event.currentTarget
+  const root = img?.closest?.('.jui-aos')
+  armAos(
+    root,
+    enterProp,
+    leaveProp,
+    thresholdProp,
+    onceProp,
+    disabledProp,
+    rootMarginProp,
+    variantProp,
+    rootProp,
+  )
+}
+
+export <view>
+  <div
+    class="jui-aos"
+    class-jui-aos--disabled=${() => !!read(disabled)}
+    class-jui-aos--static=${() => !!read(disabled) || prefersReducedMotion() || variantOf(variant) === 'none'}
+    data-jui-aos-variant=${() => variantOf(variant)}
+  >
+    <img
+      class="jui-aos__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) =>
+        bootAos(
+          event,
+          enterClass,
+          leaveClass,
+          threshold,
+          once,
+          disabled,
+          rootMargin,
+          variant,
+          root,
+        )}
+    />
+    <div class="jui-aos__content">
+      <slot />
+    </div>
+  </div>
+</view>
+
+export <style>
+.jui-aos {
+  position: relative;
+  min-width: 0;
+  transition:
+    opacity var(--j-duration-normal) var(--j-ease-out),
+    transform var(--j-duration-normal) var(--j-ease-out);
+}
+
+.jui-aos__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-aos__content {
+  min-width: 0;
+}
+
+.jui-aos.jui-aos--hidden:not(.jui-aos--static) {
+  opacity: 0;
+}
+
+.jui-aos.jui-aos--hidden:not(.jui-aos--static)[data-jui-aos-variant='fade-up'] {
+  transform: translateY(1.25rem);
+}
+
+.jui-aos.jui-aos--hidden:not(.jui-aos--static)[data-jui-aos-variant='fade-down'] {
+  transform: translateY(-1.25rem);
+}
+
+.jui-aos.jui-aos--hidden:not(.jui-aos--static)[data-jui-aos-variant='fade-left'] {
+  transform: translateX(1.25rem);
+}
+
+.jui-aos.jui-aos--hidden:not(.jui-aos--static)[data-jui-aos-variant='fade-right'] {
+  transform: translateX(-1.25rem);
+}
+
+.jui-aos.jui-aos--hidden:not(.jui-aos--static)[data-jui-aos-variant='zoom'] {
+  transform: scale(0.92);
+}
+
+.jui-aos.jui-aos--hidden:not(.jui-aos--static)[data-jui-aos-variant='fade'],
+.jui-aos.jui-aos--hidden:not(.jui-aos--static)[data-jui-aos-variant='none'] {
+  transform: none;
+}
+
+.jui-aos.jui-aos--visible {
+  opacity: 1;
+  transform: none;
+}
+
+.jui-aos.jui-aos--in {
+  animation: jui-aos-in var(--j-duration-normal) var(--j-ease-out) forwards;
+}
+
+.jui-aos.jui-aos--out {
+  opacity: 0;
+  transform: translateY(0.75rem);
+}
+
+@keyframes jui-aos-in {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.jui-aos--static,
+.jui-aos--static .jui-aos__content {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-aos {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+</style>

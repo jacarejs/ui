@@ -4,11 +4,13 @@ import { read } from '../internal/utils.js'
 
 export <contract>
   props: {
-    value: { type: 'string', default: '', model: true }
+    value: { type: 'any', default: '', model: true }
     min: { type: 'string', default: '' }
     max: { type: 'string', default: '' }
     disabled: { type: 'boolean', default: false }
     border: { type: 'boolean', default: true }
+    range: { type: 'boolean', default: false }
+    multiple: { type: 'boolean', default: false }
   }
   emits: ['change']
 </contract>
@@ -32,6 +34,28 @@ function formatValue(date) {
 
 function isAllowed(value, minimum, maximum) {
   return (!minimum || value >= minimum) && (!maximum || value <= maximum)
+}
+
+function isRangeMode(root) {
+  return !!read(root.panelRange)
+}
+
+function isMultipleMode(root) {
+  return !isRangeMode(root) && !!read(root.panelMultiple)
+}
+
+function normalizeSelection(raw, root) {
+  if (isRangeMode(root) || isMultipleMode(root)) {
+    if (Array.isArray(raw)) return raw.map((item) => String(item || '')).filter(Boolean)
+    const single = String(raw || '')
+    return single ? [single] : []
+  }
+  return String(raw || '')
+}
+
+function selectionList(root) {
+  const current = normalizeSelection(read(root.panelModel), root)
+  return Array.isArray(current) ? current : current ? [current] : []
 }
 
 function commitValue(model, next, emitFn) {
@@ -111,6 +135,31 @@ function handleYearChange(next, emitFn) {
 
 function selectDate(root, model, minimum, maximum, emitFn, value) {
   if (read(root.panelDisabled) || !isAllowed(value, minimum, maximum)) return
+
+  if (isRangeMode(root)) {
+    const draft = root.panelDraft || []
+    if (!draft.length || draft.length === 2) {
+      root.panelDraft = [value]
+    } else {
+      root.panelDraft = value < draft[0] ? [value, draft[0]] : [draft[0], value]
+    }
+    if (root.panelDraft.length === 2) {
+      commitValue(model, [...root.panelDraft], emitFn)
+    }
+    renderPanel(root)
+    return
+  }
+
+  if (isMultipleMode(root)) {
+    const current = selectionList(root)
+    const next = current.includes(value)
+      ? current.filter((item) => item !== value)
+      : [...current, value].sort()
+    commitValue(model, next, emitFn)
+    renderPanel(root)
+    return
+  }
+
   commitValue(model, value, emitFn)
   renderPanel(root)
 }
@@ -118,6 +167,22 @@ function selectDate(root, model, minimum, maximum, emitFn, value) {
 function selectToday(root, model, minimum, maximum, emitFn) {
   const today = formatValue(new Date())
   selectDate(root, model, minimum, maximum, emitFn, today)
+}
+
+function clearSelection(root, model, emitFn) {
+  if (read(root.panelDisabled)) return
+  root.panelDraft = []
+  if (isRangeMode(root) || isMultipleMode(root)) commitValue(model, [], emitFn)
+  else commitValue(model, '', emitFn)
+  renderPanel(root)
+}
+
+function selectedForRender(root) {
+  if (isRangeMode(root)) {
+    if (root.panelDraft?.length) return root.panelDraft
+    return selectionList(root)
+  }
+  return selectionList(root)
 }
 
 function renderPanel(root) {
@@ -136,7 +201,8 @@ function renderPanel(root) {
   const offset = (firstDay.getDay() + 6) % 7
   const start = new Date(year, month, 1 - offset)
   const today = formatValue(new Date())
-  const selected = String(read(model) || '')
+  const selected = selectedForRender(root)
+  const rangeMode = isRangeMode(root)
   const buttons = []
 
   for (let index = 0; index < 42; index += 1) {
@@ -149,7 +215,13 @@ function renderPanel(root) {
     button.textContent = String(date.getDate())
     button.classList.toggle('is-outside', date.getMonth() !== month)
     button.classList.toggle('is-today', dateValue === today)
-    button.classList.toggle('is-selected', dateValue === selected)
+    button.classList.toggle('is-selected', selected.includes(dateValue))
+    button.classList.toggle('is-range-start', rangeMode && selected[0] === dateValue)
+    button.classList.toggle('is-range-end', rangeMode && selected[1] === dateValue)
+    button.classList.toggle(
+      'is-in-range',
+      rangeMode && selected.length === 2 && dateValue > selected[0] && dateValue < selected[1],
+    )
     button.disabled = locked || !isAllowed(dateValue, minimum, maximum)
     button.setAttribute('aria-label', new Intl.DateTimeFormat('en-US', { dateStyle: 'full' }).format(date))
     button.addEventListener('click', () => selectDate(root, model, minimum, maximum, root.panelEmit, dateValue))
@@ -157,24 +229,64 @@ function renderPanel(root) {
   }
 
   grid.replaceChildren(...buttons)
+
+  const hint = root.querySelector('[data-panel-hint]')
+  if (hint) {
+    if (rangeMode) {
+      hint.hidden = false
+      hint.textContent = selected.length === 1 ? 'Select an end date.' : 'Select a start and end date.'
+    } else if (isMultipleMode(root)) {
+      hint.hidden = false
+      hint.textContent = selected.length
+        ? `${selected.length} date${selected.length === 1 ? '' : 's'} selected.`
+        : 'Tap days to select multiple dates.'
+    } else {
+      hint.hidden = true
+    }
+  }
+
+  const clearBtn = root.querySelector('[data-panel-clear]')
+  if (clearBtn) {
+    clearBtn.hidden = !(rangeMode || isMultipleMode(root)) || selected.length === 0
+  }
 }
 
-function armPanel(root, model, minimum, maximum, disabledProp, emitFn) {
+function initialIso(model, rangeProp, multipleProp) {
+  const raw = read(model)
+  if (read(rangeProp) || read(multipleProp)) {
+    if (Array.isArray(raw) && raw[0]) return String(raw[0])
+    return ''
+  }
+  return String(raw || '')
+}
+
+function armPanel(root, model, minimum, maximum, disabledProp, rangeProp, multipleProp, emitFn) {
   if (!root || root.panelArmed) return
   root.panelArmed = true
   root.panelModel = model
   root.panelMin = minimum
   root.panelMax = maximum
   root.panelDisabled = disabledProp
+  root.panelRange = rangeProp
+  root.panelMultiple = multipleProp
   root.panelEmit = emitFn
   emitFn.__juiPanelRoot = root
-  root.dataset.initial = read(model) || ''
+  root.dataset.initial = initialIso(model, rangeProp, multipleProp)
+  const current = normalizeSelection(read(model), root)
+  root.panelDraft = Array.isArray(current) ? [...current] : []
   syncViewControls(root)
   root.panelDispose = effect(() => {
     read(model)
     read(minimum)
     read(maximum)
     read(disabledProp)
+    read(rangeProp)
+    read(multipleProp)
+    const next = normalizeSelection(read(model), root)
+    if (isRangeMode(root)) {
+      if (Array.isArray(next) && next.length === 2) root.panelDraft = [...next]
+      else if (Array.isArray(next) && next.length === 0) root.panelDraft = []
+    }
     renderPanel(root)
   })
 }
@@ -183,6 +295,8 @@ export <view>
   <div
     class="jui-date-panel"
     class-jui-date-panel--bordered=${() => !!read(border)}
+    class-jui-date-panel--range=${() => !!read(range)}
+    class-jui-date-panel--multiple=${() => !!read(multiple) && !read(range)}
     class-is-disabled=${() => !!read(disabled)}
   >
     <img
@@ -192,7 +306,8 @@ export <view>
       height="0"
       aria-hidden="true"
       src=${BOOT_SRC}
-      on-load=${(event) => armPanel(event.currentTarget.closest('.jui-date-panel'), value, min, max, disabled, emit)}
+      on-load=${(event) =>
+        armPanel(event.currentTarget.closest('.jui-date-panel'), value, min, max, disabled, range, multiple, emit)}
     />
 
     <div class="jui-date-panel__head">
@@ -224,7 +339,17 @@ export <view>
 
     <div class="jui-date-panel__days" data-panel-days></div>
 
+    <p class="jui-date-panel__hint" data-panel-hint hidden></p>
+
     <div class="jui-date-panel__actions">
+      <button
+        type="button"
+        class="jui-date-panel__text-btn"
+        data-panel-clear
+        hidden
+        disabled=${() => !!read(disabled)}
+        on-click=${(event) => clearSelection(event.currentTarget.closest('.jui-date-panel'), value, emit)}
+      >Clear</button>
       <button type="button" class="jui-date-panel__text-btn" disabled=${() => !!read(disabled)} on-click=${(event) => selectToday(event.currentTarget.closest('.jui-date-panel'), value, read(min), read(max), emit)}>Today</button>
     </div>
   </div>
@@ -352,13 +477,42 @@ export <style>
   opacity: 0.6;
 }
 
-.jui-date-panel__day.is-today {
-  box-shadow: inset 0 0 0 1px var(--j-primary);
+.jui-date-panel__day.is-today:not(.is-selected) {
+  color: var(--j-primary);
+  box-shadow: inset 0 0 0 1.5px var(--j-primary);
+  background: color-mix(in srgb, var(--j-primary) 10%, transparent);
 }
 
-.jui-date-panel__day.is-selected {
-  color: #ffffff;
+.jui-date-panel__day.is-today.is-outside:not(.is-selected) {
+  color: var(--j-primary);
+  opacity: 0.85;
+}
+
+.jui-date-panel__day.is-in-range {
+  border-radius: 0;
+  color: var(--j-forest);
+  background: var(--j-mint);
+}
+
+.jui-date-panel__day.is-selected,
+.jui-date-panel__day.is-selected:hover:not(:disabled) {
+  color: var(--j-on-primary, #ffffff);
   background: var(--j-primary);
+  box-shadow: none;
+}
+
+.jui-date-panel__day.is-selected.is-in-range,
+.jui-date-panel__day.is-selected.is-in-range:hover:not(:disabled) {
+  color: var(--j-on-primary, #ffffff);
+  background: var(--j-primary);
+}
+
+.jui-date-panel__day.is-range-start {
+  border-radius: var(--j-radius-sm) 0 0 var(--j-radius-sm);
+}
+
+.jui-date-panel__day.is-range-end {
+  border-radius: 0 var(--j-radius-sm) var(--j-radius-sm) 0;
 }
 
 .jui-date-panel__day:disabled {
@@ -367,9 +521,21 @@ export <style>
   text-decoration: line-through;
 }
 
+.jui-date-panel__hint {
+  margin: 0;
+  color: var(--j-muted);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.jui-date-panel__hint[hidden] {
+  display: none;
+}
+
 .jui-date-panel__actions {
   display: flex;
   justify-content: flex-end;
+  gap: 0.35rem;
   padding-top: 0.55rem;
   border-top: 1px solid var(--j-border);
 }
@@ -386,6 +552,10 @@ export <style>
   font-weight: 850;
 }
 
+.jui-date-panel__text-btn[hidden] {
+  display: none;
+}
+
 .jui-date-panel__text-btn:hover:not(:disabled) {
   background: var(--j-mint);
 }
@@ -393,5 +563,17 @@ export <style>
 .jui-date-panel__text-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+@media (pointer: coarse) {
+  .jui-date-panel__day {
+    min-height: var(--j-touch-target, 2.75rem);
+  }
+
+  .jui-date-panel__nav,
+  .jui-date-panel__text-btn {
+    min-width: var(--j-touch-target, 2.75rem);
+    min-height: var(--j-touch-target, 2.75rem);
+  }
 }
 </style>

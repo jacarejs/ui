@@ -1,0 +1,228 @@
+import { canHoverTrigger, read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    content: { type: 'string', default: '' }
+    placement: { type: 'string', default: 'top' }
+    appearance: { type: 'string', default: 'dark' }
+    disabled: { type: 'boolean', default: false }
+    showAfter: { type: 'number', default: 0 }
+    hideAfter: { type: 'number', default: 200 }
+  }
+  emits: ['show', 'hide']
+  slots: ['default']
+</contract>
+
+const PLACEMENTS = [
+  'top', 'top-start', 'top-end',
+  'bottom', 'bottom-start', 'bottom-end',
+  'left', 'left-start', 'left-end',
+  'right', 'right-start', 'right-end',
+]
+
+function placementOf(value) {
+  const next = String(read(value) || 'top')
+  return PLACEMENTS.includes(next) ? next : 'top'
+}
+
+function appearanceOf(value) {
+  return read(value) === 'light' ? 'light' : 'dark'
+}
+
+function delayOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) ? Math.max(0, next) : 0
+}
+
+function panelOf(root) {
+  return root.querySelector('.jui-tooltip__panel')
+}
+
+function showTooltip(root, contentProp, disabledProp, emitFn) {
+  clearTimeout(root.juiTooltipHideTimer)
+  clearTimeout(root.juiTooltipShowTimer)
+  if (read(disabledProp) || !String(read(contentProp) || '')) return
+  const panel = panelOf(root)
+  if (!panel || !panel.hidden) return
+  panel.hidden = false
+  emitFn('show')
+}
+
+function hideTooltip(root, emitFn) {
+  clearTimeout(root.juiTooltipShowTimer)
+  clearTimeout(root.juiTooltipHideTimer)
+  const panel = panelOf(root)
+  if (!panel || panel.hidden) return
+  panel.hidden = true
+  emitFn('hide')
+}
+
+function handleEnter(event, contentProp, disabledProp, showAfterProp, emitFn) {
+  if (!canHoverTrigger()) return
+  const root = event.currentTarget
+  clearTimeout(root.juiTooltipHideTimer)
+  clearTimeout(root.juiTooltipShowTimer)
+  if (read(disabledProp) || !String(read(contentProp) || '')) return
+  const delay = delayOf(showAfterProp)
+  if (!delay) {
+    showTooltip(root, contentProp, disabledProp, emitFn)
+    return
+  }
+  root.juiTooltipShowTimer = setTimeout(
+    () => showTooltip(root, contentProp, disabledProp, emitFn),
+    delay,
+  )
+}
+
+function handleLeave(event, hideAfterProp, emitFn) {
+  if (!canHoverTrigger()) return
+  const root = event.currentTarget
+  clearTimeout(root.juiTooltipShowTimer)
+  clearTimeout(root.juiTooltipHideTimer)
+  const delay = delayOf(hideAfterProp)
+  if (!delay) {
+    hideTooltip(root, emitFn)
+    return
+  }
+  root.juiTooltipHideTimer = setTimeout(() => hideTooltip(root, emitFn), delay)
+}
+
+function handleTap(event, contentProp, disabledProp, emitFn) {
+  if (canHoverTrigger()) return
+  const root = event.currentTarget
+  const panel = panelOf(root)
+  if (!panel) return
+  if (panel.hidden) showTooltip(root, contentProp, disabledProp, emitFn)
+  else hideTooltip(root, emitFn)
+}
+
+function handleFocus(event, contentProp, disabledProp, emitFn) {
+  showTooltip(event.currentTarget, contentProp, disabledProp, emitFn)
+}
+
+function handleBlur(event, emitFn) {
+  hideTooltip(event.currentTarget, emitFn)
+}
+
+export <view>
+  <span
+    class="jui-tooltip"
+    class-jui-tooltip--top=${() => placementOf(placement) === 'top'}
+    class-jui-tooltip--top-start=${() => placementOf(placement) === 'top-start'}
+    class-jui-tooltip--top-end=${() => placementOf(placement) === 'top-end'}
+    class-jui-tooltip--bottom=${() => placementOf(placement) === 'bottom'}
+    class-jui-tooltip--bottom-start=${() => placementOf(placement) === 'bottom-start'}
+    class-jui-tooltip--bottom-end=${() => placementOf(placement) === 'bottom-end'}
+    class-jui-tooltip--left=${() => placementOf(placement) === 'left'}
+    class-jui-tooltip--left-start=${() => placementOf(placement) === 'left-start'}
+    class-jui-tooltip--left-end=${() => placementOf(placement) === 'left-end'}
+    class-jui-tooltip--right=${() => placementOf(placement) === 'right'}
+    class-jui-tooltip--right-start=${() => placementOf(placement) === 'right-start'}
+    class-jui-tooltip--right-end=${() => placementOf(placement) === 'right-end'}
+    tabindex="0"
+    on-pointerenter=${(event) => handleEnter(event, content, disabled, showAfter, emit)}
+    on-pointerleave=${(event) => handleLeave(event, hideAfter, emit)}
+    on-pointerup=${(event) => handleTap(event, content, disabled, emit)}
+    on-focus=${(event) => handleFocus(event, content, disabled, emit)}
+    on-blur=${(event) => handleBlur(event, emit)}
+  >
+    <slot />
+    <span
+      class="jui-tooltip__panel"
+      class-jui-tooltip__panel--light=${() => appearanceOf(appearance) === 'light'}
+      role="tooltip"
+      hidden
+    >${() => read(content)}</span>
+  </span>
+</view>
+
+export <style>
+.jui-tooltip {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.jui-tooltip__panel {
+  position: absolute;
+  z-index: 60;
+  width: max-content;
+  max-width: min(20rem, 80vw);
+  padding: 0.45rem 0.65rem;
+  border: 1px solid transparent;
+  border-radius: var(--j-radius-sm);
+  background: var(--j-text);
+  color: var(--j-surface);
+  box-shadow: var(--j-shadow-sm);
+  font-size: 0.8rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+
+.jui-tooltip__panel[hidden] {
+  display: none;
+}
+
+.jui-tooltip__panel--light {
+  border-color: var(--j-border);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+}
+
+.jui-tooltip--top .jui-tooltip__panel,
+.jui-tooltip--top-start .jui-tooltip__panel,
+.jui-tooltip--top-end .jui-tooltip__panel {
+  bottom: calc(100% + 0.45rem);
+}
+
+.jui-tooltip--bottom .jui-tooltip__panel,
+.jui-tooltip--bottom-start .jui-tooltip__panel,
+.jui-tooltip--bottom-end .jui-tooltip__panel {
+  top: calc(100% + 0.45rem);
+}
+
+.jui-tooltip--top .jui-tooltip__panel,
+.jui-tooltip--bottom .jui-tooltip__panel {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.jui-tooltip--top-start .jui-tooltip__panel,
+.jui-tooltip--bottom-start .jui-tooltip__panel {
+  left: 0;
+}
+
+.jui-tooltip--top-end .jui-tooltip__panel,
+.jui-tooltip--bottom-end .jui-tooltip__panel {
+  right: 0;
+}
+
+.jui-tooltip--left .jui-tooltip__panel,
+.jui-tooltip--left-start .jui-tooltip__panel,
+.jui-tooltip--left-end .jui-tooltip__panel {
+  right: calc(100% + 0.45rem);
+}
+
+.jui-tooltip--right .jui-tooltip__panel,
+.jui-tooltip--right-start .jui-tooltip__panel,
+.jui-tooltip--right-end .jui-tooltip__panel {
+  left: calc(100% + 0.45rem);
+}
+
+.jui-tooltip--left .jui-tooltip__panel,
+.jui-tooltip--right .jui-tooltip__panel {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.jui-tooltip--left-start .jui-tooltip__panel,
+.jui-tooltip--right-start .jui-tooltip__panel {
+  top: 0;
+}
+
+.jui-tooltip--left-end .jui-tooltip__panel,
+.jui-tooltip--right-end .jui-tooltip__panel {
+  bottom: 0;
+}
+</style>

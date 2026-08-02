@@ -1,4 +1,5 @@
 import { pulse } from '@jacare/core'
+import { propText, localeText } from '../i18n/index.js'
 import Select from './Select.jcr'
 import { read } from '../internal/utils.js'
 
@@ -12,6 +13,7 @@ export <contract>
     range: { type: 'boolean', default: false }
     autoApply: { type: 'boolean', default: true }
     clearable: { type: 'boolean', default: true }
+    navigable: { type: 'boolean', default: true }
     required: { type: 'boolean', default: false }
     disabled: { type: 'boolean', default: false }
     error: { type: 'string', default: '' }
@@ -112,9 +114,10 @@ function normalizedSelection(value, isRange) {
 
 function displayValue(value, isRange, placeholderValue) {
   const selected = normalizedSelection(value, read(isRange))
-  if (!read(isRange)) return displayDate(selected) || read(placeholderValue)
-  if (!selected.length) return read(placeholderValue)
-  if (selected.length === 1) return `${displayDate(selected[0])} – Select end date`
+  const empty = propText(placeholderValue, 'j.datePicker.placeholder', 'Select date')
+  if (!read(isRange)) return displayDate(selected) || empty
+  if (!selected.length) return empty
+  if (selected.length === 1) return `${displayDate(selected[0])} – ${localeText('j.datePicker.selectEnd', 'Select end date')}`
   return `${displayDate(selected[0])} – ${displayDate(selected[1])}`
 }
 
@@ -160,6 +163,14 @@ function syncViewControls(root) {
   const controls = viewControls(emitFn)
   controls.month.set(String(state.view.getMonth()))
   controls.year.set(String(state.view.getFullYear()))
+}
+
+function captionLabel(emitFn) {
+  const controls = viewControls(emitFn)
+  const monthIndex = Number(controls.month())
+  const year = controls.year()
+  const monthLabel = months[monthIndex] || months[0]
+  return `${monthLabel} ${year}`
 }
 
 function yearOptionsFor(minimum, maximum, currentYear) {
@@ -260,13 +271,14 @@ function renderCalendar(root) {
     button.className = 'jui-date__day'
     button.textContent = String(date.getDate())
     button.dataset.date = dateValue
-    button.classList.toggle('is-outside', date.getMonth() !== month)
+    const outside = date.getMonth() !== month
+    button.classList.toggle('is-outside', outside)
     button.classList.toggle('is-today', dateValue === today)
     button.classList.toggle('is-selected', selected.includes(dateValue))
     button.classList.toggle('is-range-start', state.range && selected[0] === dateValue)
     button.classList.toggle('is-range-end', state.range && selected[1] === dateValue)
     button.classList.toggle('is-in-range', state.range && selected.length === 2 && dateValue > selected[0] && dateValue < selected[1])
-    button.disabled = !isAllowed(dateValue, state.min, state.max)
+    button.disabled = !isAllowed(dateValue, state.min, state.max) || (!state.navigable && outside)
     button.setAttribute('aria-label', new Intl.DateTimeFormat('en-US', { dateStyle: 'full' }).format(date))
     button.addEventListener('click', () => selectDate(root, dateValue))
     buttons.push(button)
@@ -286,9 +298,10 @@ function closePicker(root) {
   root.datePickerState?.abortController?.abort()
 }
 
-function openPicker(event, model, minimum, maximum, isRange, shouldAutoApply, canClear, placeholderValue, emitFn) {
+function openPicker(event, model, minimum, maximum, isRange, shouldAutoApply, canClear, placeholderValue, navigableProp, emitFn) {
   const root = event.currentTarget.closest('[data-date-picker]')
-  if (event.currentTarget.disabled) return
+  const trigger = event.currentTarget
+  if (trigger.disabled) return
 
   document.querySelectorAll('[data-date-panel]:not([hidden])').forEach((panel) => {
     const otherRoot = panel.closest('[data-date-picker]')
@@ -306,6 +319,7 @@ function openPicker(event, model, minimum, maximum, isRange, shouldAutoApply, ca
     range: read(isRange),
     autoApply: read(shouldAutoApply),
     clearable: read(canClear),
+    navigable: read(navigableProp) !== false,
     placeholder: read(placeholderValue),
     min: read(minimum),
     max: read(maximum),
@@ -319,17 +333,16 @@ function openPicker(event, model, minimum, maximum, isRange, shouldAutoApply, ca
 
   renderCalendar(root)
   root.querySelector('[data-date-panel]').hidden = false
-  event.currentTarget.setAttribute('aria-expanded', 'true')
+  trigger.setAttribute('aria-expanded', 'true')
 
   requestAnimationFrame(() => {
     document.addEventListener('pointerdown', (pointerEvent) => {
       if (!root.contains(pointerEvent.target)) closePicker(root)
     }, { signal: abortController.signal })
     document.addEventListener('keydown', (keyEvent) => {
-      if (keyEvent.key === 'Escape') {
-        closePicker(root)
-        event.currentTarget.focus()
-      }
+      if (keyEvent.key !== 'Escape') return
+      closePicker(root)
+      if (typeof trigger.focus === 'function') trigger.focus()
     }, { signal: abortController.signal })
   })
 }
@@ -355,7 +368,7 @@ export <view>
           aria-expanded="false"
           aria-required=${() => !!read(required)}
           disabled=${() => !!read(disabled)}
-          on-click=${(event) => openPicker(event, value, min, max, range, autoApply, clearable, placeholder, emit)}
+          on-click=${(event) => openPicker(event, value, min, max, range, autoApply, clearable, placeholder, navigable, emit)}
         >
           <span class="jui-date__face">
             <span class="jui-date__value" data-date-value class-is-placeholder=${() => normalizedSelection(value, true).length === 0}>${() => displayValue(value, range, placeholder)}</span>
@@ -389,7 +402,7 @@ export <view>
             aria-haspopup="dialog"
             aria-expanded="false"
             disabled=${() => !!read(disabled)}
-            on-click=${(event) => openPicker(event, value, min, max, range, autoApply, clearable, placeholder, emit)}
+            on-click=${(event) => openPicker(event, value, min, max, range, autoApply, clearable, placeholder, navigable, emit)}
           >
             <span class="jui-date__icon" aria-hidden="true"></span>
           </button>
@@ -397,25 +410,32 @@ export <view>
       #end
 
       <div class="jui-date__panel" data-date-panel role="dialog" aria-label="Choose date" hidden>
-        <div class="jui-date__head">
-          <button type="button" class="jui-date__nav" aria-label="Previous month" on-click=${(event) => changeMonth(event.currentTarget.closest('[data-date-picker]'), -1)}>‹</button>
-          <Select
-            :options=${monthOptions}
-            :searchable=${false}
-            :placeholder=${'Month'}
-            :disabled=${disabled}
-            bind-value=${viewControls(emit).month}
-            on-change=${(next) => handleMonthChange(next, emit)}
-          />
-          <Select
-            :options=${() => yearOptionsFor(min, max, viewControls(emit).year())}
-            :searchable=${true}
-            :placeholder=${'Year'}
-            :disabled=${disabled}
-            bind-value=${viewControls(emit).year}
-            on-change=${(next) => handleYearChange(next, emit)}
-          />
-          <button type="button" class="jui-date__nav" aria-label="Next month" on-click=${(event) => changeMonth(event.currentTarget.closest('[data-date-picker]'), 1)}>›</button>
+        <div
+          class="jui-date__head"
+          class-jui-date__head--static=${() => read(navigable) === false}
+        >
+          #if read(navigable) === false
+            <span class="jui-date__caption">${() => captionLabel(emit)}</span>
+          #else
+            <button type="button" class="jui-date__nav" aria-label="Previous month" on-click=${(event) => changeMonth(event.currentTarget.closest('[data-date-picker]'), -1)}>‹</button>
+            <Select
+              :options=${monthOptions}
+              :searchable=${false}
+              :placeholder=${'Month'}
+              :disabled=${disabled}
+              bind-value=${viewControls(emit).month}
+              on-change=${(next) => handleMonthChange(next, emit)}
+            />
+            <Select
+              :options=${() => yearOptionsFor(min, max, viewControls(emit).year())}
+              :searchable=${true}
+              :placeholder=${'Year'}
+              :disabled=${disabled}
+              bind-value=${viewControls(emit).year}
+              on-change=${(next) => handleYearChange(next, emit)}
+            />
+            <button type="button" class="jui-date__nav" aria-label="Next month" on-click=${(event) => changeMonth(event.currentTarget.closest('[data-date-picker]'), 1)}>›</button>
+          #end
         </div>
         <div class="jui-date__weekdays" aria-hidden="true">
           #for weekdays as weekday (weekday)
@@ -425,7 +445,7 @@ export <view>
         <div class="jui-date__days" data-date-days></div>
         <p class="jui-date__range-hint" data-date-range-hint hidden>Select a start and end date.</p>
         <div class="jui-date__actions">
-          <button type="button" class="jui-date__text-btn" data-date-clear on-click=${(event) => clearSelection(event.currentTarget.closest('[data-date-picker]'))}>Clear</button>
+          <button type="button" class="jui-date__text-btn" data-date-clear on-click=${(event) => clearSelection(event.currentTarget.closest('[data-date-picker]'))}>${() => localeText('j.datePicker.clear', 'Clear')}</button>
           <button type="button" class="jui-date__text-btn" on-click=${(event) => selectToday(event.currentTarget.closest('[data-date-picker]'))}>Today</button>
           <button type="button" class="jui-date__apply-btn" data-date-apply hidden on-click=${(event) => applySelection(event.currentTarget.closest('[data-date-picker]'))}>Apply</button>
         </div>
@@ -480,12 +500,14 @@ export <style>
 .jui-date__input-wrap {
   position: relative;
   display: block;
+  min-width: 0;
 }
 
 .jui-date__input {
+  box-sizing: border-box;
   width: 100%;
   min-height: 2.75rem;
-  padding: 0.65rem 3.1rem 0.65rem 0.9rem;
+  padding: 0.65rem 2.85rem 0.65rem 0.9rem;
   border: 1px solid var(--j-border);
   border-radius: var(--j-radius-sm);
   outline: 0;
@@ -511,23 +533,26 @@ export <style>
 .jui-date__button {
   position: absolute;
   z-index: 2;
-  top: 50%;
+  top: 0.35rem;
   right: 0.35rem;
+  bottom: 0.35rem;
   display: grid;
   place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2.05rem;
+  height: auto;
+  margin: 0;
   padding: 0;
   border: 0;
-  border-radius: var(--j-radius-sm);
+  border-radius: calc(var(--j-radius-sm) - 2px);
   color: var(--j-primary);
   background: var(--j-mint);
   cursor: pointer;
-  transform: translateY(-50%);
+  transition: background 120ms ease, color 120ms ease;
 }
 
 .jui-date__button:hover {
-  background: var(--j-lime);
+  color: #fff;
+  background: var(--j-primary);
 }
 
 .jui-date__button:disabled {
@@ -609,8 +634,15 @@ export <style>
   border-radius: var(--j-radius-sm);
   color: var(--j-primary);
   background: var(--j-mint);
+  transition: background 120ms ease, color 120ms ease;
   -webkit-mask: none;
   mask: none;
+}
+
+.jui-date__trigger:hover .jui-date__icon,
+.jui-date__trigger[aria-expanded='true'] .jui-date__icon {
+  color: #fff;
+  background: var(--j-primary);
 }
 
 .jui-date__trigger .jui-date__icon::before {
@@ -646,6 +678,21 @@ export <style>
   grid-template-columns: 2.2rem minmax(0, 1.4fr) minmax(0, 1fr) 2.2rem;
   align-items: center;
   gap: 0.35rem;
+}
+
+.jui-date__head--static {
+  grid-template-columns: 1fr;
+}
+
+.jui-date__caption {
+  display: block;
+  min-width: 0;
+  padding: 0.35rem 0.2rem;
+  color: var(--j-forest);
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.3;
+  text-align: center;
 }
 
 .jui-date__head .jui-select {
@@ -731,8 +778,15 @@ export <style>
   opacity: 0.6;
 }
 
-.jui-date__day.is-today {
-  box-shadow: inset 0 0 0 1px var(--j-primary);
+.jui-date__day.is-today:not(.is-selected) {
+  color: var(--j-primary);
+  box-shadow: inset 0 0 0 1.5px var(--j-primary);
+  background: color-mix(in srgb, var(--j-primary) 10%, transparent);
+}
+
+.jui-date__day.is-today.is-outside:not(.is-selected) {
+  color: var(--j-primary);
+  opacity: 0.85;
 }
 
 .jui-date__day.is-in-range {
@@ -741,9 +795,17 @@ export <style>
   background: var(--j-mint);
 }
 
-.jui-date__day.is-selected {
+.jui-date__day.is-selected,
+.jui-date__day.is-selected:hover:not(:disabled) {
   z-index: 1;
-  color: #ffffff;
+  color: var(--j-on-primary, #ffffff);
+  background: var(--j-primary);
+  box-shadow: none;
+}
+
+.jui-date__day.is-selected.is-in-range,
+.jui-date__day.is-selected.is-in-range:hover:not(:disabled) {
+  color: var(--j-on-primary, #ffffff);
   background: var(--j-primary);
 }
 

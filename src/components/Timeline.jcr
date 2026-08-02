@@ -1,0 +1,98 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    reverse: { type: 'boolean', default: false }
+    line: { type: 'string', default: 'solid' }
+    gap: { type: 'string', default: 'md' }
+  }
+  slots: ['default']
+</contract>
+
+function lineOf(value) {
+  return read(value) === 'dashed' ? 'dashed' : 'solid'
+}
+
+function gapOf(value) {
+  const next = String(read(value) || 'md')
+  if (next === 'sm' || next === 'lg') return next
+  return 'md'
+}
+
+export <view>
+  <ul
+    class="jui-timeline"
+    class-jui-timeline--reverse=${() => !!read(reverse)}
+    class-jui-timeline--dashed=${() => lineOf(line) === 'dashed'}
+    class-jui-timeline--gap-sm=${() => gapOf(gap) === 'sm'}
+    class-jui-timeline--gap-lg=${() => gapOf(gap) === 'lg'}
+  >
+    <slot />
+  </ul>
+</view>
+
+export <style>
+.jui-timeline {
+  --jui-timeline-gap: 1.65rem;
+  --jui-timeline-line-color: color-mix(in srgb, var(--j-primary) 42%, var(--j-border));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  max-width: 42rem;
+}
+
+.jui-timeline > span,
+.jui-timeline > span > :where(div, span) {
+  display: contents;
+}
+
+.jui-timeline--gap-sm {
+  --jui-timeline-gap: 1rem;
+}
+
+.jui-timeline--gap-lg {
+  --jui-timeline-gap: 2.85rem;
+}
+
+.jui-timeline--reverse {
+  flex-direction: column-reverse;
+}
+
+.jui-timeline--dashed {
+  --jui-timeline-line-style: dashed;
+}
+
+.jui-timeline > span > *:last-child .jui-timeline-item__tail,
+.jui-timeline > .jui-timeline-item:last-child .jui-timeline-item__tail {
+  display: none;
+}
+
+.jui-timeline--reverse > span > *:last-child .jui-timeline-item__tail,
+.jui-timeline--reverse > .jui-timeline-item:last-child .jui-timeline-item__tail {
+  display: block;
+}
+
+.jui-timeline--reverse > span > *:first-child .jui-timeline-item__tail,
+.jui-timeline--reverse > .jui-timeline-item:first-child .jui-timeline-item__tail {
+  display: none;
+}
+
+.jui-timeline--reverse .jui-timeline-item__tail {
+  top: auto;
+  bottom: calc(100% - 0.7rem);
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--jui-timeline-color) 48%, var(--j-border)),
+    var(--j-border)
+  );
+}
+
+.jui-timeline--reverse.jui-timeline--dashed .jui-timeline-item__tail {
+  background: transparent;
+  border-left-color: color-mix(in srgb, var(--jui-timeline-color) 48%, var(--j-border));
+}
+</style>

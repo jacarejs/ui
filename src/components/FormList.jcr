@@ -1,0 +1,397 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'object', default: [], model: true }
+    fields: { type: 'object', default: [] }
+    min: { type: 'number', default: 0 }
+    max: { type: 'number', default: 0 }
+    addLabel: { type: 'string', default: 'Add item' }
+    itemLabel: { type: 'string', default: 'Item' }
+    reorderable: { type: 'boolean', default: true }
+    disabled: { type: 'boolean', default: false }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change', 'add', 'remove', 'reorder']
+</contract>
+
+function normalizeFields(fieldsValue) {
+  const list = read(fieldsValue)
+  if (!Array.isArray(list)) return []
+  return list
+    .map((field, index) => {
+      if (!field || typeof field !== 'object') return null
+      const key = String(field.key ?? field.prop ?? index)
+      return {
+        key,
+        label: field.label ?? key,
+        placeholder: field.placeholder ?? '',
+        type: field.type || 'text',
+      }
+    })
+    .filter(Boolean)
+}
+
+function itemsOf(model) {
+  const list = read(model)
+  return Array.isArray(list) ? list.slice() : []
+}
+
+function rowsOf(model) {
+  return itemsOf(model).map((item, index) => ({
+    key: item && typeof item === 'object' && item.id != null ? String(item.id) : `row-${index}`,
+    index,
+    item,
+  }))
+}
+
+function limitOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) && next > 0 ? Math.round(next) : 0
+}
+
+function createItem(fieldsValue) {
+  const fields = normalizeFields(fieldsValue)
+  if (!fields.length) return ''
+  const item = {}
+  fields.forEach((field) => {
+    item[field.key] = ''
+  })
+  return item
+}
+
+function commit(model, next, emitFn, eventName, payload) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+  if (eventName) emitFn(eventName, payload)
+}
+
+function canAdd(model, maxValue, disabledValue) {
+  if (read(disabledValue)) return false
+  const max = limitOf(maxValue)
+  if (max <= 0) return true
+  return itemsOf(model).length < max
+}
+
+function minFloor(minValue) {
+  const next = Number(read(minValue))
+  return Number.isFinite(next) && next >= 0 ? Math.round(next) : 0
+}
+
+function canRemove(model, minValue, disabledValue) {
+  if (read(disabledValue)) return false
+  return itemsOf(model).length > minFloor(minValue)
+}
+
+function addItem(model, fieldsValue, maxValue, disabledValue, emitFn) {
+  if (!canAdd(model, maxValue, disabledValue)) return
+  const next = itemsOf(model)
+  const item = createItem(fieldsValue)
+  next.push(item)
+  commit(model, next, emitFn, 'add', { index: next.length - 1, item })
+}
+
+function removeItem(index, model, minValue, disabledValue, emitFn) {
+  if (!canRemove(model, minValue, disabledValue)) return
+  const next = itemsOf(model)
+  if (index < 0 || index >= next.length) return
+  const [item] = next.splice(index, 1)
+  commit(model, next, emitFn, 'remove', { index, item })
+}
+
+function moveItem(index, delta, model, disabledValue, reorderableValue, emitFn) {
+  if (read(disabledValue) || !read(reorderableValue)) return
+  const next = itemsOf(model)
+  const target = index + delta
+  if (index < 0 || target < 0 || index >= next.length || target >= next.length) return
+  const [item] = next.splice(index, 1)
+  next.splice(target, 0, item)
+  commit(model, next, emitFn, 'reorder', { from: index, to: target })
+}
+
+function fieldValue(item, field) {
+  if (item == null) return ''
+  if (typeof item !== 'object') return String(item)
+  return item[field.key] ?? ''
+}
+
+function updateField(index, fieldKey, nextValue, model, fieldsValue, disabledValue, emitFn) {
+  if (read(disabledValue)) return
+  const next = itemsOf(model)
+  if (index < 0 || index >= next.length) return
+  const fields = normalizeFields(fieldsValue)
+  if (!fields.length) {
+    next[index] = nextValue
+  } else {
+    const current = next[index]
+    const item = current && typeof current === 'object' ? { ...current } : createItem(fieldsValue)
+    item[fieldKey] = nextValue
+    next[index] = item
+  }
+  commit(model, next, emitFn)
+}
+
+function itemHeading(itemLabelValue, index) {
+  const base = String(read(itemLabelValue) || 'Item').trim() || 'Item'
+  return `${base} ${index + 1}`
+}
+
+export <view>
+  <div
+    class="jui-form-list"
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
+  >
+    #if read(label)
+      <div class="jui-form-list__header">
+        <span class="jui-form-list__label">${() => read(label)}</span>
+      </div>
+    #end
+
+    <div class="jui-form-list__rows">
+      #for rowsOf(value) as row (row.key)
+        <div class="jui-form-list__row">
+          <div class="jui-form-list__row-head">
+            <span class="jui-form-list__row-title">${() => itemHeading(itemLabel, row.index)}</span>
+            <div class="jui-form-list__row-actions">
+              #if read(reorderable)
+                <button
+                  type="button"
+                  class="jui-form-list__icon-btn"
+                  aria-label="Move up"
+                  disabled=${() => !!(read(disabled) || row.index === 0)}
+                  on-click=${() => moveItem(row.index, -1, value, disabled, reorderable, emit)}
+                >↑</button>
+                <button
+                  type="button"
+                  class="jui-form-list__icon-btn"
+                  aria-label="Move down"
+                  disabled=${() => !!(read(disabled) || row.index >= itemsOf(value).length - 1)}
+                  on-click=${() => moveItem(row.index, 1, value, disabled, reorderable, emit)}
+                >↓</button>
+              #end
+              <button
+                type="button"
+                class="jui-form-list__icon-btn jui-form-list__icon-btn--danger"
+                aria-label="Remove"
+                disabled=${() => !canRemove(value, min, disabled)}
+                on-click=${() => removeItem(row.index, value, min, disabled, emit)}
+              >×</button>
+            </div>
+          </div>
+
+          <div class="jui-form-list__fields">
+            #if normalizeFields(fields).length
+              #for normalizeFields(fields) as field (field.key)
+                <label class="jui-form-list__field">
+                  <span class="jui-form-list__field-label">${field.label}</span>
+                  <input
+                    class="jui-form-list__input"
+                    type=${() => field.type || 'text'}
+                    placeholder=${() => field.placeholder || ''}
+                    disabled=${() => !!read(disabled)}
+                    value=${() => fieldValue(row.item, field)}
+                    on-input=${(event) => updateField(row.index, field.key, event.target.value, value, fields, disabled, emit)}
+                  />
+                </label>
+              #end
+            #else
+              <label class="jui-form-list__field">
+                <input
+                  class="jui-form-list__input"
+                  type="text"
+                  aria-label=${() => itemHeading(itemLabel, row.index)}
+                  disabled=${() => !!read(disabled)}
+                  value=${() => (typeof row.item === 'object' ? '' : String(row.item ?? ''))}
+                  on-input=${(event) => updateField(row.index, '', event.target.value, value, fields, disabled, emit)}
+                />
+              </label>
+            #end
+          </div>
+        </div>
+      #end
+    </div>
+
+    <div class="jui-form-list__footer">
+      <button
+        type="button"
+        class="jui-form-list__add"
+        disabled=${() => !canAdd(value, max, disabled)}
+        on-click=${() => addItem(value, fields, max, disabled, emit)}
+      >
+        ${() => read(addLabel) || 'Add item'}
+      </button>
+    </div>
+
+    #if read(error)
+      <span class="jui-form-list__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-form-list__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-form-list {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.jui-form-list__label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-form-list__rows {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.jui-form-list__row {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+}
+
+.jui-form-list__row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.jui-form-list__row-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--j-text);
+}
+
+.jui-form-list__row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.jui-form-list__icon-btn {
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+  color: var(--j-muted);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.jui-form-list__icon-btn:hover:not(:disabled) {
+  color: var(--j-primary);
+  border-color: color-mix(in srgb, var(--j-primary) 45%, var(--j-border));
+}
+
+.jui-form-list__icon-btn--danger:hover:not(:disabled) {
+  color: var(--j-danger);
+  border-color: color-mix(in srgb, var(--j-danger) 45%, var(--j-border));
+}
+
+.jui-form-list__icon-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.jui-form-list__fields {
+  display: grid;
+  gap: 0.65rem;
+}
+
+@media (min-width: 640px) {
+  .jui-form-list__fields {
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  }
+}
+
+.jui-form-list__field {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.jui-form-list__field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--j-muted);
+}
+
+.jui-form-list__input {
+  width: 100%;
+  min-height: calc(var(--j-control-height, 2.5rem) + 0.1rem);
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+  color: var(--j-text);
+  font: inherit;
+  outline: none;
+}
+
+.jui-form-list__input:focus {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-form-list__footer {
+  display: flex;
+}
+
+.jui-form-list__add {
+  min-height: 2.35rem;
+  padding: 0 0.95rem;
+  border: 1px dashed color-mix(in srgb, var(--j-primary) 45%, var(--j-border));
+  border-radius: var(--j-radius-sm);
+  background: color-mix(in srgb, var(--j-mint) 35%, var(--j-surface-2));
+  color: var(--j-primary);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.jui-form-list__add:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--j-mint) 55%, var(--j-surface-2));
+}
+
+.jui-form-list__add:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jui-form-list.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-form-list.has-error .jui-form-list__row {
+  border-color: color-mix(in srgb, var(--j-danger) 45%, var(--j-border));
+}
+
+.jui-form-list__hint,
+.jui-form-list__error {
+  font-size: 0.8rem;
+}
+
+.jui-form-list__hint {
+  color: var(--j-muted);
+}
+
+.jui-form-list__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

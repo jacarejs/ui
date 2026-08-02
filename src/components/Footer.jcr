@@ -1,0 +1,41 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    height: { type: 'string', default: '60px' }
+  }
+  slots: ['default']
+</contract>
+
+function heightOf(value) {
+  return String(read(value) || '60px')
+}
+
+export <view>
+  <footer
+    class="jui-footer"
+    style---jui-footer-height=${() => heightOf(height)}
+  >
+    <slot />
+  </footer>
+</view>
+
+export <style>
+.jui-footer {
+  --jui-footer-height: 60px;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  box-sizing: border-box;
+  height: var(--jui-footer-height);
+  min-height: var(--jui-footer-height);
+  padding: 0 var(--j-space-4);
+  border-top: 1px solid var(--j-border);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+}
+
+.jui-footer > span {
+  display: contents;
+}
+</style>

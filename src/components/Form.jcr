@@ -1,13 +1,22 @@
 import { read } from '../internal/utils.js'
+import { createForm } from '../validation/index.js'
 
 export <contract>
   props: {
+    form: { type: 'any', default: null }
+    model: { type: 'any', default: null }
+    rules: { type: 'any', default: null }
     labelPosition: { type: 'string', default: 'top' }
     disabled: { type: 'boolean', default: false }
     gap: { type: 'string', default: 'md' }
+    scrollToError: { type: 'boolean', default: true }
+    validateOnRuleChange: { type: 'boolean', default: true }
   }
   slots: ['default']
+  emits: ['validate', 'ready']
 </contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
 
 function positionOf(value) {
   return read(value) === 'left' ? 'left' : 'top'
@@ -19,6 +28,47 @@ function gapOf(value) {
   return 'md'
 }
 
+function resolveForm(formProp, modelProp, rulesProp) {
+  const existing = read(formProp)
+  if (existing && typeof existing.validate === 'function') return existing
+  return createForm({
+    model: read(modelProp) || {},
+    rules: read(rulesProp) || {},
+  })
+}
+
+function armForm(root, formProp, modelProp, rulesProp, scrollToErrorProp, emitFn) {
+  if (!root || root.juiFormArmed) return
+  root.juiFormArmed = true
+  const api = resolveForm(formProp, modelProp, rulesProp)
+  root.juiForm = api
+  root.juiFormScrollToError = () => !!read(scrollToErrorProp)
+  root.querySelectorAll('[data-jui-form-item]').forEach((item) => item.juiFormItemRebind?.())
+
+  const originalValidate = api.validate.bind(api)
+  api.validate = async (callback) => {
+    try {
+      const valid = await originalValidate()
+      emitFn('validate', true)
+      if (typeof callback === 'function') callback(true)
+      return valid
+    } catch (error) {
+      emitFn('validate', false, error.fields || {})
+      if (root.juiFormScrollToError()) {
+        const first = Object.keys(error.fields || {})[0]
+        if (first) api.scrollToField(first)
+      }
+      if (typeof callback === 'function') {
+        callback(false, error.fields || {})
+        return false
+      }
+      throw error
+    }
+  }
+
+  emitFn('ready', api)
+}
+
 export <view>
   <fieldset
     class="jui-form"
@@ -26,19 +76,43 @@ export <view>
     class-jui-form--gap-sm=${() => gapOf(gap) === 'sm'}
     class-jui-form--gap-lg=${() => gapOf(gap) === 'lg'}
     disabled=${() => !!read(disabled)}
+    data-jui-form
   >
+    <img
+      class="jui-form__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) =>
+        armForm(event.currentTarget.closest('[data-jui-form]'), form, model, rules, scrollToError, emit)}
+    />
     <slot />
   </fieldset>
 </view>
 
 export <style>
 .jui-form {
+  position: relative;
   display: grid;
-  gap: 1.1rem;
+  gap: 1.25rem;
   margin: 0;
   padding: 0;
   border: 0;
   min-inline-size: 0;
+}
+
+.jui-form > span {
+  display: contents;
+}
+
+.jui-form__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .jui-form--gap-sm {
@@ -62,5 +136,15 @@ export <style>
 
 .jui-form--label-left .jui-form-item__label {
   padding-top: 0.6rem;
+}
+
+@media (max-width: 640px) {
+  .jui-form--label-left .jui-form-item {
+    grid-template-columns: 1fr;
+  }
+
+  .jui-form--label-left .jui-form-item__label {
+    padding-top: 0;
+  }
 }
 </style>

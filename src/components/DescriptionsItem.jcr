@@ -1,0 +1,53 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    span: { type: 'number', default: 1 }
+  }
+  slots: ['default']
+</contract>
+
+function spanOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) && next > 0 ? Math.round(next) : 1
+}
+
+function itemStyle(spanValue) {
+  return `--jui-desc-span:${spanOf(spanValue)}`
+}
+
+export <view>
+  <div class="jui-descriptions-item" :style=${() => itemStyle(span)}>
+    #if read(label)
+      <div class="jui-descriptions-item__label">${() => read(label)}</div>
+    #end
+    <div class="jui-descriptions-item__content"><slot /></div>
+  </div>
+</view>
+
+export <style>
+.jui-descriptions-item {
+  --jui-desc-span: 1;
+  grid-column: span var(--jui-desc-span);
+  display: grid;
+  grid-template-columns: minmax(5rem, 8rem) minmax(0, 1fr);
+  gap: 0.5rem 0.85rem;
+  align-items: start;
+  min-width: 0;
+}
+
+.jui-descriptions-item__label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+  line-height: 1.4;
+}
+
+.jui-descriptions-item__content {
+  min-width: 0;
+  color: var(--j-text);
+  line-height: 1.45;
+  word-break: break-word;
+}
+</style>

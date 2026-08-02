@@ -1,0 +1,190 @@
+import { effect } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    content: { type: 'any', default: 'Jacaré UI' }
+    image: { type: 'string', default: '' }
+    rotate: { type: 'number', default: -22 }
+    gap: { type: 'any', default: null }
+    offset: { type: 'any', default: null }
+    zIndex: { type: 'number', default: 9 }
+    fontColor: { type: 'string', default: 'rgba(0,0,24,0.12)' }
+    fontSize: { type: 'number', default: 16 }
+    width: { type: 'number', default: 120 }
+    height: { type: 'number', default: 64 }
+  }
+  slots: ['default']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function numberOf(value, fallback, minimum = 0) {
+  const next = Number(read(value))
+  return Number.isFinite(next) ? Math.max(minimum, next) : fallback
+}
+
+function pairOf(value, fallback) {
+  const next = read(value)
+  if (!Array.isArray(next)) return fallback
+  return [
+    numberOf(next[0], fallback[0]),
+    numberOf(next[1], fallback[1]),
+  ]
+}
+
+function linesOf(value) {
+  const next = read(value)
+  if (Array.isArray(next)) return next.map((line) => String(read(line) ?? ''))
+  return [String(next ?? '')]
+}
+
+function layerStyle(zIndexProp) {
+  return `z-index:${numberOf(zIndexProp, 9)}`
+}
+
+function applyLayer(root, dataUrl, tileWidth, tileHeight, offsetValue) {
+  const layer = root.querySelector('.jui-watermark__layer')
+  if (!layer) return
+  layer.style.backgroundImage = dataUrl ? `url("${dataUrl}")` : ''
+  layer.style.backgroundSize = `${tileWidth}px ${tileHeight}px`
+  layer.style.backgroundPosition = `${offsetValue[0]}px ${offsetValue[1]}px`
+}
+
+function paintText(context, lines, markWidth, markHeight, color, size) {
+  context.fillStyle = color
+  context.font = `${size}px sans-serif`
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
+  const lineHeight = size * 1.3
+  const start = markHeight / 2 - ((lines.length - 1) * lineHeight) / 2
+  lines.forEach((line, index) => {
+    context.fillText(line, markWidth / 2, start + index * lineHeight, markWidth)
+  })
+}
+
+function paintWatermark(root, values) {
+  const markWidth = numberOf(values.width, 120, 1)
+  const markHeight = numberOf(values.height, 64, 1)
+  const gap = pairOf(values.gap, [100, 100])
+  const offset = pairOf(values.offset, [0, 0])
+  const tileWidth = markWidth + gap[0]
+  const tileHeight = markHeight + gap[1]
+  const ratio = Math.max(1, window.devicePixelRatio || 1)
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.ceil(tileWidth * ratio)
+  canvas.height = Math.ceil(tileHeight * ratio)
+  const context = canvas.getContext('2d')
+  if (!context) return
+  context.scale(ratio, ratio)
+  context.save()
+  context.translate(markWidth / 2, markHeight / 2)
+  context.rotate((numberOf(values.rotate, -22, -360) * Math.PI) / 180)
+  context.translate(-markWidth / 2, -markHeight / 2)
+  const imageSrc = String(read(values.image) || '')
+  const finish = () => {
+    context.restore()
+    try {
+      applyLayer(root, canvas.toDataURL('image/png'), tileWidth, tileHeight, offset)
+    } catch {
+      applyLayer(root, '', tileWidth, tileHeight, offset)
+    }
+  }
+  if (!imageSrc) {
+    paintText(
+      context,
+      linesOf(values.content),
+      markWidth,
+      markHeight,
+      String(read(values.fontColor) || 'rgba(0,0,24,0.12)'),
+      numberOf(values.fontSize, 16, 1),
+    )
+    finish()
+    return
+  }
+  const token = Symbol('watermark')
+  root.juiWatermarkToken = token
+  const imageElement = new Image()
+  imageElement.crossOrigin = 'anonymous'
+  imageElement.onload = () => {
+    if (root.juiWatermarkToken !== token) return
+    const scale = Math.min(markWidth / imageElement.width, markHeight / imageElement.height)
+    const drawWidth = imageElement.width * scale
+    const drawHeight = imageElement.height * scale
+    context.drawImage(
+      imageElement,
+      (markWidth - drawWidth) / 2,
+      (markHeight - drawHeight) / 2,
+      drawWidth,
+      drawHeight,
+    )
+    finish()
+  }
+  imageElement.onerror = () => {
+    if (root.juiWatermarkToken === token) applyLayer(root, '', tileWidth, tileHeight, offset)
+  }
+  imageElement.src = imageSrc
+}
+
+function armWatermark(root, values) {
+  if (!root || root.juiWatermarkDispose) return
+  root.juiWatermarkDispose = effect(() => {
+    paintWatermark(root, values)
+    return () => {
+      root.juiWatermarkToken = null
+    }
+  })
+}
+
+export <view>
+  <div class="jui-watermark">
+    <img
+      class="jui-watermark__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armWatermark(event.currentTarget.closest('.jui-watermark'), {
+        content,
+        image,
+        rotate,
+        gap,
+        offset,
+        fontColor,
+        fontSize,
+        width,
+        height,
+      })}
+    />
+    <div class="jui-watermark__content">
+      <slot />
+    </div>
+    <div class="jui-watermark__layer" :style=${() => layerStyle(zIndex)} aria-hidden="true"></div>
+  </div>
+</view>
+
+export <style>
+.jui-watermark {
+  position: relative;
+}
+
+.jui-watermark__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-watermark__content {
+  position: relative;
+}
+
+.jui-watermark__layer {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+  pointer-events: none;
+}
+</style>

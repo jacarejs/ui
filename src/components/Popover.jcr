@@ -1,0 +1,231 @@
+import { canHoverTrigger, read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    title: { type: 'string', default: '' }
+    content: { type: 'string', default: '' }
+    placement: { type: 'string', default: 'bottom' }
+    trigger: { type: 'string', default: 'click' }
+    width: { type: 'number', default: 150 }
+    disabled: { type: 'boolean', default: false }
+  }
+  emits: ['show', 'hide']
+  slots: ['default']
+</contract>
+
+const PLACEMENTS = [
+  'top', 'top-start', 'top-end',
+  'bottom', 'bottom-start', 'bottom-end',
+  'left', 'left-start', 'left-end',
+  'right', 'right-start', 'right-end',
+]
+
+function placementOf(value) {
+  const next = String(read(value) || 'bottom')
+  return PLACEMENTS.includes(next) ? next : 'bottom'
+}
+
+function triggerOf(value) {
+  return read(value) === 'hover' ? 'hover' : 'click'
+}
+
+function panelStyle(value) {
+  const next = Number(read(value))
+  const width = Number.isFinite(next) ? Math.max(0, next) : 150
+  return `min-width:${width}px`
+}
+
+function closePopover(details) {
+  if (details?.open) details.removeAttribute('open')
+}
+
+function togglePopover(details) {
+  if (!details) return
+  if (details.open) details.removeAttribute('open')
+  else details.setAttribute('open', '')
+}
+
+function handleToggle(event, emitFn, triggerProp) {
+  const details = event.currentTarget
+  emitFn(details.open ? 'show' : 'hide')
+  details.outsideController?.abort()
+  if (!details.open) return
+  if (triggerOf(triggerProp) === 'hover' && canHoverTrigger()) return
+  const controller = new AbortController()
+  details.outsideController = controller
+  requestAnimationFrame(() => {
+    document.addEventListener('pointerdown', (pointerEvent) => {
+      if (!details.contains(pointerEvent.target)) closePopover(details)
+    }, { signal: controller.signal })
+  })
+}
+
+function handleSummaryClick(event, triggerProp, disabledProp) {
+  event.preventDefault()
+  if (read(disabledProp)) return
+  if (triggerOf(triggerProp) === 'hover' && canHoverTrigger()) return
+  togglePopover(event.currentTarget.closest('details'))
+}
+
+function handleEnter(event, triggerProp, disabledProp) {
+  if (triggerOf(triggerProp) !== 'hover' || !canHoverTrigger() || read(disabledProp)) return
+  event.currentTarget.querySelector('details')?.setAttribute('open', '')
+}
+
+function handleLeave(event, triggerProp) {
+  if (triggerOf(triggerProp) !== 'hover' || !canHoverTrigger()) return
+  closePopover(event.currentTarget.querySelector('details'))
+}
+
+export <view>
+  <div
+    class="jui-popover"
+    class-jui-popover--top=${() => placementOf(placement) === 'top'}
+    class-jui-popover--top-start=${() => placementOf(placement) === 'top-start'}
+    class-jui-popover--top-end=${() => placementOf(placement) === 'top-end'}
+    class-jui-popover--bottom=${() => placementOf(placement) === 'bottom'}
+    class-jui-popover--bottom-start=${() => placementOf(placement) === 'bottom-start'}
+    class-jui-popover--bottom-end=${() => placementOf(placement) === 'bottom-end'}
+    class-jui-popover--left=${() => placementOf(placement) === 'left'}
+    class-jui-popover--left-start=${() => placementOf(placement) === 'left-start'}
+    class-jui-popover--left-end=${() => placementOf(placement) === 'left-end'}
+    class-jui-popover--right=${() => placementOf(placement) === 'right'}
+    class-jui-popover--right-start=${() => placementOf(placement) === 'right-start'}
+    class-jui-popover--right-end=${() => placementOf(placement) === 'right-end'}
+    on-pointerenter=${(event) => handleEnter(event, trigger, disabled)}
+    on-pointerleave=${(event) => handleLeave(event, trigger)}
+  >
+    <details class="jui-popover__control" on-toggle=${(event) => handleToggle(event, emit, trigger)}>
+      <summary
+        class="jui-popover__trigger"
+        aria-disabled=${() => !!read(disabled)}
+        on-click=${(event) => handleSummaryClick(event, trigger, disabled)}
+      >
+        <slot />
+      </summary>
+      <section class="jui-popover__panel" :style=${() => panelStyle(width)}>
+        #if read(title)
+          <h3 class="jui-popover__title">${() => read(title)}</h3>
+        #end
+        #if read(content)
+          <p class="jui-popover__content">${() => read(content)}</p>
+        #end
+      </section>
+    </details>
+  </div>
+</view>
+
+export <style>
+.jui-popover {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  vertical-align: middle;
+}
+
+.jui-popover__control {
+  position: relative;
+  min-width: 0;
+}
+
+.jui-popover__trigger {
+  display: inline-flex;
+  align-items: center;
+  list-style: none;
+  cursor: pointer;
+}
+
+.jui-popover__trigger[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.jui-popover__trigger::-webkit-details-marker,
+.jui-popover__trigger::marker {
+  display: none;
+  content: '';
+}
+
+.jui-popover__panel {
+  position: absolute;
+  z-index: 60;
+  max-width: min(24rem, 85vw);
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  box-shadow: var(--j-shadow-sm);
+}
+
+.jui-popover__title {
+  margin: 0 0 0.4rem;
+  color: var(--j-forest);
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.jui-popover__content {
+  margin: 0;
+  color: var(--j-text);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.jui-popover--top .jui-popover__panel,
+.jui-popover--top-start .jui-popover__panel,
+.jui-popover--top-end .jui-popover__panel {
+  bottom: calc(100% + 0.45rem);
+}
+
+.jui-popover--bottom .jui-popover__panel,
+.jui-popover--bottom-start .jui-popover__panel,
+.jui-popover--bottom-end .jui-popover__panel {
+  top: calc(100% + 0.45rem);
+}
+
+.jui-popover--top .jui-popover__panel,
+.jui-popover--bottom .jui-popover__panel {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.jui-popover--top-start .jui-popover__panel,
+.jui-popover--bottom-start .jui-popover__panel {
+  left: 0;
+}
+
+.jui-popover--top-end .jui-popover__panel,
+.jui-popover--bottom-end .jui-popover__panel {
+  right: 0;
+}
+
+.jui-popover--left .jui-popover__panel,
+.jui-popover--left-start .jui-popover__panel,
+.jui-popover--left-end .jui-popover__panel {
+  right: calc(100% + 0.45rem);
+}
+
+.jui-popover--right .jui-popover__panel,
+.jui-popover--right-start .jui-popover__panel,
+.jui-popover--right-end .jui-popover__panel {
+  left: calc(100% + 0.45rem);
+}
+
+.jui-popover--left .jui-popover__panel,
+.jui-popover--right .jui-popover__panel {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.jui-popover--left-start .jui-popover__panel,
+.jui-popover--right-start .jui-popover__panel {
+  top: 0;
+}
+
+.jui-popover--left-end .jui-popover__panel,
+.jui-popover--right-end .jui-popover__panel {
+  bottom: 0;
+}
+</style>

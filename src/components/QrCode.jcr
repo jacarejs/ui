@@ -1,0 +1,201 @@
+import { effect } from '@jacare/core'
+import { paintQrCanvas } from '../internal/qrcode.js'
+import { read } from '../internal/utils.js'
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+const LEVELS = new Set(['L', 'M', 'Q', 'H'])
+
+export <contract>
+  props: {
+    value: { type: 'string', default: '' }
+    label: { type: 'string', default: '' }
+    size: { type: 'number', default: 180 }
+    level: { type: 'string', default: 'M' }
+    margin: { type: 'number', default: 2 }
+    darkColor: { type: 'string', default: '' }
+    lightColor: { type: 'string', default: '' }
+    alt: { type: 'string', default: '' }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+    downloadable: { type: 'boolean', default: false }
+    downloadLabel: { type: 'string', default: 'Download PNG' }
+  }
+  emits: ['ready']
+</contract>
+
+function textOf(value) {
+  return String(read(value) ?? '')
+}
+
+function sizeOf(value) {
+  const next = Math.round(Number(read(value)))
+  return Number.isFinite(next) && next >= 64 ? next : 180
+}
+
+function levelOf(value) {
+  const next = String(read(value) || 'M').toUpperCase()
+  return LEVELS.has(next) ? next : 'M'
+}
+
+function marginOf(value) {
+  const next = Math.round(Number(read(value)))
+  return Number.isFinite(next) && next >= 0 ? Math.min(8, next) : 2
+}
+
+function colorOf(value, fallback) {
+  const next = String(read(value) || '').trim()
+  return next || fallback
+}
+
+function altOf(altProp, valueProp, labelProp) {
+  const custom = String(read(altProp) || '').trim()
+  if (custom) return custom
+  const label = String(read(labelProp) || '').trim()
+  const text = textOf(valueProp)
+  if (label && text) return `${label}: ${text}`
+  if (text) return `QR code for ${text}`
+  return 'QR code'
+}
+
+function armQr(root, valueProp, sizeProp, levelProp, marginProp, darkProp, lightProp, emitFn) {
+  if (!root || root.__juiQrArmed) return
+  root.__juiQrArmed = true
+  const canvas = root.querySelector('canvas')
+  root.__juiQrDispose = effect(() => {
+    const dataUrl = paintQrCanvas(canvas, textOf(valueProp), {
+      size: sizeOf(sizeProp),
+      level: levelOf(levelProp),
+      margin: marginOf(marginProp),
+      darkColor: colorOf(darkProp, '#111827'),
+      lightColor: colorOf(lightProp, '#ffffff'),
+    })
+    root.__juiQrDataUrl = dataUrl
+    emitFn('ready', dataUrl)
+  })
+}
+
+function downloadPng(event) {
+  const root = event.currentTarget.closest('[data-jui-qrcode]')
+  const dataUrl = root?.__juiQrDataUrl
+  if (!dataUrl) return
+  const link = document.createElement('a')
+  link.href = dataUrl
+  link.download = 'qrcode.png'
+  link.click()
+}
+
+export <view>
+  <div
+    class="jui-qrcode"
+    class-has-error=${() => !!read(error)}
+    data-jui-qrcode
+    style=${() => `--jui-qr-size:${sizeOf(size)}px`}
+  >
+    <img
+      class="jui-qrcode__boot"
+      alt=""
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armQr(
+        event.currentTarget.closest('[data-jui-qrcode]'),
+        value,
+        size,
+        level,
+        margin,
+        darkColor,
+        lightColor,
+        emit,
+      )}
+    />
+
+    #if read(label)
+      <span class="jui-qrcode__label">${() => read(label)}</span>
+    #end
+
+    <canvas
+      class="jui-qrcode__canvas"
+      role="img"
+      aria-label=${() => altOf(alt, value, label)}
+    ></canvas>
+
+    #if read(downloadable)
+      <button type="button" class="jui-qrcode__download" on-click=${downloadPng}>
+        ${() => read(downloadLabel) || 'Download PNG'}
+      </button>
+    #end
+
+    #if read(error)
+      <span class="jui-qrcode__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-qrcode__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-qrcode {
+  display: inline-grid;
+  justify-items: start;
+  gap: 0.55rem;
+  min-width: 0;
+  color: var(--j-text);
+}
+
+.jui-qrcode__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-qrcode__label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest, var(--j-text));
+}
+
+.jui-qrcode__canvas {
+  display: block;
+  width: var(--jui-qr-size, 180px);
+  height: var(--jui-qr-size, 180px);
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: #fff;
+  image-rendering: pixelated;
+}
+
+.jui-qrcode.has-error .jui-qrcode__canvas {
+  border-color: var(--j-danger);
+}
+
+.jui-qrcode__download {
+  min-height: var(--j-touch-target, 2.75rem);
+  padding: 0 0.95rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+  color: var(--j-primary);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.jui-qrcode__download:hover {
+  border-color: color-mix(in srgb, var(--j-primary) 45%, var(--j-border));
+}
+
+.jui-qrcode__hint,
+.jui-qrcode__error {
+  font-size: 0.8rem;
+}
+
+.jui-qrcode__hint {
+  color: var(--j-muted);
+}
+
+.jui-qrcode__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

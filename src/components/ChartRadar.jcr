@@ -1,0 +1,106 @@
+import ChartFrame from './ChartFrame.jcr'
+import ChartPlot from './ChartPlot.jcr'
+import { read } from '../internal/utils.js'
+import {
+  chartLayoutWidth,
+  escapeXml,
+  formatNumber,
+  linePath,
+  polarPoint,
+  radarModel,
+  resolveChartWidth,
+  sizeOf,
+} from '../internal/charts.js'
+
+export <contract>
+  props: {
+    data: { type: 'any', required: true }
+    title: { type: 'string', default: '' }
+    caption: { type: 'string', default: '' }
+    width: { type: 'number', default: 380 }
+    height: { type: 'number', default: 320 }
+    colors: { type: 'any', default: null }
+    showLegend: { type: 'boolean', default: true }
+    filled: { type: 'boolean', default: true }
+  }
+  emits: ['layout']
+</contract>
+
+function model(dataProp, colorsProp, widthProp, heightProp) {
+  const { width, height } = sizeOf(widthProp, heightProp, 380, 320)
+  const { axes, series } = radarModel(dataProp, colorsProp)
+  const cx = width / 2
+  const cy = height / 2 + 8
+  const radius = Math.min(width, height) * 0.34
+  const max = Math.max(1, ...series.flatMap((serie) => serie.data))
+  const levels = [0.25, 0.5, 0.75, 1].map((level) => {
+    const points = axes.map((_, index) => {
+      const angle = -Math.PI / 2 + (index / Math.max(axes.length, 1)) * Math.PI * 2
+      return polarPoint(cx, cy, radius * level, angle)
+    })
+    return { key: String(level), path: `${linePath(points)} Z` }
+  })
+  const axisLines = axes.map((label, index) => {
+    const angle = -Math.PI / 2 + (index / Math.max(axes.length, 1)) * Math.PI * 2
+    const end = polarPoint(cx, cy, radius, angle)
+    const text = polarPoint(cx, cy, radius + 18, angle)
+    return { key: label, label, x1: cx, y1: cy, x2: end.x, y2: end.y, tx: text.x, ty: text.y }
+  })
+  const polygons = series.map((serie) => {
+    const points = axes.map((_, index) => {
+      const angle = -Math.PI / 2 + (index / Math.max(axes.length, 1)) * Math.PI * 2
+      const value = serie.data[index] ?? 0
+      return polarPoint(cx, cy, radius * (value / max), angle)
+    })
+    return {
+      ...serie,
+      path: `${linePath(points)} Z`,
+      points,
+    }
+  })
+  return { width, height, levels, axisLines, polygons, legend: series, max }
+}
+
+function plotContent(dataProp, colorsProp, widthProp, heightProp, filledProp) {
+  const next = model(dataProp, colorsProp, widthProp, heightProp)
+  const isFilled = !!read(filledProp)
+  const parts = []
+  for (const level of next.levels) {
+    parts.push(
+      `<path d="${escapeXml(level.path)}" fill="none" stroke="color-mix(in srgb, var(--j-border) 80%, transparent)" />`,
+    )
+  }
+  for (const axis of next.axisLines) {
+    parts.push(
+      `<line x1="${axis.x1}" y1="${axis.y1}" x2="${axis.x2}" y2="${axis.y2}" stroke="color-mix(in srgb, var(--j-border) 80%, transparent)" stroke-width="1" />`,
+    )
+    parts.push(
+      `<text x="${axis.tx}" y="${axis.ty}" text-anchor="middle" dominant-baseline="middle" fill="var(--j-muted)" font-size="11">${escapeXml(axis.label)}</text>`,
+    )
+  }
+  for (const poly of next.polygons) {
+    parts.push(
+      `<path d="${escapeXml(poly.path)}" fill="${escapeXml(poly.color)}" fill-opacity="${isFilled ? 0.22 : 0}" stroke="${escapeXml(poly.color)}" stroke-width="2" />`,
+    )
+  }
+  return parts.join('')
+}
+
+export <view>
+  <ChartFrame
+    :title=${title}
+    :caption=${caption}
+    :width=${() => resolveChartWidth(width, emit)}
+    :height=${height}
+    :legend=${() =>
+      read(showLegend) ? model(data, colors, resolveChartWidth(width, emit), height).legend : []}
+  >
+    <ChartPlot
+      bind-layoutWidth=${chartLayoutWidth(emit)}
+      :width=${() => resolveChartWidth(width, emit)}
+      :height=${() => model(data, colors, resolveChartWidth(width, emit), height).height}
+      :label=${() => read(title) || 'Radar chart'}
+      :content=${() => plotContent(data, colors, resolveChartWidth(width, emit), height, filled)}
+    />
+  </ChartFrame>
+</view>

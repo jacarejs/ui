@@ -1,0 +1,89 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    height: { type: 'string', default: '' }
+    maxHeight: { type: 'string', default: '' }
+    native: { type: 'boolean', default: false }
+    always: { type: 'boolean', default: false }
+  }
+  slots: ['default']
+  emits: ['scroll']
+</contract>
+
+function dimOf(value) {
+  const next = String(read(value) || '')
+  return next || undefined
+}
+
+function handleScroll(event, emitFn) {
+  const node = event.currentTarget
+  emitFn('scroll', {
+    scrollTop: node.scrollTop,
+    scrollLeft: node.scrollLeft,
+  })
+}
+
+export <view>
+  <div
+    class="jui-scrollbar"
+    class-jui-scrollbar--native=${() => !!read(native)}
+    class-jui-scrollbar--always=${() => !!read(always)}
+    style---jui-scrollbar-height=${() => dimOf(height)}
+    style---jui-scrollbar-max-height=${() => dimOf(maxHeight)}
+    on-scroll=${(event) => handleScroll(event, emit)}
+  >
+    <div class="jui-scrollbar__view">
+      <slot />
+    </div>
+  </div>
+</view>
+
+export <style>
+.jui-scrollbar {
+  --jui-scrollbar-height: auto;
+  --jui-scrollbar-max-height: none;
+  box-sizing: border-box;
+  height: var(--jui-scrollbar-height);
+  max-height: var(--jui-scrollbar-max-height);
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.jui-scrollbar--always {
+  overflow: scroll;
+}
+
+.jui-scrollbar__view {
+  min-width: 0;
+  min-height: 0;
+}
+
+.jui-scrollbar__view > span {
+  display: contents;
+}
+
+.jui-scrollbar:not(.jui-scrollbar--native) {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--j-muted) 55%, transparent) transparent;
+}
+
+.jui-scrollbar:not(.jui-scrollbar--native)::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.jui-scrollbar:not(.jui-scrollbar--native)::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.jui-scrollbar:not(.jui-scrollbar--native)::-webkit-scrollbar-thumb {
+  border-radius: var(--j-radius-pill);
+  background: color-mix(in srgb, var(--j-muted) 45%, transparent);
+}
+
+.jui-scrollbar:not(.jui-scrollbar--native)::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--j-muted) 70%, transparent);
+}
+</style>

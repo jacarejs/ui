@@ -1,0 +1,124 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    active: { type: 'number', default: 0, model: true }
+    direction: { type: 'string', default: 'horizontal' }
+    finishStatus: { type: 'string', default: 'finish' }
+    processStatus: { type: 'string', default: 'process' }
+    alignCenter: { type: 'boolean', default: false }
+    simple: { type: 'boolean', default: false }
+  }
+  slots: ['default']
+  emits: ['change']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function readyState(emitFn) {
+  if (!emitFn.__juiStepsReady) emitFn.__juiStepsReady = pulse(0)
+  return emitFn.__juiStepsReady
+}
+
+function resolveModel(modelProp, emitFn) {
+  if (modelProp && typeof modelProp.set === 'function') return modelProp
+  if (!emitFn.__juiStepsModel) {
+    emitFn.__juiStepsModel = pulse(Number(read(modelProp)) || 0)
+  }
+  return emitFn.__juiStepsModel
+}
+
+function directionOf(value) {
+  return read(value) === 'vertical' ? 'vertical' : 'horizontal'
+}
+
+function statusOf(value, fallback) {
+  const next = String(read(value) || fallback)
+  if (next === 'wait' || next === 'process' || next === 'finish' || next === 'success' || next === 'error') {
+    return next
+  }
+  return fallback
+}
+
+function bindSteps(emitFn, model, finishProp, processProp) {
+  read(readyState(emitFn))
+  const root = emitFn.__juiStepsRoot
+  const resolved = resolveModel(model, emitFn)
+  if (root) {
+    root.stepsModel = resolved
+    root.stepsFinishStatus = statusOf(finishProp, 'finish')
+    root.stepsProcessStatus = statusOf(processProp, 'process')
+    root.stepsEmit = emitFn
+    root.stepsReady = readyState(emitFn)
+  }
+  read(resolved)
+  read(finishProp)
+  read(processProp)
+  return ''
+}
+
+function armSteps(root, emitFn) {
+  if (!root) return
+  emitFn.__juiStepsRoot = root
+  const ready = readyState(emitFn)
+  ready.set(read(ready) + 1)
+}
+
+export <view>
+  <div
+    class="jui-steps"
+    class-jui-steps--horizontal=${() => directionOf(direction) === 'horizontal'}
+    class-jui-steps--vertical=${() => directionOf(direction) === 'vertical'}
+    class-jui-steps--align-center=${() => !!read(alignCenter)}
+    class-jui-steps--simple=${() => !!read(simple)}
+  >
+    <img
+      class="jui-steps__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armSteps(event.currentTarget.closest('.jui-steps'), emit)}
+    />
+    <span class="jui-steps__bind" aria-hidden="true">
+      ${() => bindSteps(emit, active, finishStatus, processStatus)}
+    </span>
+    <slot />
+  </div>
+</view>
+
+export <style>
+.jui-steps {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+}
+
+.jui-steps--vertical {
+  flex-direction: column;
+}
+
+.jui-steps--simple {
+  padding: 0.8rem 1rem;
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+}
+
+.jui-steps__boot,
+.jui-steps__bind {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-steps > span,
+.jui-steps > span > [data-jacare-s] {
+  display: contents;
+}
+</style>

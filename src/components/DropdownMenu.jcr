@@ -1,0 +1,22 @@
+export <contract>
+  slots: ['default']
+</contract>
+
+export <view>
+  <ul class="jui-dropdown-menu" role="menu">
+    <slot />
+  </ul>
+</view>
+
+export <style>
+.jui-dropdown-menu {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+
+.jui-dropdown-menu > span {
+  display: contents;
+}
+</style>

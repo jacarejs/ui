@@ -1,0 +1,139 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    href: { type: 'string', default: '' }
+    title: { type: 'string', default: '' }
+    level: { type: 'number', default: 1 }
+  }
+  slots: ['default']
+</contract>
+
+function levelOf(value) {
+  const next = Math.round(Number(read(value)))
+  if (!Number.isFinite(next)) return 1
+  return Math.max(1, Math.min(4, next))
+}
+
+function hrefOf(value) {
+  return String(read(value) || '')
+}
+
+function targetId(hrefProp) {
+  const href = hrefOf(hrefProp)
+  if (!href.startsWith('#')) return ''
+  return href.slice(1)
+}
+
+function offsetFrom(linkEl) {
+  const parent = linkEl?.closest?.('.jui-anchor')
+  if (!parent) return 0
+  const fromProp = Number(read(parent.anchorOffset))
+  if (Number.isFinite(fromProp)) return fromProp
+  return Number.parseFloat(getComputedStyle(parent).getPropertyValue('--jui-anchor-offset')) || 0
+}
+
+function overflowYOf(node) {
+  const style = getComputedStyle(node)
+  return style.overflowY || style.overflow || node.style?.overflowY || node.style?.overflow || ''
+}
+
+function scrollParentOf(el) {
+  let node = el?.parentElement
+  while (node && node !== document.body && node !== document.documentElement) {
+    const oy = overflowYOf(node)
+    if ((oy === 'auto' || oy === 'scroll' || oy === 'overlay') && node.scrollHeight > node.clientHeight + 1) {
+      return node
+    }
+    node = node.parentElement
+  }
+  return window
+}
+
+function scrollToTarget(event, hrefProp) {
+  event.preventDefault()
+  const id = targetId(hrefProp)
+  if (!id) return
+  const target = document.getElementById(id)
+  if (!target) return
+  const link = event.currentTarget
+  const offset = offsetFrom(link)
+  const href = hrefOf(hrefProp)
+  const scroller = scrollParentOf(target)
+  if (scroller === window) {
+    const top = target.getBoundingClientRect().top + window.scrollY - offset
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+  } else {
+    const top =
+      target.getBoundingClientRect().top -
+      scroller.getBoundingClientRect().top +
+      scroller.scrollTop -
+      offset
+    scroller.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+  }
+  const anchor = link.closest('.jui-anchor')
+  if (typeof anchor?.juiAnchorSetActive === 'function') {
+    anchor.juiAnchorSetActive(href, true)
+  }
+}
+
+export <view>
+  <a
+    class="jui-anchor-link"
+    class-jui-anchor-link--nested=${() => levelOf(level) > 1}
+    href=${() => hrefOf(href) || undefined}
+    style=${() => `--jui-anchor-level:${levelOf(level)}`}
+    on-click=${(event) => scrollToTarget(event, href)}
+  >
+    <span class="jui-anchor-link__title">
+      #if read(title)
+        <span>${title}</span>
+      #else
+        <slot />
+      #end
+    </span>
+  </a>
+</view>
+
+export <style>
+.jui-anchor-link {
+  --jui-anchor-level: 1;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0.35rem 0.55rem;
+  padding-left: calc(0.55rem + (var(--jui-anchor-level) - 1) * 0.85rem);
+  border-radius: var(--j-radius-sm);
+  color: var(--j-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    color var(--j-duration-fast) var(--j-ease-out),
+    background var(--j-duration-fast) var(--j-ease-out);
+}
+
+.jui-anchor-link--nested {
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.jui-anchor-link:hover {
+  color: var(--j-primary);
+  background: color-mix(in srgb, var(--j-primary) 8%, transparent);
+}
+
+.jui-anchor-link.is-active {
+  color: var(--j-primary);
+  background: color-mix(in srgb, var(--j-primary) 12%, transparent);
+}
+
+.jui-anchor-link:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-anchor-link__title {
+  min-width: 0;
+}
+</style>

@@ -1,0 +1,243 @@
+import { read } from '../internal/utils.js'
+import { applyMask, resolveMask, unmaskValue } from '../internal/mask.js'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'string', default: '', model: true }
+    mask: { type: 'string', default: '' }
+    preset: { type: 'string', default: '' }
+    placeholder: { type: 'string', default: '' }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+    required: { type: 'boolean', default: false }
+    clearable: { type: 'boolean', default: false }
+    unmask: { type: 'boolean', default: false }
+    size: { type: 'string', default: 'md' }
+    name: { type: 'string', default: '' }
+    autocomplete: { type: 'string', default: '' }
+  }
+  slots: ['prefix', 'suffix']
+  emits: ['change', 'clear']
+</contract>
+
+function sizeClass(value) {
+  const next = read(value)
+  if (next === 'sm' || next === 'lg') return next
+  return 'md'
+}
+
+function patternOf(maskProp, presetProp) {
+  return resolveMask(read(maskProp), read(presetProp))
+}
+
+function displayOf(model, maskProp, presetProp, unmaskProp) {
+  const pattern = patternOf(maskProp, presetProp)
+  const current = String(read(model) ?? '')
+  if (!pattern) return current
+  if (read(unmaskProp)) return applyMask(current, pattern)
+  return applyMask(current, pattern)
+}
+
+function commit(model, nextRawOrMasked, maskProp, presetProp, unmaskProp, emitFn) {
+  const pattern = patternOf(maskProp, presetProp)
+  const masked = applyMask(nextRawOrMasked, pattern)
+  const next = read(unmaskProp) ? unmaskValue(masked, pattern) : masked
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function clearValue(model, emitFn) {
+  if (model && typeof model.set === 'function') model.set('')
+  emitFn('change', '')
+  emitFn('clear')
+}
+
+function onInput(event, model, maskProp, presetProp, unmaskProp, emitFn) {
+  commit(model, event.target.value, maskProp, presetProp, unmaskProp, emitFn)
+  event.target.value = displayOf(model, maskProp, presetProp, unmaskProp)
+}
+
+function inputModeOf(maskProp, presetProp) {
+  const pattern = patternOf(maskProp, presetProp)
+  if (!pattern) return 'text'
+  const tokens = [...pattern].filter((char) => char === '#' || char === 'A' || char === '*')
+  if (tokens.length && tokens.every((token) => token === '#')) return 'numeric'
+  return 'text'
+}
+
+export <view>
+  <label
+    class="jui-input-mask"
+    class-jui-input-mask--sm=${() => sizeClass(size) === 'sm'}
+    class-jui-input-mask--lg=${() => sizeClass(size) === 'lg'}
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
+  >
+    #if read(label)
+      <span class="jui-input-mask__label">
+        ${() => read(label)}
+        #if read(required)
+          <span class="jui-input-mask__req" aria-hidden="true">*</span>
+        #end
+      </span>
+    #end
+
+    <span class="jui-input-mask__control">
+      <span class="jui-input-mask__prefix"><slot name="prefix" /></span>
+      <input
+        class="jui-input-mask__field"
+        type="text"
+        inputmode=${() => inputModeOf(mask, preset)}
+        name=${() => read(name) || ''}
+        autocomplete=${() => read(autocomplete) || ''}
+        placeholder=${() => read(placeholder) || patternOf(mask, preset) || ''}
+        disabled=${() => !!read(disabled)}
+        required=${() => !!read(required)}
+        aria-invalid=${() => !!read(error)}
+        value=${() => displayOf(value, mask, preset, unmask)}
+        on-input=${(event) => onInput(event, value, mask, preset, unmask, emit)}
+      />
+      #if read(clearable) && !read(disabled) && read(value)
+        <button type="button" class="jui-input-mask__clear" aria-label="Clear" on-click=${() => clearValue(value, emit)}>×</button>
+      #end
+      <span class="jui-input-mask__suffix"><slot name="suffix" /></span>
+    </span>
+
+    #if read(error)
+      <span class="jui-input-mask__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-input-mask__hint">${() => read(hint)}</span>
+    #end
+  </label>
+</view>
+
+export <style>
+.jui-input-mask {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-input-mask__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-text);
+}
+
+.jui-input-mask__req {
+  color: var(--j-danger);
+}
+
+.jui-input-mask__control {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-height: calc(var(--j-control-height, 2.5rem) + 0.25rem);
+  min-height: max(var(--j-touch-target-sm, 2.5rem), calc(var(--j-control-height, 2.5rem) + 0.25rem));
+  padding: 0 calc(var(--j-control-padding-x, 1.15rem) * 0.75);
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-input-mask--sm .jui-input-mask__control {
+  min-height: 2.1rem;
+  padding: 0 0.65rem;
+}
+
+.jui-input-mask--lg .jui-input-mask__control {
+  min-height: 3.1rem;
+  padding: 0 1rem;
+}
+
+.jui-input-mask__control:focus-within {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-input-mask__field {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  padding: 0.6rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--j-text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+
+.jui-input-mask--sm .jui-input-mask__field {
+  font-size: 0.875rem;
+}
+
+.jui-input-mask--lg .jui-input-mask__field {
+  font-size: 1.05rem;
+}
+
+.jui-input-mask__field::placeholder {
+  color: color-mix(in srgb, var(--j-muted) 75%, white);
+}
+
+.jui-input-mask__prefix:empty,
+.jui-input-mask__suffix:empty {
+  display: none;
+}
+
+.jui-input-mask__prefix,
+.jui-input-mask__suffix {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  color: var(--j-muted);
+}
+
+.jui-input-mask__clear {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--j-muted);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.jui-input-mask__clear:hover {
+  color: var(--j-danger);
+}
+
+.jui-input-mask.has-error .jui-input-mask__control {
+  border-color: var(--j-danger);
+}
+
+.jui-input-mask.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-input-mask__hint,
+.jui-input-mask__error {
+  font-size: 0.8rem;
+}
+
+.jui-input-mask__hint {
+  color: var(--j-muted);
+}
+
+.jui-input-mask__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

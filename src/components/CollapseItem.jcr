@@ -1,0 +1,186 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    name: { type: 'string', required: true }
+    title: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+  }
+  slots: ['default']
+  emits: ['toggle']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function readyState(emitFn) {
+  if (!emitFn.__juiItemReady) emitFn.__juiItemReady = pulse(0)
+  return emitFn.__juiItemReady
+}
+
+function activeNames(model) {
+  const current = read(model)
+  if (Array.isArray(current)) return current.map(String)
+  if (current === undefined || current === null || current === '') return []
+  return [String(current)]
+}
+
+function isOpen(nameProp, emitFn) {
+  read(readyState(emitFn))
+  const root = emitFn.__juiItemRoot
+  if (!root) return false
+  const parent = root.closest('.jui-collapse')
+  if (parent?.collapseReady) read(parent.collapseReady)
+  const model = parent?.collapseModel
+  if (!model) return false
+  return activeNames(model).includes(String(read(nameProp)))
+}
+
+function commit(model, next, accordionProp, emitFn) {
+  const value = read(accordionProp) ? (next[0] ?? '') : next
+  if (model && typeof model.set === 'function') model.set(value)
+  if (emitFn) emitFn('change', value)
+}
+
+function toggleItem(root, nameProp, disabledProp) {
+  if (read(disabledProp)) return
+  const parent = root?.closest?.('.jui-collapse')
+  if (!parent?.collapseModel) return
+  const model = parent.collapseModel
+  const accordionProp = parent.collapseAccordion
+  const parentEmit = parent.collapseEmit
+  const name = String(read(nameProp))
+  const current = activeNames(model)
+  let next
+  if (read(accordionProp)) {
+    next = current.includes(name) ? [] : [name]
+  } else if (current.includes(name)) {
+    next = current.filter((item) => item !== name)
+  } else {
+    next = [...current, name]
+  }
+  commit(model, next, accordionProp, parentEmit)
+}
+
+function armItem(root, emitFn) {
+  if (!root) return
+  emitFn.__juiItemRoot = root
+  const ready = readyState(emitFn)
+  ready.set(read(ready) + 1)
+}
+
+function headingOf(titleProp, nameProp) {
+  const title = String(read(titleProp) || '').trim()
+  if (title) return title
+  return String(read(nameProp) || '')
+}
+
+export <view>
+  <div
+    class="jui-collapse-item"
+    class-is-open=${() => isOpen(name, emit)}
+    class-is-disabled=${() => !!read(disabled)}
+  >
+    <img
+      class="jui-collapse-item__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armItem(event.currentTarget.closest('.jui-collapse-item'), emit)}
+    />
+    <button
+      type="button"
+      class="jui-collapse-item__header"
+      aria-expanded=${() => (isOpen(name, emit) ? 'true' : 'false')}
+      disabled=${() => !!read(disabled)}
+      on-click=${(event) => {
+        const root = event.currentTarget.closest('.jui-collapse-item')
+        toggleItem(root, name, disabled)
+        emit('toggle', String(read(name)), isOpen(name, emit))
+      }}
+    >
+      <span class="jui-collapse-item__title">${() => headingOf(title, name)}</span>
+      <span class="jui-collapse-item__arrow" aria-hidden="true">›</span>
+    </button>
+    #if isOpen(name, emit)
+      <div class="jui-collapse-item__body">
+        <slot />
+      </div>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-collapse-item {
+  position: relative;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  overflow: hidden;
+}
+
+.jui-collapse-item__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-collapse-item.is-disabled {
+  opacity: 0.6;
+}
+
+.jui-collapse-item__header {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.7rem 0.95rem;
+  border: 0;
+  background: transparent;
+  color: var(--j-forest);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.jui-collapse-item__header:disabled {
+  cursor: not-allowed;
+}
+
+.jui-collapse-item__header:focus-visible {
+  outline: none;
+  box-shadow: inset var(--j-focus);
+}
+
+.jui-collapse-item__arrow {
+  display: inline-grid;
+  place-items: center;
+  width: 1.25rem;
+  color: var(--j-muted);
+  font-size: 1.2rem;
+  transform: rotate(90deg);
+  transition: transform var(--j-duration-fast) var(--j-ease-out);
+}
+
+.jui-collapse-item.is-open .jui-collapse-item__arrow {
+  transform: rotate(-90deg);
+}
+
+.jui-collapse-item__body {
+  padding: 0 0.95rem 0.95rem;
+  color: var(--j-text);
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-collapse-item__arrow { transition: none; }
+}
+</style>

@@ -1,0 +1,361 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    value: { type: 'object', default: null }
+    collapsible: { type: 'boolean', default: true }
+    selectionMode: { type: 'string', default: '' }
+    selection: { type: 'object', default: [], model: true }
+  }
+  emits: ['change']
+</contract>
+
+function normalizeNode(node) {
+  const key = String(node?.key ?? node?.id ?? node?.value ?? '')
+  return {
+    key,
+    label: node?.label ?? key,
+    description: node?.description ?? '',
+    children: Array.isArray(node?.children) ? node.children.map(normalizeNode) : [],
+  }
+}
+
+function normalizeRoot(source) {
+  const root = read(source)
+  if (!root || typeof root !== 'object') return null
+  return normalizeNode(root)
+}
+
+function allKeys(node) {
+  const keys = node.key ? [node.key] : []
+  node.children.forEach((child) => keys.push(...allKeys(child)))
+  return keys
+}
+
+function expandedState(emitFn, source) {
+  if (!emitFn.__juiOrgChartExpanded) {
+    const root = normalizeRoot(source)
+    const initial = root ? new Set(allKeys(root)) : new Set()
+    emitFn.__juiOrgChartExpanded = pulse(initial)
+  }
+  return emitFn.__juiOrgChartExpanded
+}
+
+function isExpanded(key, emitFn, source, collapsibleProp) {
+  if (!read(collapsibleProp)) return true
+  return read(expandedState(emitFn, source)).has(String(key))
+}
+
+function toggleExpanded(key, emitFn, source) {
+  const expanded = expandedState(emitFn, source)
+  const next = new Set(read(expanded))
+  const current = String(key)
+  if (next.has(current)) next.delete(current)
+  else next.add(current)
+  expanded.set(next)
+}
+
+function selectionModeOf(value) {
+  const next = String(read(value) || '')
+  if (next === 'single' || next === 'multiple') return next
+  return ''
+}
+
+function selectedKeys(model) {
+  const current = read(model)
+  return Array.isArray(current) ? current.map(String) : []
+}
+
+function isSelected(key, model) {
+  return selectedKeys(model).includes(String(key))
+}
+
+function commitSelection(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function toggleSelection(key, model, modeProp, emitFn) {
+  const mode = selectionModeOf(modeProp)
+  if (!mode) return
+  const current = String(key)
+  if (mode === 'single') {
+    commitSelection(model, isSelected(current, model) ? [] : [current], emitFn)
+    return
+  }
+  const next = new Set(selectedKeys(model))
+  if (next.has(current)) next.delete(current)
+  else next.add(current)
+  commitSelection(model, Array.from(next), emitFn)
+}
+
+function buildLevels(source, emitFn, collapsibleProp) {
+  const root = normalizeRoot(source)
+  if (!root) return []
+  const levels = []
+  let current = [root]
+  while (current.length) {
+    levels.push(current)
+    const next = []
+    current.forEach((node) => {
+      if (node.children.length && isExpanded(node.key, emitFn, source, collapsibleProp)) {
+        next.push(...node.children)
+      }
+    })
+    current = next
+  }
+  return levels.map((nodes, index) => ({
+    key: nodes.map((node) => node.key).join('|') || `level-${index}`,
+    nodes,
+  }))
+}
+
+function hasChildren(node) {
+  return node.children.length > 0
+}
+
+function nodeExpanded(node, emitFn, source, collapsibleProp) {
+  return hasChildren(node) && isExpanded(node.key, emitFn, source, collapsibleProp)
+}
+
+export <view>
+  <div class="jui-org-chart" role="tree">
+    #if normalizeRoot(value)
+      #for buildLevels(value, emit, collapsible) as level (level.key)
+        <div class="jui-org-chart__level">
+          #for level.nodes as node (node.key)
+            <div
+              class="jui-org-chart__branch"
+              class-has-children=${() => hasChildren(node)}
+              class-is-expanded=${() => nodeExpanded(node, emit, value, collapsible)}
+            >
+              <div
+                class="jui-org-chart__node"
+                role="treeitem"
+                class-is-selected=${() => isSelected(node.key, selection)}
+                class-is-expanded=${() => nodeExpanded(node, emit, value, collapsible)}
+                aria-expanded=${() => (hasChildren(node) ? nodeExpanded(node, emit, value, collapsible) : undefined)}
+                aria-selected=${() => (selectionModeOf(selectionMode) ? isSelected(node.key, selection) : undefined)}
+              >
+                #if read(collapsible) && hasChildren(node)
+                  <button
+                    type="button"
+                    class="jui-org-chart__toggle"
+                    aria-label=${() => (nodeExpanded(node, emit, value, collapsible) ? 'Collapse branch' : 'Expand branch')}
+                    on-click=${() => toggleExpanded(node.key, emit, value)}
+                  >
+                    <span
+                      class="jui-org-chart__toggle-icon"
+                      class-is-open=${() => nodeExpanded(node, emit, value, collapsible)}
+                      aria-hidden="true"
+                    ></span>
+                  </button>
+                #end
+                <button
+                  type="button"
+                  class="jui-org-chart__card"
+                  disabled=${() => !selectionModeOf(selectionMode)}
+                  on-click=${() => toggleSelection(node.key, selection, selectionMode, emit)}
+                >
+                  <span class="jui-org-chart__label">${node.label}</span>
+                  #if node.description
+                    <span class="jui-org-chart__description">${node.description}</span>
+                  #end
+                </button>
+              </div>
+            </div>
+          #end
+        </div>
+      #end
+    #else
+      <div class="jui-org-chart__empty">No data</div>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-org-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0.5rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  color: var(--j-text);
+}
+
+.jui-org-chart__level {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  width: max-content;
+  min-width: 100%;
+  padding: 0 0.5rem;
+}
+
+.jui-org-chart__level:not(:first-child) {
+  padding-top: 1.75rem;
+}
+
+.jui-org-chart__branch {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 8.5rem;
+}
+
+.jui-org-chart__branch::before {
+  content: '';
+  position: absolute;
+  top: -1.75rem;
+  left: 50%;
+  width: 2px;
+  height: 1.75rem;
+  background: var(--j-border);
+  transform: translateX(-50%);
+}
+
+.jui-org-chart__level:first-child .jui-org-chart__branch::before {
+  display: none;
+}
+
+.jui-org-chart__branch.has-children.is-expanded::after {
+  content: '';
+  display: block;
+  width: 2px;
+  height: 1.25rem;
+  margin-top: 0.35rem;
+  background: var(--j-border);
+}
+
+.jui-org-chart__level:not(:first-child)::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(to right, transparent 0, var(--j-border) 8%, var(--j-border) 92%, transparent 100%);
+  pointer-events: none;
+}
+
+.jui-org-chart__level {
+  position: relative;
+}
+
+.jui-org-chart__node {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.jui-org-chart__toggle {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.jui-org-chart__toggle:hover {
+  background: color-mix(in srgb, var(--j-muted) 12%, transparent);
+}
+
+.jui-org-chart__toggle:focus-visible,
+.jui-org-chart__card:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-org-chart__toggle-icon {
+  width: 0;
+  height: 0;
+  border-top: 0.28rem solid transparent;
+  border-bottom: 0.28rem solid transparent;
+  border-left: 0.38rem solid var(--j-muted);
+  transform: rotate(0deg);
+  transition: transform var(--j-duration-fast) var(--j-ease-out);
+}
+
+.jui-org-chart__toggle-icon.is-open {
+  transform: rotate(90deg);
+}
+
+.jui-org-chart__card {
+  appearance: none;
+  display: grid;
+  gap: 0.2rem;
+  width: 100%;
+  min-width: 8.5rem;
+  max-width: 12rem;
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  cursor: default;
+  box-shadow: var(--j-shadow-sm);
+}
+
+.jui-org-chart__node.is-selected .jui-org-chart__card {
+  border-color: var(--j-primary);
+  background: color-mix(in srgb, var(--j-primary) 10%, var(--j-surface-2));
+  color: var(--j-primary);
+}
+
+.jui-org-chart__card:not(:disabled) {
+  cursor: pointer;
+}
+
+.jui-org-chart__card:not(:disabled):hover {
+  border-color: color-mix(in srgb, var(--j-primary) 45%, var(--j-border));
+}
+
+.jui-org-chart__card:disabled {
+  cursor: default;
+}
+
+.jui-org-chart__label {
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.jui-org-chart__description {
+  color: var(--j-muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.jui-org-chart__empty {
+  padding: 1rem;
+  color: var(--j-muted);
+  font-size: 0.9rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-org-chart__toggle-icon { transition: none; }
+}
+</style>

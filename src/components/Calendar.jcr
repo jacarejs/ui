@@ -1,0 +1,696 @@
+import { effect, pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    value: { type: 'any', model: true }
+    multiple: { type: 'boolean', default: false }
+    range: { type: 'boolean', default: false }
+    markers: { type: 'object', default: [] }
+    tooltips: { type: 'boolean', default: true }
+    min: { type: 'string', default: '' }
+    max: { type: 'string', default: '' }
+    clearable: { type: 'boolean', default: true }
+  }
+  emits: ['change']
+</contract>
+
+const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+const DOT_COLORS = {
+  primary: 'var(--j-primary)',
+  success: 'var(--j-success, #16a34a)',
+  warn: 'var(--j-warn, #d97706)',
+  danger: 'var(--j-danger)',
+  info: 'var(--j-info, #0284c8)',
+  muted: 'var(--j-muted)',
+}
+
+function parseDate(value) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate())
+  }
+  const text = String(value || '').trim()
+  if (!text) return null
+  if (/^\d{4}-\d{2}-\d{2}/.test(text)) {
+    const parts = text.slice(0, 10).split('-').map(Number)
+    const date = new Date(parts[0], parts[1] - 1, parts[2])
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+  const date = new Date(text)
+  return Number.isNaN(date.getTime()) ? null : new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
+function formatValue(date) {
+  const pad = (value) => String(value).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+function isRangeMode(root) {
+  return !!read(root.calendarRange)
+}
+
+function isMultipleMode(root) {
+  return !!read(root.calendarMultiple) && !isRangeMode(root)
+}
+
+function isAllowed(value, minimum, maximum) {
+  return (!minimum || value >= minimum) && (!maximum || value <= maximum)
+}
+
+function selectionList(root) {
+  const raw = read(root.calendarModel)
+  if (isRangeMode(root) || isMultipleMode(root)) {
+    if (Array.isArray(raw)) return raw.map(String).filter(Boolean)
+    if (raw?.start || raw?.end) return [raw.start, raw.end].filter(Boolean).map(String)
+    return []
+  }
+  const date = parseDate(raw)
+  return date ? [formatValue(date)] : []
+}
+
+function commitValue(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function commitSingle(model, date, emitFn) {
+  const iso = formatValue(date)
+  const current = read(model)
+  const next = current instanceof Date ? new Date(date.getFullYear(), date.getMonth(), date.getDate()) : iso
+  commitValue(model, next, emitFn)
+}
+
+function viewControls(emitFn) {
+  if (!emitFn.__juiCalendarView) {
+    const now = new Date()
+    emitFn.__juiCalendarView = {
+      month: pulse(now.getMonth()),
+      year: pulse(now.getFullYear()),
+    }
+  }
+  return emitFn.__juiCalendarView
+}
+
+function titleOf(emitFn) {
+  const view = viewControls(emitFn)
+  return `${months[Number(read(view.month))]} ${read(view.year)}`
+}
+
+function viewState(root) {
+  if (!root.calendarView) {
+    const selected = selectionList(root)[0]
+    const initial = parseDate(selected) || new Date()
+    root.calendarView = new Date(initial.getFullYear(), initial.getMonth(), 1)
+  }
+  return root.calendarView
+}
+
+function syncView(root) {
+  const emitFn = root?.calendarEmit
+  if (!emitFn) return
+  const view = viewState(root)
+  const controls = viewControls(emitFn)
+  controls.month.set(view.getMonth())
+  controls.year.set(view.getFullYear())
+}
+
+function setView(root, year, month) {
+  root.calendarView = new Date(year, month, 1)
+  syncView(root)
+  renderCalendar(root)
+}
+
+function shiftMonth(root, amount) {
+  const view = viewState(root)
+  setView(root, view.getFullYear(), view.getMonth() + amount)
+}
+
+function selectedForRender(root) {
+  if (isRangeMode(root) && root.calendarDraft?.length) return root.calendarDraft
+  return selectionList(root)
+}
+
+function markersForDay(root, dateValue) {
+  const list = read(root.calendarMarkers)
+  if (!Array.isArray(list)) return []
+  return list
+    .filter((item) => item && String(item.date || item.day || '').slice(0, 10) === dateValue)
+    .slice(0, 4)
+    .map((item) => {
+      const tone = String(item.color || item.tone || item.type || 'primary')
+      const color = tone.startsWith('#') || tone.startsWith('rgb') || tone.startsWith('var(')
+        ? tone
+        : (DOT_COLORS[tone] || DOT_COLORS.primary)
+      return {
+        color,
+        label: item.label || item.title || item.tooltip || '',
+      }
+    })
+}
+
+function tipForMarkers(dots) {
+  return dots.map((dot) => String(dot.label || '').trim()).filter(Boolean).join(' · ')
+}
+
+function ensureCalendarTip(root) {
+  if (!root || typeof document === 'undefined') return null
+  let tip = root.__juiCalendarTip
+  if (tip?.isConnected) return tip
+  tip = document.createElement('div')
+  tip.className = 'jui-calendar__tip'
+  tip.hidden = true
+  tip.setAttribute('role', 'tooltip')
+  const scope =
+    root.getAttribute?.('data-jacare-s') ||
+    root.closest?.('[data-jacare-s]')?.getAttribute('data-jacare-s')
+  if (scope) tip.setAttribute('data-jacare-s', scope)
+  root.appendChild(tip)
+  root.__juiCalendarTip = tip
+  return tip
+}
+
+function placeCalendarTip(root, tip, clientX, clientY) {
+  if (!root || !tip) return
+  const bounds = root.getBoundingClientRect()
+  const x = clientX - bounds.left
+  const y = clientY - bounds.top
+  const maxLeft = Math.max(8, bounds.width - tip.offsetWidth - 8)
+  const left = Math.min(maxLeft, Math.max(8, x + 12))
+  const top = Math.max(8, y - tip.offsetHeight - 12)
+  tip.style.left = `${left}px`
+  tip.style.top = `${top}px`
+}
+
+function armDayTip(root, button, text) {
+  if (!button || !text) return
+  const tip = ensureCalendarTip(root)
+  if (!tip) return
+  button.addEventListener('pointerenter', (event) => {
+    if (read(root.calendarTooltips) === false) return
+    tip.textContent = text
+    tip.hidden = false
+    placeCalendarTip(root, tip, event.clientX, event.clientY)
+  })
+  button.addEventListener('pointermove', (event) => {
+    if (tip.hidden) return
+    placeCalendarTip(root, tip, event.clientX, event.clientY)
+  })
+  button.addEventListener('pointerleave', () => {
+    tip.hidden = true
+  })
+  button.addEventListener('focus', () => {
+    if (read(root.calendarTooltips) === false) return
+    tip.textContent = text
+    tip.hidden = false
+    const rect = button.getBoundingClientRect()
+    placeCalendarTip(root, tip, rect.left + rect.width / 2, rect.top)
+  })
+  button.addEventListener('blur', () => {
+    tip.hidden = true
+  })
+}
+
+function selectDate(root, value) {
+  const minimum = read(root.calendarMin)
+  const maximum = read(root.calendarMax)
+  if (!isAllowed(value, minimum, maximum)) return
+
+  if (isRangeMode(root)) {
+    const draft = root.calendarDraft || []
+    if (!draft.length || draft.length === 2) {
+      root.calendarDraft = [value]
+    } else {
+      root.calendarDraft = value < draft[0] ? [value, draft[0]] : [draft[0], value]
+    }
+    if (root.calendarDraft.length === 2) {
+      commitValue(root.calendarModel, [...root.calendarDraft], root.calendarEmit)
+    }
+    renderCalendar(root)
+    return
+  }
+
+  if (isMultipleMode(root)) {
+    const current = selectionList(root)
+    const next = current.includes(value)
+      ? current.filter((item) => item !== value)
+      : [...current, value].sort()
+    commitValue(root.calendarModel, next, root.calendarEmit)
+    renderCalendar(root)
+    return
+  }
+
+  const date = parseDate(value)
+  if (!date) return
+  commitSingle(root.calendarModel, date, root.calendarEmit)
+  setView(root, date.getFullYear(), date.getMonth())
+}
+
+function selectToday(root) {
+  selectDate(root, formatValue(new Date()))
+}
+
+function clearSelection(root) {
+  root.calendarDraft = []
+  if (isRangeMode(root) || isMultipleMode(root)) {
+    commitValue(root.calendarModel, [], root.calendarEmit)
+  } else {
+    const current = read(root.calendarModel)
+    commitValue(root.calendarModel, current instanceof Date ? null : '', root.calendarEmit)
+  }
+  renderCalendar(root)
+}
+
+function renderCalendar(root) {
+  if (!root?.isConnected) return
+  const grid = root.querySelector('[data-calendar-days]')
+  if (!grid) return
+  const emitFn = root.calendarEmit
+  const controls = viewControls(emitFn)
+  const year = Number(read(controls.year))
+  const month = Number(read(controls.month))
+  root.calendarView = new Date(year, month, 1)
+  const firstDay = new Date(year, month, 1)
+  const offset = (firstDay.getDay() + 6) % 7
+  const start = new Date(year, month, 1 - offset)
+  const today = formatValue(new Date())
+  const selected = selectedForRender(root)
+  const rangeMode = isRangeMode(root)
+  const minimum = read(root.calendarMin)
+  const maximum = read(root.calendarMax)
+  const buttons = []
+
+  for (let index = 0; index < 42; index += 1) {
+    const date = new Date(start)
+    date.setDate(start.getDate() + index)
+    const dateValue = formatValue(date)
+    const dots = markersForDay(root, dateValue)
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'jui-calendar__day'
+    button.classList.toggle('is-outside', date.getMonth() !== month)
+    button.classList.toggle('is-today', dateValue === today)
+    button.classList.toggle('is-selected', selected.includes(dateValue))
+    button.classList.toggle('is-range-start', rangeMode && selected[0] === dateValue)
+    button.classList.toggle('is-range-end', rangeMode && selected[1] === dateValue)
+    button.classList.toggle(
+      'is-in-range',
+      rangeMode && selected.length === 2 && dateValue > selected[0] && dateValue < selected[1],
+    )
+    button.classList.toggle('has-markers', dots.length > 0)
+    button.disabled = !isAllowed(dateValue, minimum, maximum)
+    const tipText = tipForMarkers(dots)
+    const dayLabel = new Intl.DateTimeFormat('en-US', { dateStyle: 'full' }).format(date)
+    button.setAttribute('aria-label', tipText ? `${dayLabel}. ${tipText}` : dayLabel)
+    button.addEventListener('click', () => selectDate(root, dateValue))
+
+    const number = document.createElement('span')
+    number.className = 'jui-calendar__day-num'
+    number.textContent = String(date.getDate())
+    button.appendChild(number)
+
+    if (dots.length) {
+      const row = document.createElement('span')
+      row.className = 'jui-calendar__dots'
+      row.setAttribute('aria-hidden', 'true')
+      for (const dot of dots) {
+        const mark = document.createElement('span')
+        mark.className = 'jui-calendar__dot'
+        mark.style.background = dot.color
+        row.appendChild(mark)
+      }
+      button.appendChild(row)
+    }
+
+    if (tipText && read(root.calendarTooltips) !== false) {
+      button.setAttribute('data-jui-tip', tipText)
+      armDayTip(root, button, tipText)
+    }
+
+    buttons.push(button)
+  }
+
+  grid.replaceChildren(...buttons)
+  const tip = root.__juiCalendarTip
+  if (tip) tip.hidden = true
+
+  const hint = root.querySelector('[data-calendar-hint]')
+  if (hint) {
+    if (rangeMode) {
+      hint.hidden = false
+      hint.textContent = selected.length === 1 ? 'Select an end date.' : 'Select a start and end date.'
+    } else if (isMultipleMode(root)) {
+      hint.hidden = false
+      hint.textContent = selected.length
+        ? `${selected.length} date${selected.length === 1 ? '' : 's'} selected.`
+        : 'Tap days to select multiple dates.'
+    } else {
+      hint.hidden = true
+    }
+  }
+
+  const clearBtn = root.querySelector('[data-calendar-clear]')
+  if (clearBtn) {
+    clearBtn.hidden = !read(root.calendarClearable) || selected.length === 0
+  }
+}
+
+function armCalendar(
+  root,
+  model,
+  emitFn,
+  rangeProp,
+  multipleProp,
+  markersProp,
+  tooltipsProp,
+  minProp,
+  maxProp,
+  clearableProp,
+) {
+  if (!root || root.calendarArmed) return
+  root.calendarArmed = true
+  root.calendarModel = model
+  root.calendarEmit = emitFn
+  root.calendarRange = rangeProp
+  root.calendarMultiple = multipleProp
+  root.calendarMarkers = markersProp
+  root.calendarTooltips = tooltipsProp
+  root.calendarMin = minProp
+  root.calendarMax = maxProp
+  root.calendarClearable = clearableProp
+  root.calendarDraft = []
+  ensureCalendarTip(root)
+
+  const selected = selectionList(root)[0]
+  const initial = parseDate(selected)
+  if (initial) {
+    root.calendarView = new Date(initial.getFullYear(), initial.getMonth(), 1)
+  }
+  syncView(root)
+
+  root.calendarDispose = effect(() => {
+    read(model)
+    read(rangeProp)
+    read(multipleProp)
+    read(markersProp)
+    read(tooltipsProp)
+    read(minProp)
+    read(maxProp)
+    read(clearableProp)
+    const controls = viewControls(emitFn)
+    read(controls.month)
+    read(controls.year)
+    if (!isRangeMode(root)) root.calendarDraft = []
+    renderCalendar(root)
+  })
+}
+
+export <view>
+  <div
+    class="jui-calendar"
+    class-jui-calendar--range=${() => !!read(range)}
+    class-jui-calendar--multiple=${() => !!read(multiple) && !read(range)}
+  >
+    <img
+      class="jui-calendar__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armCalendar(
+        event.currentTarget.closest('.jui-calendar'),
+        value,
+        emit,
+        range,
+        multiple,
+        markers,
+        tooltips,
+        min,
+        max,
+        clearable,
+      )}
+    />
+    <div class="jui-calendar__head">
+      <button
+        type="button"
+        class="jui-calendar__nav"
+        aria-label="Previous month"
+        on-click=${(event) => shiftMonth(event.currentTarget.closest('.jui-calendar'), -1)}
+      >‹</button>
+      <div class="jui-calendar__title">${() => titleOf(emit)}</div>
+      <button
+        type="button"
+        class="jui-calendar__today"
+        on-click=${(event) => selectToday(event.currentTarget.closest('.jui-calendar'))}
+      >Today</button>
+      <button
+        type="button"
+        class="jui-calendar__nav"
+        aria-label="Next month"
+        on-click=${(event) => shiftMonth(event.currentTarget.closest('.jui-calendar'), 1)}
+      >›</button>
+    </div>
+    <div class="jui-calendar__weekdays">
+      #for weekdays as weekday (weekday)
+        <span class="jui-calendar__weekday">${weekday}</span>
+      #end
+    </div>
+    <div class="jui-calendar__days" data-calendar-days></div>
+    <div class="jui-calendar__footer">
+      <p class="jui-calendar__hint" data-calendar-hint hidden></p>
+      <button
+        type="button"
+        class="jui-calendar__clear"
+        data-calendar-clear
+        hidden
+        on-click=${(event) => clearSelection(event.currentTarget.closest('.jui-calendar'))}
+      >Clear</button>
+    </div>
+  </div>
+</view>
+
+export <style>
+.jui-calendar {
+  position: relative;
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border: 1px solid var(--j-border);
+  border-radius: calc(var(--j-radius) + 2px);
+  background: var(--j-surface-2);
+  box-shadow: var(--j-shadow-sm);
+  min-width: min(100%, 20rem);
+  overflow: visible;
+}
+
+.jui-calendar__tip {
+  position: absolute;
+  z-index: 8;
+  max-width: min(16rem, 80%);
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-text);
+  color: var(--j-surface);
+  box-shadow: var(--j-shadow-sm);
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.35;
+  pointer-events: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.jui-calendar__tip[hidden] {
+  display: none;
+}
+
+.jui-calendar__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-calendar__head {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.jui-calendar__title {
+  font-weight: 800;
+  color: var(--j-forest);
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.jui-calendar__nav,
+.jui-calendar__today,
+.jui-calendar__clear {
+  appearance: none;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+  color: var(--j-forest);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.jui-calendar__nav {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  font-size: 1.2rem;
+}
+
+.jui-calendar__today,
+.jui-calendar__clear {
+  height: 2rem;
+  padding: 0 0.7rem;
+  font-size: 0.82rem;
+}
+
+.jui-calendar__clear {
+  border: 0;
+  background: transparent;
+  color: var(--j-muted);
+}
+
+.jui-calendar__nav:hover,
+.jui-calendar__today:hover {
+  border-color: color-mix(in srgb, var(--j-primary) 45%, var(--j-border));
+}
+
+.jui-calendar__nav:focus-visible,
+.jui-calendar__today:focus-visible,
+.jui-calendar__day:focus-visible,
+.jui-calendar__clear:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-calendar__weekdays,
+.jui-calendar__days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.25rem;
+}
+
+.jui-calendar__weekday {
+  display: inline-grid;
+  place-items: center;
+  min-height: 1.75rem;
+  color: var(--j-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.jui-calendar__day {
+  appearance: none;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 0.15rem;
+  min-height: 2.55rem;
+  padding: 0.2rem 0.1rem 0.3rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  background: transparent;
+  color: var(--j-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.jui-calendar__day-num {
+  line-height: 1.2;
+}
+
+.jui-calendar__dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.18rem;
+  min-height: 0.35rem;
+}
+
+.jui-calendar__dot {
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: var(--j-primary);
+}
+
+.jui-calendar__day.is-outside {
+  color: color-mix(in srgb, var(--j-muted) 55%, transparent);
+}
+
+.jui-calendar__day.is-today {
+  box-shadow: inset 0 0 0 1px var(--j-primary);
+  color: var(--j-primary);
+}
+
+.jui-calendar__day.is-selected {
+  background: var(--j-primary);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.jui-calendar__day.is-in-range {
+  background: color-mix(in srgb, var(--j-mint) 70%, var(--j-surface-2));
+  color: var(--j-forest);
+  border-radius: 0;
+}
+
+.jui-calendar__day.is-selected.is-in-range,
+.jui-calendar__day.is-range-start,
+.jui-calendar__day.is-range-end {
+  background: var(--j-primary);
+  color: #ffffff;
+}
+
+.jui-calendar__day.is-range-start {
+  border-radius: var(--j-radius-sm) 0 0 var(--j-radius-sm);
+}
+
+.jui-calendar__day.is-range-end {
+  border-radius: 0 var(--j-radius-sm) var(--j-radius-sm) 0;
+}
+
+.jui-calendar__day.is-range-start.is-range-end {
+  border-radius: var(--j-radius-sm);
+}
+
+.jui-calendar__day:hover:not(.is-selected):not(.is-in-range):not(:disabled) {
+  background: color-mix(in srgb, var(--j-mint) 70%, var(--j-surface-2));
+}
+
+.jui-calendar__day:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.jui-calendar__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 1.25rem;
+}
+
+.jui-calendar__hint {
+  margin: 0;
+  color: var(--j-muted);
+  font-size: 0.8rem;
+}
+</style>

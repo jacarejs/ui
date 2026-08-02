@@ -1,17 +1,170 @@
+import { effect, pulse } from '@jacare/core'
 import { read } from '../internal/utils.js'
+import { asArray, getByPath, normalizeTrigger } from '../validation/index.js'
 
 export <contract>
   props: {
     label: { type: 'string', default: '' }
+    prop: { type: 'string', default: '' }
     error: { type: 'string', default: '' }
     required: { type: 'boolean', default: false }
     hint: { type: 'string', default: '' }
+    rules: { type: 'any', default: null }
+    trigger: { type: 'any', default: '' }
   }
   slots: ['default']
+  emits: ['validate']
 </contract>
 
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function parentForm(root) {
+  return root?.closest?.('[data-jui-form]')?.juiForm || null
+}
+
+function errorPulse(emitFn) {
+  if (!emitFn.__juiFormItemError) emitFn.__juiFormItemError = pulse('')
+  return emitFn.__juiFormItemError
+}
+
+function shownError(errorProp, emitFn) {
+  const manual = read(errorProp)
+  if (manual) return String(manual)
+  return String(read(errorPulse(emitFn)) || '')
+}
+
+function hasError(errorProp, emitFn) {
+  return !!shownError(errorProp, emitFn)
+}
+
+function syncInvalid(root, invalid) {
+  if (!root) return
+  root.classList.toggle('has-error', invalid)
+  root.querySelectorAll('input, textarea, select, [aria-haspopup]').forEach((node) => {
+    node.setAttribute('aria-invalid', invalid ? 'true' : 'false')
+  })
+  root.querySelectorAll('.jui-input, .jui-select, .jui-textarea, .jui-field').forEach((node) => {
+    node.classList.toggle('has-error', invalid)
+  })
+}
+
+function resolveTriggers(triggerProp, rulesProp) {
+  const explicit = asArray(read(triggerProp)).filter(Boolean)
+  if (explicit.length) return explicit.map(String)
+  const fromRules = asArray(read(rulesProp)).flatMap((rule) => normalizeTrigger(rule?.trigger))
+  return [...new Set(fromRules.length ? fromRules : ['blur', 'change'])]
+}
+
+function armFormItem(root, propName, labelProp, requiredProp, rulesProp, triggerProp, errorProp, emitFn) {
+  if (!root || root.juiFormItemArmed) return
+  root.juiFormItemArmed = true
+  const localError = errorPulse(emitFn)
+  const control = root.querySelector('.jui-form-item__control')
+
+  const fieldApi = {
+    el: root,
+    rules: () => read(rulesProp),
+    required: () => !!read(requiredProp),
+    label: () => read(labelProp) || String(read(propName) || ''),
+    getValue: () => {
+      const form = parentForm(root)
+      const key = String(read(propName) || '')
+      if (!form || !key) return undefined
+      return getByPath(form.model, key)
+    },
+    setError: (message) => {
+      localError.set(message || '')
+      syncInvalid(root, !!(read(errorProp) || message))
+    },
+  }
+
+  let unregister = () => {}
+  const bindForm = () => {
+    unregister()
+    const form = parentForm(root)
+    const key = String(read(propName) || '')
+    if (!form || !key) return
+    unregister = form.registerField(key, fieldApi) || (() => {})
+  }
+
+  root.juiFormItemRebind = bindForm
+  bindForm()
+  root.juiFormItemDispose = effect(() => {
+    read(propName)
+    read(rulesProp)
+    read(requiredProp)
+    read(labelProp)
+    bindForm()
+  })
+
+  const onValidate = (trigger) => {
+    const form = parentForm(root)
+    const key = String(read(propName) || '')
+    if (!form || !key) return
+    const allowed = resolveTriggers(triggerProp, rulesProp)
+    if (trigger !== 'submit' && !allowed.includes(trigger)) return
+    form.validateField(key, trigger).catch(() => {})
+  }
+
+  control?.addEventListener(
+    'focusout',
+    (event) => {
+      if (control.contains(event.relatedTarget)) return
+      onValidate('blur')
+    },
+    true,
+  )
+  control?.addEventListener(
+    'change',
+    () => {
+      onValidate('change')
+    },
+    true,
+  )
+  control?.addEventListener(
+    'input',
+    () => {
+      if (resolveTriggers(triggerProp, rulesProp).includes('change')) onValidate('change')
+    },
+    true,
+  )
+
+  root.juiFormItemSync = effect(() => {
+    const key = String(read(propName) || '')
+    const form = parentForm(root)
+    const bag = form ? read(form.errors) || {} : {}
+    const message = read(errorProp) || bag[key] || ''
+    if (!read(errorProp) && message !== read(localError)) localError.set(message || '')
+    syncInvalid(root, !!shownError(errorProp, emitFn))
+  })
+}
+
 export <view>
-  <div class="jui-form-item" class-has-error=${() => !!read(error)}>
+  <div
+    class="jui-form-item"
+    class-has-error=${() => hasError(error, emit)}
+    data-jui-form-item
+    data-prop=${() => read(prop) || ''}
+  >
+    <img
+      class="jui-form-item__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) =>
+        armFormItem(
+          event.currentTarget.closest('[data-jui-form-item]'),
+          prop,
+          label,
+          required,
+          rules,
+          trigger,
+          error,
+          emit,
+        )}
+    />
     #if read(label)
       <span class="jui-form-item__label">
         ${() => read(label)}
@@ -22,8 +175,8 @@ export <view>
     #end
     <div class="jui-form-item__control">
       <slot />
-      #if read(error)
-        <span class="jui-form-item__error" role="alert">${() => read(error)}</span>
+      #if hasError(error, emit)
+        <span class="jui-form-item__error" role="alert">${() => shownError(error, emit)}</span>
       #elif read(hint)
         <span class="jui-form-item__hint">${() => read(hint)}</span>
       #end
@@ -33,9 +186,18 @@ export <view>
 
 export <style>
 .jui-form-item {
+  position: relative;
   display: grid;
-  gap: 0.4rem;
+  gap: 0.55rem;
   min-width: 0;
+}
+
+.jui-form-item__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .jui-form-item__label {
@@ -57,7 +219,7 @@ export <style>
 
 .jui-form-item__control {
   display: grid;
-  gap: 0.4rem;
+  gap: 0.45rem;
   min-width: 0;
 }
 

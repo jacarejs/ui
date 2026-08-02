@@ -1,0 +1,157 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    value: { type: 'string', default: '', model: true }
+    placeholder: { type: 'string', default: 'Click to edit' }
+    disabled: { type: 'boolean', default: false }
+    required: { type: 'boolean', default: false }
+  }
+  emits: ['change', 'start', 'cancel']
+</contract>
+
+function editingState(emitFn) {
+  if (!emitFn.__juiEditableOpen) emitFn.__juiEditableOpen = pulse(false)
+  return emitFn.__juiEditableOpen
+}
+
+function draftState(emitFn) {
+  if (!emitFn.__juiEditableDraft) emitFn.__juiEditableDraft = pulse('')
+  return emitFn.__juiEditableDraft
+}
+
+function isEditing(emitFn) {
+  return !!read(editingState(emitFn))
+}
+
+function displayText(model, placeholderValue) {
+  const next = String(read(model) ?? '')
+  return next || String(read(placeholderValue) || 'Click to edit')
+}
+
+function startEdit(model, disabledValue, emitFn) {
+  if (read(disabledValue) || isEditing(emitFn)) return
+  draftState(emitFn).set(String(read(model) ?? ''))
+  editingState(emitFn).set(true)
+  emitFn('start')
+  requestAnimationFrame(() => {
+    const root = document.querySelector(`[data-jui-editable="${emitFn.__juiEditableId}"]`)
+    root?.querySelector('input')?.focus()
+    root?.querySelector('input')?.select()
+  })
+}
+
+function ensureId(emitFn) {
+  if (!emitFn.__juiEditableId) emitFn.__juiEditableId = Math.random().toString(36).slice(2, 9)
+  return emitFn.__juiEditableId
+}
+
+function commit(model, emitFn) {
+  const next = String(read(draftState(emitFn)) ?? '')
+  if (model && typeof model.set === 'function') model.set(next)
+  editingState(emitFn).set(false)
+  emitFn('change', next)
+}
+
+function cancel(emitFn) {
+  editingState(emitFn).set(false)
+  emitFn('cancel')
+}
+
+function onKeydown(event, model, emitFn) {
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    commit(model, emitFn)
+  } else if (event.key === 'Escape') {
+    event.preventDefault()
+    cancel(emitFn)
+  }
+}
+
+export <view>
+  <span
+    class="jui-editable"
+    class-is-editing=${() => isEditing(emit)}
+    class-is-empty=${() => !String(read(value) ?? '')}
+    class-is-disabled=${() => !!read(disabled)}
+    data-jui-editable=${() => ensureId(emit)}
+  >
+    #if isEditing(emit)
+      <input
+        class="jui-editable__input"
+        type="text"
+        required=${() => !!read(required)}
+        disabled=${() => !!read(disabled)}
+        value=${() => read(draftState(emit))}
+        on-input=${(event) => draftState(emit).set(event.target.value)}
+        on-blur=${() => commit(value, emit)}
+        on-keydown=${(event) => onKeydown(event, value, emit)}
+      />
+    #else
+      <button
+        type="button"
+        class="jui-editable__trigger"
+        disabled=${() => !!read(disabled)}
+        on-click=${() => startEdit(value, disabled, emit)}
+      >
+        ${() => displayText(value, placeholder)}
+      </button>
+    #end
+  </span>
+</view>
+
+export <style>
+.jui-editable {
+  display: inline-grid;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.jui-editable__trigger,
+.jui-editable__input {
+  min-width: 4rem;
+  max-width: 100%;
+  min-height: var(--j-touch-target, 2.75rem);
+  margin: 0;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: var(--j-radius-sm);
+  background: transparent;
+  color: var(--j-text);
+  font: inherit;
+  text-align: left;
+  line-height: 1.35;
+}
+
+.jui-editable__trigger {
+  cursor: text;
+}
+
+.jui-editable__trigger:hover:not(:disabled) {
+  border-color: var(--j-border);
+  background: var(--j-surface-2);
+}
+
+.jui-editable__trigger:focus-visible {
+  outline: none;
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-editable.is-empty .jui-editable__trigger {
+  color: var(--j-muted);
+  font-style: italic;
+}
+
+.jui-editable__input {
+  border-color: var(--j-primary);
+  background: var(--j-surface-2);
+  box-shadow: var(--j-focus);
+  outline: none;
+}
+
+.jui-editable.is-disabled {
+  opacity: 0.6;
+}
+</style>

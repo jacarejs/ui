@@ -1,0 +1,232 @@
+import { effect, pulse } from '@jacare/core'
+import { propText } from '../i18n/index.js'
+import { read } from '../internal/utils.js'
+import { activateFocusTrap, uniqueId } from '../internal/overlay.js'
+
+export <contract>
+  props: {
+    open: { type: 'boolean', default: false, model: true }
+    title: { type: 'string', default: 'Message' }
+    message: { type: 'string', default: '' }
+    type: { type: 'string', default: '' }
+    confirmButtonText: { type: 'string', default: 'OK' }
+    cancelButtonText: { type: 'string', default: 'Cancel' }
+    showCancelButton: { type: 'boolean', default: true }
+    showInput: { type: 'boolean', default: false }
+    inputPlaceholder: { type: 'string', default: '' }
+    inputValue: { type: 'string', default: '', model: true }
+  }
+  emits: ['confirm', 'cancel']
+</contract>
+
+function openState(openProp, emitFn) {
+  if (openProp && typeof openProp.set === 'function') return openProp
+  if (!emitFn.__juiMessageBoxOpen) emitFn.__juiMessageBoxOpen = pulse(read(openProp) === true)
+  return emitFn.__juiMessageBoxOpen
+}
+
+function inputState(inputProp, emitFn) {
+  if (inputProp && typeof inputProp.set === 'function') return inputProp
+  if (!emitFn.__juiMessageBoxInput) emitFn.__juiMessageBoxInput = pulse(String(read(inputProp) || ''))
+  return emitFn.__juiMessageBoxInput
+}
+
+function isOpen(openProp, emitFn) {
+  return read(openState(openProp, emitFn)) === true
+}
+
+function boxId(emitFn) {
+  return uniqueId('jui-message-box', emitFn, '__juiMessageBoxId')
+}
+
+function typeOf(value) {
+  const next = String(read(value) || '')
+  if (next === 'success' || next === 'warning' || next === 'error' || next === 'primary' || next === 'info') return next
+  if (next === 'warn') return 'warning'
+  if (next === 'danger') return 'error'
+  return ''
+}
+
+function closeBox(openProp, emitFn) {
+  openState(openProp, emitFn).set(false)
+}
+
+function confirm(openProp, emitFn, inputProp, showInputProp) {
+  const payload = read(showInputProp) ? { value: String(read(inputState(inputProp, emitFn)) || '') } : 'confirm'
+  closeBox(openProp, emitFn)
+  emitFn('confirm', payload)
+}
+
+function cancel(openProp, emitFn) {
+  closeBox(openProp, emitFn)
+  emitFn('cancel')
+}
+
+function armOverlay(openProp, emitFn) {
+  if (!emitFn.__juiMessageBoxOverlay) {
+    emitFn.__juiMessageBoxOverlay = effect(() => {
+      if (!isOpen(openProp, emitFn)) return undefined
+      const id = boxId(emitFn)
+      let release = () => {}
+      const frame = requestAnimationFrame(() => {
+        const root = document.querySelector(`[data-jui-message-box="${id}"]`)
+        if (!root) return
+        release = activateFocusTrap(root, {
+          onEscape: () => cancel(openProp, emitFn),
+        })
+      })
+      return () => {
+        cancelAnimationFrame(frame)
+        release()
+      }
+    })
+  }
+  return ''
+}
+
+export <view>
+  #if isOpen(open, emit)
+    <div class="jui-message-box-backdrop" on-click=${(event) => {
+      if (event.target !== event.currentTarget) return
+      cancel(open, emit)
+    }}>
+      <section
+        class="jui-message-box"
+        class-jui-message-box--success=${() => typeOf(type) === 'success'}
+        class-jui-message-box--warning=${() => typeOf(type) === 'warning'}
+        class-jui-message-box--error=${() => typeOf(type) === 'error'}
+        class-jui-message-box--primary=${() => typeOf(type) === 'primary'}
+        class-jui-message-box--info=${() => typeOf(type) === 'info'}
+        role="dialog"
+        aria-modal="true"
+        data-jui-message-box=${() => boxId(emit)}
+        on-click=${(event) => event.stopPropagation()}
+      >
+        <header class="jui-message-box__head">
+          <h2 class="jui-message-box__title">${() => propText(title, 'j.messageBox.title', 'Message')}</h2>
+        </header>
+        <div class="jui-message-box__body">
+          #if read(message)
+            <p>${() => read(message)}</p>
+          #end
+          #if read(showInput)
+            <input
+              class="jui-message-box__input"
+              type="text"
+              placeholder=${() => read(inputPlaceholder) || ''}
+              value=${() => read(inputState(inputValue, emit))}
+              on-input=${(event) => inputState(inputValue, emit).set(event.target.value)}
+            />
+          #end
+        </div>
+        <footer class="jui-message-box__footer">
+          #if read(showCancelButton)
+            <button type="button" class="jui-message-box__cancel" on-click=${() => cancel(open, emit)}>
+              ${() => propText(cancelButtonText, 'j.messageBox.cancel', 'Cancel')}
+            </button>
+          #end
+          <button type="button" class="jui-message-box__confirm" on-click=${() => confirm(open, emit, inputValue, showInput)}>
+            ${() => propText(confirmButtonText, 'j.messageBox.ok', 'OK')}
+          </button>
+        </footer>
+        <span class="jui-message-box__arm" aria-hidden="true">${() => armOverlay(open, emit)}</span>
+      </section>
+    </div>
+  #end
+</view>
+
+export <style>
+.jui-message-box-backdrop {
+  position: fixed;
+  z-index: 140;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 24, 24, 0.55);
+}
+
+.jui-message-box {
+  --jui-message-box-tone: var(--j-primary);
+  width: min(24rem, 100%);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  box-shadow: var(--j-shadow);
+  overflow: hidden;
+}
+
+.jui-message-box--success { --jui-message-box-tone: var(--j-success, var(--j-primary)); }
+.jui-message-box--warning { --jui-message-box-tone: var(--j-warn); }
+.jui-message-box--error { --jui-message-box-tone: var(--j-danger); }
+.jui-message-box--primary { --jui-message-box-tone: var(--j-primary); }
+.jui-message-box--info { --jui-message-box-tone: var(--j-info); }
+
+.jui-message-box__head {
+  padding: 1rem 1.1rem 0.35rem;
+  border-top: 3px solid var(--jui-message-box-tone);
+}
+
+.jui-message-box__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.jui-message-box__body {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.5rem 1.1rem 1rem;
+}
+
+.jui-message-box__body p {
+  margin: 0;
+  color: var(--j-muted);
+  line-height: 1.45;
+}
+
+.jui-message-box__input {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+  color: var(--j-text);
+}
+
+.jui-message-box__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  padding: 0 1.1rem 1rem;
+}
+
+.jui-message-box__cancel,
+.jui-message-box__confirm {
+  min-height: 2.4rem;
+  padding: 0 0.9rem;
+  border-radius: var(--j-radius-sm);
+  border: 1px solid var(--j-border);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.jui-message-box__cancel {
+  background: transparent;
+  color: var(--j-text);
+}
+
+.jui-message-box__confirm {
+  border-color: var(--jui-message-box-tone);
+  background: var(--jui-message-box-tone);
+  color: #fff;
+}
+
+.jui-message-box__arm {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+</style>

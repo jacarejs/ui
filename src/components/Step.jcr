@@ -1,0 +1,261 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    title: { type: 'string', default: '' }
+    description: { type: 'string', default: '' }
+    icon: { type: 'string', default: '' }
+    status: { type: 'string', default: '' }
+  }
+  slots: ['default']
+  emits: ['select']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function readyState(emitFn) {
+  if (!emitFn.__juiStepReady) emitFn.__juiStepReady = pulse(0)
+  return emitFn.__juiStepReady
+}
+
+function stepRoot(emitFn) {
+  read(readyState(emitFn))
+  return emitFn.__juiStepRoot
+}
+
+function parentOf(emitFn) {
+  return stepRoot(emitFn)?.closest('.jui-steps')
+}
+
+function indexOf(emitFn) {
+  const root = stepRoot(emitFn)
+  const parent = parentOf(emitFn)
+  if (!root || !parent) return 0
+  return [...parent.querySelectorAll('.jui-step')].indexOf(root)
+}
+
+function statusOf(statusProp, emitFn) {
+  const override = String(read(statusProp) || '')
+  if (override === 'wait' || override === 'process' || override === 'finish' || override === 'success' || override === 'error') {
+    return override
+  }
+  const parent = parentOf(emitFn)
+  if (parent?.stepsReady) read(parent.stepsReady)
+  const active = Number(read(parent?.stepsModel)) || 0
+  const index = indexOf(emitFn)
+  if (index < active) return parent?.stepsFinishStatus || 'finish'
+  if (index === active) return parent?.stepsProcessStatus || 'process'
+  return 'wait'
+}
+
+function markerOf(iconProp, emitFn) {
+  const glyph = String(read(iconProp) || '')
+  return glyph || String(indexOf(emitFn) + 1)
+}
+
+function armStep(root, emitFn) {
+  if (!root) return
+  emitFn.__juiStepRoot = root
+  const ready = readyState(emitFn)
+  ready.set(read(ready) + 1)
+  const parent = root.closest('.jui-steps')
+  if (parent?.stepsReady) parent.stepsReady.set(read(parent.stepsReady) + 1)
+}
+
+export <view>
+  <div
+    class="jui-step"
+    class-jui-step--wait=${() => statusOf(status, emit) === 'wait'}
+    class-jui-step--process=${() => statusOf(status, emit) === 'process'}
+    class-jui-step--finish=${() => statusOf(status, emit) === 'finish'}
+    class-jui-step--success=${() => statusOf(status, emit) === 'success'}
+    class-jui-step--error=${() => statusOf(status, emit) === 'error'}
+  >
+    <img
+      class="jui-step__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armStep(event.currentTarget.closest('.jui-step'), emit)}
+    />
+    <div class="jui-step__head">
+      <div class="jui-step__line" aria-hidden="true"></div>
+      <div class="jui-step__icon" aria-hidden="true">${() => markerOf(icon, emit)}</div>
+    </div>
+    <div class="jui-step__main">
+      #if read(title)
+        <div class="jui-step__title">${() => read(title)}</div>
+      #end
+      #if read(description)
+        <div class="jui-step__description">${() => read(description)}</div>
+      #end
+      <div class="jui-step__body"><slot /></div>
+    </div>
+  </div>
+</view>
+
+export <style>
+.jui-step {
+  --j-step-color: var(--j-muted);
+  position: relative;
+  flex: 1 1 0;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+  color: var(--j-step-color);
+}
+
+.jui-step--process { --j-step-color: var(--j-primary); }
+.jui-step--finish { --j-step-color: var(--j-primary); }
+.jui-step--success { --j-step-color: var(--j-success, var(--j-primary)); }
+.jui-step--error { --j-step-color: var(--j-danger); }
+
+.jui-step__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-step__head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.jui-step__line {
+  position: absolute;
+  left: calc(1.9rem + 0.5rem);
+  right: 0.5rem;
+  top: 50%;
+  height: 2px;
+  background: var(--j-border);
+  transform: translateY(-50%);
+}
+
+.jui-step:last-child .jui-step__line {
+  display: none;
+}
+
+.jui-step--finish .jui-step__line,
+.jui-step--success .jui-step__line {
+  background: var(--j-step-color);
+}
+
+.jui-step__icon {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  background: var(--j-surface);
+  color: var(--j-step-color);
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.jui-step--process .jui-step__icon,
+.jui-step--finish .jui-step__icon,
+.jui-step--success .jui-step__icon {
+  background: var(--j-step-color);
+  color: var(--j-surface);
+}
+
+.jui-step__main {
+  display: grid;
+  gap: 0.25rem;
+  align-content: start;
+  min-width: 0;
+  padding: 0.6rem 1rem 0 0;
+}
+
+.jui-step__title {
+  color: var(--j-step-color);
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.jui-step__description,
+.jui-step__body {
+  color: var(--j-muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.jui-steps--align-center .jui-step {
+  text-align: center;
+}
+
+.jui-steps--align-center .jui-step__head {
+  justify-content: center;
+}
+
+.jui-steps--align-center .jui-step__line {
+  left: calc(50% + 1.45rem);
+  right: calc(-50% + 1.45rem);
+}
+
+.jui-steps--align-center .jui-step__main {
+  padding-right: 0;
+}
+
+.jui-steps--vertical .jui-step {
+  flex: none;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: none;
+  min-height: 5rem;
+}
+
+.jui-steps--vertical .jui-step__head {
+  align-items: flex-start;
+}
+
+.jui-steps--vertical .jui-step__line {
+  left: 50%;
+  right: auto;
+  top: calc(1.9rem + 0.4rem);
+  bottom: 0.4rem;
+  width: 2px;
+  height: auto;
+  transform: translateX(-50%);
+}
+
+.jui-steps--vertical .jui-step__main {
+  padding: 0.2rem 0 1.2rem 0.8rem;
+}
+
+.jui-steps--simple .jui-step {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.jui-steps--simple .jui-step__head {
+  flex: 0 0 auto;
+}
+
+.jui-steps--simple .jui-step__line,
+.jui-steps--simple .jui-step__description,
+.jui-steps--simple .jui-step__body {
+  display: none;
+}
+
+.jui-steps--simple .jui-step__icon {
+  width: 1.55rem;
+  height: 1.55rem;
+}
+
+.jui-steps--simple .jui-step__main {
+  display: block;
+  padding: 0;
+}
+</style>

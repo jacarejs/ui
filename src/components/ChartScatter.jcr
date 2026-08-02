@@ -1,0 +1,103 @@
+import ChartFrame from './ChartFrame.jcr'
+import ChartPlot from './ChartPlot.jcr'
+import { read } from '../internal/utils.js'
+import {
+  chartLayoutWidth,
+  escapeXml,
+  extent,
+  formatNumber,
+  niceTicks,
+  padOf,
+  resolveChartWidth,
+  scaleLinear,
+  scatterPoints,
+  sizeOf,
+} from '../internal/charts.js'
+
+export <contract>
+  props: {
+    data: { type: 'any', required: true }
+    title: { type: 'string', default: '' }
+    caption: { type: 'string', default: '' }
+    width: { type: 'number', default: 480 }
+    height: { type: 'number', default: 280 }
+    colors: { type: 'any', default: null }
+    showLegend: { type: 'boolean', default: true }
+  }
+  emits: ['layout']
+</contract>
+
+function model(dataProp, colorsProp, widthProp, heightProp) {
+  const { width, height } = sizeOf(widthProp, heightProp, 480, 280)
+  const pad = padOf(null)
+  const series = scatterPoints(dataProp, colorsProp)
+  const xs = series.flatMap((serie) => serie.points.map((point) => point.x))
+  const ys = series.flatMap((serie) => serie.points.map((point) => point.y))
+  const xDomain = extent(xs)
+  const yDomain = extent(ys)
+  const xTicks = niceTicks(xDomain.min, xDomain.max, 4)
+  const yTicks = niceTicks(yDomain.min, yDomain.max, 4)
+  const xScale = scaleLinear(xDomain.min, xDomain.max, pad.left, width - pad.right)
+  const yScale = scaleLinear(yDomain.min, yDomain.max, height - pad.bottom, pad.top)
+  return {
+    width,
+    height,
+    pad,
+    series: series.map((serie) => ({
+      ...serie,
+      points: serie.points.map((point) => ({
+        ...point,
+        cx: xScale(point.x),
+        cy: yScale(point.y),
+      })),
+    })),
+    xTicks: xTicks.map((tick) => ({ value: tick, x: xScale(tick), label: formatNumber(tick) })),
+    yTicks: yTicks.map((tick) => ({ value: tick, y: yScale(tick), label: formatNumber(tick) })),
+    legend: series,
+  }
+}
+
+function plotContent(dataProp, colorsProp, widthProp, heightProp) {
+  const next = model(dataProp, colorsProp, widthProp, heightProp)
+  const parts = []
+  for (const tick of next.yTicks) {
+    parts.push(
+      `<line x1="${next.pad.left}" x2="${next.width - next.pad.right}" y1="${tick.y}" y2="${tick.y}" stroke="color-mix(in srgb, var(--j-border) 70%, transparent)" stroke-width="1" />`,
+    )
+    parts.push(
+      `<text x="${next.pad.left - 8}" y="${tick.y}" text-anchor="end" dominant-baseline="middle" fill="var(--j-muted)" font-size="11">${escapeXml(tick.label)}</text>`,
+    )
+  }
+  for (const tick of next.xTicks) {
+    parts.push(
+      `<text x="${tick.x}" y="${next.height - 12}" text-anchor="middle" fill="var(--j-muted)" font-size="11">${escapeXml(tick.label)}</text>`,
+    )
+  }
+  for (const serie of next.series) {
+    for (const point of serie.points) {
+      parts.push(
+        `<circle cx="${point.cx}" cy="${point.cy}" r="5" fill="${escapeXml(serie.color)}" opacity="0.9" data-jui-tip="${escapeXml(serie.name)}: ${escapeXml(formatNumber(point.x))}, ${escapeXml(formatNumber(point.y))}" />`,
+      )
+    }
+  }
+  return parts.join('')
+}
+
+export <view>
+  <ChartFrame
+    :title=${title}
+    :caption=${caption}
+    :width=${() => resolveChartWidth(width, emit)}
+    :height=${height}
+    :legend=${() =>
+      read(showLegend) ? model(data, colors, resolveChartWidth(width, emit), height).legend : []}
+  >
+    <ChartPlot
+      bind-layoutWidth=${chartLayoutWidth(emit)}
+      :width=${() => resolveChartWidth(width, emit)}
+      :height=${() => model(data, colors, resolveChartWidth(width, emit), height).height}
+      :label=${() => read(title) || 'Scatter chart'}
+      :content=${() => plotContent(data, colors, resolveChartWidth(width, emit), height)}
+    />
+  </ChartFrame>
+</view>

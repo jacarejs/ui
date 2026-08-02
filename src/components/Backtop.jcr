@@ -1,0 +1,161 @@
+import { effect, pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    visibilityHeight: { type: 'number', default: 200 }
+    right: { type: 'number', default: 40 }
+    bottom: { type: 'number', default: 40 }
+    scrollTarget: { type: 'string', default: '' }
+  }
+  emits: ['click']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function numOf(value, fallback) {
+  const next = Number(read(value))
+  return Number.isFinite(next) ? next : fallback
+}
+
+function visibleState(emitFn) {
+  if (!emitFn.__juiBacktopVisible) emitFn.__juiBacktopVisible = pulse(false)
+  return emitFn.__juiBacktopVisible
+}
+
+function isVisible(emitFn) {
+  return !!read(visibleState(emitFn))
+}
+
+function resolveTarget(selectorProp) {
+  const selector = String(read(selectorProp) || '').trim()
+  if (!selector) return window
+  try {
+    return document.querySelector(selector) || window
+  } catch {
+    return window
+  }
+}
+
+function scrollTopOf(target) {
+  if (!target || target === window || target === document) {
+    return window.scrollY || document.documentElement.scrollTop || 0
+  }
+  return target.scrollTop || 0
+}
+
+function scrollToTop(target) {
+  if (!target || target === window || target === document) {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    return
+  }
+  if (typeof target.scrollTo === 'function') {
+    target.scrollTo({ top: 0, behavior: 'smooth' })
+    return
+  }
+  target.scrollTop = 0
+}
+
+function positionStyle(rightProp, bottomProp) {
+  return `right:${numOf(rightProp, 40)}px;bottom:${numOf(bottomProp, 40)}px`
+}
+
+function armBacktop(root, visibilityHeightProp, scrollTargetProp, emitFn) {
+  if (!root || root.backtopArmed) return
+  root.backtopArmed = true
+  const visible = visibleState(emitFn)
+  const sync = () => {
+    const target = resolveTarget(scrollTargetProp)
+    const top = scrollTopOf(target)
+    const threshold = numOf(visibilityHeightProp, 200)
+    visible.set(top >= threshold)
+  }
+  root.backtopDispose = effect(() => {
+    read(visibilityHeightProp)
+    read(scrollTargetProp)
+    const target = resolveTarget(scrollTargetProp)
+    sync()
+    const listenerTarget = target === window ? window : target
+    listenerTarget.addEventListener('scroll', sync, { passive: true })
+    return () => listenerTarget.removeEventListener('scroll', sync)
+  })
+}
+
+function handleClick(event, scrollTargetProp, emitFn) {
+  scrollToTop(resolveTarget(scrollTargetProp))
+  emitFn('click', event)
+}
+
+export <view>
+  <div
+    class="jui-backtop"
+    class-is-visible=${() => isVisible(emit)}
+    :style=${() => positionStyle(right, bottom)}
+  >
+    <img
+      class="jui-backtop__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armBacktop(event.currentTarget.closest('.jui-backtop'), visibilityHeight, scrollTarget, emit)}
+    />
+    #if isVisible(emit)
+      <button
+        type="button"
+        class="jui-backtop__btn"
+        aria-label="Back to top"
+        on-click=${(event) => handleClick(event, scrollTarget, emit)}
+      >
+        <span aria-hidden="true">↑</span>
+      </button>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-backtop {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.jui-backtop__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-backtop__btn {
+  appearance: none;
+  pointer-events: auto;
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--j-border);
+  border-radius: 50%;
+  background: var(--j-surface-2);
+  color: var(--j-forest);
+  box-shadow: var(--j-shadow-sm);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition:
+    background var(--j-duration-fast) var(--j-ease-out),
+    color var(--j-duration-fast) var(--j-ease-out),
+    box-shadow var(--j-duration-fast) var(--j-ease-out);
+}
+
+.jui-backtop__btn:hover {
+  color: var(--j-primary);
+  box-shadow: var(--j-shadow);
+}
+
+.jui-backtop__btn:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+</style>

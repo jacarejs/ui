@@ -1,0 +1,86 @@
+import ChartFrame from './ChartFrame.jcr'
+import ChartPlot from './ChartPlot.jcr'
+import { read } from '../internal/utils.js'
+import {
+  arcPath,
+  chartLayoutWidth,
+  escapeXml,
+  formatNumber,
+  pieSlices,
+  resolveChartWidth,
+  sizeOf,
+} from '../internal/charts.js'
+
+export <contract>
+  props: {
+    data: { type: 'any', required: true }
+    title: { type: 'string', default: '' }
+    caption: { type: 'string', default: '' }
+    width: { type: 'number', default: 360 }
+    height: { type: 'number', default: 280 }
+    colors: { type: 'any', default: null }
+    innerRatio: { type: 'number', default: 0.58 }
+    centerLabel: { type: 'string', default: '' }
+    showLegend: { type: 'boolean', default: true }
+  }
+  emits: ['layout']
+</contract>
+
+function model(dataProp, colorsProp, widthProp, heightProp, innerProp, centerProp) {
+  const { width, height } = sizeOf(widthProp, heightProp, 360, 280)
+  const cx = width / 2
+  const cy = height / 2
+  const radius = Math.min(width, height) * 0.36
+  const inner = radius * Math.max(0.2, Math.min(0.85, Number(read(innerProp) || 0.58)))
+  const slices = pieSlices(dataProp, colorsProp).map((slice) => ({
+    ...slice,
+    path: arcPath(cx, cy, radius, slice.start, slice.end, inner),
+  }))
+  const total = slices[0]?.total || 0
+  return {
+    width,
+    height,
+    cx,
+    cy,
+    slices,
+    legend: slices,
+    center: String(read(centerProp) || formatNumber(total)),
+  }
+}
+
+function plotContent(dataProp, colorsProp, widthProp, heightProp, innerProp, centerProp) {
+  const next = model(dataProp, colorsProp, widthProp, heightProp, innerProp, centerProp)
+  const parts = []
+  for (const slice of next.slices) {
+    parts.push(
+      `<path d="${escapeXml(slice.path)}" fill="${escapeXml(slice.color)}" data-jui-tip="${escapeXml(slice.label)}: ${escapeXml(formatNumber(slice.value))}" />`,
+    )
+  }
+  parts.push(
+    `<text x="${next.cx}" y="${next.cy}" text-anchor="middle" dominant-baseline="middle" fill="var(--j-text)" font-size="18" font-weight="800">${escapeXml(next.center)}</text>`,
+  )
+  return parts.join('')
+}
+
+export <view>
+  <ChartFrame
+    :title=${title}
+    :caption=${caption}
+    :width=${() => resolveChartWidth(width, emit)}
+    :height=${height}
+    :legend=${() =>
+      read(showLegend)
+        ? model(data, colors, resolveChartWidth(width, emit), height, innerRatio, centerLabel).legend
+        : []}
+  >
+    <ChartPlot
+      bind-layoutWidth=${chartLayoutWidth(emit)}
+      :width=${() => resolveChartWidth(width, emit)}
+      :height=${() =>
+        model(data, colors, resolveChartWidth(width, emit), height, innerRatio, centerLabel).height}
+      :label=${() => read(title) || 'Donut chart'}
+      :content=${() =>
+        plotContent(data, colors, resolveChartWidth(width, emit), height, innerRatio, centerLabel)}
+    />
+  </ChartFrame>
+</view>

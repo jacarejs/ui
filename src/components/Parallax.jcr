@@ -1,0 +1,270 @@
+import { effect, pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    src: { type: 'string', default: '' }
+    alt: { type: 'string', default: 'parallax' }
+    height: { type: 'number', default: 400 }
+    speed: { type: 'number', default: 0.5 }
+    reversed: { type: 'boolean', default: false }
+    scrim: { type: 'string', default: 'dark' }
+  }
+  slots: ['default']
+  emits: ['offset']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function numOf(value, fallback) {
+  const next = Number(read(value))
+  return Number.isFinite(next) ? next : fallback
+}
+
+function heightStyle(value) {
+  return `height:${Math.max(120, numOf(value, 400))}px`
+}
+
+function scrimOf(value) {
+  const next = String(read(value) || 'dark')
+  if (next === 'light' || next === 'none' || next === 'dark') return next
+  return 'dark'
+}
+
+function motionReduced(root) {
+  if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return true
+  }
+  const scope = root?.closest('[data-j-motion]') || (typeof document !== 'undefined' ? document.documentElement : null)
+  return scope?.dataset?.jMotion === 'reduce'
+}
+
+function offsetState(emitFn) {
+  if (!emitFn.__juiParallaxOffset) emitFn.__juiParallaxOffset = pulse(0)
+  return emitFn.__juiParallaxOffset
+}
+
+function offsetY(emitFn) {
+  return read(offsetState(emitFn))
+}
+
+function bgStyle(srcProp, emitFn) {
+  const src = String(read(srcProp) || '').trim()
+  const y = offsetY(emitFn)
+  const transform = `transform:translate3d(0,${y}px,0)`
+  if (!src) return transform
+  return `${transform};background-image:url("${src.replace(/"/g, '\\"')}")`
+}
+
+function syncParallax(root, speedProp, reversedProp, heightProp, emitFn) {
+  if (!root) return
+  if (motionReduced(root)) {
+    if (read(offsetState(emitFn)) !== 0) {
+      offsetState(emitFn).set(0)
+      emitFn('offset', 0)
+    }
+    return
+  }
+  const rect = root.getBoundingClientRect()
+  const speed = Math.max(0, Math.min(1, numOf(speedProp, 0.5)))
+  const factor = read(reversedProp) ? -1 : 1
+  const viewport = window.innerHeight || document.documentElement.clientHeight || 0
+  const height = Math.max(rect.height, numOf(heightProp, 400), 1)
+  const progress = (viewport - rect.top) / (viewport + height)
+  const travel = height * speed * 0.28 * factor
+  const raw = (progress - 0.5) * travel * 2
+  const maxShift = height * 0.22
+  const offset = Math.round(Math.max(-maxShift, Math.min(maxShift, raw)))
+  if (read(offsetState(emitFn)) === offset) return
+  offsetState(emitFn).set(offset)
+  emitFn('offset', offset)
+}
+
+function armParallax(root, speedProp, reversedProp, heightProp, srcProp, emitFn) {
+  if (!root || root.parallaxArmed) return
+  root.parallaxArmed = true
+
+  const update = () => syncParallax(root, speedProp, reversedProp, heightProp, emitFn)
+  window.addEventListener('scroll', update, { passive: true })
+  window.addEventListener('resize', update, { passive: true })
+
+  root.parallaxDispose = effect(() => {
+    read(speedProp)
+    read(reversedProp)
+    read(heightProp)
+    read(srcProp)
+    update()
+  })
+
+  root.parallaxCleanup = () => {
+    window.removeEventListener('scroll', update)
+    window.removeEventListener('resize', update)
+    root.parallaxDispose?.()
+    root.parallaxDispose = null
+    root.parallaxArmed = false
+  }
+
+  update()
+}
+
+export <view>
+  <section
+    class="jui-parallax"
+    class-jui-parallax--scrim-dark=${() => scrimOf(scrim) === 'dark'}
+    class-jui-parallax--scrim-light=${() => scrimOf(scrim) === 'light'}
+    class-jui-parallax--scrim-none=${() => scrimOf(scrim) === 'none'}
+    class-is-reduced=${() => motionReduced(null)}
+    :style=${() => heightStyle(height)}
+  >
+    <img
+      class="jui-parallax__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) =>
+        armParallax(event.currentTarget.closest('.jui-parallax'), speed, reversed, height, src, emit)}
+    />
+    <div
+      class="jui-parallax__bg"
+      role="img"
+      aria-label=${() => read(alt) || 'parallax'}
+      :style=${() => bgStyle(src, emit)}
+    />
+    <div class="jui-parallax__scrim" aria-hidden="true"></div>
+    <div class="jui-parallax__overlay">
+      <div class="jui-parallax__content">
+        <slot />
+      </div>
+    </div>
+  </section>
+</view>
+
+export <style>
+.jui-parallax {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  min-width: 0;
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  color: #ffffff;
+}
+
+.jui-parallax__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-parallax__bg {
+  position: absolute;
+  inset: -18% 0;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-color: color-mix(in srgb, var(--j-forest) 55%, #001a12);
+  will-change: transform;
+  transition: none;
+}
+
+.jui-parallax__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #04140c 18%, transparent) 0%,
+      color-mix(in srgb, #04140c 52%, transparent) 55%,
+      color-mix(in srgb, #04140c 72%, transparent) 100%
+    );
+}
+
+.jui-parallax--scrim-light .jui-parallax__scrim {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #ffffff 12%, transparent) 0%,
+      color-mix(in srgb, #ffffff 55%, transparent) 60%,
+      color-mix(in srgb, #ffffff 78%, transparent) 100%
+    );
+}
+
+.jui-parallax--scrim-light {
+  color: var(--j-forest);
+}
+
+.jui-parallax--scrim-none .jui-parallax__scrim {
+  display: none;
+}
+
+.jui-parallax__overlay {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  text-align: center;
+}
+
+.jui-parallax__content {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+  max-width: 36rem;
+  min-width: 0;
+}
+
+.jui-parallax__content .jui-text--h1,
+.jui-parallax__content .jui-text--h2,
+.jui-parallax__content .jui-text--h3 {
+  margin: 0;
+  text-wrap: balance;
+}
+
+.jui-parallax--scrim-dark .jui-parallax__content .jui-text,
+.jui-parallax--scrim-dark .jui-parallax__content .jui-text--h1,
+.jui-parallax--scrim-dark .jui-parallax__content .jui-text--h2,
+.jui-parallax--scrim-dark .jui-parallax__content .jui-text--h3,
+.jui-parallax--scrim-dark .jui-parallax__content .jui-text--primary {
+  color: #ffffff;
+}
+
+.jui-parallax--scrim-dark .jui-parallax__content .jui-text--muted {
+  color: color-mix(in srgb, #ffffff 80%, transparent);
+}
+
+.jui-parallax--scrim-light .jui-parallax__content .jui-text,
+.jui-parallax--scrim-light .jui-parallax__content .jui-text--h1,
+.jui-parallax--scrim-light .jui-parallax__content .jui-text--h2,
+.jui-parallax--scrim-light .jui-parallax__content .jui-text--h3 {
+  color: var(--j-forest);
+}
+
+.jui-parallax--scrim-light .jui-parallax__content .jui-text--muted {
+  color: color-mix(in srgb, var(--j-forest) 72%, transparent);
+}
+
+.jui-parallax.is-reduced .jui-parallax__bg {
+  inset: 0;
+  transform: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-parallax__bg {
+    inset: 0;
+    transform: none !important;
+  }
+}
+
+[data-j-motion='reduce'] .jui-parallax__bg {
+  inset: 0;
+  transform: none !important;
+}
+</style>

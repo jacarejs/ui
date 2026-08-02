@@ -1,0 +1,106 @@
+import ChartFrame from './ChartFrame.jcr'
+import ChartPlot from './ChartPlot.jcr'
+import { read } from '../internal/utils.js'
+import {
+  candlesticks,
+  chartLayoutWidth,
+  escapeXml,
+  extent,
+  formatNumber,
+  niceTicks,
+  padOf,
+  resolveChartWidth,
+  scaleLinear,
+  sizeOf,
+} from '../internal/charts.js'
+
+export <contract>
+  props: {
+    data: { type: 'any', required: true }
+    title: { type: 'string', default: '' }
+    caption: { type: 'string', default: '' }
+    width: { type: 'number', default: 520 }
+    height: { type: 'number', default: 280 }
+  }
+  emits: ['layout']
+</contract>
+
+function model(dataProp, widthProp, heightProp) {
+  const { width, height } = sizeOf(widthProp, heightProp, 520, 280)
+  const pad = padOf(null)
+  const candles = candlesticks(dataProp)
+  const values = candles.flatMap((item) => [item.high, item.low])
+  const yDomain = extent(values, 0.06)
+  const ticks = niceTicks(yDomain.min, yDomain.max, 4)
+  const plotW = width - pad.left - pad.right
+  const slot = plotW / Math.max(candles.length, 1)
+  const bodyW = slot * 0.45
+  const yScale = scaleLinear(yDomain.min, yDomain.max, height - pad.bottom, pad.top)
+  return {
+    width,
+    height,
+    pad,
+    ticks: ticks.map((tick) => ({ value: tick, y: yScale(tick), label: formatNumber(tick) })),
+    candles: candles.map((item, index) => {
+      const cx = pad.left + index * slot + slot / 2
+      const openY = yScale(item.open)
+      const closeY = yScale(item.close)
+      const highY = yScale(item.high)
+      const lowY = yScale(item.low)
+      return {
+        ...item,
+        cx,
+        highY,
+        lowY,
+        bodyX: cx - bodyW / 2,
+        bodyY: Math.min(openY, closeY),
+        bodyH: Math.max(1, Math.abs(openY - closeY)),
+        bodyW,
+        color: item.up ? '#15803d' : '#be185d',
+        labelX: cx,
+      }
+    }),
+  }
+}
+
+function plotContent(dataProp, widthProp, heightProp) {
+  const next = model(dataProp, widthProp, heightProp)
+  const parts = []
+  for (const tick of next.ticks) {
+    parts.push(
+      `<line x1="${next.pad.left}" x2="${next.width - next.pad.right}" y1="${tick.y}" y2="${tick.y}" stroke="color-mix(in srgb, var(--j-border) 70%, transparent)" stroke-width="1" />`,
+    )
+    parts.push(
+      `<text x="${next.pad.left - 8}" y="${tick.y}" text-anchor="end" dominant-baseline="middle" fill="var(--j-muted)" font-size="11">${escapeXml(tick.label)}</text>`,
+    )
+  }
+  for (const candle of next.candles) {
+    parts.push(
+      `<line x1="${candle.cx}" x2="${candle.cx}" y1="${candle.highY}" y2="${candle.lowY}" stroke="${escapeXml(candle.color)}" stroke-width="1.5" />`,
+    )
+    parts.push(
+      `<rect x="${candle.bodyX}" y="${candle.bodyY}" width="${candle.bodyW}" height="${candle.bodyH}" rx="2" fill="${escapeXml(candle.color)}" data-jui-tip="${escapeXml(candle.label)}: O ${escapeXml(formatNumber(candle.open))} H ${escapeXml(formatNumber(candle.high))} L ${escapeXml(formatNumber(candle.low))} C ${escapeXml(formatNumber(candle.close))}" />`,
+    )
+    parts.push(
+      `<text x="${candle.labelX}" y="${next.height - 12}" text-anchor="middle" fill="var(--j-muted)" font-size="11">${escapeXml(candle.label)}</text>`,
+    )
+  }
+  return parts.join('')
+}
+
+export <view>
+  <ChartFrame
+    :title=${title}
+    :caption=${caption}
+    :width=${() => resolveChartWidth(width, emit)}
+    :height=${height}
+  >
+    <ChartPlot
+      bind-layoutWidth=${chartLayoutWidth(emit)}
+      :width=${() => resolveChartWidth(width, emit)}
+      :height=${() => model(data, resolveChartWidth(width, emit), height).height}
+      :label=${() => read(title) || 'Candlestick chart'}
+      :content=${() => plotContent(data, resolveChartWidth(width, emit), height)}
+    />
+  </ChartFrame>
+</view>

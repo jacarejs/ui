@@ -1,0 +1,306 @@
+import { read } from '../internal/utils.js'
+import { propText } from '../i18n/index.js'
+import Icon from './Icon.jcr'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'string', default: '', model: true }
+    placeholder: { type: 'string', default: 'Search…' }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+    required: { type: 'boolean', default: false }
+    clearable: { type: 'boolean', default: true }
+    debounce: { type: 'number', default: 300 }
+    showButton: { type: 'boolean', default: false }
+    buttonLabel: { type: 'string', default: 'Search' }
+    size: { type: 'string', default: 'md' }
+    name: { type: 'string', default: '' }
+    autocomplete: { type: 'string', default: 'off' }
+  }
+  emits: ['change', 'search', 'clear']
+</contract>
+
+function sizeClass(value) {
+  const next = read(value)
+  if (next === 'sm' || next === 'lg') return next
+  return 'md'
+}
+
+function commit(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function emitSearch(value, emitFn) {
+  emitFn('search', String(value ?? ''))
+}
+
+function scheduleSearch(input, delayValue, emitFn) {
+  window.clearTimeout(input.__juiSearchTimer)
+  const delay = Number(read(delayValue))
+  const wait = Number.isFinite(delay) && delay > 0 ? delay : 0
+  const next = input.value
+  if (wait <= 0) {
+    emitSearch(next, emitFn)
+    return
+  }
+  input.__juiSearchTimer = window.setTimeout(() => emitSearch(next, emitFn), wait)
+}
+
+function onInput(event, model, delayValue, emitFn) {
+  const input = event.currentTarget
+  commit(model, input.value, emitFn)
+  scheduleSearch(input, delayValue, emitFn)
+}
+
+function submitSearch(event, model, emitFn) {
+  event.preventDefault()
+  const root = event.currentTarget.closest('[data-jui-search]')
+  const input = root?.querySelector('[data-jui-search-input]')
+  if (input) window.clearTimeout(input.__juiSearchTimer)
+  emitSearch(read(model), emitFn)
+}
+
+function clearValue(event, model, emitFn) {
+  const root = event.currentTarget.closest('[data-jui-search]')
+  const input = root?.querySelector('[data-jui-search-input]')
+  if (input) {
+    window.clearTimeout(input.__juiSearchTimer)
+    input.value = ''
+    input.focus()
+  }
+  commit(model, '', emitFn)
+  emitSearch('', emitFn)
+  emitFn('clear')
+}
+
+export <view>
+  <form
+    class="jui-input-search"
+    class-jui-input-search--sm=${() => sizeClass(size) === 'sm'}
+    class-jui-input-search--lg=${() => sizeClass(size) === 'lg'}
+    class-jui-input-search--with-button=${() => !!read(showButton)}
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
+    data-jui-search
+    role="search"
+    on-submit=${(event) => submitSearch(event, value, emit)}
+  >
+    #if read(label)
+      <label class="jui-input-search__label" for=${() => `jui-search-${read(name) || 'field'}`}>
+        ${() => read(label)}
+        #if read(required)
+          <span class="jui-input-search__req" aria-hidden="true">*</span>
+        #end
+      </label>
+    #end
+
+    <div class="jui-input-search__row">
+      <span class="jui-input-search__control">
+        <span class="jui-input-search__prefix" aria-hidden="true">
+          <Icon :name=${'search'} :size=${'sm'} />
+        </span>
+        <input
+          class="jui-input-search__field"
+          data-jui-search-input
+          id=${() => `jui-search-${read(name) || 'field'}`}
+          type="search"
+          name=${() => read(name) || ''}
+          autocomplete=${() => read(autocomplete) || 'off'}
+          placeholder=${() => read(placeholder) || 'Search…'}
+          disabled=${() => !!read(disabled)}
+          required=${() => !!read(required)}
+          aria-invalid=${() => !!read(error)}
+          value=${() => read(value)}
+          on-input=${(event) => onInput(event, value, debounce, emit)}
+        />
+        #if read(clearable) && !read(disabled) && read(value)
+          <button type="button" class="jui-input-search__clear" aria-label="Clear search" on-click=${(event) => clearValue(event, value, emit)}>×</button>
+        #end
+      </span>
+
+      #if read(showButton)
+        <button type="submit" class="jui-input-search__button" disabled=${() => !!read(disabled)}>
+          ${() => propText(buttonLabel, 'j.inputSearch.button', 'Search')}
+        </button>
+      #end
+    </div>
+
+    #if read(error)
+      <span class="jui-input-search__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-input-search__hint">${() => read(hint)}</span>
+    #end
+  </form>
+</view>
+
+export <style>
+.jui-input-search {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.jui-input-search__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-text);
+}
+
+.jui-input-search__req {
+  color: var(--j-danger);
+}
+
+.jui-input-search__row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.jui-input-search__control {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: calc(var(--j-control-height, 2.5rem) + 0.25rem);
+  padding: 0 calc(var(--j-control-padding-x, 1.15rem) * 0.75);
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-input-search--sm .jui-input-search__control {
+  min-height: 2.1rem;
+  padding: 0 0.65rem;
+}
+
+.jui-input-search--lg .jui-input-search__control {
+  min-height: 3.1rem;
+  padding: 0 1rem;
+}
+
+.jui-input-search__control:focus-within {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-input-search__prefix {
+  display: inline-flex;
+  align-items: center;
+  color: var(--j-muted);
+}
+
+.jui-input-search__field {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  padding: 0.6rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--j-text);
+  font: inherit;
+  outline: none;
+}
+
+.jui-input-search__field::-webkit-search-decoration,
+.jui-input-search__field::-webkit-search-cancel-button,
+.jui-input-search__field::-webkit-search-results-button,
+.jui-input-search__field::-webkit-search-results-decoration {
+  display: none;
+}
+
+.jui-input-search--sm .jui-input-search__field {
+  font-size: 0.875rem;
+}
+
+.jui-input-search--lg .jui-input-search__field {
+  font-size: 1.05rem;
+}
+
+.jui-input-search__field::placeholder {
+  color: color-mix(in srgb, var(--j-muted) 75%, white);
+}
+
+.jui-input-search__clear {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--j-muted);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.jui-input-search__clear:hover {
+  color: var(--j-danger);
+}
+
+.jui-input-search__button {
+  flex: 0 0 auto;
+  min-height: calc(var(--j-control-height, 2.5rem) + 0.25rem);
+  padding: 0 1rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  background: var(--j-primary);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.jui-input-search__button:hover:not(:disabled) {
+  background: var(--j-leaf, var(--j-primary));
+}
+
+.jui-input-search__button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.jui-input-search--sm .jui-input-search__button {
+  min-height: 2.1rem;
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+}
+
+.jui-input-search--lg .jui-input-search__button {
+  min-height: 3.1rem;
+  padding: 0 1.15rem;
+}
+
+.jui-input-search.has-error .jui-input-search__control {
+  border-color: var(--j-danger);
+}
+
+.jui-input-search.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-input-search__hint,
+.jui-input-search__error {
+  font-size: 0.8rem;
+}
+
+.jui-input-search__hint {
+  color: var(--j-muted);
+}
+
+.jui-input-search__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

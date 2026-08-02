@@ -1,3 +1,4 @@
+import { localeText, propText } from '../i18n/index.js'
 import { read } from '../internal/utils.js'
 
 export <contract>
@@ -8,23 +9,83 @@ export <contract>
     placeholder: { type: 'string', default: 'Select' }
     clearable: { type: 'boolean', default: true }
     disabled: { type: 'boolean', default: false }
+    loading: { type: 'boolean', default: false }
+    size: { type: 'string', default: 'md' }
+    fluid: { type: 'boolean', default: false }
     separator: { type: 'string', default: '/' }
     hint: { type: 'string', default: '' }
     error: { type: 'string', default: '' }
+    filterable: { type: 'boolean', default: false }
+    changeOnSelect: { type: 'boolean', default: false }
+    multiple: { type: 'boolean', default: false }
+    expandTrigger: { type: 'string', default: 'hover' }
+    showAllLevels: { type: 'boolean', default: true }
+    emitPath: { type: 'boolean', default: true }
   }
   emits: ['change']
 </contract>
+
+function sizeOf(value) {
+  const next = String(read(value) || 'md')
+  if (next === 'sm' || next === 'lg') return next
+  return 'md'
+}
 
 function normalizedTree(source) {
   const list = read(source)
   return Array.isArray(list) ? list : []
 }
 
-function toPath(value, sep) {
+function isMultiple(multipleProp) {
+  return !!read(multipleProp)
+}
+
+function usesPath(emitPathProp) {
+  return read(emitPathProp) !== false
+}
+
+function findPathByLeaf(nodes, leaf, trail = []) {
+  for (const node of nodes) {
+    const next = [...trail, node.value]
+    if (String(node.value) === String(leaf)) return next
+    const children = node.children || []
+    if (children.length) {
+      const found = findPathByLeaf(children, leaf, next)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+function toPath(value, sep, source, emitPathProp) {
   const current = read(value)
-  if (Array.isArray(current)) return current.filter((item) => item !== undefined && item !== null && item !== '')
-  if (typeof current === 'string' && current) return current.split(read(sep) || '/').filter(Boolean)
-  return []
+  if (usesPath(emitPathProp)) {
+    if (Array.isArray(current)) {
+      if (current.length && Array.isArray(current[0])) return []
+      return current.filter((item) => item !== undefined && item !== null && item !== '')
+    }
+    if (typeof current === 'string' && current) return current.split(read(sep) || '/').filter(Boolean)
+    return []
+  }
+  if (current === undefined || current === null || current === '') return []
+  return findPathByLeaf(normalizedTree(source), current) || []
+}
+
+function toPaths(value, sep, source, emitPathProp, multipleProp) {
+  const current = read(value)
+  if (!isMultiple(multipleProp)) {
+    const path = toPath(value, sep, source, emitPathProp)
+    return path.length ? [path] : []
+  }
+  if (!Array.isArray(current)) return []
+  if (usesPath(emitPathProp)) {
+    return current
+      .map((item) => (Array.isArray(item) ? item.filter((step) => step !== undefined && step !== null && step !== '') : []))
+      .filter((path) => path.length)
+  }
+  return current
+    .map((leaf) => findPathByLeaf(normalizedTree(source), leaf))
+    .filter((path) => Array.isArray(path) && path.length)
 }
 
 function findNode(nodes, value) {
@@ -43,16 +104,65 @@ function pathLabels(tree, path) {
   return labels
 }
 
-function displayValue(value, source, sep, placeholderValue) {
-  const path = toPath(value, sep)
-  const labels = pathLabels(normalizedTree(source), path)
-  return labels.length ? labels.join(` ${read(sep) || '/'} `) : read(placeholderValue)
+function pathKey(path) {
+  return path.map(String).join('\0')
 }
 
-function commitPath(model, path, emitFn) {
-  const next = [...path]
+function formatPath(tree, path, sep, showAll) {
+  const labels = pathLabels(tree, path)
+  if (!labels.length) return ''
+  if (read(showAll) === false) return labels[labels.length - 1]
+  return labels.join(` ${read(sep) || '/'} `)
+}
+
+function displayValue(value, source, sep, placeholderValue, emitPathProp, multipleProp, showAllProp) {
+  const tree = normalizedTree(source)
+  const paths = toPaths(value, sep, source, emitPathProp, multipleProp)
+  const empty = propText(placeholderValue, 'j.cascader.placeholder', 'Select')
+  if (!paths.length) return empty
+  if (isMultiple(multipleProp)) {
+    return paths.map((path) => formatPath(tree, path, sep, showAllProp)).filter(Boolean).join(', ')
+  }
+  return formatPath(tree, paths[0], sep, showAllProp) || empty
+}
+
+function modelPayload(paths, emitPathProp, multipleProp) {
+  if (isMultiple(multipleProp)) {
+    return usesPath(emitPathProp) ? paths.map((path) => [...path]) : paths.map((path) => path[path.length - 1])
+  }
+  if (!paths.length) return usesPath(emitPathProp) ? [] : null
+  return usesPath(emitPathProp) ? [...paths[0]] : paths[0][paths[0].length - 1]
+}
+
+function commitPaths(model, paths, emitFn, emitPathProp, multipleProp) {
+  const next = modelPayload(paths, emitPathProp, multipleProp)
   if (model && typeof model.set === 'function') model.set(next)
   emitFn('change', next)
+}
+
+function commitPath(model, path, emitFn, emitPathProp, multipleProp) {
+  commitPaths(model, path.length ? [path] : [], emitFn, emitPathProp, multipleProp)
+}
+
+function collectLeaves(nodes, trail = [], out = []) {
+  nodes.forEach((node) => {
+    const next = [...trail, node.value]
+    const children = node.children || []
+    if (children.length) collectLeaves(children, next, out)
+    else out.push({ path: next, label: node.label, labels: null })
+  })
+  return out
+}
+
+function filterMatches(tree, query, sep, showAllProp) {
+  const needle = String(query || '').trim().toLowerCase()
+  if (!needle) return []
+  return collectLeaves(tree).filter((item) => {
+    const labels = pathLabels(tree, item.path)
+    item.labels = labels
+    item.text = formatPath(tree, item.path, sep, showAllProp)
+    return labels.some((label) => String(label).toLowerCase().includes(needle))
+  })
 }
 
 function isMobileLayout() {
@@ -70,10 +180,37 @@ function nodesAtDepth(tree, path, depth) {
   return level
 }
 
-function buildColumn(nodes, activeValue, level, root) {
+function clearHoverTimer(root) {
+  const state = root?.cascaderState
+  if (!state?.hoverTimer) return
+  clearTimeout(state.hoverTimer)
+  state.hoverTimer = 0
+}
+
+function expandBranch(root, level, node) {
+  const state = root.cascaderState
+  const nextPath = [...state.path.slice(0, level), node.value]
+  const same =
+    nextPath.length === state.path.length &&
+    nextPath.every((step, index) => String(step) === String(state.path[index]))
+  if (same) return
+  state.path = nextPath
+  renderColumns(root)
+}
+
+function pathSelected(paths, path) {
+  const key = pathKey(path)
+  return paths.some((item) => pathKey(item) === key)
+}
+
+function buildColumn(nodes, activeValue, level, root, committedPaths) {
   const list = document.createElement('ul')
   list.className = 'jui-cascader__column'
   list.setAttribute('role', 'listbox')
+  list.dataset.cascaderLevel = String(level)
+  const changeOnSelect = !!root.cascaderState?.changeOnSelect
+  const multiple = !!root.cascaderState?.multiple
+  const expandTrigger = root.cascaderState?.expandTrigger || 'hover'
 
   nodes.forEach((node) => {
     const item = document.createElement('li')
@@ -82,10 +219,32 @@ function buildColumn(nodes, activeValue, level, root) {
     button.className = 'jui-cascader__option'
     button.setAttribute('role', 'option')
     const hasChildren = Array.isArray(node.children) && node.children.length > 0
-    button.classList.toggle('is-active', String(node.value) === String(activeValue))
+    const branchPath = [...root.cascaderState.path.slice(0, level), node.value]
+    const isActive = String(node.value) === String(activeValue)
+    const isCommitted = pathSelected(committedPaths, branchPath) || (
+      !multiple &&
+      !changeOnSelect &&
+      !hasChildren &&
+      committedPaths.some((path) => (
+        path.length === level + 1 &&
+        String(path[path.length - 1]) === String(node.value)
+      ))
+    )
+    button.classList.toggle('is-active', isActive)
+    button.classList.toggle('is-selected', isCommitted)
     button.classList.toggle('has-children', hasChildren)
+    button.setAttribute('aria-selected', isActive || isCommitted ? 'true' : 'false')
+
+    if (multiple || changeOnSelect) {
+      const mark = document.createElement('span')
+      mark.className = 'jui-cascader__radio'
+      mark.classList.toggle('is-on', isCommitted)
+      mark.setAttribute('aria-hidden', 'true')
+      button.appendChild(mark)
+    }
 
     const text = document.createElement('span')
+    text.className = 'jui-cascader__option-label'
     text.textContent = node.label
     button.appendChild(text)
 
@@ -93,11 +252,29 @@ function buildColumn(nodes, activeValue, level, root) {
       const caret = document.createElement('span')
       caret.className = 'jui-cascader__caret'
       caret.setAttribute('aria-hidden', 'true')
-      caret.textContent = '›'
       button.appendChild(caret)
+    } else if (isCommitted && !multiple && !changeOnSelect) {
+      const check = document.createElement('span')
+      check.className = 'jui-cascader__check'
+      check.setAttribute('aria-hidden', 'true')
+      button.appendChild(check)
     }
 
-    button.addEventListener('click', () => selectNode(root, level, node))
+    button.addEventListener('pointerdown', (event) => {
+      if (!hasChildren || changeOnSelect || multiple) event.preventDefault()
+    })
+    button.addEventListener('click', (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+      selectNode(root, level, node)
+    })
+    button.addEventListener('pointerenter', () => {
+      const state = root.cascaderState
+      if (!state || state.mobile || expandTrigger !== 'hover') return
+      clearHoverTimer(root)
+      if (!hasChildren) return
+      state.hoverTimer = setTimeout(() => expandBranch(root, level, node), 70)
+    })
     item.appendChild(button)
     list.appendChild(item)
   })
@@ -113,7 +290,7 @@ function buildMobileNav(root) {
   const back = document.createElement('button')
   back.type = 'button'
   back.className = 'jui-cascader__nav-back'
-  back.textContent = 'Back'
+  back.textContent = localeText('j.cascader.back', 'Back')
   back.disabled = state.path.length === 0
   back.addEventListener('click', () => {
     if (!state.path.length) return
@@ -124,11 +301,49 @@ function buildMobileNav(root) {
   const title = document.createElement('span')
   title.className = 'jui-cascader__nav-title'
   const labels = pathLabels(state.tree, state.path)
-  title.textContent = labels.length ? labels[labels.length - 1] : 'Select'
+  title.textContent = labels.length ? labels[labels.length - 1] : localeText('j.cascader.placeholder', 'Select')
 
   nav.appendChild(back)
   nav.appendChild(title)
   return nav
+}
+
+function renderFilterResults(root) {
+  const state = root.cascaderState
+  const container = root.querySelector('[data-cascader-columns]')
+  container.replaceChildren()
+  const matches = filterMatches(state.tree, state.query, state.separator, state.showAllLevels)
+  const list = document.createElement('ul')
+  list.className = 'jui-cascader__column jui-cascader__column--filter'
+  list.setAttribute('role', 'listbox')
+  if (!matches.length) {
+    const empty = document.createElement('li')
+    empty.className = 'jui-cascader__empty'
+    empty.textContent = localeText('j.cascader.noMatches', 'No matches')
+    list.appendChild(empty)
+    container.appendChild(list)
+    return
+  }
+  matches.forEach((match) => {
+    const item = document.createElement('li')
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'jui-cascader__option'
+    button.classList.toggle('is-selected', pathSelected(state.committedPaths, match.path))
+    button.setAttribute('role', 'option')
+    const text = document.createElement('span')
+    text.className = 'jui-cascader__option-label'
+    text.textContent = match.text
+    button.appendChild(text)
+    button.addEventListener('click', (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+      choosePath(root, match.path)
+    })
+    item.appendChild(button)
+    list.appendChild(item)
+  })
+  container.appendChild(list)
 }
 
 function renderColumns(root) {
@@ -136,14 +351,19 @@ function renderColumns(root) {
   const container = root.querySelector('[data-cascader-columns]')
   const mobile = !!state.mobile
   root.classList.toggle('is-mobile', mobile)
+  if (state.filterable && String(state.query || '').trim()) {
+    renderFilterResults(root)
+    return
+  }
   container.replaceChildren()
+  const committedPaths = state.committedPaths || []
 
   if (mobile) {
     container.appendChild(buildMobileNav(root))
     const depth = state.path.length
     const nodes = nodesAtDepth(state.tree, state.path, depth)
     if (nodes.length) {
-      container.appendChild(buildColumn(nodes, state.path[depth], depth, root))
+      container.appendChild(buildColumn(nodes, state.path[depth], depth, root, committedPaths))
     }
     return
   }
@@ -151,11 +371,62 @@ function renderColumns(root) {
   let level = state.tree
   for (let index = 0; index <= state.path.length; index += 1) {
     if (!level.length) break
-    container.appendChild(buildColumn(level, state.path[index], index, root))
+    container.appendChild(buildColumn(level, state.path[index], index, root, committedPaths))
     const activeNode = findNode(level, state.path[index])
     if (!activeNode) break
     level = activeNode.children || []
   }
+
+  requestAnimationFrame(() => {
+    positionPanel(root)
+    const maxScroll = Math.max(0, container.scrollWidth - container.clientWidth)
+    if (maxScroll > 0) container.scrollLeft = maxScroll
+  })
+}
+
+function positionPanel(root) {
+  const panel = root.querySelector('[data-cascader-panel]')
+  const field = root.querySelector('.jui-cascader__field')
+  if (!panel || !field || panel.hidden) return
+
+  const margin = 12
+  const fieldRect = field.getBoundingClientRect()
+  const viewport = typeof window === 'undefined' ? 1280 : window.innerWidth
+  const spaceRight = Math.max(fieldRect.width, viewport - fieldRect.left - margin)
+  const spaceLeft = Math.max(fieldRect.width, fieldRect.right - margin)
+  const alignEnd = spaceLeft > spaceRight
+  const available = Math.min(alignEnd ? spaceLeft : spaceRight, viewport - margin * 2)
+
+  panel.style.left = alignEnd ? 'auto' : '0'
+  panel.style.right = alignEnd ? '0' : 'auto'
+  panel.style.maxWidth = `${available}px`
+}
+
+function choosePath(root, nextPath, { close = true } = {}) {
+  const state = root.cascaderState
+  if (state.multiple) {
+    const key = pathKey(nextPath)
+    const exists = state.committedPaths.some((path) => pathKey(path) === key)
+    state.committedPaths = exists
+      ? state.committedPaths.filter((path) => pathKey(path) !== key)
+      : [...state.committedPaths, [...nextPath]]
+    state.path = nextPath
+    state.commit(state.committedPaths)
+    renderColumns(root)
+    return
+  }
+  state.committedPaths = [[...nextPath]]
+  state.path = nextPath
+  state.commit(state.committedPaths)
+  if (!close) {
+    renderColumns(root)
+    return
+  }
+  root.__juiCascaderSkipOpen = true
+  closePicker(root)
+  setTimeout(() => {
+    root.__juiCascaderSkipOpen = false
+  }, 0)
 }
 
 function selectNode(root, level, node) {
@@ -163,50 +434,85 @@ function selectNode(root, level, node) {
   const nextPath = [...state.path.slice(0, level), node.value]
   const hasChildren = Array.isArray(node.children) && node.children.length > 0
 
+  clearHoverTimer(root)
+  state.path = nextPath
+
   if (hasChildren) {
-    state.path = nextPath
+    if (state.changeOnSelect) {
+      choosePath(root, nextPath, { close: false })
+      return
+    }
     renderColumns(root)
     return
   }
 
-  state.commit(nextPath)
-  closePicker(root)
+  choosePath(root, nextPath, { close: !state.multiple })
 }
 
 function closePicker(root) {
   if (!root) return
+  clearHoverTimer(root)
   const panel = root.querySelector('[data-cascader-panel]')
-  if (panel) panel.hidden = true
+  if (panel) {
+    panel.hidden = true
+    panel.style.left = ''
+    panel.style.right = ''
+    panel.style.maxWidth = ''
+  }
   root.querySelector('[data-cascader-trigger]')?.setAttribute('aria-expanded', 'false')
   root.classList.remove('is-open', 'is-mobile')
   root.cascaderController?.abort()
 }
 
-function openPicker(event, model, source, sep, emitFn) {
+function openPicker(event, model, source, sep, loadingProp, emitFn, config) {
   const root = event.currentTarget.closest('[data-cascader]')
-  if (!root || event.currentTarget.disabled) return
+  if (!root || event.currentTarget.disabled || read(loadingProp) || root.__juiCascaderSkipOpen) return
 
   document.querySelectorAll('[data-cascader-panel]:not([hidden])').forEach((panel) => {
     const otherRoot = panel.closest('[data-cascader]')
     if (otherRoot !== root) closePicker(otherRoot)
   })
 
+  if (!root.querySelector('[data-cascader-panel]')?.hidden) {
+    closePicker(root)
+    return
+  }
+
+  const emitPathProp = config.emitPath
+  const multipleProp = config.multiple
+  const committedPaths = toPaths(model, sep, source, emitPathProp, multipleProp)
+  const expandTrigger = String(read(config.expandTrigger) || 'hover') === 'click' ? 'click' : 'hover'
   root.cascaderState = {
     tree: normalizedTree(source),
-    path: toPath(model, sep),
+    path: committedPaths[0] ? [...committedPaths[0]] : [],
+    committedPaths: committedPaths.map((path) => [...path]),
     mobile: isMobileLayout(),
-    commit: (path) => commitPath(model, path, emitFn),
+    hoverTimer: 0,
+    query: '',
+    filterable: !!read(config.filterable),
+    changeOnSelect: !!read(config.changeOnSelect),
+    multiple: !!read(multipleProp),
+    expandTrigger,
+    separator: sep,
+    showAllLevels: config.showAllLevels,
+    commit: (paths) => commitPaths(model, paths, emitFn, emitPathProp, multipleProp),
   }
+
+  const search = root.querySelector('[data-cascader-search]')
+  if (search) search.value = ''
 
   renderColumns(root)
   root.querySelector('[data-cascader-panel]').hidden = false
   root.classList.add('is-open')
   event.currentTarget.setAttribute('aria-expanded', 'true')
+  positionPanel(root)
 
   root.cascaderController?.abort()
   const controller = new AbortController()
   root.cascaderController = controller
   requestAnimationFrame(() => {
+    positionPanel(root)
+    if (search && root.cascaderState.filterable) search.focus()
     document.addEventListener('pointerdown', (pointerEvent) => {
       if (!root.contains(pointerEvent.target)) closePicker(root)
     }, { signal: controller.signal })
@@ -216,35 +522,111 @@ function openPicker(event, model, source, sep, emitFn) {
         event.currentTarget.focus()
       }
     }, { signal: controller.signal })
+    window.addEventListener('resize', () => positionPanel(root), { signal: controller.signal })
   })
 }
 
+function onSearchInput(event) {
+  const root = event.currentTarget.closest('[data-cascader]')
+  if (!root?.cascaderState) return
+  root.cascaderState.query = event.currentTarget.value
+  renderColumns(root)
+}
+
+function hasSelection(valueProp, sep, source, emitPathProp, multipleProp) {
+  return toPaths(valueProp, sep, source, emitPathProp, multipleProp).length > 0
+}
+
+function pickerConfig(filterableProp, changeOnSelectProp, multipleProp, expandTriggerProp, showAllLevelsProp, emitPathProp) {
+  return {
+    filterable: filterableProp,
+    changeOnSelect: changeOnSelectProp,
+    multiple: multipleProp,
+    expandTrigger: expandTriggerProp,
+    showAllLevels: showAllLevelsProp,
+    emitPath: emitPathProp,
+  }
+}
+
 export <view>
-  <div class="jui-cascader" class-has-error=${() => !!read(error)} class-is-disabled=${() => !!read(disabled)} data-cascader>
+  <div
+    class="jui-cascader"
+    class-jui-cascader--sm=${() => sizeOf(size) === 'sm'}
+    class-jui-cascader--lg=${() => sizeOf(size) === 'lg'}
+    class-is-fluid=${() => !!read(fluid)}
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!(read(disabled) || read(loading))}
+    class-is-loading=${() => !!read(loading)}
+    class-is-multiple=${() => !!read(multiple)}
+    data-cascader
+  >
     #if read(label)
       <span class="jui-cascader__label">${() => read(label)}</span>
     #end
 
     <span class="jui-cascader__field">
-      <button
-        type="button"
-        class="jui-cascader__trigger"
-        data-cascader-trigger
-        aria-haspopup="dialog"
-        aria-expanded="false"
-        disabled=${() => !!read(disabled)}
-        on-click=${(event) => openPicker(event, value, options, separator, emit)}
-      >
-        <span class="jui-cascader__face">
-          <span class="jui-cascader__value" class-is-placeholder=${() => toPath(value, separator).length === 0}>${() => displayValue(value, options, separator, placeholder)}</span>
-          <span class="jui-cascader__chevron" aria-hidden="true"></span>
-        </span>
-      </button>
+      <span class="jui-cascader__control">
+        <button
+          type="button"
+          class="jui-cascader__trigger"
+          data-cascader-trigger
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          aria-busy=${() => (read(loading) ? 'true' : 'false')}
+          disabled=${() => !!(read(disabled) || read(loading))}
+          on-click=${(event) => openPicker(
+            event,
+            value,
+            options,
+            separator,
+            loading,
+            emit,
+            pickerConfig(filterable, changeOnSelect, multiple, expandTrigger, showAllLevels, emitPath),
+          )}
+        >
+          <span class="jui-cascader__face">
+            <span
+              class="jui-cascader__value"
+              class-is-placeholder=${() => !hasSelection(value, separator, options, emitPath, multiple) || !!read(loading)}
+            >
+              ${() => (read(loading)
+                ? localeText('j.cascader.loading', 'Loading…')
+                : displayValue(value, options, separator, placeholder, emitPath, multiple, showAllLevels))}
+            </span>
+            #if read(loading)
+              <span class="jui-cascader__spinner" aria-hidden="true"></span>
+            #else
+              <span class="jui-cascader__chevron" aria-hidden="true"></span>
+            #end
+          </span>
+        </button>
+        #if read(clearable) && !read(loading) && !read(disabled) && hasSelection(value, separator, options, emitPath, multiple)
+          <button
+            type="button"
+            class="jui-cascader__clear"
+            aria-label=${() => localeText('j.cascader.clear', 'Clear')}
+            on-click=${() => commitPaths(value, [], emit, emitPath, multiple)}
+          >×</button>
+        #end
+      </span>
 
       <div class="jui-cascader__backdrop" data-cascader-backdrop aria-hidden="true" on-click=${(event) => closePicker(event.currentTarget.closest('[data-cascader]'))}></div>
 
-      <div class="jui-cascader__panel" data-cascader-panel role="dialog" aria-label="Choose option" hidden>
+      <div class="jui-cascader__panel" data-cascader-panel role="dialog" aria-label=${() => localeText('j.cascader.choose', 'Choose option')} hidden>
         <div class="jui-cascader__sheet-handle" aria-hidden="true"></div>
+        #if read(filterable)
+          <label class="jui-cascader__search">
+            <span class="jui-cascader__search-label">${() => localeText('j.common.filter', 'Filter')}</span>
+            <input
+              type="search"
+              class="jui-cascader__search-input"
+              data-cascader-search
+              placeholder=${() => localeText('j.cascader.search', 'Search…')}
+              autocomplete="off"
+              on-input=${onSearchInput}
+            />
+          </label>
+        #end
         <div class="jui-cascader__columns" data-cascader-columns></div>
         #if read(clearable)
           <div class="jui-cascader__footer">
@@ -252,10 +634,10 @@ export <view>
               type="button"
               class="jui-cascader__text-btn"
               on-click=${(event) => {
-                commitPath(value, [], emit)
+                commitPaths(value, [], emit, emitPath, multiple)
                 closePicker(event.currentTarget.closest('[data-cascader]'))
               }}
-            >Clear</button>
+            >${() => localeText('j.cascader.clear', 'Clear')}</button>
           </div>
         #end
       </div>
@@ -273,6 +655,16 @@ export <style>
 .jui-cascader {
   display: grid;
   gap: 0.4rem;
+  min-width: 0;
+}
+
+.jui-cascader.is-fluid {
+  width: 100%;
+}
+
+.jui-cascader__control {
+  position: relative;
+  display: block;
   min-width: 0;
 }
 
@@ -311,7 +703,7 @@ export <style>
   gap: 0.65rem;
   width: 100%;
   min-height: 2.75rem;
-  padding: 0.65rem 0.9rem;
+  padding: 0.65rem 2.4rem 0.65rem 0.9rem;
   border: 1px solid var(--j-border);
   border-radius: var(--j-radius-sm);
   outline: 0;
@@ -323,6 +715,58 @@ export <style>
   cursor: pointer;
   transition: border-color 120ms ease, box-shadow 120ms ease;
   touch-action: manipulation;
+}
+
+.jui-cascader--sm .jui-cascader__trigger {
+  min-height: 2.25rem;
+  padding: 0.4rem 2.2rem 0.4rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.jui-cascader--lg .jui-cascader__trigger {
+  min-height: 3.15rem;
+  padding: 0.8rem 2.6rem 0.8rem 1rem;
+  font-size: 1rem;
+}
+
+.jui-cascader__clear {
+  position: absolute;
+  top: 50%;
+  right: 2rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  color: var(--j-muted);
+  background: transparent;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.jui-cascader__clear:hover {
+  background: var(--j-mint);
+  color: var(--j-text);
+}
+
+.jui-cascader__spinner {
+  box-sizing: border-box;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid color-mix(in srgb, var(--j-primary) 25%, var(--j-border));
+  border-right-color: var(--j-primary);
+  border-radius: 50%;
+  animation: jui-cascader-spin 0.7s linear infinite;
+}
+
+@keyframes jui-cascader-spin {
+  to { transform: rotate(360deg); }
 }
 
 .jui-cascader__trigger:focus,
@@ -393,15 +837,76 @@ export <style>
   display: none;
 }
 
+.jui-cascader__search {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.jui-cascader__search-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.jui-cascader__search-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 2.4rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  color: var(--j-text);
+  background: var(--j-surface);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.jui-cascader__search-input:focus {
+  border-color: var(--j-primary);
+  outline: 0;
+  box-shadow: var(--j-focus);
+}
+
+.jui-cascader__empty {
+  padding: 0.85rem 0.75rem;
+  color: var(--j-muted);
+  font-size: 0.85rem;
+}
+
+.jui-cascader__radio {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 1.5px solid var(--j-border);
+  border-radius: 999px;
+  background: var(--j-surface);
+}
+
+.jui-cascader__radio.is-on {
+  border-color: var(--j-primary);
+  background: radial-gradient(circle at center, var(--j-primary) 0 35%, transparent 38%);
+}
+
+.jui-cascader__column--filter {
+  flex-basis: min(22rem, 70vw);
+  width: min(22rem, 70vw);
+  min-width: min(22rem, 70vw);
+}
+
 .jui-cascader__panel {
   position: absolute;
   z-index: 80;
   top: calc(100% + 0.4rem);
   left: 0;
   display: grid;
-  gap: 0.5rem;
-  max-width: min(100vw - 1.5rem, 36rem);
-  padding: 0.55rem;
+  gap: 0.55rem;
+  width: max-content;
+  min-width: 100%;
+  max-width: min(100vw - 1.5rem, 42rem);
+  padding: 0.5rem;
   border: 1px solid var(--j-border);
   border-radius: var(--j-radius);
   background: var(--j-surface-2);
@@ -414,31 +919,41 @@ export <style>
 
 .jui-cascader__columns {
   display: flex;
-  gap: 0.4rem;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0;
+  width: max-content;
   max-width: 100%;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--j-border);
+  border-radius: calc(var(--j-radius-sm) + 1px);
+  background: var(--j-surface);
 }
 
 .jui-cascader__column {
   display: grid;
   align-content: start;
-  gap: 0.15rem;
-  flex: 0 0 11rem;
-  width: 11rem;
-  max-height: 16rem;
+  gap: 0.25rem;
+  flex: 0 0 12rem;
+  width: 12rem;
+  min-width: 12rem;
+  max-height: 18rem;
   margin: 0;
-  padding: 0;
+  padding: 0.4rem;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   list-style: none;
+  scrollbar-width: thin;
+  background: var(--j-surface);
+  isolation: isolate;
 }
 
 .jui-cascader__column + .jui-cascader__column {
   border-left: 1px solid var(--j-border);
-  padding-left: 0.4rem;
 }
 
 .jui-cascader__nav {
@@ -446,36 +961,87 @@ export <style>
 }
 
 .jui-cascader__option {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.65rem;
   width: 100%;
   min-height: 2.5rem;
-  padding: 0.5rem 0.6rem;
+  padding: 0.5rem 0.75rem;
   border: 0;
   border-radius: var(--j-radius-sm);
   color: var(--j-text);
   background: transparent;
   cursor: pointer;
   text-align: left;
+  font: inherit;
   font-size: 0.88rem;
+  line-height: 1.25;
   touch-action: manipulation;
+  transition: background-color 100ms ease, color 100ms ease;
 }
 
-.jui-cascader__option:hover,
-.jui-cascader__option.is-active {
-  background: var(--j-mint);
+.jui-cascader__option-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jui-cascader__option:hover {
+  background: color-mix(in srgb, var(--j-mint) 70%, var(--j-surface-2));
 }
 
 .jui-cascader__option.is-active {
   color: var(--j-forest);
   font-weight: 700;
+  background: var(--j-mint);
+  box-shadow: inset 2px 0 0 var(--j-primary);
+}
+
+.jui-cascader__option.is-active:hover {
+  background: color-mix(in srgb, var(--j-mint) 82%, var(--j-primary));
+}
+
+.jui-cascader__option.is-selected {
+  color: var(--j-forest);
+  font-weight: 800;
+  background: color-mix(in srgb, var(--j-primary) 12%, var(--j-surface-2));
+}
+
+.jui-cascader__option.is-selected:hover,
+.jui-cascader__option.is-selected.is-active {
+  background: color-mix(in srgb, var(--j-primary) 16%, var(--j-mint));
+}
+
+.jui-cascader__caret,
+.jui-cascader__check {
+  box-sizing: border-box;
+  display: block;
+  flex: 0 0 auto;
+  width: 0.85rem;
+  height: 0.85rem;
+  background-color: currentColor;
+  -webkit-mask: center / contain no-repeat;
+  mask: center / contain no-repeat;
 }
 
 .jui-cascader__caret {
-  flex: 0 0 auto;
   color: var(--j-muted);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 6 6 6-6 6'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 6 6 6-6 6'/%3E%3C/svg%3E");
+}
+
+.jui-cascader__option.is-active .jui-cascader__caret {
+  color: var(--j-primary);
+}
+
+.jui-cascader__check {
+  color: var(--j-primary);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5 10 17.5 19 7'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5 10 17.5 19 7'/%3E%3C/svg%3E");
 }
 
 .jui-cascader__footer {

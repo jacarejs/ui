@@ -1,0 +1,146 @@
+import ChartFrame from './ChartFrame.jcr'
+import ChartPlot from './ChartPlot.jcr'
+import { read } from '../internal/utils.js'
+import {
+  cartesianModel,
+  chartLayoutWidth,
+  colorAt,
+  escapeXml,
+  extent,
+  formatNumber,
+  niceTicks,
+  padOf,
+  resolveChartWidth,
+  scaleLinear,
+  sizeOf,
+  stackedSeries,
+} from '../internal/charts.js'
+
+export <contract>
+  props: {
+    data: { type: 'any', required: true }
+    title: { type: 'string', default: '' }
+    caption: { type: 'string', default: '' }
+    width: { type: 'number', default: 480 }
+    height: { type: 'number', default: 280 }
+    colors: { type: 'any', default: null }
+    stacked: { type: 'boolean', default: false }
+    showLegend: { type: 'boolean', default: true }
+  }
+  emits: ['layout']
+</contract>
+
+function model(dataProp, colorsProp, widthProp, heightProp, stackedProp) {
+  const { width, height } = sizeOf(widthProp, heightProp, 480, 280)
+  const pad = padOf(null)
+  const base = cartesianModel(dataProp)
+  const isStacked = !!read(stackedProp)
+  const seriesCount = Math.max(base.series.length, 1)
+  const values = isStacked
+    ? stackedSeries(base, colorsProp).flatMap((serie) => serie.points.map((point) => point.y1))
+    : base.series.flatMap((serie) => serie.data)
+  const yDomain = extent(values, 0.05)
+  if (yDomain.min > 0) yDomain.min = 0
+  const ticks = niceTicks(yDomain.min, yDomain.max, 4)
+  const plotW = width - pad.left - pad.right
+  const groupW = plotW / Math.max(base.categories.length, 1)
+  const barW = isStacked ? groupW * 0.55 : (groupW * 0.7) / seriesCount
+  const yScale = scaleLinear(yDomain.min, yDomain.max, height - pad.bottom, pad.top)
+  const zero = yScale(0)
+  const bars = []
+  const legend = base.series.map((serie, index) => ({
+    key: serie.key || serie.name,
+    name: serie.name,
+    color: serie.color || colorAt(index, colorsProp),
+  }))
+  if (isStacked) {
+    stackedSeries(base, colorsProp).forEach((serie) => {
+      serie.points.forEach((point) => {
+        const x = pad.left + point.xIndex * groupW + (groupW - barW) / 2
+        const y1 = yScale(point.y1)
+        const y0 = yScale(point.y0)
+        bars.push({
+          key: `${serie.key}-${point.xIndex}`,
+          x,
+          y: Math.min(y0, y1),
+          width: barW,
+          height: Math.max(1, Math.abs(y0 - y1)),
+          color: serie.color,
+          title: `${serie.name} ${base.categories[point.xIndex]}: ${formatNumber(point.value)}`,
+        })
+      })
+    })
+  } else {
+    base.series.forEach((serie, serieIndex) => {
+      const color = serie.color || colorAt(serieIndex, colorsProp)
+      serie.data.forEach((value, index) => {
+        const x = pad.left + index * groupW + groupW * 0.15 + serieIndex * barW
+        const y = yScale(value)
+        bars.push({
+          key: `${serie.key}-${index}`,
+          x,
+          y: Math.min(zero, y),
+          width: barW,
+          height: Math.max(1, Math.abs(zero - y)),
+          color,
+          title: `${serie.name} ${base.categories[index]}: ${formatNumber(value)}`,
+        })
+      })
+    })
+  }
+  return {
+    width,
+    height,
+    pad,
+    bars,
+    ticks: ticks.map((tick) => ({ value: tick, y: yScale(tick), label: formatNumber(tick) })),
+    xLabels: base.categories.map((label, index) => ({
+      label,
+      x: pad.left + index * groupW + groupW / 2,
+    })),
+    legend,
+  }
+}
+
+function plotContent(dataProp, colorsProp, widthProp, heightProp, stackedProp) {
+  const next = model(dataProp, colorsProp, widthProp, heightProp, stackedProp)
+  const parts = []
+  for (const tick of next.ticks) {
+    parts.push(
+      `<line x1="${next.pad.left}" x2="${next.width - next.pad.right}" y1="${tick.y}" y2="${tick.y}" stroke="color-mix(in srgb, var(--j-border) 70%, transparent)" stroke-width="1" />`,
+    )
+    parts.push(
+      `<text x="${next.pad.left - 8}" y="${tick.y}" text-anchor="end" dominant-baseline="middle" fill="var(--j-muted)" font-size="11">${escapeXml(tick.label)}</text>`,
+    )
+  }
+  for (const bar of next.bars) {
+    parts.push(
+      `<rect x="${bar.x}" y="${bar.y}" width="${bar.width}" height="${bar.height}" rx="4" fill="${escapeXml(bar.color)}" data-jui-tip="${escapeXml(bar.title)}" />`,
+    )
+  }
+  for (const item of next.xLabels) {
+    parts.push(
+      `<text x="${item.x}" y="${next.height - 12}" text-anchor="middle" fill="var(--j-muted)" font-size="11">${escapeXml(item.label)}</text>`,
+    )
+  }
+  return parts.join('')
+}
+
+export <view>
+  <ChartFrame
+    :title=${title}
+    :caption=${caption}
+    :width=${() => resolveChartWidth(width, emit)}
+    :height=${height}
+    :legend=${() =>
+      read(showLegend) ? model(data, colors, resolveChartWidth(width, emit), height, stacked).legend : []}
+  >
+    <ChartPlot
+      bind-layoutWidth=${chartLayoutWidth(emit)}
+      :width=${() => resolveChartWidth(width, emit)}
+      :height=${() => model(data, colors, resolveChartWidth(width, emit), height, stacked).height}
+      :label=${() => read(title) || 'Column chart'}
+      :content=${() => plotContent(data, colors, resolveChartWidth(width, emit), height, stacked)}
+    />
+  </ChartFrame>
+</view>

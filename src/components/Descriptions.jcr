@@ -1,0 +1,112 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    title: { type: 'string', default: '' }
+    column: { type: 'number', default: 3 }
+    direction: { type: 'string', default: 'horizontal' }
+    border: { type: 'boolean', default: false }
+    size: { type: 'string', default: 'md' }
+  }
+  slots: ['default']
+</contract>
+
+function columnsOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) && next > 0 ? Math.round(next) : 3
+}
+
+function directionOf(value) {
+  return read(value) === 'vertical' ? 'vertical' : 'horizontal'
+}
+
+function sizeOf(value) {
+  const next = String(read(value) || 'md')
+  if (next === 'sm' || next === 'lg') return next
+  return 'md'
+}
+
+function bodyStyle(columnValue) {
+  return `--jui-desc-cols:${columnsOf(columnValue)}`
+}
+
+export <view>
+  <div
+    class="jui-descriptions"
+    class-jui-descriptions--vertical=${() => directionOf(direction) === 'vertical'}
+    class-jui-descriptions--border=${() => !!read(border)}
+    class-jui-descriptions--sm=${() => sizeOf(size) === 'sm'}
+    class-jui-descriptions--lg=${() => sizeOf(size) === 'lg'}
+  >
+    #if read(title)
+      <div class="jui-descriptions__title">${() => read(title)}</div>
+    #end
+    <div class="jui-descriptions__body" :style=${() => bodyStyle(column)}>
+      <slot />
+    </div>
+  </div>
+</view>
+
+export <style>
+.jui-descriptions {
+  --jui-desc-cols: 3;
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.jui-descriptions__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--j-forest);
+}
+
+.jui-descriptions__body {
+  display: grid;
+  grid-template-columns: repeat(var(--jui-desc-cols), minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+  min-width: 0;
+}
+
+.jui-descriptions--sm .jui-descriptions__body {
+  gap: 0.55rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.jui-descriptions--lg .jui-descriptions__body {
+  gap: 1.1rem 1.35rem;
+  font-size: 1.02rem;
+}
+
+.jui-descriptions--border .jui-descriptions__body {
+  gap: 0;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  overflow: hidden;
+  background: var(--j-surface-2);
+}
+
+.jui-descriptions--border .jui-descriptions-item {
+  padding: 0.7rem 0.85rem;
+  border-bottom: 1px solid var(--j-border);
+  border-right: 1px solid var(--j-border);
+}
+
+.jui-descriptions--vertical .jui-descriptions-item {
+  grid-template-columns: 1fr;
+  gap: 0.25rem;
+}
+
+.jui-descriptions--vertical .jui-descriptions-item__label {
+  color: var(--j-muted);
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .jui-descriptions__body {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

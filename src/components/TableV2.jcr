@@ -1,0 +1,361 @@
+import { pulse } from '@jacare/core'
+import { propText } from '../i18n/index.js'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    data: { type: 'any', default: [] }
+    columns: { type: 'any', default: [] }
+    stripe: { type: 'boolean', default: false }
+    border: { type: 'boolean', default: false }
+    size: { type: 'string', default: 'md' }
+    emptyText: { type: 'string', default: 'No data' }
+    rowHeight: { type: 'number', default: 44 }
+    maxHeight: { type: 'number', default: 360 }
+    sortField: { type: 'string', default: '', model: true }
+    sortOrder: { type: 'number', default: 1, model: true }
+  }
+  slots: ['default']
+  emits: ['scroll', 'change']
+</contract>
+
+function sizeOf(value) {
+  const next = String(read(value) || 'md')
+  if (next === 'sm' || next === 'lg') return next
+  return 'md'
+}
+
+function rowsOf(source) {
+  const list = read(source)
+  return Array.isArray(list) ? list : []
+}
+
+function colsOf(source) {
+  const list = read(source)
+  if (!Array.isArray(list)) return []
+  return list
+    .map((col) => ({
+      prop: col?.prop ?? col?.key ?? '',
+      label: col?.label ?? col?.prop ?? '',
+      width: col?.width ?? '',
+      sortable: !!col?.sortable,
+      align: col?.align === 'center' || col?.align === 'end' ? col.align : 'start',
+    }))
+    .filter((col) => col.prop || col.label)
+}
+
+function cellValue(row, prop) {
+  if (!row || typeof row !== 'object') return ''
+  const key = String(prop || '')
+  if (!key) return ''
+  const value = row[key]
+  return value === undefined || value === null ? '' : String(value)
+}
+
+function colStyle(width, align) {
+  const parts = []
+  const next = String(width || '')
+  if (next) parts.push(/^\d+$/.test(next) ? `width:${next}px` : `width:${next}`)
+  if (align === 'center') parts.push('text-align:center')
+  if (align === 'end') parts.push('text-align:right')
+  return parts.length ? parts.join(';') : undefined
+}
+
+function rowKey(row, index) {
+  if (row && typeof row === 'object') {
+    const id = row.id ?? row.key ?? row.value
+    if (id !== undefined && id !== null) return String(id)
+  }
+  return String(index)
+}
+
+function scrollState(emitFn) {
+  if (!emitFn.__juiTableV2Scroll) {
+    emitFn.__juiTableV2Scroll = {
+      top: pulse(0),
+      left: pulse(0),
+    }
+  }
+  return emitFn.__juiTableV2Scroll
+}
+
+function metrics(rowHeightProp, maxHeightProp) {
+  const rowHeight = Math.max(28, Number(read(rowHeightProp)) || 44)
+  const maxHeight = Math.max(rowHeight * 3, Number(read(maxHeightProp)) || 360)
+  return { rowHeight, maxHeight }
+}
+
+function sortedList(source, sortFieldProp, sortOrderProp) {
+  const list = rowsOf(source)
+  const field = String(read(sortFieldProp) || '')
+  const order = Number(read(sortOrderProp)) === -1 ? -1 : 1
+  if (!field) return list
+  return [...list].sort((left, right) => {
+    const leftValue = cellValue(left, field)
+    const rightValue = cellValue(right, field)
+    const cmp = leftValue.localeCompare(rightValue, undefined, { numeric: true, sensitivity: 'base' })
+    return cmp * order
+  })
+}
+
+function windowedRows(source, emitFn, rowHeightProp, maxHeightProp, sortFieldProp, sortOrderProp) {
+  const list = sortedList(source, sortFieldProp, sortOrderProp)
+  const { rowHeight, maxHeight } = metrics(rowHeightProp, maxHeightProp)
+  const scrollTop = Number(read(scrollState(emitFn).top)) || 0
+  const visible = Math.ceil(maxHeight / rowHeight) + 6
+  const start = Math.max(0, Math.floor(scrollTop / rowHeight) - 2)
+  const end = Math.min(list.length, start + visible)
+  return {
+    rows: list.slice(start, end).map((row, offset) => {
+      const index = start + offset
+      return { row, index, key: rowKey(row, index) }
+    }),
+    start,
+    padTop: start * rowHeight,
+    padBottom: Math.max(0, (list.length - end) * rowHeight),
+    total: list.length,
+    rowHeight,
+    maxHeight,
+  }
+}
+
+function bodyStyle(rowHeightProp, maxHeightProp) {
+  const { rowHeight, maxHeight } = metrics(rowHeightProp, maxHeightProp)
+  return `max-height:${maxHeight}px;--jui-table-v2-row-height:${rowHeight}px`
+}
+
+function headStyle(emitFn) {
+  const left = Number(read(scrollState(emitFn).left)) || 0
+  return `transform:translateX(${-left}px)`
+}
+
+function handleScroll(event, emitFn) {
+  const top = event.currentTarget.scrollTop || 0
+  const left = event.currentTarget.scrollLeft || 0
+  const state = scrollState(emitFn)
+  if (read(state.top) !== top) state.top.set(top)
+  if (read(state.left) !== left) state.left.set(left)
+  emitFn('scroll', { scrollTop: top, scrollLeft: left })
+}
+
+function sortIndicator(col, sortFieldProp, sortOrderProp) {
+  const field = String(read(sortFieldProp) || '')
+  if (!col.sortable || field !== col.prop) return ''
+  return Number(read(sortOrderProp)) === -1 ? ' ↓' : ' ↑'
+}
+
+function headerContent(col, sortFieldProp, sortOrderProp) {
+  if (!col.sortable) return col.label
+  return `${col.label}${sortIndicator(col, sortFieldProp, sortOrderProp)}`
+}
+
+function sortAriaLabel(label) {
+  return `Sort by ${label}`
+}
+
+function toggleSort(col, sortFieldProp, sortOrderProp, emitFn) {
+  if (!col.sortable) return
+  const field = col.prop
+  const current = String(read(sortFieldProp) || '')
+  const order = current === field && Number(read(sortOrderProp)) !== -1 ? -1 : 1
+  if (sortFieldProp && typeof sortFieldProp.set === 'function') sortFieldProp.set(field)
+  if (sortOrderProp && typeof sortOrderProp.set === 'function') sortOrderProp.set(order)
+  emitFn('change', { sortField: field, sortOrder: order })
+}
+
+export <view>
+  <div
+    class="jui-table-v2"
+    class-jui-table-v2--stripe=${() => !!read(stripe)}
+    class-jui-table-v2--border=${() => !!read(border)}
+    class-jui-table-v2--sm=${() => sizeOf(size) === 'sm'}
+    class-jui-table-v2--lg=${() => sizeOf(size) === 'lg'}
+  >
+    <div class="jui-table-v2__slot" hidden aria-hidden="true"><slot /></div>
+    <div class="jui-table-v2__head">
+      <div class="jui-table-v2__head-track" :style=${() => headStyle(emit)}>
+        <table class="jui-table-v2__table">
+          <thead>
+            <tr>
+              #for colsOf(columns) as col (col.prop || col.label)
+                <th
+                  class="jui-table-v2__th"
+                  class-is-sortable=${() => !!col.sortable}
+                  :style=${() => colStyle(col.width, col.align)}
+                  scope="col"
+                >
+                  <button
+                    type="button"
+                    class="jui-table-v2__sort-btn"
+                    aria-label=${() => sortAriaLabel(col.label)}
+                    disabled=${() => !col.sortable}
+                    on-click=${() => toggleSort(col, sortField, sortOrder, emit)}
+                  >${() => headerContent(col, sortField, sortOrder)}</button>
+                </th>
+              #end
+            </tr>
+          </thead>
+        </table>
+      </div>
+    </div>
+    <div
+      class="jui-table-v2__body"
+      :style=${() => bodyStyle(rowHeight, maxHeight)}
+      on-scroll=${(event) => handleScroll(event, emit)}
+    >
+      #if windowedRows(data, emit, rowHeight, maxHeight, sortField, sortOrder).total === 0
+        <div class="jui-table-v2__empty">${() => propText(emptyText, 'j.table.emptyText', 'No data')}</div>
+      #else
+        <div
+          class="jui-table-v2__spacer"
+          :style=${() => `height:${windowedRows(data, emit, rowHeight, maxHeight, sortField, sortOrder).padTop}px`}
+          aria-hidden="true"
+        ></div>
+        <table class="jui-table-v2__table">
+          <tbody>
+            #for windowedRows(data, emit, rowHeight, maxHeight, sortField, sortOrder).rows as item (item.key)
+              <tr
+                class="jui-table-v2__tr"
+                class-is-odd=${() => item.index % 2 === 1}
+                :style=${() => `height:${windowedRows(data, emit, rowHeight, maxHeight, sortField, sortOrder).rowHeight}px`}
+              >
+                #for colsOf(columns) as col (col.prop || col.label)
+                  <td class="jui-table-v2__td" :style=${() => colStyle(col.width, col.align)}>
+                    ${() => cellValue(item.row, col.prop)}
+                  </td>
+                #end
+              </tr>
+            #end
+          </tbody>
+        </table>
+        <div
+          class="jui-table-v2__spacer"
+          :style=${() => `height:${windowedRows(data, emit, rowHeight, maxHeight, sortField, sortOrder).padBottom}px`}
+          aria-hidden="true"
+        ></div>
+      #end
+    </div>
+  </div>
+</view>
+
+export <style>
+.jui-table-v2 {
+  --jui-table-v2-row-height: 44px;
+  min-width: 0;
+  color: var(--j-text);
+  border: 1px solid transparent;
+  border-radius: var(--j-radius);
+  overflow: hidden;
+  background: var(--j-surface);
+}
+
+.jui-table-v2__slot {
+  display: none;
+}
+
+.jui-table-v2__head {
+  overflow: hidden;
+  background: color-mix(in srgb, var(--j-surface) 70%, var(--j-surface-2));
+  border-bottom: 1px solid var(--j-border);
+}
+
+.jui-table-v2__head-track {
+  will-change: transform;
+}
+
+.jui-table-v2__body {
+  overflow: auto;
+  min-height: 0;
+}
+
+.jui-table-v2__table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.jui-table-v2__th,
+.jui-table-v2__td {
+  padding: 0.7rem 0.85rem;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--j-border);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jui-table-v2__th {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--j-forest);
+}
+
+.jui-table-v2__th.is-sortable {
+  white-space: nowrap;
+}
+
+.jui-table-v2__sort-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+}
+
+.jui-table-v2__sort-btn:disabled {
+  cursor: default;
+}
+
+.jui-table-v2__sort-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+  border-radius: var(--j-radius-sm);
+}
+
+.jui-table-v2__td {
+  font-size: 0.92rem;
+}
+
+.jui-table-v2--sm .jui-table-v2__th,
+.jui-table-v2--sm .jui-table-v2__td {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.82rem;
+}
+
+.jui-table-v2--lg .jui-table-v2__th,
+.jui-table-v2--lg .jui-table-v2__td {
+  padding: 0.95rem 1.05rem;
+  font-size: 1rem;
+}
+
+.jui-table-v2--stripe .jui-table-v2__tr.is-odd .jui-table-v2__td {
+  background: color-mix(in srgb, var(--j-mint) 22%, var(--j-surface));
+}
+
+.jui-table-v2--border {
+  border-color: var(--j-border);
+}
+
+.jui-table-v2--border .jui-table-v2__th,
+.jui-table-v2--border .jui-table-v2__td {
+  border: 1px solid var(--j-border);
+}
+
+.jui-table-v2__empty {
+  padding: 1.25rem 0.85rem;
+  text-align: center;
+  color: var(--j-muted);
+}
+
+.jui-table-v2__spacer {
+  width: 100%;
+  pointer-events: none;
+}
+</style>

@@ -1,0 +1,366 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    value: { type: 'number', default: 50, model: true }
+    orientation: { type: 'string', default: 'horizontal' }
+    slideOnHover: { type: 'boolean', default: false }
+    beforeSrc: { type: 'string', default: '' }
+    afterSrc: { type: 'string', default: '' }
+    beforeAlt: { type: 'string', default: 'Before' }
+    afterAlt: { type: 'string', default: 'After' }
+    beforeLabel: { type: 'string', default: 'Before' }
+    afterLabel: { type: 'string', default: 'After' }
+  }
+  emits: ['change']
+</contract>
+
+function orientationOf(value) {
+  return String(read(value) || 'horizontal') === 'vertical' ? 'vertical' : 'horizontal'
+}
+
+function clampPercent(next) {
+  const amount = Number(next)
+  if (!Number.isFinite(amount)) return 50
+  return Math.min(100, Math.max(0, amount))
+}
+
+function posModel(model, emitFn) {
+  if (model && typeof model.set === 'function') return model
+  if (!emitFn.__juiComparePos) emitFn.__juiComparePos = pulse(clampPercent(read(model)))
+  return emitFn.__juiComparePos
+}
+
+function percentOf(model, emitFn) {
+  return clampPercent(read(posModel(model, emitFn)))
+}
+
+function commit(model, next, emitFn) {
+  const clamped = clampPercent(next)
+  posModel(model, emitFn).set(clamped)
+  emitFn('change', clamped)
+}
+
+function beforeClipStyle(model, orientationProp, emitFn) {
+  const amount = percentOf(model, emitFn)
+  if (orientationOf(orientationProp) === 'vertical') {
+    return `clip-path:inset(0 0 ${100 - amount}% 0)`
+  }
+  return `clip-path:inset(0 ${100 - amount}% 0 0)`
+}
+
+function handleStyle(model, orientationProp, emitFn) {
+  const amount = percentOf(model, emitFn)
+  if (orientationOf(orientationProp) === 'vertical') {
+    return `top:${amount}%;left:50%`
+  }
+  return `left:${amount}%;top:50%`
+}
+
+function stageOf(root) {
+  if (!root) return null
+  if (root.classList?.contains('jui-compare__stage')) return root
+  return root.querySelector?.('.jui-compare__stage') || root.closest?.('.jui-compare__stage')
+}
+
+function valueFromPointer(event, root, orientationProp) {
+  const stage = stageOf(root)
+  if (!stage) return 50
+  const rect = stage.getBoundingClientRect()
+  if (orientationOf(orientationProp) === 'vertical') {
+    if (rect.height <= 0) return 50
+    const ratio = (event.clientY - rect.top) / rect.height
+    return Math.min(100, Math.max(0, ratio * 100))
+  }
+  if (rect.width <= 0) return 50
+  const ratio = (event.clientX - rect.left) / rect.width
+  return Math.min(100, Math.max(0, ratio * 100))
+}
+
+function dragState(emitFn) {
+  if (!emitFn.__juiCompareDrag) emitFn.__juiCompareDrag = pulse(false)
+  return emitFn.__juiCompareDrag
+}
+
+function isDragging(emitFn) {
+  return !!read(dragState(emitFn))
+}
+
+function beginPointer(event, model, orientationProp, slideOnHoverProp, emitFn) {
+  if (event.pointerType === 'mouse' && event.button !== 0) return
+  if (read(slideOnHoverProp) && event.type === 'pointerdown') return
+  const root = event.currentTarget
+  event.preventDefault()
+  dragState(emitFn).set(true)
+  if (typeof root.setPointerCapture === 'function') root.setPointerCapture(event.pointerId)
+  commit(model, valueFromPointer(event, root, orientationProp), emitFn)
+}
+
+function movePointer(event, model, orientationProp, slideOnHoverProp, emitFn) {
+  const root = event.currentTarget
+  const hoverMode = !!read(slideOnHoverProp)
+  const dragging = isDragging(emitFn)
+  const captured = typeof root.hasPointerCapture === 'function' && root.hasPointerCapture(event.pointerId)
+  if (!dragging && !hoverMode && !captured) return
+  if (hoverMode && event.type === 'pointermove' && event.buttons) return
+  if (!dragging && !hoverMode) return
+  event.preventDefault()
+  commit(model, valueFromPointer(event, root, orientationProp), emitFn)
+}
+
+function endPointer(event, emitFn) {
+  const root = event.currentTarget
+  const captured = typeof root.hasPointerCapture === 'function' && root.hasPointerCapture(event.pointerId)
+  if (!isDragging(emitFn) && !captured) return
+  if (captured && typeof root.releasePointerCapture === 'function') root.releasePointerCapture(event.pointerId)
+  dragState(emitFn).set(false)
+}
+
+function handleInput(event, model, emitFn) {
+  commit(model, Number(event.target.value), emitFn)
+}
+
+export <view>
+  <div
+    class="jui-compare"
+    class-jui-compare--vertical=${() => orientationOf(orientation) === 'vertical'}
+    class-jui-compare--hover=${() => !!read(slideOnHover)}
+    class-is-dragging=${() => isDragging(emit)}
+  >
+    <div
+      class="jui-compare__stage"
+      on-pointerdown=${(event) => beginPointer(event, value, orientation, slideOnHover, emit)}
+      on-pointermove=${(event) => movePointer(event, value, orientation, slideOnHover, emit)}
+      on-pointerup=${(event) => endPointer(event, emit)}
+      on-pointercancel=${(event) => endPointer(event, emit)}
+    >
+      <img
+        class="jui-compare__image jui-compare__image--after"
+        src=${() => String(read(afterSrc) || '')}
+        alt=${() => String(read(afterAlt) || 'After')}
+        draggable="false"
+      />
+      <div class="jui-compare__before" :style=${() => beforeClipStyle(value, orientation, emit)}>
+        <img
+          class="jui-compare__image jui-compare__image--before"
+          src=${() => String(read(beforeSrc) || '')}
+          alt=${() => String(read(beforeAlt) || 'Before')}
+          draggable="false"
+        />
+      </div>
+      <div class="jui-compare__handle" :style=${() => handleStyle(value, orientation, emit)} aria-hidden="true">
+        <span class="jui-compare__handle-bar"></span>
+        <span class="jui-compare__handle-knob"></span>
+      </div>
+      <input
+        class="jui-compare__input"
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        value=${() => percentOf(value, emit)}
+        aria-label="Compare position"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow=${() => percentOf(value, emit)}
+        on-input=${(event) => handleInput(event, value, emit)}
+        on-change=${(event) => handleInput(event, value, emit)}
+      />
+      #if read(beforeLabel)
+        <span class="jui-compare__label jui-compare__label--before">${() => read(beforeLabel)}</span>
+      #end
+      #if read(afterLabel)
+        <span class="jui-compare__label jui-compare__label--after">${() => read(afterLabel)}</span>
+      #end
+    </div>
+  </div>
+</view>
+
+export <style>
+.jui-compare {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.jui-compare__stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: var(--j-radius);
+  border: 1px solid var(--j-border);
+  background: var(--j-surface-2);
+  touch-action: none;
+  user-select: none;
+}
+
+.jui-compare--vertical .jui-compare__stage {
+  aspect-ratio: 10 / 16;
+  max-height: 28rem;
+}
+
+.jui-compare__image {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.jui-compare__before {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.jui-compare__handle {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.jui-compare--vertical .jui-compare__handle {
+  transform: translate(-50%, -50%);
+}
+
+.jui-compare__handle-bar {
+  position: absolute;
+  background: var(--j-surface-2);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--j-forest) 25%, transparent);
+}
+
+.jui-compare:not(.jui-compare--vertical) .jui-compare__handle-bar {
+  top: -9999px;
+  bottom: -9999px;
+  left: 50%;
+  width: 3px;
+  transform: translateX(-50%);
+}
+
+.jui-compare--vertical .jui-compare__handle-bar {
+  left: -9999px;
+  right: -9999px;
+  top: 50%;
+  height: 3px;
+  transform: translateY(-50%);
+}
+
+.jui-compare__handle-knob {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 50%;
+  border: 2px solid var(--j-primary);
+  background: var(--j-surface-2);
+  box-shadow: var(--j-shadow-sm);
+}
+
+.jui-compare__handle-knob::before,
+.jui-compare__handle-knob::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-top: 0.28rem solid transparent;
+  border-bottom: 0.28rem solid transparent;
+  transform: translateY(-50%);
+}
+
+.jui-compare__handle-knob::before {
+  left: 0.45rem;
+  border-right: 0.32rem solid var(--j-primary);
+}
+
+.jui-compare__handle-knob::after {
+  right: 0.45rem;
+  border-left: 0.32rem solid var(--j-primary);
+}
+
+.jui-compare--vertical .jui-compare__handle-knob::before,
+.jui-compare--vertical .jui-compare__handle-knob::after {
+  left: 50%;
+  right: auto;
+  border-top: 0;
+  border-bottom: 0;
+  border-left: 0.28rem solid transparent;
+  border-right: 0.28rem solid transparent;
+  transform: translateX(-50%);
+}
+
+.jui-compare--vertical .jui-compare__handle-knob::before {
+  top: 0.45rem;
+  border-bottom: 0.32rem solid var(--j-primary);
+}
+
+.jui-compare--vertical .jui-compare__handle-knob::after {
+  top: auto;
+  bottom: 0.45rem;
+  border-top: 0.32rem solid var(--j-primary);
+}
+
+.jui-compare__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: ew-resize;
+  z-index: 3;
+}
+
+.jui-compare--vertical .jui-compare__input {
+  cursor: ns-resize;
+}
+
+.jui-compare__input:focus-visible {
+  opacity: 1;
+  outline: none;
+  box-shadow: inset var(--j-focus);
+}
+
+.jui-compare__label {
+  position: absolute;
+  z-index: 1;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--j-radius-sm);
+  background: color-mix(in srgb, var(--j-forest) 72%, transparent);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.jui-compare__label--before {
+  top: 0.65rem;
+  left: 0.65rem;
+}
+
+.jui-compare__label--after {
+  top: 0.65rem;
+  right: 0.65rem;
+}
+
+.jui-compare.is-dragging .jui-compare__handle-knob,
+.jui-compare--hover:hover .jui-compare__handle-knob {
+  box-shadow: var(--j-focus);
+}
+
+@media (pointer: coarse) {
+  .jui-compare__handle-knob {
+    width: var(--j-touch-target, 2.75rem);
+    height: var(--j-touch-target, 2.75rem);
+  }
+}
+</style>

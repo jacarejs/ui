@@ -1,0 +1,451 @@
+import { effect, pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+import { activateFocusTrap, uniqueId } from '../internal/overlay.js'
+
+export <contract>
+  props: {
+    images: { type: 'object', default: [] }
+    activeIndex: { type: 'number', default: 0, model: true }
+    showThumbnails: { type: 'boolean', default: true }
+    open: { type: 'boolean', default: false, model: true }
+  }
+  emits: ['change']
+</contract>
+
+function normalizeImages(source) {
+  const list = read(source)
+  if (!Array.isArray(list)) return []
+  return list
+    .map((item, index) => ({
+      key: String(item?.key ?? index),
+      src: String(item?.src ?? ''),
+      alt: String(item?.alt ?? `Image ${index + 1}`),
+      thumb: String(item?.thumb ?? item?.src ?? ''),
+    }))
+    .filter((item) => item.src)
+}
+
+function activeOf(model, source) {
+  const total = normalizeImages(source).length
+  if (total <= 0) return 0
+  const next = Number(read(model)) || 0
+  return Math.min(total - 1, Math.max(0, next))
+}
+
+function activeItem(model, source) {
+  const items = normalizeImages(source)
+  return items[activeOf(model, source)] || null
+}
+
+function itemIndex(items, key) {
+  return items.findIndex((entry) => entry.key === key)
+}
+
+function isThumbActive(key, model, source) {
+  const items = normalizeImages(source)
+  return itemIndex(items, key) === activeOf(model, source)
+}
+
+function commitIndex(model, index, source, emitFn) {
+  const total = normalizeImages(source).length
+  if (total <= 0) return
+  const next = Math.min(total - 1, Math.max(0, index))
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function openState(openProp, emitFn) {
+  if (openProp && typeof openProp.set === 'function') return openProp
+  if (!emitFn.__juiGalleryOpen) emitFn.__juiGalleryOpen = pulse(read(openProp) === true)
+  return emitFn.__juiGalleryOpen
+}
+
+function isOpen(openProp, emitFn) {
+  return read(openState(openProp, emitFn)) === true
+}
+
+function openLightbox(openProp, index, model, source, emitFn) {
+  commitIndex(model, index, source, emitFn)
+  openState(openProp, emitFn).set(true)
+}
+
+function closeLightbox(openProp, emitFn) {
+  openState(openProp, emitFn).set(false)
+}
+
+function step(delta, model, source, emitFn) {
+  const total = normalizeImages(source).length
+  if (total <= 0) return
+  const current = activeOf(model, source)
+  const next = (current + delta + total) % total
+  commitIndex(model, next, source, emitFn)
+}
+
+function zoomState(emitFn) {
+  if (!emitFn.__juiGalleryZoom) emitFn.__juiGalleryZoom = pulse(1)
+  return emitFn.__juiGalleryZoom
+}
+
+function zoomLevel(emitFn) {
+  return Number(read(zoomState(emitFn))) || 1
+}
+
+function setZoom(emitFn, next) {
+  zoomState(emitFn).set(Math.min(3, Math.max(1, next)))
+}
+
+function resetZoom(emitFn) {
+  zoomState(emitFn).set(1)
+}
+
+function viewerStyle(emitFn) {
+  const scale = zoomLevel(emitFn)
+  return `transform:scale(${scale})`
+}
+
+function galleryId(emitFn) {
+  return uniqueId('jui-gallery', emitFn, '__juiGalleryId')
+}
+
+function armLightbox(openProp, emitFn) {
+  if (!emitFn.__juiGalleryOverlay) {
+    emitFn.__juiGalleryOverlay = effect(() => {
+      if (!isOpen(openProp, emitFn)) {
+        resetZoom(emitFn)
+        return undefined
+      }
+      const id = galleryId(emitFn)
+      let release = () => {}
+      const frame = requestAnimationFrame(() => {
+        const root = document.querySelector(`[data-jui-gallery="${id}"]`)
+        if (!root) return
+        release = activateFocusTrap(root, {
+          onEscape: () => closeLightbox(openProp, emitFn),
+        })
+      })
+      return () => {
+        cancelAnimationFrame(frame)
+        release()
+      }
+    })
+  }
+  return ''
+}
+
+export <view>
+  <div class="jui-gallery">
+    #if read(showThumbnails)
+      <div class="jui-gallery__grid" role="list">
+        #for normalizeImages(images) as item (item.key)
+          <button
+            type="button"
+            class="jui-gallery__thumb"
+            class-is-active=${() => isThumbActive(item.key, activeIndex, images)}
+            role="listitem"
+            aria-label=${() => `Open ${item.alt}`}
+            on-click=${() => openLightbox(open, itemIndex(normalizeImages(images), item.key), activeIndex, images, emit)}
+          >
+            <img class="jui-gallery__thumb-img" src=${item.thumb} alt="" draggable="false" />
+          </button>
+        #end
+        #if normalizeImages(images).length === 0
+          <div class="jui-gallery__empty">No images</div>
+        #end
+      </div>
+    #end
+
+    #if isOpen(open, emit)
+      <div
+        class="jui-gallery__lightbox"
+        on-click=${(event) => {
+          if (event.target === event.currentTarget) closeLightbox(open, emit)
+        }}
+      >
+        <section
+          class="jui-gallery__viewer"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image gallery"
+          data-jui-gallery=${() => galleryId(emit)}
+          tabindex="-1"
+          on-click=${(event) => event.stopPropagation()}
+        >
+          <header class="jui-gallery__toolbar">
+            <span class="jui-gallery__counter">${() => `${activeOf(activeIndex, images) + 1} / ${normalizeImages(images).length}`}</span>
+            <div class="jui-gallery__zoom">
+              <button
+                type="button"
+                class="jui-gallery__tool"
+                aria-label="Zoom out"
+                disabled=${() => zoomLevel(emit) <= 1}
+                on-click=${() => setZoom(emit, zoomLevel(emit) - 0.25)}
+              >−</button>
+              <button
+                type="button"
+                class="jui-gallery__tool"
+                aria-label="Reset zoom"
+                on-click=${() => resetZoom(emit)}
+              >100%</button>
+              <button
+                type="button"
+                class="jui-gallery__tool"
+                aria-label="Zoom in"
+                disabled=${() => zoomLevel(emit) >= 3}
+                on-click=${() => setZoom(emit, zoomLevel(emit) + 0.25)}
+              >+</button>
+            </div>
+            <button
+              type="button"
+              class="jui-gallery__tool jui-gallery__close"
+              aria-label="Close gallery"
+              on-click=${() => closeLightbox(open, emit)}
+            >×</button>
+          </header>
+
+          <div class="jui-gallery__stage">
+            #if activeItem(activeIndex, images)
+              <img
+                class="jui-gallery__image"
+                src=${() => activeItem(activeIndex, images).src}
+                alt=${() => activeItem(activeIndex, images).alt}
+                :style=${() => viewerStyle(emit)}
+                draggable="false"
+              />
+            #end
+            #if normalizeImages(images).length > 1
+              <button
+                type="button"
+                class="jui-gallery__nav jui-gallery__nav--prev"
+                aria-label="Previous image"
+                on-click=${() => step(-1, activeIndex, images, emit)}
+              >‹</button>
+              <button
+                type="button"
+                class="jui-gallery__nav jui-gallery__nav--next"
+                aria-label="Next image"
+                on-click=${() => step(1, activeIndex, images, emit)}
+              >›</button>
+            #end
+          </div>
+
+          <span class="jui-gallery__arm" aria-hidden="true">${() => armLightbox(open, emit)}</span>
+        </section>
+      </div>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-gallery {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.jui-gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+  gap: 0.55rem;
+}
+
+.jui-gallery__thumb {
+  appearance: none;
+  position: relative;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: var(--j-radius-sm);
+  overflow: hidden;
+  background: var(--j-surface-2);
+  cursor: pointer;
+  aspect-ratio: 1;
+}
+
+.jui-gallery__thumb:hover {
+  border-color: color-mix(in srgb, var(--j-primary) 35%, transparent);
+}
+
+.jui-gallery__thumb.is-active {
+  border-color: var(--j-primary);
+}
+
+.jui-gallery__thumb:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-gallery__thumb-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.jui-gallery__empty {
+  grid-column: 1 / -1;
+  padding: 1rem;
+  color: var(--j-muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.jui-gallery__lightbox {
+  position: fixed;
+  z-index: 150;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding:
+    max(1rem, var(--j-safe-top, env(safe-area-inset-top, 0px)))
+    max(1rem, var(--j-safe-right, env(safe-area-inset-right, 0px)))
+    max(1rem, var(--j-safe-bottom, env(safe-area-inset-bottom, 0px)))
+    max(1rem, var(--j-safe-left, env(safe-area-inset-left, 0px)));
+  background: rgba(0, 24, 24, 0.82);
+  overscroll-behavior: contain;
+}
+
+.jui-gallery__viewer {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(56rem, 100%);
+  max-height: min(92dvh, 44rem);
+  overflow: hidden;
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  box-shadow: var(--j-shadow);
+}
+
+.jui-gallery__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--j-border);
+  background: color-mix(in srgb, var(--j-surface) 60%, var(--j-surface-2));
+}
+
+.jui-gallery__counter {
+  color: var(--j-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.jui-gallery__zoom {
+  display: inline-flex;
+  gap: 0.35rem;
+}
+
+.jui-gallery__tool {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  min-width: var(--j-touch-target, 2.35rem);
+  min-height: var(--j-touch-target, 2.35rem);
+  padding: 0 0.55rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.jui-gallery__tool:hover:not(:disabled) {
+  border-color: var(--j-primary);
+  color: var(--j-primary);
+}
+
+.jui-gallery__tool:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.jui-gallery__tool:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-gallery__close {
+  margin-left: auto;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.jui-gallery__stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: 1rem;
+  overflow: auto;
+  background: color-mix(in srgb, var(--j-forest) 8%, var(--j-surface-2));
+}
+
+.jui-gallery__image {
+  max-width: 100%;
+  max-height: min(72dvh, 36rem);
+  object-fit: contain;
+  transition: transform var(--j-duration-fast) var(--j-ease-out);
+  transform-origin: center center;
+}
+
+.jui-gallery__nav {
+  appearance: none;
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--j-surface-2) 88%, transparent);
+  color: var(--j-forest);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--j-shadow-sm);
+  transform: translateY(-50%);
+}
+
+.jui-gallery__nav--prev { left: 0.65rem; }
+.jui-gallery__nav--next { right: 0.65rem; }
+
+.jui-gallery__nav:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-gallery__arm {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-gallery__image { transition: none; }
+}
+
+@media (max-width: 640px) {
+  .jui-gallery__viewer {
+    width: 100%;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+
+  .jui-gallery__nav {
+    width: var(--j-touch-target, 2.75rem);
+    height: var(--j-touch-target, 2.75rem);
+  }
+}
+</style>

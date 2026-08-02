@@ -1,0 +1,92 @@
+import ChartFrame from './ChartFrame.jcr'
+import ChartPlot from './ChartPlot.jcr'
+import { read } from '../internal/utils.js'
+import {
+  arcPath,
+  chartLayoutWidth,
+  escapeXml,
+  formatNumber,
+  num,
+  resolveChartWidth,
+  sizeOf,
+} from '../internal/charts.js'
+
+export <contract>
+  props: {
+    value: { type: 'number', default: 0 }
+    min: { type: 'number', default: 0 }
+    max: { type: 'number', default: 100 }
+    title: { type: 'string', default: '' }
+    caption: { type: 'string', default: '' }
+    width: { type: 'number', default: 320 }
+    height: { type: 'number', default: 200 }
+    color: { type: 'string', default: '' }
+    label: { type: 'string', default: '' }
+  }
+  emits: ['layout']
+</contract>
+
+function model(valueProp, minProp, maxProp, widthProp, heightProp, colorProp, labelProp) {
+  const sized = sizeOf(widthProp, heightProp, 320, 180)
+  const min = num(minProp, 0)
+  const max = num(maxProp, 100)
+  const value = Math.min(max, Math.max(min, num(valueProp, 0)))
+  const pct = max === min ? 0 : (value - min) / (max - min)
+  const width = sized.width
+  const cx = width / 2
+  const pad = 14
+  const radius = Math.min(cx - pad, sized.height - pad * 2)
+  const cy = radius + pad
+  const height = Math.ceil(cy + pad)
+  const inner = radius * 0.72
+  const start = Math.PI
+  const end = Math.PI * 2
+  const valueEnd = start + pct * Math.PI
+  return {
+    width,
+    height,
+    pct,
+    track: arcPath(cx, cy, radius, start, end, inner),
+    valuePath: pct > 0 ? arcPath(cx, cy, radius, start, valueEnd, inner) : '',
+    color: String(read(colorProp) || 'var(--j-primary)'),
+    label: String(read(labelProp) || formatNumber(value)),
+    cx,
+    labelY: cy - inner * 0.12,
+  }
+}
+
+function plotContent(valueProp, minProp, maxProp, widthProp, heightProp, colorProp, labelProp) {
+  const next = model(valueProp, minProp, maxProp, widthProp, heightProp, colorProp, labelProp)
+  const parts = []
+  parts.push(
+    `<path d="${escapeXml(next.track)}" fill="color-mix(in srgb, var(--j-border) 55%, transparent)" />`,
+  )
+  if (next.valuePath) {
+    parts.push(
+      `<path d="${escapeXml(next.valuePath)}" fill="${escapeXml(next.color)}" />`,
+    )
+  }
+  parts.push(
+    `<text x="${next.cx}" y="${next.labelY}" text-anchor="middle" dominant-baseline="middle" fill="var(--j-text)" font-size="22" font-weight="800">${escapeXml(next.label)}</text>`,
+  )
+  return parts.join('')
+}
+
+export <view>
+  <ChartFrame
+    :title=${title}
+    :caption=${caption}
+    :width=${() => resolveChartWidth(width, emit)}
+    :height=${height}
+  >
+    <ChartPlot
+      bind-layoutWidth=${chartLayoutWidth(emit)}
+      :width=${() => resolveChartWidth(width, emit)}
+      :height=${() =>
+        model(value, min, max, resolveChartWidth(width, emit), height, color, label).height}
+      :label=${() => read(title) || 'Gauge chart'}
+      :content=${() =>
+        plotContent(value, min, max, resolveChartWidth(width, emit), height, color, label)}
+    />
+  </ChartFrame>
+</view>

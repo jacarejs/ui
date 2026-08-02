@@ -1,4 +1,5 @@
 import { read } from '../internal/utils.js'
+import { propText } from '../i18n/index.js'
 
 export <contract>
   props: {
@@ -41,15 +42,16 @@ function selectedOption(model, source) {
 }
 
 function selectedLabel(model, source, placeholderValue, multipleValue) {
+  const empty = propText(placeholderValue, 'j.select.placeholder', 'Select')
   if (read(multipleValue)) {
     const labels = normalizedOptions(source)
       .filter((option) => isSelected(option.value, model, true))
       .map((option) => option.label)
-    if (!labels.length) return read(placeholderValue)
+    if (!labels.length) return empty
     if (labels.length <= 2) return labels.join(', ')
     return `${labels.length} selected`
   }
-  return selectedOption(model, source)?.label || read(placeholderValue)
+  return selectedOption(model, source)?.label || empty
 }
 
 function selectedTag(model, source) {
@@ -156,7 +158,7 @@ export <view>
           <input
             class="jui-select__search"
             type="search"
-            placeholder=${() => read(searchPlaceholder)}
+            placeholder=${() => propText(searchPlaceholder, 'j.select.searchPlaceholder', 'Search...')}
             on-input=${filterOptions}
             on-keydown=${(event) => {
               if (event.key === 'Escape') event.currentTarget.closest('details').removeAttribute('open')
@@ -172,10 +174,10 @@ export <view>
               class-is-active=${() => read(multiple) ? selectedValues(value).length === 0 : String(read(value) ?? '') === ''}
               aria-selected=${() => read(multiple) ? selectedValues(value).length === 0 : String(read(value) ?? '') === ''}
               data-select-option
-              data-search=${() => String(read(placeholder)).toLowerCase()}
-              on-click=${(event) => chooseOption({ value: '', label: read(placeholder) }, event, value, multiple, emit)}
+              data-search=${() => propText(placeholder, 'j.select.placeholder', 'Select').toLowerCase()}
+              on-click=${(event) => chooseOption({ value: '', label: propText(placeholder, 'j.select.placeholder', 'Select') }, event, value, multiple, emit)}
             >
-              ${() => read(placeholder)}
+              ${() => propText(placeholder, 'j.select.placeholder', 'Select')}
             </button>
           </li>
           #for normalizedOptions(options) as option (option.value)

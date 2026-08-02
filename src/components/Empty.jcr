@@ -1,0 +1,198 @@
+import { buildEmptyImageMaskUrl, typeOfEmptyImage } from '../internal/empty-image.js'
+import { read } from '../internal/utils.js'
+import { propText } from '../i18n/index.js'
+
+export <contract>
+  props: {
+    title: { type: 'string', default: '' }
+    description: { type: 'string', default: 'No data' }
+    image: { type: 'string', default: '' }
+    imageSize: { type: 'number', default: 120 }
+    type: { type: 'string', default: 'default' }
+  }
+  slots: ['default', 'image', 'description']
+</contract>
+
+function sizeOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) && next > 0 ? Math.round(next) : 120
+}
+
+function typeOf(value) {
+  const next = typeOfEmptyImage(read(value))
+  if (
+    next === 'search' ||
+    next === 'inbox' ||
+    next === 'error' ||
+    next === 'success'
+  ) {
+    return next
+  }
+  return 'default'
+}
+
+function imageStyle(sizeValue, typeValue) {
+  return `--jui-empty-size:${sizeOf(sizeValue)}px;--jui-empty-mask:${buildEmptyImageMaskUrl(typeOf(typeValue))}`
+}
+
+function hasTitle(value) {
+  return String(read(value) || '').trim().length > 0
+}
+
+function hasCustomImage(value) {
+  return String(read(value) || '').trim().length > 0
+}
+
+export <view>
+  <div
+    class="jui-empty"
+    class-jui-empty--search=${() => typeOf(type) === 'search'}
+    class-jui-empty--inbox=${() => typeOf(type) === 'inbox'}
+    class-jui-empty--error=${() => typeOf(type) === 'error'}
+    class-jui-empty--success=${() => typeOf(type) === 'success'}
+    :style=${() => imageStyle(imageSize, type)}
+  >
+    <div class="jui-empty__visual" aria-hidden="true">
+      <span class="jui-empty__halo"></span>
+      <div class="jui-empty__image">
+        <slot name="image" />
+        #if hasCustomImage(image)
+          <img class="jui-empty__img" src=${() => read(image)} alt="" />
+        #else
+          <span class="jui-empty__glyph"></span>
+        #end
+      </div>
+    </div>
+
+    #if hasTitle(title)
+      <div class="jui-empty__title">${() => read(title)}</div>
+    #end
+
+    <div class="jui-empty__description">
+      <slot name="description" />
+      ${() => propText(description, 'j.empty.description', 'No data')}
+    </div>
+    <div class="jui-empty__extra"><slot /></div>
+  </div>
+</view>
+
+export <style>
+.jui-empty {
+  --jui-empty-size: 120px;
+  --jui-empty-accent: var(--j-primary);
+  display: grid;
+  justify-items: center;
+  gap: 0.85rem;
+  padding: 2rem 1.25rem;
+  text-align: center;
+  color: var(--j-muted);
+}
+
+.jui-empty--search {
+  --jui-empty-accent: var(--j-info, #1f6feb);
+}
+
+.jui-empty--inbox {
+  --jui-empty-accent: var(--j-primary);
+}
+
+.jui-empty--error {
+  --jui-empty-accent: var(--j-danger);
+}
+
+.jui-empty--success {
+  --jui-empty-accent: var(--j-success, var(--j-primary));
+}
+
+.jui-empty__visual {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: calc(var(--jui-empty-size) + 1.5rem);
+  height: calc(var(--jui-empty-size) + 1.5rem);
+}
+
+.jui-empty__halo {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle at 35% 30%,
+      color-mix(in srgb, var(--jui-empty-accent) 22%, transparent),
+      transparent 58%
+    ),
+    color-mix(in srgb, var(--jui-empty-accent) 10%, var(--j-surface));
+  border: 1px solid color-mix(in srgb, var(--jui-empty-accent) 18%, var(--j-border));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent);
+}
+
+.jui-empty__image {
+  position: relative;
+  z-index: 1;
+  width: var(--jui-empty-size);
+  height: var(--jui-empty-size);
+}
+
+.jui-empty__img,
+.jui-empty__glyph {
+  display: block;
+  width: var(--jui-empty-size);
+  height: var(--jui-empty-size);
+  object-fit: contain;
+}
+
+.jui-empty__glyph {
+  background-color: var(--jui-empty-accent);
+  -webkit-mask-image: var(--jui-empty-mask);
+  mask-image: var(--jui-empty-mask);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.jui-empty__image:has(img.jui-empty__img) .jui-empty__glyph {
+  display: none;
+}
+
+.jui-empty__image:has(> :not(.jui-empty__img):not(.jui-empty__glyph):not(:empty)) .jui-empty__img,
+.jui-empty__image:has(> :not(.jui-empty__img):not(.jui-empty__glyph):not(:empty)) .jui-empty__glyph {
+  display: none;
+}
+
+.jui-empty__title {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+  color: var(--j-forest);
+}
+
+.jui-empty__description {
+  max-width: 28rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--j-muted);
+}
+
+.jui-empty__description:empty {
+  display: none;
+}
+
+.jui-empty__extra {
+  display: grid;
+  gap: 0.65rem;
+  justify-items: center;
+  margin-top: 0.15rem;
+}
+
+.jui-empty__extra:empty,
+.jui-empty__extra:has(> span:only-child:empty) {
+  display: none;
+}
+</style>

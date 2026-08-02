@@ -1,0 +1,49 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    offset: { type: 'number', default: 0 }
+    position: { type: 'string', default: 'top' }
+    zIndex: { type: 'number', default: 100 }
+  }
+  slots: ['default']
+</contract>
+
+function offsetOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) ? next : 0
+}
+
+function zOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) ? next : 100
+}
+
+function positionOf(value) {
+  return read(value) === 'bottom' ? 'bottom' : 'top'
+}
+
+function affixStyle(offsetProp, positionProp, zIndexProp) {
+  const offset = offsetOf(offsetProp)
+  const z = zOf(zIndexProp)
+  if (positionOf(positionProp) === 'bottom') {
+    return `position:sticky;bottom:${offset}px;z-index:${z};top:auto`
+  }
+  return `position:sticky;top:${offset}px;z-index:${z};bottom:auto`
+}
+
+export <view>
+  <div
+    class="jui-affix"
+    class-jui-affix--bottom=${() => positionOf(position) === 'bottom'}
+    :style=${() => affixStyle(offset, position, zIndex)}
+  >
+    <slot />
+  </div>
+</view>
+
+export <style>
+.jui-affix {
+  min-width: 0;
+}
+</style>

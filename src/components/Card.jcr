@@ -5,45 +5,192 @@ export <contract>
     title: { type: 'string', default: '' }
     subtitle: { type: 'string', default: '' }
     padding: { type: 'string', default: 'md' }
+    shadow: { type: 'string', default: 'always' }
+    tone: { type: 'string', default: 'default' }
+    cover: { type: 'string', default: '' }
+    coverAlt: { type: 'string', default: '' }
   }
-  slots: ['default']
+  slots: ['default', 'header', 'footer']
 </contract>
+
+function shadowOf(value) {
+  const next = read(value)
+  if (next === 'hover' || next === 'never') return next
+  return 'always'
+}
+
+function toneOf(value) {
+  const next = String(read(value) || 'default')
+  if (
+    next === 'primary' ||
+    next === 'success' ||
+    next === 'warn' ||
+    next === 'danger' ||
+    next === 'info'
+  ) {
+    return next
+  }
+  return 'default'
+}
+
+function hasCover(value) {
+  return String(read(value) || '').trim().length > 0
+}
 
 export <view>
   <section
     class="jui-card"
-    class-jui-card--sm=${read(padding) === 'sm'}
-    class-jui-card--lg=${read(padding) === 'lg'}
+    class-jui-card--sm=${() => read(padding) === 'sm'}
+    class-jui-card--lg=${() => read(padding) === 'lg'}
+    class-jui-card--shadow-hover=${() => shadowOf(shadow) === 'hover'}
+    class-jui-card--shadow-never=${() => shadowOf(shadow) === 'never'}
+    class-jui-card--primary=${() => toneOf(tone) === 'primary'}
+    class-jui-card--success=${() => toneOf(tone) === 'success'}
+    class-jui-card--warn=${() => toneOf(tone) === 'warn'}
+    class-jui-card--danger=${() => toneOf(tone) === 'danger'}
+    class-jui-card--info=${() => toneOf(tone) === 'info'}
+    class-jui-card--has-cover=${() => hasCover(cover)}
   >
-    #if read(title)
-      <header class="jui-card__header">
+    #if hasCover(cover)
+      <div class="jui-card__media">
+        <img
+          class="jui-card__cover"
+          src=${() => String(read(cover) || '')}
+          alt=${() => String(read(coverAlt) || '')}
+        />
+      </div>
+    #end
+
+    <header class="jui-card__header">
+      <slot name="header" />
+      #if read(title)
         <h3 class="jui-card__title">${title}</h3>
         #if read(subtitle)
           <p class="jui-card__subtitle">${subtitle}</p>
         #end
-      </header>
-    #end
+      #end
+    </header>
     <div class="jui-card__body"><slot /></div>
+    <footer class="jui-card__footer">
+      <slot name="footer" />
+    </footer>
   </section>
 </view>
 
 export <style>
 .jui-card {
+  --jui-card-pad: calc(1.25rem * var(--j-density, 1));
+  --jui-card-accent: var(--j-primary);
   display: grid;
   gap: 0.85rem;
-  padding: calc(1.25rem * var(--j-density, 1));
+  padding: var(--jui-card-pad);
   border: 1px solid var(--j-border);
   border-radius: calc(var(--j-radius) + 4px);
   background: var(--j-surface-2);
   box-shadow: var(--j-shadow-sm);
+  transition:
+    box-shadow var(--j-duration-fast, 120ms) var(--j-ease-out, ease),
+    border-color var(--j-duration-fast, 120ms) var(--j-ease-out, ease),
+    background-color var(--j-duration-fast, 120ms) var(--j-ease-out, ease);
+  overflow: hidden;
 }
 
-.jui-card--sm { padding: 0.85rem; }
-.jui-card--lg { padding: 1.75rem; }
+.jui-card--sm {
+  --jui-card-pad: 0.85rem;
+  padding: var(--jui-card-pad);
+}
+
+.jui-card--lg {
+  --jui-card-pad: 1.75rem;
+  padding: var(--jui-card-pad);
+}
+
+.jui-card--shadow-hover {
+  box-shadow: none;
+}
+
+.jui-card--shadow-hover:hover {
+  box-shadow: var(--j-shadow-sm);
+}
+
+.jui-card--shadow-never {
+  box-shadow: none;
+}
+
+.jui-card--primary,
+.jui-card--success,
+.jui-card--warn,
+.jui-card--danger,
+.jui-card--info {
+  border-color: color-mix(in srgb, var(--jui-card-accent) 34%, var(--j-border));
+  background: color-mix(in srgb, var(--jui-card-accent) 10%, var(--j-surface-2));
+  box-shadow: none;
+}
+
+.jui-card--primary {
+  --jui-card-accent: var(--j-primary);
+}
+
+.jui-card--success {
+  --jui-card-accent: var(--j-success, var(--j-primary));
+}
+
+.jui-card--warn {
+  --jui-card-accent: var(--j-warn, #c47a00);
+}
+
+.jui-card--danger {
+  --jui-card-accent: var(--j-danger);
+}
+
+.jui-card--info {
+  --jui-card-accent: var(--j-info, #1f6feb);
+}
+
+.jui-card--primary .jui-card__title,
+.jui-card--success .jui-card__title,
+.jui-card--warn .jui-card__title,
+.jui-card--danger .jui-card__title,
+.jui-card--info .jui-card__title {
+  color: color-mix(in srgb, var(--jui-card-accent) 72%, var(--j-forest));
+}
+
+.jui-card--has-cover {
+  padding-top: 0;
+  gap: 1rem;
+}
+
+.jui-card__media {
+  margin: 0 calc(var(--jui-card-pad) * -1);
+  min-width: 0;
+  background: color-mix(in srgb, var(--j-mint) 35%, var(--j-surface));
+}
+
+.jui-card--has-cover .jui-card__media {
+  margin-bottom: 0.15rem;
+}
+
+.jui-card__cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border: 0;
+}
 
 .jui-card__header {
   display: grid;
   gap: 0.25rem;
+  min-width: 0;
+}
+
+.jui-card--has-cover .jui-card__header {
+  gap: 0.35rem;
+  padding-top: 0.2rem;
+}
+
+.jui-card__header:has(> span:only-child:empty) {
+  display: none;
 }
 
 .jui-card__title {
@@ -64,5 +211,26 @@ export <style>
   display: grid;
   gap: 0.75rem;
   min-width: 0;
+}
+
+.jui-card--has-cover .jui-card__body {
+  gap: 0.95rem;
+}
+
+.jui-card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  padding-top: 0.15rem;
+}
+
+.jui-card--has-cover .jui-card__footer {
+  padding-top: 0.35rem;
+}
+
+.jui-card__footer:has(> span:only-child:empty) {
+  display: none;
 }
 </style>

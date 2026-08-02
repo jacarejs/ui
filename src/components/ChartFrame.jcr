@@ -1,0 +1,119 @@
+import { read } from '../internal/utils.js'
+import { asArray } from '../internal/charts.js'
+
+export <contract>
+  props: {
+    title: { type: 'string', default: '' }
+    caption: { type: 'string', default: '' }
+    legend: { type: 'any', default: [] }
+    width: { type: 'number', default: 420 }
+    height: { type: 'number', default: 260 }
+  }
+  slots: ['default']
+</contract>
+
+function legendOf(value) {
+  return asArray(value)
+    .map((item, index) => {
+      if (!item || typeof item !== 'object') return null
+      return {
+        key: String(item.key ?? item.name ?? index),
+        name: String(item.name ?? item.label ?? index),
+        color: String(item.color || 'var(--j-primary)'),
+      }
+    })
+    .filter(Boolean)
+}
+
+function frameStyle(widthProp, heightProp) {
+  const w = Math.max(120, Math.round(Number(read(widthProp) || 420)))
+  const h = Math.max(100, Math.round(Number(read(heightProp) || 260)))
+  return `--jui-chart-w:${w}px;--jui-chart-h:${h}px;--jui-chart-aw:${w};--jui-chart-ah:${h}`
+}
+
+export <view>
+  <div class="jui-chart" style=${() => frameStyle(width, height)}>
+    #if read(title)
+      <div class="jui-chart__title">${() => read(title)}</div>
+    #end
+    #if legendOf(legend).length
+      <ul class="jui-chart__legend" aria-label="Legend">
+        #for legendOf(legend) as item (item.key)
+          <li class="jui-chart__legend-item">
+            <span class="jui-chart__swatch" style=${() => `background:${item.color}`}></span>
+            <span>${item.name}</span>
+          </li>
+        #end
+      </ul>
+    #end
+    <div class="jui-chart__plot">
+      <slot />
+    </div>
+    #if read(caption)
+      <div class="jui-chart__caption">${() => read(caption)}</div>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-chart {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+  color: var(--j-text);
+}
+
+.jui-chart__title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--j-forest, var(--j-text));
+}
+
+.jui-chart__caption {
+  font-size: 0.8rem;
+  color: var(--j-muted);
+}
+
+.jui-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jui-chart__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--j-muted);
+}
+
+.jui-chart__swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: var(--j-primary);
+}
+
+.jui-chart__plot {
+  width: 100%;
+  min-width: 0;
+  overflow: visible;
+}
+
+.jui-chart__plot > span {
+  display: contents;
+}
+
+.jui-chart__plot svg {
+  display: block;
+  width: min(100%, var(--jui-chart-w, 420px));
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: var(--jui-chart-aw, 420) / var(--jui-chart-ah, 260);
+}
+</style>

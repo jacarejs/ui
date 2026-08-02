@@ -1,0 +1,83 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    value: { type: 'any', model: true }
+    accordion: { type: 'boolean', default: false }
+  }
+  slots: ['default']
+  emits: ['change']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function readyState(emitFn) {
+  if (!emitFn.__juiCollapseReady) emitFn.__juiCollapseReady = pulse(0)
+  return emitFn.__juiCollapseReady
+}
+
+function resolveModel(modelProp, emitFn) {
+  if (modelProp && typeof modelProp.set === 'function') return modelProp
+  if (!emitFn.__juiCollapseModel) {
+    emitFn.__juiCollapseModel = pulse(read(modelProp) ?? [])
+  }
+  return emitFn.__juiCollapseModel
+}
+
+function bindCollapse(emitFn, model, accordionProp) {
+  read(readyState(emitFn))
+  const root = emitFn.__juiCollapseRoot
+  const resolved = resolveModel(model, emitFn)
+  if (root) {
+    root.collapseModel = resolved
+    root.collapseAccordion = accordionProp
+    root.collapseEmit = emitFn
+    root.collapseReady = readyState(emitFn)
+  }
+  read(resolved)
+  read(accordionProp)
+  return ''
+}
+
+function armCollapse(root, emitFn) {
+  if (!root) return
+  emitFn.__juiCollapseRoot = root
+  const ready = readyState(emitFn)
+  ready.set(read(ready) + 1)
+}
+
+export <view>
+  <div class="jui-collapse" class-jui-collapse--accordion=${() => !!read(accordion)}>
+    <img
+      class="jui-collapse__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armCollapse(event.currentTarget.closest('.jui-collapse'), emit)}
+    />
+    <span class="jui-collapse__bind" aria-hidden="true">${() => bindCollapse(emit, value, accordion)}</span>
+    <slot />
+  </div>
+</view>
+
+export <style>
+.jui-collapse {
+  position: relative;
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.jui-collapse__boot,
+.jui-collapse__bind {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+</style>

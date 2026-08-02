@@ -1,0 +1,363 @@
+import { read } from '../internal/utils.js'
+import { propText } from '../i18n/index.js'
+
+export <contract>
+  props: {
+    data: { type: 'any', default: [] }
+    columns: { type: 'any', default: [] }
+    striped: { type: 'boolean', default: false }
+    border: { type: 'boolean', default: false }
+    size: { type: 'string', default: 'md' }
+    emptyText: { type: 'string', default: 'No data' }
+    selectable: { type: 'boolean', default: false }
+    selection: { type: 'object', default: [], model: true }
+    sortField: { type: 'string', default: '', model: true }
+    sortOrder: { type: 'number', default: 1, model: true }
+  }
+  emits: ['change']
+</contract>
+
+function sizeOf(value) {
+  const next = String(read(value) || 'md')
+  if (next === 'sm' || next === 'lg') return next
+  return 'md'
+}
+
+function rowsOf(source) {
+  const list = read(source)
+  return Array.isArray(list) ? list : []
+}
+
+function colsOf(source) {
+  const list = read(source)
+  if (!Array.isArray(list)) return []
+  return list
+    .map((col) => ({
+      prop: col?.prop ?? col?.key ?? '',
+      label: col?.label ?? col?.prop ?? '',
+      width: col?.width ?? '',
+      sortable: !!col?.sortable,
+    }))
+    .filter((col) => col.prop || col.label)
+}
+
+function cellValue(row, prop) {
+  if (!row || typeof row !== 'object') return ''
+  const key = String(prop || '')
+  if (!key) return ''
+  const value = row[key]
+  return value === undefined || value === null ? '' : String(value)
+}
+
+function colStyle(width) {
+  const next = String(width || '')
+  if (!next) return undefined
+  if (/^\d+$/.test(next)) return `width:${next}px`
+  return `width:${next}`
+}
+
+function rowKey(row, index) {
+  if (row && typeof row === 'object') {
+    const id = row.key ?? row.id ?? row.value
+    if (id !== undefined && id !== null) return String(id)
+  }
+  return String(index)
+}
+
+function selectionSet(selectionProp) {
+  const list = read(selectionProp)
+  return new Set((Array.isArray(list) ? list : []).map(String))
+}
+
+function isSelected(key, selectionProp) {
+  return selectionSet(selectionProp).has(String(key))
+}
+
+function sortedRows(dataProp, sortFieldProp, sortOrderProp) {
+  const rows = rowsOf(dataProp).map((row, index) => ({ row, index, key: rowKey(row, index) }))
+  const field = String(read(sortFieldProp) || '')
+  const order = Number(read(sortOrderProp)) === -1 ? -1 : 1
+  if (!field) return rows
+  return [...rows].sort((left, right) => {
+    const leftValue = cellValue(left.row, field)
+    const rightValue = cellValue(right.row, field)
+    const cmp = leftValue.localeCompare(rightValue, undefined, { numeric: true, sensitivity: 'base' })
+    return cmp * order
+  })
+}
+
+function sortIndicator(col, sortFieldProp, sortOrderProp) {
+  const field = String(read(sortFieldProp) || '')
+  if (!col.sortable || field !== col.prop) return ''
+  return Number(read(sortOrderProp)) === -1 ? ' ↓' : ' ↑'
+}
+
+function toggleSort(col, sortFieldProp, sortOrderProp, emitFn) {
+  if (!col.sortable) return
+  const field = col.prop
+  const current = String(read(sortFieldProp) || '')
+  const order = current === field && Number(read(sortOrderProp)) !== -1 ? -1 : 1
+  if (sortFieldProp && typeof sortFieldProp.set === 'function') sortFieldProp.set(field)
+  if (sortOrderProp && typeof sortOrderProp.set === 'function') sortOrderProp.set(order)
+  emitFn('change', { sortField: field, sortOrder: order })
+}
+
+function toggleRow(key, selectionProp, emitFn) {
+  const next = new Set(selectionSet(selectionProp))
+  const id = String(key)
+  if (next.has(id)) next.delete(id)
+  else next.add(id)
+  const value = Array.from(next)
+  if (selectionProp && typeof selectionProp.set === 'function') selectionProp.set(value)
+  emitFn('change', { selection: value })
+}
+
+function allRowKeys(dataProp, sortFieldProp, sortOrderProp) {
+  return sortedRows(dataProp, sortFieldProp, sortOrderProp).map((item) => item.key)
+}
+
+function isAllSelected(dataProp, selectionProp, sortFieldProp, sortOrderProp) {
+  const keys = allRowKeys(dataProp, sortFieldProp, sortOrderProp)
+  if (!keys.length) return false
+  const selected = selectionSet(selectionProp)
+  return keys.every((key) => selected.has(key))
+}
+
+function toggleSelectAll(dataProp, selectionProp, sortFieldProp, sortOrderProp, emitFn) {
+  const keys = allRowKeys(dataProp, sortFieldProp, sortOrderProp)
+  const selected = selectionSet(selectionProp)
+  const allChecked = keys.length > 0 && keys.every((key) => selected.has(key))
+  const value = allChecked ? [] : keys
+  if (selectionProp && typeof selectionProp.set === 'function') selectionProp.set(value)
+  emitFn('change', { selection: value })
+}
+
+function sortAriaLabel(label) {
+  return `Sort by ${label}`
+}
+
+function headerContent(col, sortFieldProp, sortOrderProp) {
+  if (!col.sortable) return col.label
+  return `${col.label}${sortIndicator(col, sortFieldProp, sortOrderProp)}`
+}
+
+function rowAriaLabel(key) {
+  return `Select row ${key}`
+}
+
+function columnCount(columnsProp, selectableProp) {
+  return colsOf(columnsProp).length + (read(selectableProp) ? 1 : 0)
+}
+
+export <view>
+  <div
+    class="jui-data-table"
+    class-jui-data-table--striped=${() => !!read(striped)}
+    class-jui-data-table--border=${() => !!read(border)}
+    class-jui-data-table--sm=${() => sizeOf(size) === 'sm'}
+    class-jui-data-table--lg=${() => sizeOf(size) === 'lg'}
+  >
+    <table class="jui-data-table__table">
+      <thead>
+        <tr>
+          #if read(selectable)
+            <th class="jui-data-table__th jui-data-table__th--select" scope="col">
+              <label class="jui-data-table__check">
+                <input
+                  type="checkbox"
+                  aria-label="Select all rows"
+                  checked=${() => isAllSelected(data, selection, sortField, sortOrder)}
+                  on-change=${() => toggleSelectAll(data, selection, sortField, sortOrder, emit)}
+                />
+                <span class="jui-data-table__box" aria-hidden="true"></span>
+              </label>
+            </th>
+          #end
+          #for colsOf(columns) as col (col.prop)
+            <th
+              class="jui-data-table__th"
+              class-is-sortable=${() => !!col.sortable}
+              :style=${() => colStyle(col.width)}
+              scope="col"
+            >
+              <button
+                type="button"
+                class="jui-data-table__sort-btn"
+                aria-label=${() => sortAriaLabel(col.label)}
+                disabled=${() => !col.sortable}
+                on-click=${() => toggleSort(col, sortField, sortOrder, emit)}
+              >${() => headerContent(col, sortField, sortOrder)}</button>
+            </th>
+          #end
+        </tr>
+      </thead>
+      <tbody>
+        #if sortedRows(data, sortField, sortOrder).length === 0
+          <tr>
+            <td class="jui-data-table__empty" colspan=${() => Math.max(1, columnCount(columns, selectable))}>${() => propText(emptyText, 'j.table.emptyText', 'No data')}</td>
+          </tr>
+        #else
+          #for sortedRows(data, sortField, sortOrder) as item (item.key)
+            <tr class="jui-data-table__tr">
+              #if read(selectable)
+                <td class="jui-data-table__td jui-data-table__td--select">
+                  <label class="jui-data-table__check">
+                    <input
+                      type="checkbox"
+                      aria-label=${() => rowAriaLabel(item.key)}
+                      checked=${() => isSelected(item.key, selection)}
+                      on-change=${() => toggleRow(item.key, selection, emit)}
+                    />
+                    <span class="jui-data-table__box" aria-hidden="true"></span>
+                  </label>
+                </td>
+              #end
+              #for colsOf(columns) as col (col.prop)
+                <td class="jui-data-table__td" :style=${() => colStyle(col.width)}>${() => cellValue(item.row, col.prop)}</td>
+              #end
+            </tr>
+          #end
+        #end
+      </tbody>
+    </table>
+  </div>
+</view>
+
+export <style>
+.jui-data-table {
+  min-width: 0;
+  overflow: auto;
+  color: var(--j-text);
+}
+
+.jui-data-table__table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.jui-data-table__th,
+.jui-data-table__td {
+  padding: 0.7rem 0.85rem;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--j-border);
+}
+
+.jui-data-table__th {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--j-forest);
+  background: color-mix(in srgb, var(--j-surface) 70%, var(--j-surface-2));
+}
+
+.jui-data-table__th--select,
+.jui-data-table__td--select {
+  width: 2.75rem;
+  padding-inline: 0.65rem;
+}
+
+.jui-data-table__sort-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+}
+
+.jui-data-table__sort-btn:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.jui-data-table__sort-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+  border-radius: var(--j-radius-sm);
+}
+
+.jui-data-table__th.is-sortable {
+  white-space: nowrap;
+}
+
+.jui-data-table__td {
+  font-size: 0.92rem;
+}
+
+.jui-data-table--sm .jui-data-table__th,
+.jui-data-table--sm .jui-data-table__td {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.82rem;
+}
+
+.jui-data-table--lg .jui-data-table__th,
+.jui-data-table--lg .jui-data-table__td {
+  padding: 0.95rem 1.05rem;
+  font-size: 1rem;
+}
+
+.jui-data-table--striped .jui-data-table__tr:nth-child(even) .jui-data-table__td {
+  background: color-mix(in srgb, var(--j-surface) 55%, transparent);
+}
+
+.jui-data-table--border .jui-data-table__th,
+.jui-data-table--border .jui-data-table__td {
+  border: 1px solid var(--j-border);
+}
+
+.jui-data-table--border .jui-data-table__table {
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  overflow: hidden;
+}
+
+.jui-data-table__empty {
+  padding: 1.25rem 0.85rem;
+  text-align: center;
+  color: var(--j-muted);
+}
+
+.jui-data-table__check {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.jui-data-table__check input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-data-table__box {
+  position: relative;
+  flex: 0 0 auto;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 1.5px solid var(--j-border);
+  border-radius: 0.3rem;
+  background: var(--j-surface-2);
+  transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+input:checked + .jui-data-table__box {
+  background: var(--j-primary);
+  border-color: var(--j-primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5 6.5 11.5 12.5 4.5'/%3E%3C/svg%3E");
+  background-size: 0.8rem;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+input:focus-visible + .jui-data-table__box {
+  box-shadow: var(--j-focus);
+}
+</style>

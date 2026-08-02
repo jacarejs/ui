@@ -1,0 +1,41 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    height: { type: 'string', default: '60px' }
+  }
+  slots: ['default']
+</contract>
+
+function heightOf(value) {
+  return String(read(value) || '60px')
+}
+
+export <view>
+  <header
+    class="jui-header"
+    style---jui-header-height=${() => heightOf(height)}
+  >
+    <slot />
+  </header>
+</view>
+
+export <style>
+.jui-header {
+  --jui-header-height: 60px;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  box-sizing: border-box;
+  height: var(--jui-header-height);
+  min-height: var(--jui-header-height);
+  padding: 0 var(--j-space-4);
+  border-bottom: 1px solid var(--j-border);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+}
+
+.jui-header > span {
+  display: contents;
+}
+</style>

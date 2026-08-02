@@ -1,0 +1,80 @@
+import ChartFrame from './ChartFrame.jcr'
+import ChartPlot from './ChartPlot.jcr'
+import { read } from '../internal/utils.js'
+import {
+  arcPath,
+  chartLayoutWidth,
+  escapeXml,
+  formatNumber,
+  pieSlices,
+  polarPoint,
+  resolveChartWidth,
+  sizeOf,
+} from '../internal/charts.js'
+
+export <contract>
+  props: {
+    data: { type: 'any', required: true }
+    title: { type: 'string', default: '' }
+    caption: { type: 'string', default: '' }
+    width: { type: 'number', default: 360 }
+    height: { type: 'number', default: 280 }
+    colors: { type: 'any', default: null }
+    showLabels: { type: 'boolean', default: true }
+    showLegend: { type: 'boolean', default: true }
+  }
+  emits: ['layout']
+</contract>
+
+function model(dataProp, colorsProp, widthProp, heightProp) {
+  const { width, height } = sizeOf(widthProp, heightProp, 360, 280)
+  const cx = width / 2
+  const cy = height / 2
+  const radius = Math.min(width, height) * 0.36
+  const slices = pieSlices(dataProp, colorsProp).map((slice) => {
+    const labelPoint = polarPoint(cx, cy, radius * 0.72, slice.mid)
+    return {
+      ...slice,
+      path: arcPath(cx, cy, radius, slice.start, slice.end),
+      labelX: labelPoint.x,
+      labelY: labelPoint.y,
+      label: `${slice.label} ${formatNumber(slice.pct, 0)}%`,
+    }
+  })
+  return { width, height, slices, legend: slices }
+}
+
+function plotContent(dataProp, colorsProp, widthProp, heightProp, showLabelsProp) {
+  const next = model(dataProp, colorsProp, widthProp, heightProp)
+  const parts = []
+  for (const slice of next.slices) {
+    parts.push(
+      `<path d="${escapeXml(slice.path)}" fill="${escapeXml(slice.color)}" data-jui-tip="${escapeXml(slice.label)}: ${escapeXml(formatNumber(slice.value))}" />`,
+    )
+    if (read(showLabelsProp)) {
+      parts.push(
+        `<text x="${slice.labelX}" y="${slice.labelY}" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-size="11" font-weight="700">${escapeXml(formatNumber(slice.pct, 0))}%</text>`,
+      )
+    }
+  }
+  return parts.join('')
+}
+
+export <view>
+  <ChartFrame
+    :title=${title}
+    :caption=${caption}
+    :width=${() => resolveChartWidth(width, emit)}
+    :height=${height}
+    :legend=${() =>
+      read(showLegend) ? model(data, colors, resolveChartWidth(width, emit), height).legend : []}
+  >
+    <ChartPlot
+      bind-layoutWidth=${chartLayoutWidth(emit)}
+      :width=${() => resolveChartWidth(width, emit)}
+      :height=${() => model(data, colors, resolveChartWidth(width, emit), height).height}
+      :label=${() => read(title) || 'Pie chart'}
+      :content=${() => plotContent(data, colors, resolveChartWidth(width, emit), height, showLabels)}
+    />
+  </ChartFrame>
+</view>

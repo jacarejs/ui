@@ -228,17 +228,18 @@ export <style>
   gap: 0.45rem;
 }
 
-.jui-btn__icon {
-  display: inline-flex;
+.jui-btn__icon,
+.jui-btn .jui-icon {
+  display: inline-block;
   flex-shrink: 0;
   width: 1.1rem;
   height: 1.1rem;
-  align-items: center;
-  justify-content: center;
+  vertical-align: middle;
 }
 
 .jui-btn__icon svg,
 .jui-btn svg.jui-btn__icon {
+  display: block;
   width: 1.1rem;
   height: 1.1rem;
   fill: none;
@@ -249,6 +250,7 @@ export <style>
 }
 
 .jui-btn--sm .jui-btn__icon,
+.jui-btn--sm .jui-icon,
 .jui-btn--sm .jui-btn__icon svg,
 .jui-btn--sm svg.jui-btn__icon {
   width: 0.95rem;
@@ -256,6 +258,7 @@ export <style>
 }
 
 .jui-btn--lg .jui-btn__icon,
+.jui-btn--lg .jui-icon,
 .jui-btn--lg .jui-btn__icon svg,
 .jui-btn--lg svg.jui-btn__icon {
   width: 1.25rem;

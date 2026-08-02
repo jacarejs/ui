@@ -1,0 +1,171 @@
+import { effect, pulse, untrack } from '@jacare/core'
+import InputNumber from './InputNumber.jcr'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'number', default: 0, model: true }
+    unit: { type: 'string', default: 'minutes' }
+    showDays: { type: 'boolean', default: false }
+    disabled: { type: 'boolean', default: false }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change']
+</contract>
+
+function totalMinutes(model) {
+  const next = Number(read(model))
+  return Number.isFinite(next) && next >= 0 ? Math.round(next) : 0
+}
+
+function partsFromMinutes(total, showDaysValue) {
+  let remaining = Math.max(0, total)
+  let days = 0
+  if (read(showDaysValue)) {
+    days = Math.floor(remaining / 1440)
+    remaining %= 1440
+  }
+  const hours = Math.floor(remaining / 60)
+  const minutes = remaining % 60
+  return { days, hours, minutes }
+}
+
+function minutesFromParts(parts, showDaysValue) {
+  const days = read(showDaysValue) ? Math.max(0, Number(parts.days) || 0) : 0
+  const hours = Math.max(0, Number(parts.hours) || 0)
+  const minutes = Math.max(0, Number(parts.minutes) || 0)
+  return days * 1440 + hours * 60 + minutes
+}
+
+function commit(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function ensureParts(model, showDaysValue, emitFn) {
+  if (emitFn.__juiDuration) return emitFn.__juiDuration
+
+  const initial = partsFromMinutes(totalMinutes(model), showDaysValue)
+  const daysPulse = pulse(initial.days)
+  const hoursPulse = pulse(initial.hours)
+  const minutesPulse = pulse(initial.minutes)
+  let syncing = false
+
+  effect(() => {
+    const next = partsFromMinutes(totalMinutes(model), showDaysValue)
+    if (syncing) return
+    syncing = true
+    if (untrack(() => daysPulse()) !== next.days) daysPulse.set(next.days)
+    if (untrack(() => hoursPulse()) !== next.hours) hoursPulse.set(next.hours)
+    if (untrack(() => minutesPulse()) !== next.minutes) minutesPulse.set(next.minutes)
+    syncing = false
+  })
+
+  effect(() => {
+    const parts = {
+      days: daysPulse(),
+      hours: hoursPulse(),
+      minutes: minutesPulse(),
+    }
+    if (syncing) return
+    const composed = minutesFromParts(parts, showDaysValue)
+    if (composed === untrack(() => totalMinutes(model))) return
+    syncing = true
+    commit(model, composed, emitFn)
+    syncing = false
+  })
+
+  emitFn.__juiDuration = { daysPulse, hoursPulse, minutesPulse }
+  return emitFn.__juiDuration
+}
+
+function daysModel(model, showDaysValue, emitFn) {
+  return ensureParts(model, showDaysValue, emitFn).daysPulse
+}
+
+function hoursModel(model, showDaysValue, emitFn) {
+  return ensureParts(model, showDaysValue, emitFn).hoursPulse
+}
+
+function minutesModel(model, showDaysValue, emitFn) {
+  return ensureParts(model, showDaysValue, emitFn).minutesPulse
+}
+
+function summary(model, showDaysValue) {
+  const parts = partsFromMinutes(totalMinutes(model), showDaysValue)
+  const chunks = []
+  if (read(showDaysValue) && parts.days) chunks.push(`${parts.days}d`)
+  if (parts.hours) chunks.push(`${parts.hours}h`)
+  chunks.push(`${parts.minutes}m`)
+  return chunks.join(' ')
+}
+
+export <view>
+  <div class="jui-duration" class-has-error=${() => !!read(error)} class-is-disabled=${() => !!read(disabled)}>
+    #if read(label)
+      <span class="jui-duration__label">${() => read(label)}</span>
+    #end
+
+    <div class="jui-duration__row">
+      #if read(showDays)
+        <InputNumber :label=${'Days'} :min=${0} :step=${1} :disabled=${disabled} :controls=${true} bind-value=${daysModel(value, showDays, emit)} />
+      #end
+      <InputNumber :label=${'Hours'} :min=${0} :max=${() => (read(showDays) ? null : 999)} :step=${1} :disabled=${disabled} :controls=${true} bind-value=${hoursModel(value, showDays, emit)} />
+      <InputNumber :label=${'Minutes'} :min=${0} :max=${59} :step=${1} :disabled=${disabled} :controls=${true} bind-value=${minutesModel(value, showDays, emit)} />
+    </div>
+
+    <span class="jui-duration__summary">${() => summary(value, showDays)}</span>
+
+    #if read(error)
+      <span class="jui-duration__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-duration__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-duration {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.jui-duration__label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-duration__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 0.55rem;
+}
+
+.jui-duration__summary {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--j-muted);
+}
+
+.jui-duration.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-duration__hint,
+.jui-duration__error {
+  font-size: 0.8rem;
+}
+
+.jui-duration__hint {
+  color: var(--j-muted);
+}
+
+.jui-duration__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

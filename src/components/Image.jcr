@@ -1,0 +1,127 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    src: { type: 'string', default: '' }
+    alt: { type: 'string', default: '' }
+    fit: { type: 'string', default: 'cover' }
+    lazy: { type: 'boolean', default: false }
+    preview: { type: 'boolean', default: false }
+  }
+  slots: ['default']
+  emits: ['error']
+</contract>
+
+function fitOf(value) {
+  const next = String(read(value) || 'cover')
+  if (next === 'contain' || next === 'fill' || next === 'none' || next === 'cover') return next
+  return 'cover'
+}
+
+function errorState(emitFn) {
+  if (!emitFn.__juiImageError) {
+    emitFn.__juiImageError = pulse(false)
+    emitFn.__juiImageSrc = ''
+  }
+  return emitFn.__juiImageError
+}
+
+function hasError(emitFn) {
+  return !!read(errorState(emitFn))
+}
+
+function markError(emitFn) {
+  const state = errorState(emitFn)
+  if (read(state)) return
+  state.set(true)
+  emitFn('error')
+}
+
+function syncSrc(srcValue, emitFn) {
+  const next = String(read(srcValue) || '')
+  if (emitFn.__juiImageSrc !== next) {
+    emitFn.__juiImageSrc = next
+    errorState(emitFn).set(false)
+  }
+  return next
+}
+
+function showFallback(srcValue, emitFn) {
+  const src = syncSrc(srcValue, emitFn)
+  return hasError(emitFn) || !src
+}
+
+function imageStyle(fitValue) {
+  return `object-fit:${fitOf(fitValue)}`
+}
+
+export <view>
+  <div
+    class="jui-image"
+    class-jui-image--preview=${() => !!read(preview)}
+    class-is-error=${() => hasError(emit)}
+  >
+    #if showFallback(src, emit)
+      <div class="jui-image__fallback" role="img" aria-label=${() => read(alt) || 'Image unavailable'}>
+        <div class="jui-image__fallback-slot">
+          <slot />
+        </div>
+        <span class="jui-image__placeholder" aria-hidden="true">▣</span>
+      </div>
+    #else
+      <img
+        class="jui-image__img"
+        src=${() => syncSrc(src, emit)}
+        alt=${() => read(alt) || ''}
+        loading=${() => (read(lazy) ? 'lazy' : 'eager')}
+        :style=${() => imageStyle(fit)}
+        on-error=${() => markError(emit)}
+      />
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-image {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 2 / 1;
+  border-radius: var(--j-radius);
+  background: color-mix(in srgb, var(--j-mint) 40%, var(--j-surface));
+}
+
+.jui-image--preview {
+  cursor: zoom-in;
+}
+
+.jui-image__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.jui-image__fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 8rem;
+  color: var(--j-muted);
+  font-weight: 600;
+  background: color-mix(in srgb, var(--j-border) 35%, var(--j-surface));
+}
+
+.jui-image__fallback:has(.jui-image__fallback-slot :not(:empty)) .jui-image__placeholder {
+  display: none;
+}
+
+.jui-image__placeholder {
+  font-size: 1.75rem;
+  opacity: 0.55;
+}
+</style>

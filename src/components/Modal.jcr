@@ -1,0 +1,563 @@
+import { effect, pulse } from '@jacare/core'
+import { isNarrowViewport, read } from '../internal/utils.js'
+import { activateFocusTrap, uniqueId } from '../internal/overlay.js'
+
+export <contract>
+  props: {
+    open: { type: 'boolean', default: false, model: true }
+    title: { type: 'string', default: '' }
+    description: { type: 'string', default: '' }
+    size: { type: 'string', default: 'md' }
+    placement: { type: 'string', default: 'auto' }
+    closeOnClickModal: { type: 'boolean', default: true }
+    closeOnEsc: { type: 'boolean', default: true }
+    showClose: { type: 'boolean', default: true }
+    lockScroll: { type: 'boolean', default: true }
+  }
+  slots: ['default']
+  emits: ['close', 'opened']
+</contract>
+
+function openState(openProp, emitFn) {
+  if (openProp && typeof openProp.set === 'function') return openProp
+  if (!emitFn.__juiModalOpen) {
+    emitFn.__juiModalOpen = pulse(read(openProp) === true)
+  }
+  return emitFn.__juiModalOpen
+}
+
+function isOpen(openProp, emitFn) {
+  return read(openState(openProp, emitFn)) === true
+}
+
+function modalId(emitFn) {
+  return uniqueId('jui-modal', emitFn, '__juiModalId')
+}
+
+function titleId(emitFn) {
+  return `${modalId(emitFn)}-title`
+}
+
+function descriptionId(emitFn) {
+  return `${modalId(emitFn)}-description`
+}
+
+function sizeOf(value) {
+  const next = String(read(value) || 'md')
+  if (next === 'sm' || next === 'lg' || next === 'full') return next
+  return 'md'
+}
+
+function placementOf(value) {
+  const next = String(read(value) || 'auto')
+  if (next === 'center' || next === 'bottom' || next === 'auto') return next
+  return 'auto'
+}
+
+function resolvedPlacement(placementProp) {
+  const next = placementOf(placementProp)
+  if (next === 'auto') return isNarrowViewport(640) ? 'bottom' : 'center'
+  return next
+}
+
+function closeModal(openProp, emitFn) {
+  openState(openProp, emitFn).set(false)
+  emitFn('close')
+}
+
+function handleBackdrop(event, openProp, emitFn, closeOnClickProp) {
+  if (event.target !== event.currentTarget || !read(closeOnClickProp)) return
+  closeModal(openProp, emitFn)
+}
+
+function lockBodyScroll(locked) {
+  if (typeof document === 'undefined') return
+  const root = document.documentElement
+  if (locked) {
+    if (root.dataset.juiModalScrollLock) {
+      root.dataset.juiModalScrollLock = String(Number(root.dataset.juiModalScrollLock) + 1)
+      return
+    }
+    root.dataset.juiModalScrollLock = '1'
+    root.dataset.juiModalScrollTop = String(window.scrollY || 0)
+    root.style.overflow = 'hidden'
+    root.style.touchAction = 'none'
+    return
+  }
+  const count = Number(root.dataset.juiModalScrollLock || 0) - 1
+  if (count > 0) {
+    root.dataset.juiModalScrollLock = String(count)
+    return
+  }
+  const top = Number(root.dataset.juiModalScrollTop || 0)
+  delete root.dataset.juiModalScrollLock
+  delete root.dataset.juiModalScrollTop
+  root.style.overflow = ''
+  root.style.touchAction = ''
+  if (Number.isFinite(top)) window.scrollTo(0, top)
+}
+
+function placeSlots(root) {
+  if (!root) return
+  const body = root.querySelector('.jui-modal__body')
+  const footer = root.querySelector('[data-modal-footer]')
+  const titles = root.querySelector('[data-modal-titles]')
+  if (!body) return
+
+  const slotHost = (node) => {
+    const scoped = node.closest('[data-jacare-s]')
+    if (scoped && body.contains(scoped) && !scoped.contains(footer) && !scoped.contains(titles)) {
+      return scoped
+    }
+    return node
+  }
+
+  body.querySelectorAll('[data-jui-modal-slot="footer"]').forEach((node) => {
+    const host = slotHost(node)
+    if (footer && host && !footer.contains(host)) footer.appendChild(host)
+  })
+
+  body.querySelectorAll('[data-jui-modal-slot="header"]').forEach((node) => {
+    const host = slotHost(node)
+    if (titles && host && !titles.contains(host)) titles.replaceChildren(host)
+  })
+
+  if (footer) footer.hidden = footer.childElementCount === 0
+}
+
+function beginSheetDrag(event, openProp, emitFn, placementProp) {
+  if (resolvedPlacement(placementProp) !== 'bottom') return
+  if (event.pointerType === 'mouse' && event.button !== 0) return
+  const handle = event.currentTarget
+  const panel = handle.closest('.jui-modal')
+  if (!panel) return
+  const startY = event.clientY
+  let delta = 0
+
+  if (typeof handle.setPointerCapture === 'function') {
+    handle.setPointerCapture(event.pointerId)
+  }
+
+  const onMove = (moveEvent) => {
+    delta = Math.max(0, moveEvent.clientY - startY)
+    panel.style.transform = `translateY(${delta}px)`
+    panel.style.transition = 'none'
+  }
+
+  const onUp = () => {
+    handle.removeEventListener('pointermove', onMove)
+    handle.removeEventListener('pointerup', onUp)
+    handle.removeEventListener('pointercancel', onUp)
+    panel.style.transition = ''
+    if (delta > 96) {
+      panel.style.transform = ''
+      closeModal(openProp, emitFn)
+      return
+    }
+    panel.style.transform = ''
+  }
+
+  handle.addEventListener('pointermove', onMove)
+  handle.addEventListener('pointerup', onUp)
+  handle.addEventListener('pointercancel', onUp)
+}
+
+function portalBackdrop(backdrop, emitFn) {
+  if (!backdrop || typeof document === 'undefined') return
+  const shell = emitFn.__juiModalShell
+  if (shell?.contains(backdrop) && shell.parentElement === document.body) return
+
+  const scopeId = backdrop.closest('[data-jacare-s]')?.getAttribute('data-jacare-s')
+  emitFn.__juiModalHome = backdrop.parentElement
+
+  let host = emitFn.__juiModalShell
+  if (!host) {
+    host = document.createElement('div')
+    host.setAttribute('data-jui-modal-portal', '')
+    emitFn.__juiModalShell = host
+  }
+  if (scopeId) host.setAttribute('data-jacare-s', scopeId)
+  if (host.parentElement !== document.body) document.body.appendChild(host)
+  host.appendChild(backdrop)
+}
+
+function restoreBackdrop(emitFn) {
+  const backdrop = emitFn.__juiModalBackdrop
+  const home = emitFn.__juiModalHome
+  const shell = emitFn.__juiModalShell
+  emitFn.__juiModalBackdrop = null
+  emitFn.__juiModalHome = null
+  if (backdrop?.isConnected && home?.isConnected && !home.contains(backdrop)) {
+    home.appendChild(backdrop)
+  }
+  if (shell?.isConnected) shell.remove()
+}
+
+function armOverlay(openProp, emitFn, closeOnEscProp, lockScrollProp, placementProp) {
+  if (!emitFn.__juiModalOverlay) {
+    emitFn.__juiModalOverlay = effect(() => {
+      const open = isOpen(openProp, emitFn)
+      read(placementProp)
+      if (!open) {
+        emitFn.__juiModalWasOpen = false
+        restoreBackdrop(emitFn)
+        if (emitFn.__juiModalLocked) {
+          emitFn.__juiModalLocked = false
+          lockBodyScroll(false)
+        }
+        return undefined
+      }
+
+      if (!emitFn.__juiModalWasOpen) {
+        emitFn.__juiModalWasOpen = true
+        emitFn('opened')
+      }
+      if (read(lockScrollProp) && !emitFn.__juiModalLocked) {
+        emitFn.__juiModalLocked = true
+        lockBodyScroll(true)
+      }
+
+      const id = modalId(emitFn)
+      let release = () => {}
+      const frame = requestAnimationFrame(() => {
+        const root = document.querySelector(`[data-jui-modal="${id}"]`)
+        if (!root) return
+        const backdrop = root.closest('.jui-modal-backdrop')
+        emitFn.__juiModalBackdrop = backdrop
+        portalBackdrop(backdrop, emitFn)
+        placeSlots(root)
+        requestAnimationFrame(() => placeSlots(root))
+        release = activateFocusTrap(root, {
+          onEscape: () => {
+            if (!read(closeOnEscProp)) return
+            closeModal(openProp, emitFn)
+          },
+        })
+      })
+      return () => {
+        cancelAnimationFrame(frame)
+        release()
+        restoreBackdrop(emitFn)
+        if (emitFn.__juiModalLocked) {
+          emitFn.__juiModalLocked = false
+          lockBodyScroll(false)
+        }
+      }
+    })
+  }
+  return ''
+}
+
+export <view>
+  #if isOpen(open, emit)
+    <div
+      class="jui-modal-backdrop"
+      class-jui-modal-backdrop--bottom=${() => resolvedPlacement(placement) === 'bottom'}
+      class-jui-modal-backdrop--center=${() => resolvedPlacement(placement) === 'center'}
+      class-jui-modal-backdrop--full=${() => sizeOf(size) === 'full'}
+      on-click=${(event) => handleBackdrop(event, open, emit, closeOnClickModal)}
+    >
+      <section
+        class="jui-modal"
+        class-jui-modal--sm=${() => sizeOf(size) === 'sm'}
+        class-jui-modal--md=${() => sizeOf(size) === 'md'}
+        class-jui-modal--lg=${() => sizeOf(size) === 'lg'}
+        class-jui-modal--full=${() => sizeOf(size) === 'full'}
+        class-jui-modal--bottom=${() => resolvedPlacement(placement) === 'bottom'}
+        role="dialog"
+        aria-modal="true"
+        tabindex="-1"
+        data-jui-modal=${() => modalId(emit)}
+        aria-labelledby=${() => (read(title) ? titleId(emit) : undefined)}
+        aria-describedby=${() => (read(description) ? descriptionId(emit) : undefined)}
+        on-click=${(event) => event.stopPropagation()}
+      >
+        #if resolvedPlacement(placement) === 'bottom'
+          <div
+            class="jui-modal__grabber"
+            aria-hidden="true"
+            on-pointerdown=${(event) => beginSheetDrag(event, open, emit, placement)}
+          >
+            <span class="jui-modal__grabber-bar"></span>
+          </div>
+        #end
+
+        <header class="jui-modal__head">
+          <div class="jui-modal__titles" data-modal-titles>
+            #if read(title)
+              <h2 class="jui-modal__title" id=${() => titleId(emit)}>${() => read(title)}</h2>
+            #end
+            #if read(description)
+              <p class="jui-modal__description" id=${() => descriptionId(emit)}>${() => read(description)}</p>
+            #end
+          </div>
+          #if read(showClose)
+            <button
+              type="button"
+              class="jui-modal__close"
+              aria-label="Close"
+              on-click=${() => closeModal(open, emit)}
+            >
+              <span aria-hidden="true">×</span>
+            </button>
+          #end
+        </header>
+
+        <div class="jui-modal__body">
+          <slot />
+        </div>
+
+        <footer class="jui-modal__footer" data-modal-footer></footer>
+
+        <span class="jui-modal__arm" aria-hidden="true">${() =>
+          armOverlay(open, emit, closeOnEsc, lockScroll, placement)}</span>
+      </section>
+    </div>
+  #end
+</view>
+
+export <style>
+.jui-modal-backdrop {
+  position: fixed;
+  z-index: 2400;
+  inset: 0;
+  display: grid;
+  padding:
+    max(1rem, var(--j-safe-top, env(safe-area-inset-top, 0px)))
+    max(1rem, var(--j-safe-right, env(safe-area-inset-right, 0px)))
+    max(1rem, var(--j-safe-bottom, env(safe-area-inset-bottom, 0px)))
+    max(1rem, var(--j-safe-left, env(safe-area-inset-left, 0px)));
+  background: rgba(0, 24, 24, 0.55);
+  overscroll-behavior: contain;
+}
+
+.jui-modal-backdrop--full {
+  padding: 0;
+  z-index: 2500;
+}
+
+.jui-modal-backdrop--center {
+  place-items: center;
+}
+
+.jui-modal-backdrop--bottom {
+  align-items: end;
+  justify-items: stretch;
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: 0;
+}
+
+.jui-modal {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  width: min(32rem, 100%);
+  max-height: min(88dvh, 44rem);
+  overflow: hidden;
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  box-shadow: var(--j-shadow);
+  animation: jui-modal-in-center var(--j-duration-normal, 200ms) var(--j-ease-out, ease);
+}
+
+.jui-modal--sm {
+  width: min(22rem, 100%);
+}
+
+.jui-modal--lg {
+  width: min(42rem, 100%);
+}
+
+.jui-modal--full {
+  width: min(100%, 100vw);
+  max-height: 100dvh;
+  height: 100dvh;
+  border-radius: 0;
+}
+
+.jui-modal--bottom {
+  width: 100%;
+  max-width: 100%;
+  max-height: min(92dvh, 40rem);
+  border-radius: var(--j-radius) var(--j-radius) 0 0;
+  animation: jui-modal-in-bottom var(--j-duration-normal, 200ms) var(--j-ease-out, ease);
+  padding-bottom: var(--j-safe-bottom, env(safe-area-inset-bottom, 0px));
+}
+
+.jui-modal--bottom.jui-modal--full {
+  max-height: 100dvh;
+  height: 100dvh;
+  border-radius: 0;
+}
+
+.jui-modal__grabber {
+  display: grid;
+  place-items: center;
+  min-height: 1.75rem;
+  padding-top: 0.45rem;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.jui-modal__grabber-bar {
+  width: 2.75rem;
+  height: 0.28rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--j-muted) 45%, transparent);
+}
+
+.jui-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  padding: 0.85rem 0.9rem 0.85rem 1.15rem;
+  border-bottom: 1px solid var(--j-border);
+}
+
+.jui-modal__titles {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.jui-modal__title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.jui-modal__description {
+  margin: 0;
+  color: var(--j-muted);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.jui-modal__close {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: var(--j-touch-target, 2.75rem);
+  height: var(--j-touch-target, 2.75rem);
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  background: transparent;
+  color: var(--j-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.jui-modal__close:hover {
+  background: var(--j-mint);
+  color: var(--j-text);
+}
+
+.jui-modal__close:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-modal__body {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 1.1rem 1.15rem;
+}
+
+.jui-modal__body > span {
+  display: contents;
+}
+
+.jui-modal__footer[hidden] {
+  display: none;
+}
+
+.jui-modal__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  padding: 0.9rem 1.15rem calc(1rem + var(--j-safe-bottom, env(safe-area-inset-bottom, 0px)));
+  border-top: 1px solid var(--j-border);
+  background: color-mix(in srgb, var(--j-surface) 65%, var(--j-surface-2));
+}
+
+.jui-modal__footer > [data-jacare-s],
+.jui-modal__footer > span {
+  display: contents;
+}
+
+.jui-modal__arm {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+@keyframes jui-modal-in-center {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes jui-modal-in-bottom {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .jui-modal-backdrop--center:not(:has(.jui-modal--full)) {
+    align-items: end;
+    justify-items: stretch;
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+  }
+
+  .jui-modal-backdrop--center .jui-modal:not(.jui-modal--full) {
+    width: 100%;
+    max-width: 100%;
+    max-height: min(92dvh, 40rem);
+    border-radius: var(--j-radius) var(--j-radius) 0 0;
+    animation-name: jui-modal-in-bottom;
+  }
+
+  .jui-modal__footer {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .jui-modal__footer > span > * {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-modal {
+    animation: none;
+  }
+}
+</style>

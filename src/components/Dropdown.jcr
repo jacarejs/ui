@@ -1,0 +1,252 @@
+import { canHoverTrigger, read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    trigger: { type: 'string', default: 'click' }
+    placement: { type: 'string', default: 'bottom-start' }
+    disabled: { type: 'boolean', default: false }
+    hideOnClick: { type: 'boolean', default: true }
+    maxHeight: { type: 'number', default: 280 }
+  }
+  slots: ['default', 'dropdown']
+  emits: ['command', 'visible-change']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+const PLACEMENTS = new Set([
+  'bottom',
+  'bottom-start',
+  'bottom-end',
+  'top',
+  'top-start',
+  'top-end',
+])
+
+function triggerOf(value) {
+  return read(value) === 'hover' ? 'hover' : 'click'
+}
+
+function placementOf(value) {
+  const next = String(read(value) || 'bottom-start')
+  return PLACEMENTS.has(next) ? next : 'bottom-start'
+}
+
+function maxHeightOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) && next > 0 ? Math.round(next) : 280
+}
+
+function closeDropdown(details) {
+  if (details?.open) details.removeAttribute('open')
+}
+
+function openDropdown(details) {
+  if (details && !details.open) details.setAttribute('open', '')
+}
+
+function toggleDropdown(details) {
+  if (!details) return
+  if (details.open) closeDropdown(details)
+  else openDropdown(details)
+}
+
+function placeMenu(root) {
+  const panel = root.querySelector('.jui-dropdown__panel')
+  const trigger = root.querySelector('.jui-dropdown__trigger')
+  if (!panel || !trigger) return
+  const menu = trigger.querySelector('.jui-dropdown-menu')
+  if (!menu) return
+  const host = menu.closest('[data-jacare-s]') || menu
+  if (panel.contains(host)) return
+  panel.appendChild(host)
+}
+
+function syncOptions(emitFn, hideOnClickProp) {
+  const root = emitFn.__juiDropdownRoot
+  if (root) root.juiHideOnClick = read(hideOnClickProp) !== false
+  read(hideOnClickProp)
+  return ''
+}
+
+function armDropdown(root, emitFn, hideOnClickProp) {
+  if (!root) return
+  emitFn.__juiDropdownRoot = root
+  root.juiHideOnClick = read(hideOnClickProp) !== false
+  root.dropdownEmit = emitFn
+  if (root.dropdownArmed) return
+  root.dropdownArmed = true
+  placeMenu(root)
+  requestAnimationFrame(() => placeMenu(root))
+  root.addEventListener('jui-dropdown-command', (event) => {
+    emitFn('command', event.detail)
+  })
+}
+
+function handleToggle(event, emitFn, triggerProp) {
+  const details = event.currentTarget
+  emitFn('visible-change', !!details.open)
+  details.outsideController?.abort()
+  if (!details.open) return
+  if (triggerOf(triggerProp) === 'hover' && canHoverTrigger()) return
+  const controller = new AbortController()
+  details.outsideController = controller
+  requestAnimationFrame(() => {
+    document.addEventListener(
+      'pointerdown',
+      (pointerEvent) => {
+        const path = typeof pointerEvent.composedPath === 'function' ? pointerEvent.composedPath() : []
+        if (path.includes(details) || details.contains(pointerEvent.target)) return
+        closeDropdown(details)
+      },
+      { signal: controller.signal },
+    )
+    document.addEventListener(
+      'keydown',
+      (keyEvent) => {
+        if (keyEvent.key === 'Escape') closeDropdown(details)
+      },
+      { signal: controller.signal },
+    )
+  })
+}
+
+function handleSummaryClick(event, triggerProp, disabledProp) {
+  event.preventDefault()
+  if (read(disabledProp)) return
+  if (triggerOf(triggerProp) === 'hover' && canHoverTrigger()) return
+  toggleDropdown(event.currentTarget.closest('details'))
+}
+
+function handleEnter(event, triggerProp, disabledProp) {
+  if (triggerOf(triggerProp) !== 'hover' || !canHoverTrigger() || read(disabledProp)) return
+  openDropdown(event.currentTarget.querySelector('details'))
+}
+
+function handleLeave(event, triggerProp) {
+  if (triggerOf(triggerProp) !== 'hover' || !canHoverTrigger()) return
+  closeDropdown(event.currentTarget.querySelector('details'))
+}
+
+export <view>
+  <div
+    class="jui-dropdown"
+    class-jui-dropdown--top=${() => placementOf(placement).startsWith('top')}
+    class-jui-dropdown--end=${() => placementOf(placement).endsWith('end')}
+    class-jui-dropdown--center=${() => placementOf(placement) === 'bottom' || placementOf(placement) === 'top'}
+    class-jui-dropdown--disabled=${() => !!read(disabled)}
+    data-trigger=${() => triggerOf(trigger)}
+    :style=${() => `--jui-dropdown-max-h:${maxHeightOf(maxHeight)}px`}
+    on-pointerenter=${(event) => handleEnter(event, trigger, disabled)}
+    on-pointerleave=${(event) => handleLeave(event, trigger)}
+  >
+    <img
+      class="jui-dropdown__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) =>
+        armDropdown(event.currentTarget.closest('.jui-dropdown'), emit, hideOnClick)}
+    />
+    <span class="jui-dropdown__bind" aria-hidden="true">${() => syncOptions(emit, hideOnClick)}</span>
+    <details
+      class="jui-dropdown__control"
+      on-toggle=${(event) => handleToggle(event, emit, trigger)}
+    >
+      <summary
+        class="jui-dropdown__trigger"
+        aria-disabled=${() => !!read(disabled)}
+        on-click=${(event) => handleSummaryClick(event, trigger, disabled)}
+      >
+        <slot />
+      </summary>
+      <div class="jui-dropdown__panel" role="presentation">
+        <slot name="dropdown" />
+      </div>
+    </details>
+  </div>
+</view>
+
+export <style>
+.jui-dropdown {
+  --jui-dropdown-max-h: 280px;
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  vertical-align: middle;
+  z-index: 20;
+}
+
+.jui-dropdown__boot,
+.jui-dropdown__bind {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-dropdown__control {
+  position: relative;
+  min-width: 0;
+}
+
+.jui-dropdown__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  list-style: none;
+  cursor: pointer;
+}
+
+.jui-dropdown__trigger::-webkit-details-marker,
+.jui-dropdown__trigger::marker {
+  display: none;
+  content: '';
+}
+
+.jui-dropdown--disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.jui-dropdown__panel {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  z-index: 40;
+  min-width: 10rem;
+  max-height: var(--jui-dropdown-max-h);
+  overflow: auto;
+  padding: 0.35rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  box-shadow: var(--j-shadow-sm);
+}
+
+.jui-dropdown--end .jui-dropdown__panel {
+  left: auto;
+  right: 0;
+}
+
+.jui-dropdown--center .jui-dropdown__panel {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.jui-dropdown--top .jui-dropdown__panel {
+  top: auto;
+  bottom: calc(100% + 0.35rem);
+}
+
+.jui-dropdown__panel > span {
+  display: contents;
+}
+
+.jui-dropdown__control:not([open]) > .jui-dropdown__panel {
+  display: none;
+}
+</style>

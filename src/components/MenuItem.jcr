@@ -1,0 +1,159 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    index: { type: 'string', required: true }
+    href: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+  }
+  slots: ['default']
+  emits: ['select']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function readyState(emitFn) {
+  if (!emitFn.__juiMenuItemReady) emitFn.__juiMenuItemReady = pulse(0)
+  return emitFn.__juiMenuItemReady
+}
+
+function isActive(indexProp, emitFn) {
+  read(readyState(emitFn))
+  const root = emitFn.__juiMenuItemRoot
+  const menu = root?.closest?.('.jui-menu')
+  const active = menu?.menuActive
+  if (!active) return false
+  read(active)
+  return String(read(active) || '') === String(read(indexProp) || '')
+}
+
+function safeHref(value) {
+  const next = String(read(value) || '')
+  if (!next) return ''
+  if (/^\s*javascript:/i.test(next)) return '#'
+  return next
+}
+
+function selectItem(event, indexProp, disabledProp, emitFn) {
+  if (read(disabledProp)) {
+    event.preventDefault()
+    return
+  }
+  const root = emitFn.__juiMenuItemRoot || event.currentTarget.closest('.jui-menu-item')
+  const menu = root?.closest?.('.jui-menu')
+  const index = String(read(indexProp) || '')
+  if (menu?.menuActive && typeof menu.menuActive.set === 'function') {
+    menu.menuActive.set(index)
+  }
+  if (menu?.menuEmit) menu.menuEmit('select', index)
+}
+
+function armItem(root, emitFn) {
+  if (!root) return
+  emitFn.__juiMenuItemRoot = root
+  const ready = readyState(emitFn)
+  ready.set(read(ready) + 1)
+}
+
+export <view>
+  <li
+    class="jui-menu-item"
+    class-is-active=${() => isActive(index, emit)}
+    class-is-disabled=${() => !!read(disabled)}
+    role="none"
+  >
+    <img
+      class="jui-menu-item__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armItem(event.currentTarget.closest('.jui-menu-item'), emit)}
+    />
+    #if safeHref(href)
+      <a
+        class="jui-menu-item__link"
+        role="menuitem"
+        href=${() => safeHref(href)}
+        aria-disabled=${() => !!read(disabled)}
+        tabindex=${() => (read(disabled) ? -1 : 0)}
+        on-click=${(event) => selectItem(event, index, disabled, emit)}
+      >
+        <span class="jui-menu-item__label"><slot /></span>
+      </a>
+    #else
+      <button
+        type="button"
+        class="jui-menu-item__link"
+        role="menuitem"
+        disabled=${() => !!read(disabled)}
+        on-click=${(event) => selectItem(event, index, disabled, emit)}
+      >
+        <span class="jui-menu-item__label"><slot /></span>
+      </button>
+    #end
+  </li>
+</view>
+
+export <style>
+.jui-menu-item {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jui-menu-item__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-menu-item__link {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.75rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.jui-menu-item__link:hover {
+  background: color-mix(in srgb, var(--j-primary) 10%, transparent);
+  color: var(--j-primary);
+}
+
+.jui-menu-item.is-active .jui-menu-item__link {
+  background: color-mix(in srgb, var(--j-primary) 14%, transparent);
+  color: var(--j-primary);
+  font-weight: 700;
+}
+
+.jui-menu-item__link:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-menu-item.is-disabled .jui-menu-item__link,
+.jui-menu-item__link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jui-menu-item__label {
+  min-width: 0;
+}
+</style>

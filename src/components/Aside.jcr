@@ -1,0 +1,52 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    width: { type: 'string', default: '200px' }
+  }
+  slots: ['default']
+</contract>
+
+function widthOf(value) {
+  return String(read(value) || '200px')
+}
+
+export <view>
+  <aside
+    class="jui-aside"
+    style---jui-aside-width=${() => widthOf(width)}
+  >
+    <slot />
+  </aside>
+</view>
+
+export <style>
+.jui-aside {
+  --jui-aside-width: 200px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: var(--jui-aside-width);
+  min-width: var(--jui-aside-width);
+  min-height: 0;
+  overflow: auto;
+  border-inline-end: 1px solid var(--j-border);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+}
+
+.jui-aside > span {
+  display: contents;
+}
+
+@media (max-width: 640px) {
+  .jui-aside {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    border-inline-end: 0;
+    border-block-end: 1px solid var(--j-border);
+  }
+}
+</style>

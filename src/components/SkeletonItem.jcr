@@ -1,0 +1,152 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    variant: { type: 'string', default: 'text' }
+    size: { type: 'string', default: 'md' }
+    animated: { type: 'boolean', default: false }
+    width: { type: 'string', default: '' }
+  }
+</contract>
+
+function variantOf(value) {
+  const next = String(read(value) || 'text')
+  if (next === 'circle' || next === 'rect' || next === 'image' || next === 'button' || next === 'text') return next
+  return 'text'
+}
+
+function sizeOf(value) {
+  const next = String(read(value) || 'md')
+  if (next === 'sm' || next === 'lg') return next
+  return 'md'
+}
+
+function itemStyle(widthValue) {
+  const next = String(read(widthValue) || '').trim()
+  return next ? `width:${next}` : ''
+}
+
+export <view>
+  <div
+    class="jui-skeleton-item"
+    class-jui-skeleton-item--text=${() => variantOf(variant) === 'text'}
+    class-jui-skeleton-item--circle=${() => variantOf(variant) === 'circle'}
+    class-jui-skeleton-item--rect=${() => variantOf(variant) === 'rect'}
+    class-jui-skeleton-item--image=${() => variantOf(variant) === 'image'}
+    class-jui-skeleton-item--button=${() => variantOf(variant) === 'button'}
+    class-jui-skeleton-item--sm=${() => sizeOf(size) === 'sm'}
+    class-jui-skeleton-item--lg=${() => sizeOf(size) === 'lg'}
+    class-jui-skeleton-item--animated=${() => !!read(animated)}
+    :style=${() => itemStyle(width)}
+    aria-hidden="true"
+  ></div>
+</view>
+
+export <style>
+.jui-skeleton-item {
+  --jui-skeleton-base: color-mix(in srgb, var(--j-border) 48%, var(--j-surface));
+  --jui-skeleton-shine: color-mix(in srgb, var(--j-mint) 58%, var(--j-surface-2));
+  display: block;
+  flex: 0 0 auto;
+  background: linear-gradient(
+    105deg,
+    var(--jui-skeleton-base) 0%,
+    var(--jui-skeleton-base) 38%,
+    var(--jui-skeleton-shine) 50%,
+    var(--jui-skeleton-base) 62%,
+    var(--jui-skeleton-base) 100%
+  );
+  background-size: 220% 100%;
+  border-radius: var(--j-radius-sm);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--j-border) 35%, transparent);
+}
+
+.jui-skeleton-item--text {
+  width: 100%;
+  height: 0.9rem;
+}
+
+.jui-skeleton-item--text.jui-skeleton-item--sm {
+  height: 0.7rem;
+}
+
+.jui-skeleton-item--text.jui-skeleton-item--lg {
+  height: 1.15rem;
+}
+
+.jui-skeleton-item--circle {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+}
+
+.jui-skeleton-item--circle.jui-skeleton-item--sm {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.jui-skeleton-item--circle.jui-skeleton-item--lg {
+  width: 3.5rem;
+  height: 3.5rem;
+}
+
+.jui-skeleton-item--rect {
+  width: 100%;
+  height: 4.5rem;
+  border-radius: calc(var(--j-radius) + 2px);
+}
+
+.jui-skeleton-item--rect.jui-skeleton-item--sm {
+  height: 3rem;
+}
+
+.jui-skeleton-item--rect.jui-skeleton-item--lg {
+  height: 6rem;
+}
+
+.jui-skeleton-item--image {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  border-radius: calc(var(--j-radius) + 4px);
+}
+
+.jui-skeleton-item--image.jui-skeleton-item--sm {
+  aspect-ratio: 4 / 3;
+}
+
+.jui-skeleton-item--image.jui-skeleton-item--lg {
+  aspect-ratio: 21 / 9;
+}
+
+.jui-skeleton-item--button {
+  width: 6.5rem;
+  height: 2.25rem;
+  border-radius: var(--j-radius-pill);
+}
+
+.jui-skeleton-item--button.jui-skeleton-item--sm {
+  width: 4.75rem;
+  height: 1.85rem;
+}
+
+.jui-skeleton-item--button.jui-skeleton-item--lg {
+  width: 8rem;
+  height: 2.75rem;
+}
+
+.jui-skeleton-item--animated {
+  animation: jui-skeleton-shimmer 1.35s var(--j-ease-in-out, ease-in-out) infinite;
+}
+
+@keyframes jui-skeleton-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-skeleton-item--animated {
+    animation: none;
+  }
+}
+</style>

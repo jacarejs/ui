@@ -9,6 +9,7 @@ export <contract>
     clearable: { type: 'boolean', default: true }
     showText: { type: 'boolean', default: false }
     texts: { type: 'object', default: null }
+    character: { type: 'string', default: '★' }
   }
   emits: ['change']
 </contract>
@@ -70,6 +71,11 @@ function textFor(model, textsProp, maxProp) {
   return `${current} / ${maxOf(maxProp)}`
 }
 
+function glyphOf(value) {
+  const next = String(read(value) ?? '').trim()
+  return next || '★'
+}
+
 export <view>
   <div class="jui-rate" class-is-disabled=${() => !!read(disabled)}>
     <div class="jui-rate__stars" role="radiogroup" aria-label="Rating">
@@ -104,8 +110,8 @@ export <view>
             ></button>
           #end
           <span class="jui-rate__icon" aria-hidden="true">
-            <span class="jui-rate__icon-base">★</span>
-            <span class="jui-rate__icon-fill" :style=${() => fillStyle(index, value)}>★</span>
+            <span class="jui-rate__icon-base">${() => glyphOf(character)}</span>
+            <span class="jui-rate__icon-fill" :style=${() => fillStyle(index, value)}>${() => glyphOf(character)}</span>
           </span>
         </span>
       #end
@@ -201,5 +207,16 @@ export <style>
   color: var(--j-muted);
   font-size: 0.85rem;
   font-weight: 600;
+}
+
+@media (pointer: coarse) {
+  .jui-rate__star {
+    width: var(--j-touch-target, 2.75rem);
+    height: var(--j-touch-target, 2.75rem);
+  }
+
+  .jui-rate__icon {
+    font-size: 1.85rem;
+  }
 }
 </style>

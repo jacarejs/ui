@@ -1,0 +1,171 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'number', default: null, model: true }
+    min: { type: 'number', default: 0 }
+    max: { type: 'number', default: 10 }
+    lowLabel: { type: 'string', default: 'Not likely' }
+    highLabel: { type: 'string', default: 'Very likely' }
+    disabled: { type: 'boolean', default: false }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change']
+</contract>
+
+function bound(value, fallback) {
+  const next = Number(read(value))
+  return Number.isFinite(next) ? Math.round(next) : fallback
+}
+
+function scores(minProp, maxProp) {
+  const start = bound(minProp, 0)
+  const end = Math.max(start, bound(maxProp, 10))
+  const list = []
+  for (let score = start; score <= end; score += 1) list.push(score)
+  return list
+}
+
+function isSelected(score, model) {
+  return Number(read(model)) === score
+}
+
+function pick(score, model, disabledValue, emitFn) {
+  if (read(disabledValue)) return
+  if (model && typeof model.set === 'function') model.set(score)
+  emitFn('change', score)
+}
+
+function toneOf(score, minProp, maxProp) {
+  const start = bound(minProp, 0)
+  const end = Math.max(start + 1, bound(maxProp, 10))
+  const ratio = (score - start) / (end - start)
+  if (ratio <= 0.3) return 'low'
+  if (ratio <= 0.6) return 'mid'
+  return 'high'
+}
+
+export <view>
+  <div
+    class="jui-nps"
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
+    role="radiogroup"
+    aria-label=${() => read(label) || 'NPS score'}
+  >
+    #if read(label)
+      <span class="jui-nps__label">${() => read(label)}</span>
+    #end
+
+    <div class="jui-nps__scores">
+      #for scores(min, max) as score (score)
+        <button
+          type="button"
+          class="jui-nps__score"
+          class-is-active=${() => isSelected(score, value)}
+          class-jui-nps__score--low=${() => toneOf(score, min, max) === 'low'}
+          class-jui-nps__score--mid=${() => toneOf(score, min, max) === 'mid'}
+          class-jui-nps__score--high=${() => toneOf(score, min, max) === 'high'}
+          role="radio"
+          aria-checked=${() => isSelected(score, value)}
+          disabled=${() => !!read(disabled)}
+          on-click=${() => pick(score, value, disabled, emit)}
+        >
+          ${score}
+        </button>
+      #end
+    </div>
+
+    <div class="jui-nps__legend">
+      <span>${() => read(lowLabel) || 'Not likely'}</span>
+      <span>${() => read(highLabel) || 'Very likely'}</span>
+    </div>
+
+    #if read(error)
+      <span class="jui-nps__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-nps__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-nps {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.jui-nps__label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-nps__scores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(2.4rem, 1fr));
+  gap: 0.35rem;
+}
+
+.jui-nps__score {
+  min-height: var(--j-touch-target, 2.75rem);
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.jui-nps__score:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--j-primary) 45%, var(--j-border));
+}
+
+.jui-nps__score.is-active {
+  color: #fff;
+  border-color: transparent;
+  box-shadow: var(--j-focus);
+}
+
+.jui-nps__score--low.is-active {
+  background: var(--j-danger);
+}
+
+.jui-nps__score--mid.is-active {
+  background: var(--j-warn, #d97706);
+}
+
+.jui-nps__score--high.is-active {
+  background: var(--j-primary);
+}
+
+.jui-nps__legend {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--j-muted);
+  font-size: 0.8rem;
+}
+
+.jui-nps.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-nps__hint,
+.jui-nps__error {
+  font-size: 0.8rem;
+}
+
+.jui-nps__hint {
+  color: var(--j-muted);
+}
+
+.jui-nps__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

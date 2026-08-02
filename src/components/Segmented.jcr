@@ -1,0 +1,159 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    value: { type: 'any', model: true }
+    options: { type: 'object', default: [] }
+    size: { type: 'string', default: 'md' }
+    block: { type: 'boolean', default: false }
+    disabled: { type: 'boolean', default: false }
+  }
+  emits: ['change']
+</contract>
+
+function normalizeOptions(optionsValue) {
+  const list = read(optionsValue)
+  if (!Array.isArray(list)) return []
+  return list.map((option, index) => {
+    if (option && typeof option === 'object') {
+      const value = option.value ?? option.id ?? String(index)
+      return {
+        value,
+        label: option.label ?? String(value),
+        disabled: !!option.disabled,
+      }
+    }
+    return {
+      value: option,
+      label: String(option),
+      disabled: false,
+    }
+  })
+}
+
+function sizeOf(value) {
+  const next = String(read(value) || 'md')
+  if (next === 'sm' || next === 'lg') return next
+  return 'md'
+}
+
+function groupName(emitFn) {
+  if (!emitFn.__juiSegmentedName) {
+    emitFn.__juiSegmentedName = `jui-segmented-${Math.random().toString(36).slice(2, 9)}`
+  }
+  return emitFn.__juiSegmentedName
+}
+
+function isSelected(optionValue, model) {
+  return read(model) === optionValue
+}
+
+function pick(option, model, disabledValue, emitFn) {
+  if (read(disabledValue) || option.disabled) return
+  if (model && typeof model.set === 'function') model.set(option.value)
+  emitFn('change', option.value)
+}
+
+export <view>
+  <div
+    class="jui-segmented"
+    class-jui-segmented--sm=${() => sizeOf(size) === 'sm'}
+    class-jui-segmented--lg=${() => sizeOf(size) === 'lg'}
+    class-jui-segmented--block=${() => !!read(block)}
+    class-is-disabled=${() => !!read(disabled)}
+    role="radiogroup"
+  >
+    #for normalizeOptions(options) as option (option.value)
+      <button
+        type="button"
+        class="jui-segmented__item"
+        class-is-active=${() => isSelected(option.value, value)}
+        class-is-disabled=${() => !!(read(disabled) || option.disabled)}
+        role="radio"
+        aria-checked=${() => isSelected(option.value, value)}
+        name=${() => groupName(emit)}
+        disabled=${() => !!(read(disabled) || option.disabled)}
+        on-click=${() => pick(option, value, disabled, emit)}
+      >
+        ${option.label}
+      </button>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-segmented {
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 0.2rem;
+  padding: 0.2rem;
+  border: 1px solid var(--j-border);
+  border-radius: calc(var(--j-radius) + 2px);
+  background: color-mix(in srgb, var(--j-mint) 45%, var(--j-surface));
+  min-width: 0;
+}
+
+.jui-segmented--block {
+  display: grid;
+  grid-auto-flow: dense;
+  grid-auto-columns: unset;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  width: 100%;
+}
+
+.jui-segmented.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-segmented__item {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.15rem;
+  padding: 0.35rem 0.9rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  background: transparent;
+  color: var(--j-muted);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease;
+}
+
+.jui-segmented--sm .jui-segmented__item {
+  min-height: 1.75rem;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.8rem;
+}
+
+.jui-segmented--lg .jui-segmented__item {
+  min-height: 2.6rem;
+  padding: 0.45rem 1.1rem;
+  font-size: 1rem;
+}
+
+.jui-segmented__item:hover:not(:disabled) {
+  color: var(--j-forest);
+}
+
+.jui-segmented__item.is-active {
+  background: var(--j-surface-2);
+  color: var(--j-forest);
+  box-shadow: var(--j-shadow-sm);
+}
+
+.jui-segmented__item:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-segmented__item:disabled,
+.jui-segmented__item.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+</style>

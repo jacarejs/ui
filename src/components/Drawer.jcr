@@ -1,0 +1,299 @@
+import { effect, pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+import { activateFocusTrap, uniqueId } from '../internal/overlay.js'
+
+export <contract>
+  props: {
+    open: { type: 'boolean', default: false, model: true }
+    title: { type: 'string', default: '' }
+    direction: { type: 'string', default: 'rtl' }
+    size: { type: 'string', default: '30%' }
+    closeOnClickModal: { type: 'boolean', default: true }
+    showClose: { type: 'boolean', default: true }
+  }
+  slots: ['default']
+  emits: ['close']
+</contract>
+
+function openState(openProp, emitFn) {
+  if (openProp && typeof openProp.set === 'function') return openProp
+  if (!emitFn.__juiDrawerOpen) {
+    emitFn.__juiDrawerOpen = pulse(read(openProp) === true)
+  }
+  return emitFn.__juiDrawerOpen
+}
+
+function isOpen(openProp, emitFn) {
+  return read(openState(openProp, emitFn)) === true
+}
+
+function drawerId(emitFn) {
+  return uniqueId('jui-drawer', emitFn, '__juiDrawerId')
+}
+
+function titleId(emitFn) {
+  return `${drawerId(emitFn)}-title`
+}
+
+function directionOf(value) {
+  const next = String(read(value) || 'rtl')
+  if (next === 'ltr' || next === 'ttb' || next === 'btt') return next
+  return 'rtl'
+}
+
+function sizeStyle(value) {
+  return `--j-drawer-size:${String(read(value) || '30%')}`
+}
+
+function closeDrawer(openProp, emitFn) {
+  openState(openProp, emitFn).set(false)
+  emitFn('close')
+}
+
+function handleBackdrop(event, openProp, emitFn, closeOnClickProp) {
+  if (event.target !== event.currentTarget || !read(closeOnClickProp)) return
+  closeDrawer(openProp, emitFn)
+}
+
+function armOverlay(openProp, emitFn) {
+  if (!emitFn.__juiDrawerOverlay) {
+    emitFn.__juiDrawerOverlay = effect(() => {
+      if (!isOpen(openProp, emitFn)) return undefined
+      const id = drawerId(emitFn)
+      let release = () => {}
+      const frame = requestAnimationFrame(() => {
+        const root = document.querySelector(`[data-jui-drawer="${id}"]`)
+        if (!root) return
+        release = activateFocusTrap(root, {
+          onEscape: () => closeDrawer(openProp, emitFn),
+        })
+      })
+      return () => {
+        cancelAnimationFrame(frame)
+        release()
+      }
+    })
+  }
+  return ''
+}
+
+export <view>
+  #if isOpen(open, emit)
+    <div
+      class="jui-drawer-backdrop"
+      class-jui-drawer-backdrop--rtl=${() => directionOf(direction) === 'rtl'}
+      class-jui-drawer-backdrop--ltr=${() => directionOf(direction) === 'ltr'}
+      class-jui-drawer-backdrop--ttb=${() => directionOf(direction) === 'ttb'}
+      class-jui-drawer-backdrop--btt=${() => directionOf(direction) === 'btt'}
+      on-click=${(event) => handleBackdrop(event, open, emit, closeOnClickModal)}
+    >
+      <section
+        class="jui-drawer"
+        class-jui-drawer--rtl=${() => directionOf(direction) === 'rtl'}
+        class-jui-drawer--ltr=${() => directionOf(direction) === 'ltr'}
+        class-jui-drawer--ttb=${() => directionOf(direction) === 'ttb'}
+        class-jui-drawer--btt=${() => directionOf(direction) === 'btt'}
+        role="dialog"
+        aria-modal="true"
+        data-jui-drawer=${() => drawerId(emit)}
+        aria-labelledby=${() => (read(title) ? titleId(emit) : undefined)}
+        :style=${() => sizeStyle(size)}
+        on-click=${(event) => event.stopPropagation()}
+      >
+        <header class="jui-drawer__head">
+          #if read(title)
+            <h2 class="jui-drawer__title" id=${() => titleId(emit)}>${() => read(title)}</h2>
+          #else
+            <span class="jui-drawer__title-spacer"></span>
+          #end
+          #if read(showClose)
+            <button
+              type="button"
+              class="jui-drawer__close"
+              aria-label="Close"
+              on-click=${() => closeDrawer(open, emit)}
+            >
+              <span aria-hidden="true">×</span>
+            </button>
+          #end
+        </header>
+        <div class="jui-drawer__body">
+          <slot />
+        </div>
+        <span class="jui-drawer__arm" aria-hidden="true">${() => armOverlay(open, emit)}</span>
+      </section>
+    </div>
+  #end
+</view>
+
+export <style>
+.jui-drawer-backdrop {
+  position: fixed;
+  z-index: 130;
+  inset: 0;
+  display: flex;
+  background: rgba(0, 24, 24, 0.55);
+}
+
+.jui-drawer-backdrop--rtl {
+  justify-content: flex-end;
+}
+
+.jui-drawer-backdrop--ltr {
+  justify-content: flex-start;
+}
+
+.jui-drawer-backdrop--ttb {
+  align-items: flex-start;
+}
+
+.jui-drawer-backdrop--btt {
+  align-items: flex-end;
+}
+
+.jui-drawer {
+  --j-drawer-size: 30%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  box-shadow: var(--j-shadow);
+}
+
+.jui-drawer--rtl,
+.jui-drawer--ltr {
+  width: min(var(--j-drawer-size), 100%);
+  height: 100%;
+  max-width: 100%;
+}
+
+.jui-drawer--ttb,
+.jui-drawer--btt {
+  width: 100%;
+  height: min(var(--j-drawer-size), 100%);
+  max-height: 100%;
+}
+
+.jui-drawer--rtl {
+  animation: jui-drawer-in-rtl var(--j-duration-normal) var(--j-ease-out);
+}
+
+.jui-drawer--ltr {
+  animation: jui-drawer-in-ltr var(--j-duration-normal) var(--j-ease-out);
+}
+
+.jui-drawer--ttb {
+  animation: jui-drawer-in-ttb var(--j-duration-normal) var(--j-ease-out);
+}
+
+.jui-drawer--btt {
+  animation: jui-drawer-in-btt var(--j-duration-normal) var(--j-ease-out);
+}
+
+.jui-drawer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  padding: 0.85rem 0.9rem 0.85rem 1.15rem;
+  border-bottom: 1px solid var(--j-border);
+}
+
+.jui-drawer__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.jui-drawer__title-spacer {
+  flex: 1;
+}
+
+.jui-drawer__close {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  background: transparent;
+  color: var(--j-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.jui-drawer__close:hover {
+  background: var(--j-mint);
+  color: var(--j-text);
+}
+
+.jui-drawer__close:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-drawer__body {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  overflow: auto;
+  padding: 1.1rem 1.15rem 1.15rem;
+}
+
+.jui-drawer__arm {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+@keyframes jui-drawer-in-rtl {
+  from { transform: translateX(100%); }
+}
+
+@keyframes jui-drawer-in-ltr {
+  from { transform: translateX(-100%); }
+}
+
+@keyframes jui-drawer-in-ttb {
+  from { transform: translateY(-100%); }
+}
+
+@keyframes jui-drawer-in-btt {
+  from { transform: translateY(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-drawer { animation: none; }
+}
+
+@media (max-width: 640px) {
+  .jui-drawer--rtl,
+  .jui-drawer--ltr {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .jui-drawer--ttb,
+  .jui-drawer--btt {
+    height: min(85dvh, 100%);
+  }
+
+  .jui-drawer__head {
+    padding-top: calc(0.85rem + var(--j-safe-top, env(safe-area-inset-top, 0px)));
+    padding-left: calc(1.15rem + var(--j-safe-left, env(safe-area-inset-left, 0px)));
+    padding-right: calc(0.9rem + var(--j-safe-right, env(safe-area-inset-right, 0px)));
+  }
+
+  .jui-drawer__body {
+    padding-bottom: calc(1.15rem + var(--j-safe-bottom, env(safe-area-inset-bottom, 0px)));
+    padding-left: calc(1.15rem + var(--j-safe-left, env(safe-area-inset-left, 0px)));
+    padding-right: calc(1.15rem + var(--j-safe-right, env(safe-area-inset-right, 0px)));
+  }
+}
+</style>

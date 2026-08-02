@@ -1,0 +1,96 @@
+import ChartFrame from './ChartFrame.jcr'
+import ChartPlot from './ChartPlot.jcr'
+import { read } from '../internal/utils.js'
+import {
+  chartLayoutWidth,
+  escapeXml,
+  formatNumber,
+  heatmapModel,
+  mixHeat,
+  resolveChartWidth,
+  sizeOf,
+} from '../internal/charts.js'
+
+export <contract>
+  props: {
+    data: { type: 'any', required: true }
+    title: { type: 'string', default: '' }
+    caption: { type: 'string', default: '' }
+    width: { type: 'number', default: 480 }
+    height: { type: 'number', default: 300 }
+  }
+  emits: ['layout']
+</contract>
+
+function model(dataProp, widthProp, heightProp) {
+  const { width, height } = sizeOf(widthProp, heightProp, 480, 300)
+  const pad = { top: 20, right: 16, bottom: 40, left: 72 }
+  const { x, y, values } = heatmapModel(dataProp)
+  const flat = values.flat()
+  const min = Math.min(...flat, 0)
+  const max = Math.max(...flat, 1)
+  const cellW = (width - pad.left - pad.right) / Math.max(x.length, 1)
+  const cellH = (height - pad.top - pad.bottom) / Math.max(y.length, 1)
+  const cells = []
+  y.forEach((rowLabel, rowIndex) => {
+    x.forEach((colLabel, colIndex) => {
+      const value = values[rowIndex]?.[colIndex] ?? 0
+      const t = max === min ? 0 : (value - min) / (max - min)
+      cells.push({
+        key: `${rowLabel}-${colLabel}`,
+        x: pad.left + colIndex * cellW + 1,
+        y: pad.top + rowIndex * cellH + 1,
+        width: Math.max(1, cellW - 2),
+        height: Math.max(1, cellH - 2),
+        color: mixHeat(t),
+        title: `${rowLabel} / ${colLabel}: ${formatNumber(value)}`,
+      })
+    })
+  })
+  return {
+    width,
+    height,
+    pad,
+    cells,
+    xLabels: x.map((label, index) => ({ label, x: pad.left + index * cellW + cellW / 2 })),
+    yLabels: y.map((label, index) => ({ label, y: pad.top + index * cellH + cellH / 2 })),
+  }
+}
+
+function plotContent(dataProp, widthProp, heightProp) {
+  const next = model(dataProp, widthProp, heightProp)
+  const parts = []
+  for (const cell of next.cells) {
+    parts.push(
+      `<rect x="${cell.x}" y="${cell.y}" width="${cell.width}" height="${cell.height}" rx="3" fill="${escapeXml(cell.color)}" data-jui-tip="${escapeXml(cell.title)}" />`,
+    )
+  }
+  for (const item of next.xLabels) {
+    parts.push(
+      `<text x="${item.x}" y="${next.height - 14}" text-anchor="middle" fill="var(--j-muted)" font-size="11">${escapeXml(item.label)}</text>`,
+    )
+  }
+  for (const item of next.yLabels) {
+    parts.push(
+      `<text x="${next.pad.left - 8}" y="${item.y}" text-anchor="end" dominant-baseline="middle" fill="var(--j-muted)" font-size="11">${escapeXml(item.label)}</text>`,
+    )
+  }
+  return parts.join('')
+}
+
+export <view>
+  <ChartFrame
+    :title=${title}
+    :caption=${caption}
+    :width=${() => resolveChartWidth(width, emit)}
+    :height=${height}
+  >
+    <ChartPlot
+      bind-layoutWidth=${chartLayoutWidth(emit)}
+      :width=${() => resolveChartWidth(width, emit)}
+      :height=${() => model(data, resolveChartWidth(width, emit), height).height}
+      :label=${() => read(title) || 'Heatmap chart'}
+      :content=${() => plotContent(data, resolveChartWidth(width, emit), height)}
+    />
+  </ChartFrame>
+</view>

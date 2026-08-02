@@ -1,0 +1,252 @@
+import { read } from '../internal/utils.js'
+import { propText } from '../i18n/index.js'
+
+export <contract>
+  props: {
+    title: { type: 'string', default: 'Are you sure?' }
+    confirmButtonText: { type: 'string', default: 'OK' }
+    cancelButtonText: { type: 'string', default: 'Cancel' }
+    placement: { type: 'string', default: 'bottom' }
+    width: { type: 'number', default: 200 }
+  }
+  emits: ['confirm', 'cancel']
+  slots: ['default']
+</contract>
+
+const PLACEMENTS = [
+  'top', 'top-start', 'top-end',
+  'bottom', 'bottom-start', 'bottom-end',
+  'left', 'left-start', 'left-end',
+  'right', 'right-start', 'right-end',
+]
+
+function placementOf(value) {
+  const next = String(read(value) || 'bottom')
+  return PLACEMENTS.includes(next) ? next : 'bottom'
+}
+
+function panelStyle(value) {
+  const next = Number(read(value))
+  const width = Number.isFinite(next) ? Math.max(0, next) : 200
+  return `min-width:${width}px`
+}
+
+function closeWith(details, emitFn, eventName) {
+  if (!details?.open) return
+  details.removeAttribute('open')
+  emitFn(eventName)
+}
+
+function handleToggle(event, emitFn) {
+  const details = event.currentTarget
+  details.outsideController?.abort()
+  if (!details.open) return
+  const controller = new AbortController()
+  details.outsideController = controller
+  requestAnimationFrame(() => {
+    document.addEventListener('pointerdown', (pointerEvent) => {
+      if (!details.contains(pointerEvent.target)) closeWith(details, emitFn, 'cancel')
+    }, { signal: controller.signal })
+    document.addEventListener('keydown', (keyEvent) => {
+      if (keyEvent.key === 'Escape') closeWith(details, emitFn, 'cancel')
+    }, { signal: controller.signal })
+  })
+}
+
+function handleAction(event, emitFn, eventName) {
+  event.preventDefault()
+  event.stopPropagation()
+  closeWith(event.currentTarget.closest('details'), emitFn, eventName)
+}
+
+function handleSummaryClick(event) {
+  event.preventDefault()
+  const details = event.currentTarget.closest('details')
+  if (!details) return
+  if (details.open) details.removeAttribute('open')
+  else details.setAttribute('open', '')
+}
+
+export <view>
+  <div
+    class="jui-popconfirm"
+    class-jui-popconfirm--top=${() => placementOf(placement) === 'top'}
+    class-jui-popconfirm--top-start=${() => placementOf(placement) === 'top-start'}
+    class-jui-popconfirm--top-end=${() => placementOf(placement) === 'top-end'}
+    class-jui-popconfirm--bottom=${() => placementOf(placement) === 'bottom'}
+    class-jui-popconfirm--bottom-start=${() => placementOf(placement) === 'bottom-start'}
+    class-jui-popconfirm--bottom-end=${() => placementOf(placement) === 'bottom-end'}
+    class-jui-popconfirm--left=${() => placementOf(placement) === 'left'}
+    class-jui-popconfirm--left-start=${() => placementOf(placement) === 'left-start'}
+    class-jui-popconfirm--left-end=${() => placementOf(placement) === 'left-end'}
+    class-jui-popconfirm--right=${() => placementOf(placement) === 'right'}
+    class-jui-popconfirm--right-start=${() => placementOf(placement) === 'right-start'}
+    class-jui-popconfirm--right-end=${() => placementOf(placement) === 'right-end'}
+  >
+    <details class="jui-popconfirm__control" on-toggle=${(event) => handleToggle(event, emit)}>
+      <summary class="jui-popconfirm__trigger" on-click=${(event) => handleSummaryClick(event)}>
+        <slot />
+      </summary>
+      <section class="jui-popconfirm__panel" :style=${() => panelStyle(width)} role="alertdialog">
+        <p class="jui-popconfirm__title">${title}</p>
+        <div class="jui-popconfirm__actions">
+          <button
+            type="button"
+            class="jui-popconfirm__button jui-popconfirm__button--cancel"
+            on-click=${(event) => handleAction(event, emit, 'cancel')}
+          >${() => propText(cancelButtonText, 'j.popconfirm.cancel', 'Cancel')}</button>
+          <button
+            type="button"
+            class="jui-popconfirm__button jui-popconfirm__button--confirm"
+            on-click=${(event) => handleAction(event, emit, 'confirm')}
+          >${() => propText(confirmButtonText, 'j.popconfirm.ok', 'OK')}</button>
+        </div>
+      </section>
+    </details>
+  </div>
+</view>
+
+export <style>
+.jui-popconfirm {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  vertical-align: middle;
+}
+
+.jui-popconfirm__control {
+  position: relative;
+  min-width: 0;
+}
+
+.jui-popconfirm__trigger {
+  display: inline-flex;
+  align-items: center;
+  list-style: none;
+  cursor: pointer;
+}
+
+.jui-popconfirm__trigger::-webkit-details-marker,
+.jui-popconfirm__trigger::marker {
+  display: none;
+  content: '';
+}
+
+.jui-popconfirm__panel {
+  position: absolute;
+  z-index: 60;
+  max-width: min(24rem, 85vw);
+  padding: 0.9rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  box-shadow: var(--j-shadow-sm);
+}
+
+.jui-popconfirm__title {
+  margin: 0;
+  color: var(--j-text);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.jui-popconfirm__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  margin-top: 0.8rem;
+}
+
+.jui-popconfirm__button {
+  min-height: 2rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--j-radius-pill);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.jui-popconfirm__button:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-popconfirm__button--cancel {
+  border-color: var(--j-border);
+  background: var(--j-surface);
+  color: var(--j-forest);
+}
+
+.jui-popconfirm__button--cancel:hover {
+  background: var(--j-mint);
+}
+
+.jui-popconfirm__button--confirm {
+  background: var(--j-primary);
+  color: #ffffff;
+}
+
+.jui-popconfirm__button--confirm:hover {
+  background: var(--j-leaf);
+}
+
+.jui-popconfirm--top .jui-popconfirm__panel,
+.jui-popconfirm--top-start .jui-popconfirm__panel,
+.jui-popconfirm--top-end .jui-popconfirm__panel {
+  bottom: calc(100% + 0.45rem);
+}
+
+.jui-popconfirm--bottom .jui-popconfirm__panel,
+.jui-popconfirm--bottom-start .jui-popconfirm__panel,
+.jui-popconfirm--bottom-end .jui-popconfirm__panel {
+  top: calc(100% + 0.45rem);
+}
+
+.jui-popconfirm--top .jui-popconfirm__panel,
+.jui-popconfirm--bottom .jui-popconfirm__panel {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.jui-popconfirm--top-start .jui-popconfirm__panel,
+.jui-popconfirm--bottom-start .jui-popconfirm__panel {
+  left: 0;
+}
+
+.jui-popconfirm--top-end .jui-popconfirm__panel,
+.jui-popconfirm--bottom-end .jui-popconfirm__panel {
+  right: 0;
+}
+
+.jui-popconfirm--left .jui-popconfirm__panel,
+.jui-popconfirm--left-start .jui-popconfirm__panel,
+.jui-popconfirm--left-end .jui-popconfirm__panel {
+  right: calc(100% + 0.45rem);
+}
+
+.jui-popconfirm--right .jui-popconfirm__panel,
+.jui-popconfirm--right-start .jui-popconfirm__panel,
+.jui-popconfirm--right-end .jui-popconfirm__panel {
+  left: calc(100% + 0.45rem);
+}
+
+.jui-popconfirm--left .jui-popconfirm__panel,
+.jui-popconfirm--right .jui-popconfirm__panel {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.jui-popconfirm--left-start .jui-popconfirm__panel,
+.jui-popconfirm--right-start .jui-popconfirm__panel {
+  top: 0;
+}
+
+.jui-popconfirm--left-end .jui-popconfirm__panel,
+.jui-popconfirm--right-end .jui-popconfirm__panel {
+  bottom: 0;
+}
+</style>

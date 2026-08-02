@@ -1,0 +1,318 @@
+import { read } from '../internal/utils.js'
+import { propText } from '../i18n/index.js'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'object', default: [], model: true }
+    options: { type: 'object', default: [] }
+    layout: { type: 'string', default: 'list' }
+    selectAll: { type: 'boolean', default: false }
+    selectAllLabel: { type: 'string', default: 'Select all' }
+    name: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+    required: { type: 'boolean', default: false }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change']
+</contract>
+
+function normalizeOptions(optionsValue) {
+  const list = read(optionsValue)
+  if (!Array.isArray(list)) return []
+  return list.map((option, index) => {
+    if (option && typeof option === 'object') {
+      const value = option.value ?? option.id ?? String(index)
+      return {
+        value,
+        label: option.label ?? String(value),
+        description: option.description ?? '',
+        disabled: !!option.disabled,
+      }
+    }
+    return {
+      value: option,
+      label: String(option),
+      description: '',
+      disabled: false,
+    }
+  })
+}
+
+function selectedList(model) {
+  const next = read(model)
+  return Array.isArray(next) ? next.slice() : []
+}
+
+function isSelected(optionValue, model) {
+  return selectedList(model).includes(optionValue)
+}
+
+function selectableValues(optionsValue) {
+  return normalizeOptions(optionsValue)
+    .filter((option) => !option.disabled)
+    .map((option) => option.value)
+}
+
+function selectionState(optionsValue, model) {
+  const keys = selectableValues(optionsValue)
+  if (!keys.length) return 'none'
+  const selected = selectedList(model)
+  const hit = keys.filter((key) => selected.includes(key)).length
+  if (hit === 0) return 'none'
+  if (hit === keys.length) return 'all'
+  return 'some'
+}
+
+function commit(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function toggle(option, model, disabledValue, emitFn) {
+  if (read(disabledValue) || option.disabled) return
+  const next = selectedList(model)
+  const index = next.indexOf(option.value)
+  if (index >= 0) next.splice(index, 1)
+  else next.push(option.value)
+  commit(model, next, emitFn)
+}
+
+function toggleSelectAll(optionsValue, model, disabledValue, emitFn) {
+  if (read(disabledValue)) return
+  const keys = selectableValues(optionsValue)
+  const state = selectionState(optionsValue, model)
+  commit(model, state === 'all' ? [] : keys.slice(), emitFn)
+}
+
+function layoutOf(value) {
+  return read(value) === 'cards' ? 'cards' : 'list'
+}
+
+export <view>
+  <fieldset
+    class="jui-checkbox-group"
+    class-jui-checkbox-group--cards=${() => layoutOf(layout) === 'cards'}
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
+    disabled=${() => !!read(disabled)}
+  >
+    #if read(label)
+      <legend class="jui-checkbox-group__legend">
+        ${() => read(label)}
+        #if read(required)
+          <span class="jui-checkbox-group__req" aria-hidden="true">*</span>
+        #end
+      </legend>
+    #end
+
+    #if read(selectAll)
+      <label
+        class="jui-checkbox-group__option jui-checkbox-group__option--all"
+        class-is-active=${() => selectionState(options, value) === 'all'}
+        class-is-indeterminate=${() => selectionState(options, value) === 'some'}
+      >
+        <input
+          class="jui-checkbox-group__input"
+          type="checkbox"
+          disabled=${() => !!read(disabled)}
+          checked=${() => selectionState(options, value) === 'all'}
+          aria-checked=${() => {
+            const state = selectionState(options, value)
+            if (state === 'some') return 'mixed'
+            return state === 'all' ? 'true' : 'false'
+          }}
+          on-change=${() => toggleSelectAll(options, value, disabled, emit)}
+        />
+        <span class="jui-checkbox-group__control" aria-hidden="true"></span>
+        <span class="jui-checkbox-group__copy">
+          <span class="jui-checkbox-group__title">${() => propText(selectAllLabel, 'j.checkboxGroup.selectAll', 'Select all')}</span>
+        </span>
+      </label>
+    #end
+
+    <div class="jui-checkbox-group__list" role="presentation">
+      #for normalizeOptions(options) as option (option.value)
+        <label
+          class="jui-checkbox-group__option"
+          class-is-active=${() => isSelected(option.value, value)}
+          class-is-disabled=${() => !!option.disabled}
+        >
+          <input
+            class="jui-checkbox-group__input"
+            type="checkbox"
+            name=${() => read(name) || ''}
+            value=${() => String(option.value)}
+            disabled=${() => !!(read(disabled) || option.disabled)}
+            checked=${() => isSelected(option.value, value)}
+            aria-invalid=${() => !!read(error)}
+            on-change=${() => toggle(option, value, disabled, emit)}
+          />
+          <span class="jui-checkbox-group__control" aria-hidden="true"></span>
+          <span class="jui-checkbox-group__copy">
+            <span class="jui-checkbox-group__title">${option.label}</span>
+            #if option.description
+              <span class="jui-checkbox-group__desc">${option.description}</span>
+            #end
+          </span>
+        </label>
+      #end
+    </div>
+
+    #if read(error)
+      <span class="jui-checkbox-group__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-checkbox-group__hint">${() => read(hint)}</span>
+    #end
+  </fieldset>
+</view>
+
+export <style>
+.jui-checkbox-group {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+.jui-checkbox-group__legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-checkbox-group__req {
+  color: var(--j-danger);
+}
+
+.jui-checkbox-group__list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.jui-checkbox-group--cards .jui-checkbox-group__list {
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.65rem;
+}
+
+.jui-checkbox-group__option {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: start;
+  min-height: 2.75rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.jui-checkbox-group__option--all {
+  margin-bottom: 0.15rem;
+}
+
+.jui-checkbox-group__option:hover {
+  border-color: color-mix(in srgb, var(--j-primary) 45%, var(--j-border));
+}
+
+.jui-checkbox-group__option.is-active {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+  background: color-mix(in srgb, var(--j-mint) 55%, var(--j-surface-2));
+}
+
+.jui-checkbox-group__option.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.jui-checkbox-group.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-checkbox-group__input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.jui-checkbox-group__control {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.1rem;
+  border: 1.5px solid var(--j-border);
+  border-radius: 0.35rem;
+  background: var(--j-surface-2);
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.jui-checkbox-group__input:checked + .jui-checkbox-group__control {
+  border-color: var(--j-primary);
+  background: var(--j-primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5 6.5 11.5 12.5 4.5'/%3E%3C/svg%3E");
+  background-size: 0.85rem;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.jui-checkbox-group__option.is-indeterminate .jui-checkbox-group__control {
+  border-color: var(--j-primary);
+  background: var(--j-primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M3.5 8h9'/%3E%3C/svg%3E");
+  background-size: 0.85rem;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.jui-checkbox-group__input:focus-visible + .jui-checkbox-group__control {
+  box-shadow: var(--j-focus);
+}
+
+.jui-checkbox-group__copy {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.jui-checkbox-group__title {
+  font-weight: 700;
+  color: var(--j-text);
+  line-height: 1.3;
+}
+
+.jui-checkbox-group__desc {
+  color: var(--j-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.jui-checkbox-group.has-error .jui-checkbox-group__option {
+  border-color: color-mix(in srgb, var(--j-danger) 55%, var(--j-border));
+}
+
+.jui-checkbox-group__hint,
+.jui-checkbox-group__error {
+  font-size: 0.8rem;
+}
+
+.jui-checkbox-group__hint {
+  color: var(--j-muted);
+}
+
+.jui-checkbox-group__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

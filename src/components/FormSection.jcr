@@ -1,0 +1,140 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    title: { type: 'string', default: '' }
+    description: { type: 'string', default: '' }
+    collapsible: { type: 'boolean', default: false }
+    open: { type: 'boolean', default: true, model: true }
+  }
+  slots: ['default', 'extra']
+  emits: ['toggle']
+</contract>
+
+function isOpen(openValue, collapsibleValue) {
+  if (!read(collapsibleValue)) return true
+  return read(openValue) !== false
+}
+
+function toggle(openValue, collapsibleValue, emitFn) {
+  if (!read(collapsibleValue)) return
+  const next = !isOpen(openValue, collapsibleValue)
+  if (openValue && typeof openValue.set === 'function') openValue.set(next)
+  emitFn('toggle', next)
+}
+
+export <view>
+  <fieldset
+    class="jui-form-section"
+    class-is-collapsed=${() => !isOpen(open, collapsible)}
+  >
+    #if read(title) || read(description) || read(collapsible)
+      <legend class="jui-form-section__legend">
+        <span class="jui-form-section__heading">
+          #if read(collapsible)
+            <button
+              type="button"
+              class="jui-form-section__toggle"
+              aria-expanded=${() => isOpen(open, collapsible)}
+              on-click=${() => toggle(open, collapsible, emit)}
+            >
+              <span class="jui-form-section__chevron" aria-hidden="true">${() => (isOpen(open, collapsible) ? '▾' : '▸')}</span>
+              <span class="jui-form-section__title">${() => read(title)}</span>
+            </button>
+          #elif read(title)
+            <span class="jui-form-section__title">${() => read(title)}</span>
+          #end
+          #if read(description)
+            <span class="jui-form-section__description">${() => read(description)}</span>
+          #end
+        </span>
+        <span class="jui-form-section__extra"><slot name="extra" /></span>
+      </legend>
+    #end
+
+    #if isOpen(open, collapsible)
+      <div class="jui-form-section__body">
+        <slot />
+      </div>
+    #end
+  </fieldset>
+</view>
+
+export <style>
+.jui-form-section {
+  display: grid;
+  gap: 1.15rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+.jui-form-section__legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.65rem 1rem;
+  width: 100%;
+  padding: 0;
+  margin: 0 0 1.25rem;
+  float: none;
+}
+
+.jui-form-section__heading {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.jui-form-section__title {
+  font-size: 1rem;
+  font-weight: 750;
+  color: var(--j-forest);
+  line-height: 1.3;
+}
+
+.jui-form-section__description {
+  color: var(--j-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  font-weight: 400;
+}
+
+.jui-form-section__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.jui-form-section__chevron {
+  color: var(--j-muted);
+  font-size: 0.85rem;
+}
+
+.jui-form-section__extra:empty {
+  display: none;
+}
+
+.jui-form-section__body {
+  display: grid;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.jui-form-section__body > span {
+  display: contents;
+}
+
+.jui-form-section.is-collapsed .jui-form-section__body {
+  display: none;
+}
+</style>

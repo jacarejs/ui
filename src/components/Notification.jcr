@@ -1,0 +1,88 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    title: { type: 'string', default: 'Title' }
+    message: { type: 'string', default: 'This is a notification.' }
+    type: { type: 'string', default: '' }
+    showClose: { type: 'boolean', default: true }
+  }
+  emits: ['close']
+</contract>
+
+function typeOf(value) {
+  const next = String(read(value) || '')
+  if (next === 'success' || next === 'warning' || next === 'error' || next === 'primary' || next === 'info') return next
+  if (next === 'warn') return 'warning'
+  if (next === 'danger') return 'error'
+  return ''
+}
+
+export <view>
+  <div
+    class="jui-notification-demo"
+    class-jui-notification-demo--success=${() => typeOf(type) === 'success'}
+    class-jui-notification-demo--warning=${() => typeOf(type) === 'warning'}
+    class-jui-notification-demo--error=${() => typeOf(type) === 'error'}
+    class-jui-notification-demo--primary=${() => typeOf(type) === 'primary'}
+    class-jui-notification-demo--info=${() => typeOf(type) === 'info'}
+    role="status"
+  >
+    <div class="jui-notification-demo__body">
+      #if read(title)
+        <strong class="jui-notification-demo__title">${() => read(title)}</strong>
+      #end
+      <p class="jui-notification-demo__message">${() => read(message)}</p>
+    </div>
+    #if read(showClose)
+      <button type="button" class="jui-notification-demo__close" aria-label="Close" on-click=${() => emit('close')}>×</button>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-notification-demo {
+  --jui-notification-tone: var(--j-border);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  width: min(22rem, 100%);
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  box-shadow: var(--j-shadow);
+  border-left-width: 3px;
+  border-left-color: var(--jui-notification-tone);
+}
+
+.jui-notification-demo--success { --jui-notification-tone: var(--j-success, var(--j-primary)); }
+.jui-notification-demo--warning { --jui-notification-tone: var(--j-warn); }
+.jui-notification-demo--error { --jui-notification-tone: var(--j-danger); }
+.jui-notification-demo--primary { --jui-notification-tone: var(--j-primary); }
+.jui-notification-demo--info { --jui-notification-tone: var(--j-info); }
+
+.jui-notification-demo__title {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.98rem;
+}
+
+.jui-notification-demo__message {
+  margin: 0;
+  color: var(--j-muted);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.jui-notification-demo__close {
+  border: 0;
+  background: transparent;
+  color: var(--j-muted);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  align-self: start;
+}
+</style>

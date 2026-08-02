@@ -1,0 +1,293 @@
+import { effect } from '@jacare/core'
+import { SVG_NS } from '../internal/charts.js'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    value: { type: 'number', default: 0 }
+    max: { type: 'number', default: 100 }
+    indeterminate: { type: 'boolean', default: false }
+    size: { type: 'string', default: 'md' }
+    thickness: { type: 'number', default: 0.1 }
+    tone: { type: 'string', default: 'primary' }
+    showValue: { type: 'boolean', default: true }
+    label: { type: 'string', default: '' }
+  }
+  slots: ['default']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+const VIEW_R = 42
+
+function pctOf(value, max) {
+  const current = Number(read(value) ?? 0)
+  const ceiling = Number(read(max) ?? 100) || 100
+  return Math.max(0, Math.min(100, Math.round((current / ceiling) * 100)))
+}
+
+function sizePx(value) {
+  const raw = String(read(value) || 'md').trim()
+  if (raw.endsWith('px')) {
+    const next = parseFloat(raw)
+    return Number.isFinite(next) && next > 0 ? next : 88
+  }
+  if (raw === 'sm') return 56
+  if (raw === 'lg') return 128
+  return 88
+}
+
+function thicknessOf(value) {
+  const next = Number(read(value))
+  if (!Number.isFinite(next)) return 0.1
+  return Math.max(0.04, Math.min(0.35, next))
+}
+
+function toneClass(value) {
+  const next = read(value)
+  if (next === 'success' || next === 'warn' || next === 'danger') return next
+  return 'primary'
+}
+
+function rootStyle(sizeProp, thicknessProp, valueProp, maxProp, indeterminateProp) {
+  const px = sizePx(sizeProp)
+  const strokeRatio = thicknessOf(thicknessProp)
+  const strokeUser = Math.max(3, VIEW_R * 2 * strokeRatio)
+  const circ = 2 * Math.PI * VIEW_R
+  const pct = pctOf(valueProp, maxProp)
+  const offset = read(indeterminateProp) ? circ * 0.72 : circ * (1 - pct / 100)
+  return `--pc-size:${px}px;--pc-stroke:${strokeUser};--pc-circ:${circ};--pc-offset:${offset}`
+}
+
+function ariaLabelProp(labelProp, valueProp, maxProp, indeterminateProp) {
+  const custom = String(read(labelProp) || '').trim()
+  if (custom) return custom
+  if (read(indeterminateProp)) return 'Loading'
+  return `${pctOf(valueProp, maxProp)} percent`
+}
+
+function svgEl(tag) {
+  return document.createElementNS(SVG_NS, tag)
+}
+
+function ensureDial(host) {
+  if (!host) return null
+  let svg = host.__juiPcSvg
+  if (svg?.isConnected) return svg
+  svg = svgEl('svg')
+  svg.setAttribute('class', 'jui-progress-circle__svg')
+  svg.setAttribute('viewBox', '0 0 100 100')
+  svg.setAttribute('aria-hidden', 'true')
+  const track = svgEl('circle')
+  track.setAttribute('class', 'jui-progress-circle__track')
+  track.setAttribute('cx', '50')
+  track.setAttribute('cy', '50')
+  track.setAttribute('r', String(VIEW_R))
+  track.setAttribute('fill', 'none')
+  track.setAttribute('stroke-linecap', 'round')
+  const fill = svgEl('circle')
+  fill.setAttribute('class', 'jui-progress-circle__fill')
+  fill.setAttribute('cx', '50')
+  fill.setAttribute('cy', '50')
+  fill.setAttribute('r', String(VIEW_R))
+  fill.setAttribute('fill', 'none')
+  fill.setAttribute('stroke-linecap', 'round')
+  svg.append(track, fill)
+  host.replaceChildren(svg)
+  host.__juiPcSvg = svg
+  return svg
+}
+
+function armDial(host) {
+  if (!host || host.__juiPcArmed) return
+  host.__juiPcArmed = true
+  host.__juiPcDispose = effect(() => {
+    ensureDial(host)
+    return () => {}
+  })
+}
+
+export <view>
+  <div
+    class="jui-progress-circle"
+    class-jui-progress-circle--sm=${() => String(read(size) || 'md') === 'sm'}
+    class-jui-progress-circle--md=${() => !['sm', 'lg'].includes(String(read(size) || 'md'))}
+    class-jui-progress-circle--lg=${() => String(read(size) || 'md') === 'lg'}
+    class-jui-progress-circle--success=${() => toneClass(tone) === 'success'}
+    class-jui-progress-circle--warn=${() => toneClass(tone) === 'warn'}
+    class-jui-progress-circle--danger=${() => toneClass(tone) === 'danger'}
+    class-is-indeterminate=${() => !!read(indeterminate)}
+    :style=${() => rootStyle(size, thickness, value, max, indeterminate)}
+    role="progressbar"
+    aria-valuemin="0"
+    aria-valuemax=${() => read(max)}
+    aria-valuenow=${() => (read(indeterminate) ? undefined : read(value))}
+    aria-label=${() => ariaLabelProp(label, value, max, indeterminate)}
+  >
+    <div class="jui-progress-circle__dial">
+      <img
+        class="jui-progress-circle__boot"
+        alt=""
+        width="0"
+        height="0"
+        aria-hidden="true"
+        src=${BOOT_SRC}
+        on-load=${(event) => armDial(event.currentTarget.parentElement)}
+      />
+    </div>
+    <div class="jui-progress-circle__center">
+      <span class="jui-progress-circle__slot"><slot /></span>
+      #if read(showValue) && !read(indeterminate)
+        <span class="jui-progress-circle__value">${() => `${pctOf(value, max)}%`}</span>
+      #end
+    </div>
+  </div>
+</view>
+
+export <style>
+.jui-progress-circle {
+  --pc-accent: var(--j-primary);
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: var(--pc-size, 88px);
+  height: var(--pc-size, 88px);
+  flex: 0 0 auto;
+  color: var(--pc-accent);
+  vertical-align: middle;
+}
+
+.jui-progress-circle__dial {
+  position: absolute;
+  inset: 0;
+}
+
+.jui-progress-circle__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-progress-circle__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.jui-progress-circle__track,
+.jui-progress-circle__fill {
+  fill: none;
+  stroke-width: var(--pc-stroke, 8.4);
+}
+
+.jui-progress-circle__track {
+  stroke: color-mix(in srgb, var(--pc-accent) 16%, var(--j-border));
+}
+
+.jui-progress-circle__fill {
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-dasharray: var(--pc-circ, 264);
+  stroke-dashoffset: var(--pc-offset, 264);
+  transition: stroke-dashoffset var(--j-duration-normal) var(--j-ease-out);
+}
+
+.jui-progress-circle--success {
+  --pc-accent: var(--j-success, #2f7d4a);
+  color: var(--pc-accent);
+}
+
+.jui-progress-circle--warn {
+  --pc-accent: var(--j-warn, #c47a00);
+  color: var(--pc-accent);
+}
+
+.jui-progress-circle--danger {
+  --pc-accent: var(--j-danger);
+  color: var(--pc-accent);
+}
+
+.jui-progress-circle.is-indeterminate .jui-progress-circle__fill {
+  stroke-dasharray: calc(var(--pc-circ, 264) * 0.28) calc(var(--pc-circ, 264) * 0.72);
+  stroke-dashoffset: 0;
+}
+
+.jui-progress-circle.is-indeterminate .jui-progress-circle__svg {
+  animation: jui-progress-circle-spin var(--j-duration-slow, 900ms) linear infinite;
+}
+
+.jui-progress-circle__center {
+  position: absolute;
+  inset: 18%;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  text-align: center;
+}
+
+.jui-progress-circle__slot,
+.jui-progress-circle__value {
+  grid-area: 1 / 1;
+}
+
+.jui-progress-circle__slot > span {
+  display: contents;
+}
+
+.jui-progress-circle__slot:has(> :not(:empty)),
+.jui-progress-circle__slot:has(> span:not(:empty)) {
+  z-index: 1;
+}
+
+.jui-progress-circle__slot:has(> :not(:empty)) ~ .jui-progress-circle__value,
+.jui-progress-circle__slot:has(> span:not(:empty)) ~ .jui-progress-circle__value {
+  display: none;
+}
+
+.jui-progress-circle__value {
+  font-size: calc(var(--pc-size, 88px) * 0.2);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--j-forest);
+}
+
+.jui-progress-circle--sm .jui-progress-circle__value {
+  font-size: calc(var(--pc-size, 56px) * 0.22);
+}
+
+.jui-progress-circle__slot {
+  font-size: calc(var(--pc-size, 88px) * 0.16);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--j-forest);
+  line-height: 1.1;
+}
+
+@keyframes jui-progress-circle-spin {
+  to {
+    transform: rotate(270deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jui-progress-circle__fill {
+    transition: none;
+  }
+
+  .jui-progress-circle.is-indeterminate .jui-progress-circle__svg {
+    animation: none;
+  }
+}
+
+[data-j-motion='reduce'] .jui-progress-circle__fill {
+  transition: none;
+}
+
+[data-j-motion='reduce'] .jui-progress-circle.is-indeterminate .jui-progress-circle__svg {
+  animation: none;
+}
+</style>

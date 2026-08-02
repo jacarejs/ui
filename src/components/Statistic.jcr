@@ -1,0 +1,186 @@
+import { effect, pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    value: { type: 'any', default: 0 }
+    title: { type: 'string', default: '' }
+    prefix: { type: 'string', default: '' }
+    suffix: { type: 'string', default: '' }
+    precision: { type: 'number', default: 0 }
+    duration: { type: 'number', default: 1200 }
+  }
+  emits: ['finish']
+</contract>
+
+function precisionOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) && next >= 0 ? Math.round(next) : 0
+}
+
+function durationOf(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) && next >= 0 ? next : 1200
+}
+
+function numericValue(raw) {
+  if (typeof raw === 'number') return Number.isFinite(raw) ? raw : null
+  if (typeof raw === 'string' && raw.trim() !== '' && !Number.isNaN(Number(raw))) {
+    const next = Number(raw)
+    return Number.isFinite(next) ? next : null
+  }
+  return null
+}
+
+function prefersReducedMotion() {
+  return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+function easeOutCubic(t) {
+  return 1 - Math.pow(1 - t, 3)
+}
+
+function displayState(emitFn) {
+  if (!emitFn.__juiStatDisplay) {
+    emitFn.__juiStatDisplay = {
+      text: pulse('0'),
+      number: pulse(0),
+      started: false,
+    }
+  }
+  return emitFn.__juiStatDisplay
+}
+
+function formatNumber(num, precisionProp) {
+  const digits = precisionOf(precisionProp)
+  return num.toLocaleString(undefined, {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  })
+}
+
+function setDisplay(emitFn, raw, precisionProp) {
+  const state = displayState(emitFn)
+  const num = numericValue(raw)
+  if (num == null) {
+    state.text.set(String(raw ?? ''))
+    return
+  }
+  state.number.set(num)
+  state.text.set(formatNumber(num, precisionProp))
+}
+
+function cancelAnimation(emitFn) {
+  if (emitFn.__juiStatFrame) {
+    cancelAnimationFrame(emitFn.__juiStatFrame)
+    emitFn.__juiStatFrame = 0
+  }
+}
+
+function animateValue(emitFn, valueProp, durationProp, precisionProp) {
+  const raw = read(valueProp)
+  const target = numericValue(raw)
+  cancelAnimation(emitFn)
+
+  if (target == null) {
+    setDisplay(emitFn, raw, precisionProp)
+    return
+  }
+
+  const state = displayState(emitFn)
+  const duration = prefersReducedMotion() ? 0 : durationOf(durationProp)
+  const from = state.started ? (Number(read(state.number)) || 0) : 0
+  state.started = true
+
+  if (!duration || from === target) {
+    setDisplay(emitFn, target, precisionProp)
+    emitFn('finish', target)
+    return
+  }
+
+  const start = performance.now()
+  const tick = (now) => {
+    const progress = Math.min(1, (now - start) / duration)
+    const current = from + (target - from) * easeOutCubic(progress)
+    state.number.set(current)
+    state.text.set(formatNumber(current, precisionProp))
+    if (progress < 1) {
+      emitFn.__juiStatFrame = requestAnimationFrame(tick)
+      return
+    }
+    setDisplay(emitFn, target, precisionProp)
+    emitFn.__juiStatFrame = 0
+    emitFn('finish', target)
+  }
+  emitFn.__juiStatFrame = requestAnimationFrame(tick)
+}
+
+function armStatistic(emitFn, valueProp, durationProp, precisionProp) {
+  if (emitFn.__juiStatArmed) return
+  emitFn.__juiStatArmed = true
+  emitFn.__juiStatDispose = effect(() => {
+    read(valueProp)
+    read(durationProp)
+    read(precisionProp)
+    animateValue(emitFn, valueProp, durationProp, precisionProp)
+  })
+}
+
+function displayText(emitFn, valueProp, durationProp, precisionProp) {
+  armStatistic(emitFn, valueProp, durationProp, precisionProp)
+  return read(displayState(emitFn).text)
+}
+
+export <view>
+  <div class="jui-statistic">
+    #if read(title)
+      <div class="jui-statistic__title">${title}</div>
+    #end
+    <div class="jui-statistic__content">
+      #if read(prefix)
+        <span class="jui-statistic__prefix">${prefix}</span>
+      #end
+      <span class="jui-statistic__value">${() => displayText(emit, value, duration, precision)}</span>
+      #if read(suffix)
+        <span class="jui-statistic__suffix">${suffix}</span>
+      #end
+    </div>
+  </div>
+</view>
+
+export <style>
+.jui-statistic {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.jui-statistic__title {
+  color: var(--j-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.jui-statistic__content {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  color: var(--j-forest);
+}
+
+.jui-statistic__value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.jui-statistic__prefix,
+.jui-statistic__suffix {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--j-muted);
+}
+</style>

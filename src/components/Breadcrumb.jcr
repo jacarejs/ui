@@ -1,0 +1,71 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    separator: { type: 'string', default: '/' }
+    separatorIcon: { type: 'string', default: '' }
+  }
+  slots: ['default']
+</contract>
+
+function sepOf(value) {
+  const next = String(read(value) ?? '/')
+  return next || '/'
+}
+
+function sepStyle(value) {
+  return `--jui-breadcrumb-sep:'${sepOf(value).replace(/'/g, "\\'")}'`
+}
+
+export <view>
+  <nav
+    class="jui-breadcrumb"
+    aria-label="Breadcrumb"
+    :style=${() => sepStyle(separator)}
+  >
+    <ol class="jui-breadcrumb__list">
+      <slot />
+    </ol>
+  </nav>
+</view>
+
+export <style>
+.jui-breadcrumb {
+  --jui-breadcrumb-sep: '/';
+  min-width: 0;
+  color: var(--j-muted);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.jui-breadcrumb__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0;
+  row-gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jui-breadcrumb__list > span {
+  display: contents;
+}
+
+.jui-breadcrumb__list > span > :not(:last-child) .jui-breadcrumb-item::after,
+.jui-breadcrumb__list > :not(:last-child).jui-breadcrumb-item::after {
+  content: var(--jui-breadcrumb-sep, '/');
+  display: inline;
+  margin-inline: 0.75rem;
+  color: color-mix(in srgb, var(--j-muted) 70%, var(--j-border));
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.jui-breadcrumb__list > span > :last-child .jui-breadcrumb-item,
+.jui-breadcrumb__list > :last-child.jui-breadcrumb-item {
+  color: var(--j-forest, var(--j-text));
+  font-weight: 700;
+}
+</style>

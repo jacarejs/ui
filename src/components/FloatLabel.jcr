@@ -1,0 +1,258 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    variant: { type: 'string', default: 'over' }
+    invalid: { type: 'boolean', default: false }
+    inputId: { type: 'string', default: '' }
+    fluid: { type: 'boolean', default: false }
+  }
+  slots: ['default']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function variantOf(value) {
+  const next = String(read(value) || 'over').toLowerCase()
+  if (next === 'in' || next === 'on') return next
+  return 'over'
+}
+
+function controlOf(root) {
+  return root?.querySelector?.('input, textarea, select') || null
+}
+
+function isFilled(control) {
+  if (!control) return false
+  if (control instanceof HTMLSelectElement) {
+    return control.value != null && String(control.value).length > 0
+  }
+  return String(control.value ?? '').length > 0
+}
+
+function syncActive(root) {
+  if (!root) return
+  const control = controlOf(root)
+  const focused = !!(control && document.activeElement === control)
+  const filled = isFilled(control)
+  root.classList.toggle('is-active', focused || filled)
+  if (control) control.classList.toggle('is-filled', filled)
+}
+
+function armFloatLabel(root) {
+  if (!root || root.__juiFloatLabelArmed) return
+  root.__juiFloatLabelArmed = true
+
+  const sync = () => syncActive(root)
+  root.addEventListener('focusin', sync)
+  root.addEventListener('focusout', () => requestAnimationFrame(sync))
+  root.addEventListener('input', sync)
+  root.addEventListener('change', sync)
+
+  const control = controlOf(root)
+  if (control) {
+    control.classList.add('jui-float-label__control')
+    if (!control.getAttribute('placeholder')) {
+      control.setAttribute('placeholder', ' ')
+    }
+  }
+
+  sync()
+}
+
+export <view>
+  <span
+    class="jui-float-label"
+    class-jui-float-label--over=${() => variantOf(variant) === 'over'}
+    class-jui-float-label--in=${() => variantOf(variant) === 'in'}
+    class-jui-float-label--on=${() => variantOf(variant) === 'on'}
+    class-is-invalid=${() => !!read(invalid)}
+    class-is-fluid=${() => !!read(fluid)}
+    data-jui-float-label
+  >
+    <img
+      class="jui-float-label__boot"
+      alt=""
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armFloatLabel(event.currentTarget.closest('[data-jui-float-label]'))}
+    />
+    <slot />
+    #if read(label)
+      <label class="jui-float-label__label" for=${() => read(inputId) || undefined}>
+        ${() => read(label)}
+      </label>
+    #end
+  </span>
+</view>
+
+export <style>
+.jui-float-label {
+  --jui-float-label-color: var(--j-muted);
+  --jui-float-label-focus: var(--j-primary);
+  --jui-float-label-active: var(--j-muted);
+  --jui-float-label-invalid: var(--j-danger);
+  --jui-float-label-x: calc(var(--j-control-padding-x, 1.15rem) * 0.75);
+  --jui-float-label-y: var(--j-control-padding-y, 0.6rem);
+  position: relative;
+  display: inline-block;
+  min-width: 12rem;
+  max-width: 100%;
+}
+
+.jui-float-label--over {
+  margin-top: 0.85rem;
+}
+
+.jui-float-label.is-fluid {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.jui-float-label__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-float-label > span:not([class]):has(> :is(input, textarea, select)) {
+  display: contents;
+}
+
+.jui-float-label .jui-float-label__control {
+  display: block;
+  width: 100%;
+  min-height: calc(var(--j-control-height, 2.5rem) + 0.25rem);
+  margin: 0;
+  padding: var(--j-control-padding-y, 0.6rem) var(--jui-float-label-x);
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  font: inherit;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    border-color var(--j-duration-fast, 120ms) var(--j-ease-out, ease),
+    box-shadow var(--j-duration-fast, 120ms) var(--j-ease-out, ease);
+}
+
+.jui-float-label textarea.jui-float-label__control {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.jui-float-label .jui-float-label__control::placeholder {
+  color: transparent;
+}
+
+.jui-float-label .jui-float-label__control:focus {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+  outline: none;
+}
+
+.jui-float-label label,
+.jui-float-label .jui-float-label__label {
+  position: absolute;
+  inset-inline-start: var(--jui-float-label-x);
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  pointer-events: none;
+  line-height: 1;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--jui-float-label-color);
+  transition:
+    top 0.2s ease,
+    transform 0.2s ease,
+    font-size 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease,
+    padding 0.2s ease;
+}
+
+.jui-float-label:has(textarea) label,
+.jui-float-label:has(textarea) .jui-float-label__label {
+  top: var(--jui-float-label-y);
+  transform: none;
+}
+
+.jui-float-label.is-active label,
+.jui-float-label.is-active .jui-float-label__label,
+.jui-float-label:has(:is(input, textarea, select):focus) label,
+.jui-float-label:has(:is(input, textarea, select):focus) .jui-float-label__label,
+.jui-float-label:has(:is(input, textarea, select):not(:placeholder-shown)) label,
+.jui-float-label:has(:is(input, textarea, select):not(:placeholder-shown)) .jui-float-label__label,
+.jui-float-label:has(:is(input, textarea):-webkit-autofill) label,
+.jui-float-label:has(:is(input, textarea):-webkit-autofill) .jui-float-label__label {
+  top: -1.15rem;
+  transform: none;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.jui-float-label.is-active label,
+.jui-float-label.is-active .jui-float-label__label,
+.jui-float-label:has(:is(input, textarea, select):not(:placeholder-shown)) label,
+.jui-float-label:has(:is(input, textarea, select):not(:placeholder-shown)) .jui-float-label__label {
+  color: var(--jui-float-label-active);
+}
+
+.jui-float-label:has(:is(input, textarea, select):focus) label,
+.jui-float-label:has(:is(input, textarea, select):focus) .jui-float-label__label,
+.jui-float-label:has(:is(input, textarea):-webkit-autofill) label,
+.jui-float-label:has(:is(input, textarea):-webkit-autofill) .jui-float-label__label {
+  color: var(--jui-float-label-focus);
+}
+
+.jui-float-label--in .jui-float-label__control {
+  padding-top: 1.45rem;
+  padding-bottom: 0.45rem;
+}
+
+.jui-float-label--in.is-active label,
+.jui-float-label--in.is-active .jui-float-label__label,
+.jui-float-label--in:has(:is(input, textarea, select):focus) label,
+.jui-float-label--in:has(:is(input, textarea, select):focus) .jui-float-label__label,
+.jui-float-label--in:has(:is(input, textarea, select):not(:placeholder-shown)) label,
+.jui-float-label--in:has(:is(input, textarea, select):not(:placeholder-shown)) .jui-float-label__label,
+.jui-float-label--in:has(:is(input, textarea):-webkit-autofill) label,
+.jui-float-label--in:has(:is(input, textarea):-webkit-autofill) .jui-float-label__label {
+  top: 0.45rem;
+  transform: none;
+}
+
+.jui-float-label--on.is-active label,
+.jui-float-label--on.is-active .jui-float-label__label,
+.jui-float-label--on:has(:is(input, textarea, select):focus) label,
+.jui-float-label--on:has(:is(input, textarea, select):focus) .jui-float-label__label,
+.jui-float-label--on:has(:is(input, textarea, select):not(:placeholder-shown)) label,
+.jui-float-label--on:has(:is(input, textarea, select):not(:placeholder-shown)) .jui-float-label__label,
+.jui-float-label--on:has(:is(input, textarea):-webkit-autofill) label,
+.jui-float-label--on:has(:is(input, textarea):-webkit-autofill) .jui-float-label__label {
+  top: 0;
+  transform: translateY(-50%);
+  padding: 0 0.2rem;
+  border-radius: 2px;
+  background: var(--j-bg, var(--j-surface, #fff));
+}
+
+.jui-float-label.is-invalid .jui-float-label__control,
+.jui-float-label:has([aria-invalid='true']) .jui-float-label__control {
+  border-color: var(--j-danger);
+}
+
+.jui-float-label.is-invalid label,
+.jui-float-label.is-invalid .jui-float-label__label,
+.jui-float-label:has([aria-invalid='true']) label,
+.jui-float-label:has([aria-invalid='true']) .jui-float-label__label {
+  color: var(--jui-float-label-invalid);
+}
+</style>

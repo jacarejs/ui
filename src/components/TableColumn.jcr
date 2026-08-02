@@ -1,0 +1,26 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    prop: { type: 'string', default: '' }
+    label: { type: 'string', default: '' }
+    width: { type: 'string', default: '' }
+  }
+</contract>
+
+export <view>
+  <div
+    class="jui-table-column"
+    hidden
+    aria-hidden="true"
+    data-prop=${() => String(read(prop) || '')}
+    data-label=${() => String(read(label) || '')}
+    data-width=${() => String(read(width) || '')}
+  ></div>
+</view>
+
+export <style>
+.jui-table-column {
+  display: none;
+}
+</style>

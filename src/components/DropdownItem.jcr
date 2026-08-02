@@ -1,0 +1,110 @@
+import { canHoverTrigger, read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+    divided: { type: 'boolean', default: false }
+    danger: { type: 'boolean', default: false }
+    command: { type: 'any', default: '' }
+  }
+  slots: ['default']
+  emits: ['command']
+</contract>
+
+function handleSelect(event, disabledProp, commandProp, emitFn) {
+  if (read(disabledProp)) return
+  const command = read(commandProp)
+  emitFn('command', command)
+  const root = event.currentTarget.closest('.jui-dropdown')
+  root?.dispatchEvent(
+    new CustomEvent('jui-dropdown-command', {
+      bubbles: true,
+      detail: command,
+    }),
+  )
+  const hoverOpen =
+    root?.getAttribute('data-trigger') === 'hover' && canHoverTrigger()
+  if (root?.juiHideOnClick !== false && !hoverOpen) {
+    event.currentTarget.closest('details')?.removeAttribute('open')
+  }
+}
+
+export <view>
+  <li
+    class="jui-dropdown-item"
+    class-is-disabled=${() => !!read(disabled)}
+    class-is-divided=${() => !!read(divided)}
+    class-is-danger=${() => !!read(danger)}
+    role="none"
+  >
+    <button
+      type="button"
+      class="jui-dropdown-item__btn"
+      role="menuitem"
+      disabled=${() => !!read(disabled)}
+      on-click=${(event) => handleSelect(event, disabled, command, emit)}
+    >
+      #if read(label)
+        <span>${label}</span>
+      #else
+        <slot />
+      #end
+    </button>
+  </li>
+</view>
+
+export <style>
+.jui-dropdown-item {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jui-dropdown-item.is-divided {
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--j-border);
+}
+
+.jui-dropdown-item__btn {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 2.1rem;
+  padding: 0.4rem 0.7rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  background: transparent;
+  color: var(--j-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.jui-dropdown-item__btn:hover {
+  background: color-mix(in srgb, var(--j-primary) 10%, transparent);
+  color: var(--j-primary);
+}
+
+.jui-dropdown-item__btn:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-dropdown-item.is-danger .jui-dropdown-item__btn {
+  color: var(--j-danger, #b42318);
+}
+
+.jui-dropdown-item.is-danger .jui-dropdown-item__btn:hover {
+  background: color-mix(in srgb, var(--j-danger, #b42318) 12%, transparent);
+  color: var(--j-danger, #b42318);
+}
+
+.jui-dropdown-item__btn:disabled,
+.jui-dropdown-item.is-disabled .jui-dropdown-item__btn {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+</style>

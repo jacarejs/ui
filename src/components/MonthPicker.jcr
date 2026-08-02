@@ -1,0 +1,409 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'string', default: '', model: true }
+    min: { type: 'string', default: '' }
+    max: { type: 'string', default: '' }
+    placeholder: { type: 'string', default: 'Select month' }
+    inline: { type: 'boolean', default: false }
+    disabled: { type: 'boolean', default: false }
+    clearable: { type: 'boolean', default: true }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change']
+</contract>
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+function parseMonth(value) {
+  const match = String(read(value) || '').match(/^(\d{4})-(\d{2})$/)
+  if (!match) return null
+  const year = Number(match[1])
+  const month = Number(match[2])
+  if (month < 1 || month > 12) return null
+  return { year, month }
+}
+
+function formatMonth(year, month) {
+  return `${year}-${String(month).padStart(2, '0')}`
+}
+
+function displayMonth(model, placeholderProp) {
+  const parsed = parseMonth(model)
+  if (!parsed) return String(read(placeholderProp) || 'Select month')
+  return `${MONTHS[parsed.month - 1]} ${parsed.year}`
+}
+
+function viewYear(model, emitFn) {
+  if (!emitFn.__juiMonthYear) {
+    const parsed = parseMonth(model)
+    emitFn.__juiMonthYear = pulse(parsed?.year || new Date().getFullYear())
+  }
+  return emitFn.__juiMonthYear
+}
+
+function syncViewYear(model, emitFn) {
+  const yearPulse = viewYear(model, emitFn)
+  const parsed = parseMonth(model)
+  if (parsed && Number(read(yearPulse)) !== parsed.year) {
+    yearPulse.set(parsed.year)
+  }
+  return yearPulse
+}
+
+function months() {
+  return MONTHS.map((label, index) => ({ label, month: index + 1 }))
+}
+
+function isSelected(month, model) {
+  const parsed = parseMonth(model)
+  return parsed?.month === month
+}
+
+function isDisabledMonth(yearValue, month, minProp, maxProp) {
+  const stamp = formatMonth(read(yearValue), month)
+  const minValue = String(read(minProp) || '')
+  const maxValue = String(read(maxProp) || '')
+  if (minValue && stamp < minValue) return true
+  if (maxValue && stamp > maxValue) return true
+  return false
+}
+
+function commit(model, next, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+}
+
+function closePicker(event) {
+  event.currentTarget.closest('details')?.removeAttribute('open')
+}
+
+function pick(month, model, yearPulse, minProp, maxProp, disabledValue, emitFn, event) {
+  if (read(disabledValue) || isDisabledMonth(yearPulse, month, minProp, maxProp)) return
+  commit(model, formatMonth(read(yearPulse), month), emitFn)
+  closePicker(event)
+}
+
+function shiftYear(delta, yearPulse, disabledValue) {
+  if (read(disabledValue)) return
+  yearPulse.set(Number(read(yearPulse)) + delta)
+}
+
+function clearValue(model, disabledValue, emitFn, event) {
+  if (read(disabledValue)) return
+  commit(model, '', emitFn)
+  if (event) closePicker(event)
+}
+
+function handleToggle(event) {
+  const current = event.currentTarget
+  if (!current.open) {
+    current.outsideController?.abort()
+    return
+  }
+  document.querySelectorAll('details.jui-month-picker__control[open]').forEach((details) => {
+    if (details !== current) details.removeAttribute('open')
+  })
+  current.outsideController?.abort()
+  const controller = new AbortController()
+  current.outsideController = controller
+  requestAnimationFrame(() => {
+    document.addEventListener('pointerdown', (pointerEvent) => {
+      if (!current.contains(pointerEvent.target)) current.removeAttribute('open')
+    }, { signal: controller.signal })
+  })
+}
+
+export <view>
+  <div
+    class="jui-month-picker"
+    class-is-inline=${() => !!read(inline)}
+    class-has-error=${() => !!read(error)}
+    class-is-disabled=${() => !!read(disabled)}
+  >
+    #if read(label)
+      <span class="jui-month-picker__label">${() => read(label)}</span>
+    #end
+
+    #if read(inline)
+      <div class="jui-month-picker__panel">
+        <div class="jui-month-picker__nav">
+          <button type="button" class="jui-month-picker__nav-btn" aria-label="Previous year" disabled=${() => !!read(disabled)} on-click=${() => shiftYear(-1, syncViewYear(value, emit), disabled)}>‹</button>
+          <span class="jui-month-picker__year">${() => read(syncViewYear(value, emit))}</span>
+          <button type="button" class="jui-month-picker__nav-btn" aria-label="Next year" disabled=${() => !!read(disabled)} on-click=${() => shiftYear(1, syncViewYear(value, emit), disabled)}>›</button>
+        </div>
+
+        <div class="jui-month-picker__grid" role="listbox" aria-label="Month">
+          #for months() as item (item.month)
+            <button
+              type="button"
+              class="jui-month-picker__month"
+              class-is-active=${() => isSelected(item.month, value) && parseMonth(value)?.year === read(syncViewYear(value, emit))}
+              role="option"
+              aria-selected=${() => isSelected(item.month, value)}
+              disabled=${() => !!(read(disabled) || isDisabledMonth(syncViewYear(value, emit), item.month, min, max))}
+              on-click=${(event) => pick(item.month, value, syncViewYear(value, emit), min, max, disabled, emit, event)}
+            >
+              ${item.label}
+            </button>
+          #end
+        </div>
+
+        #if read(clearable) && read(value)
+          <button type="button" class="jui-month-picker__clear" disabled=${() => !!read(disabled)} on-click=${(event) => clearValue(value, disabled, emit, event)}>Clear</button>
+        #end
+      </div>
+    #else
+      <details class="jui-month-picker__control" on-toggle=${handleToggle}>
+        <summary
+          class="jui-month-picker__trigger"
+          aria-haspopup="dialog"
+          tabindex=${() => (read(disabled) ? '-1' : '0')}
+          on-click=${(event) => {
+            if (read(disabled)) event.preventDefault()
+          }}
+        >
+          <span class="jui-month-picker__face">
+            <span class="jui-month-picker__value" class-is-placeholder=${() => !parseMonth(value)}>
+              ${() => displayMonth(value, placeholder)}
+            </span>
+            <span class="jui-month-picker__chevron" aria-hidden="true"></span>
+          </span>
+        </summary>
+
+        <div class="jui-month-picker__panel" role="dialog" aria-label="Choose month">
+          <div class="jui-month-picker__nav">
+            <button type="button" class="jui-month-picker__nav-btn" aria-label="Previous year" disabled=${() => !!read(disabled)} on-click=${() => shiftYear(-1, syncViewYear(value, emit), disabled)}>‹</button>
+            <span class="jui-month-picker__year">${() => read(syncViewYear(value, emit))}</span>
+            <button type="button" class="jui-month-picker__nav-btn" aria-label="Next year" disabled=${() => !!read(disabled)} on-click=${() => shiftYear(1, syncViewYear(value, emit), disabled)}>›</button>
+          </div>
+
+          <div class="jui-month-picker__grid" role="listbox" aria-label="Month">
+            #for months() as item (item.month)
+              <button
+                type="button"
+                class="jui-month-picker__month"
+                class-is-active=${() => isSelected(item.month, value) && parseMonth(value)?.year === read(syncViewYear(value, emit))}
+                role="option"
+                aria-selected=${() => isSelected(item.month, value)}
+                disabled=${() => !!(read(disabled) || isDisabledMonth(syncViewYear(value, emit), item.month, min, max))}
+                on-click=${(event) => pick(item.month, value, syncViewYear(value, emit), min, max, disabled, emit, event)}
+              >
+                ${item.label}
+              </button>
+            #end
+          </div>
+
+          #if read(clearable)
+            <button type="button" class="jui-month-picker__clear" disabled=${() => !!read(disabled)} on-click=${(event) => clearValue(value, disabled, emit, event)}>Clear</button>
+          #end
+        </div>
+      </details>
+    #end
+
+    #if read(error)
+      <span class="jui-month-picker__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-month-picker__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-month-picker {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.jui-month-picker__label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-month-picker.has-error .jui-month-picker__label {
+  color: var(--j-danger);
+}
+
+.jui-month-picker.has-error .jui-month-picker__trigger,
+.jui-month-picker.has-error .jui-month-picker__panel {
+  border-color: var(--j-danger);
+}
+
+.jui-month-picker__control {
+  position: relative;
+  min-width: 0;
+}
+
+.jui-month-picker__trigger {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: calc(var(--j-control-height, 2.5rem) + 0.25rem);
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  font: inherit;
+  cursor: pointer;
+  list-style: none;
+  outline: none;
+}
+
+.jui-month-picker__trigger::-webkit-details-marker,
+.jui-month-picker__trigger::marker {
+  display: none;
+}
+
+.jui-month-picker__trigger:focus,
+.jui-month-picker__control[open] .jui-month-picker__trigger {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-month-picker__face {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.jui-month-picker__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.jui-month-picker__value.is-placeholder {
+  color: var(--j-muted);
+  font-weight: 500;
+}
+
+.jui-month-picker__chevron {
+  flex: 0 0 auto;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-0.1rem);
+  opacity: 0.7;
+  transition: transform 120ms ease;
+}
+
+.jui-month-picker__control[open] .jui-month-picker__chevron {
+  transform: rotate(225deg) translateY(-0.05rem);
+}
+
+.jui-month-picker__control .jui-month-picker__panel {
+  position: absolute;
+  z-index: 40;
+  inset-inline-start: 0;
+  top: calc(100% + 0.35rem);
+  width: min(100%, 20rem);
+  min-width: 16rem;
+  box-shadow: var(--j-shadow-md, 0 10px 30px color-mix(in srgb, var(--j-text) 12%, transparent));
+}
+
+.jui-month-picker__control:not([open]) .jui-month-picker__panel {
+  display: none;
+}
+
+.jui-month-picker__panel {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.85rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+}
+
+.jui-month-picker__nav {
+  display: grid;
+  grid-template-columns: 2.4rem 1fr 2.4rem;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.jui-month-picker__nav-btn {
+  min-height: 2.4rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+  color: var(--j-text);
+  font: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.jui-month-picker__year {
+  text-align: center;
+  font-weight: 750;
+}
+
+.jui-month-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.jui-month-picker__month {
+  min-height: var(--j-touch-target, 2.75rem);
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+  color: var(--j-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.jui-month-picker__month.is-active {
+  border-color: var(--j-primary);
+  background: color-mix(in srgb, var(--j-mint) 55%, var(--j-surface));
+  box-shadow: var(--j-focus);
+}
+
+.jui-month-picker__month:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.jui-month-picker__clear {
+  justify-self: end;
+  border: 0;
+  background: transparent;
+  color: var(--j-muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.jui-month-picker.is-disabled {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.jui-month-picker__hint,
+.jui-month-picker__error {
+  font-size: 0.8rem;
+}
+
+.jui-month-picker__hint {
+  color: var(--j-muted);
+}
+
+.jui-month-picker__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

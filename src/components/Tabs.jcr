@@ -1,0 +1,324 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    value: { type: 'any', model: true }
+    type: { type: 'string', default: '' }
+    tabPosition: { type: 'string', default: 'top' }
+    stretch: { type: 'boolean', default: false }
+  }
+  slots: ['default']
+  emits: ['change', 'tab-click']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function stateOf(emitFn, modelProp) {
+  if (!emitFn.__juiTabsState) {
+    emitFn.__juiTabsState = {
+      ready: pulse(0),
+      registry: pulse([]),
+      model: modelProp && typeof modelProp.set === 'function'
+        ? modelProp
+        : pulse(read(modelProp)),
+    }
+  } else if (modelProp && typeof modelProp.set === 'function') {
+    emitFn.__juiTabsState.model = modelProp
+  }
+  return emitFn.__juiTabsState
+}
+
+function tabs(emitFn, modelProp) {
+  const state = stateOf(emitFn, modelProp)
+  read(state.ready)
+  return read(state.registry)
+}
+
+function activeName(emitFn, modelProp) {
+  return read(stateOf(emitFn, modelProp).model)
+}
+
+function typeOf(value) {
+  const next = String(read(value) || '')
+  if (next === 'card' || next === 'border-card') return next
+  return ''
+}
+
+function positionOf(value) {
+  const next = String(read(value) || 'top')
+  if (next === 'right' || next === 'bottom' || next === 'left') return next
+  return 'top'
+}
+
+function selectTab(item, emitFn, modelProp) {
+  emitFn('tab-click', item.name)
+  if (item.disabled) return
+  const state = stateOf(emitFn, modelProp)
+  if (read(state.model) === item.name) return
+  state.model.set(item.name)
+  state.ready.set(read(state.ready) + 1)
+  emitFn('change', item.name)
+}
+
+function bindTabs(root, emitFn, modelProp) {
+  const state = stateOf(emitFn, modelProp)
+  if (root) {
+    root.tabsModel = state.model
+    root.tabsEmit = emitFn
+    root.tabsReady = state.ready
+    root.tabsRegistry = state.registry
+  }
+  read(state.model)
+  read(state.ready)
+  return ''
+}
+
+function armTabs(root, emitFn, modelProp) {
+  if (!root) return
+  emitFn.__juiTabsRoot = root
+  const state = stateOf(emitFn, modelProp)
+  bindTabs(root, emitFn, modelProp)
+  state.ready.set(read(state.ready) + 1)
+}
+
+export <view>
+  <div
+    class="jui-tabs"
+    class-jui-tabs--card=${() => typeOf(type) === 'card'}
+    class-jui-tabs--border-card=${() => typeOf(type) === 'border-card'}
+    class-jui-tabs--top=${() => positionOf(tabPosition) === 'top'}
+    class-jui-tabs--right=${() => positionOf(tabPosition) === 'right'}
+    class-jui-tabs--bottom=${() => positionOf(tabPosition) === 'bottom'}
+    class-jui-tabs--left=${() => positionOf(tabPosition) === 'left'}
+    class-jui-tabs--stretch=${() => !!read(stretch)}
+  >
+    <img
+      class="jui-tabs__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armTabs(event.currentTarget.closest('.jui-tabs'), emit, value)}
+    />
+    <span class="jui-tabs__bind" aria-hidden="true">
+      ${() => bindTabs(emit.__juiTabsRoot, emit, value)}
+    </span>
+    <nav class="jui-tabs__nav" role="tablist">
+      #for tabs(emit, value) as item (item.id)
+        <button
+          type="button"
+          class="jui-tabs__tab"
+          class-is-active=${() => activeName(emit, value) === item.name}
+          role="tab"
+          aria-selected=${() => activeName(emit, value) === item.name}
+          aria-controls=${item.id}
+          disabled=${item.disabled}
+          on-click=${() => selectTab(item, emit, value)}
+        >${item.label}</button>
+      #end
+    </nav>
+    <div class="jui-tabs__content">
+      <slot />
+    </div>
+  </div>
+</view>
+
+export <style>
+.jui-tabs {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  color: var(--j-text);
+}
+
+.jui-tabs__boot,
+.jui-tabs__bind {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-tabs__nav {
+  display: flex;
+  min-width: 0;
+  overflow: auto;
+  border-bottom: 1px solid var(--j-border);
+}
+
+.jui-tabs__tab {
+  appearance: none;
+  position: relative;
+  flex: 0 0 auto;
+  min-height: 2.75rem;
+  margin: 0;
+  padding: 0.65rem 1rem;
+  border: 0;
+  background: transparent;
+  color: var(--j-muted);
+  font: inherit;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.jui-tabs__tab::after {
+  position: absolute;
+  right: 0.75rem;
+  bottom: -1px;
+  left: 0.75rem;
+  height: 2px;
+  background: transparent;
+  content: '';
+}
+
+.jui-tabs__tab:hover:not(:disabled) {
+  color: var(--j-forest);
+}
+
+.jui-tabs__tab.is-active {
+  color: var(--j-primary);
+}
+
+.jui-tabs__tab.is-active::after {
+  background: var(--j-primary);
+}
+
+.jui-tabs__tab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jui-tabs__tab:focus-visible {
+  z-index: 1;
+  outline: none;
+  box-shadow: inset var(--j-focus);
+}
+
+.jui-tabs__content {
+  min-width: 0;
+  padding-top: 1rem;
+}
+
+.jui-tabs__content > span,
+.jui-tabs__content > span > [data-jacare-s] {
+  display: contents;
+}
+
+.jui-tabs--stretch .jui-tabs__tab {
+  flex: 1 1 0;
+}
+
+.jui-tabs--card .jui-tabs__nav,
+.jui-tabs--border-card .jui-tabs__nav {
+  align-items: flex-end;
+}
+
+.jui-tabs--card .jui-tabs__tab {
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: var(--j-radius-sm) var(--j-radius-sm) 0 0;
+}
+
+.jui-tabs--card .jui-tabs__tab.is-active {
+  border-color: var(--j-border);
+  background: var(--j-surface-2);
+}
+
+.jui-tabs--card .jui-tabs__tab::after,
+.jui-tabs--border-card .jui-tabs__tab::after {
+  display: none;
+}
+
+.jui-tabs--border-card {
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  overflow: hidden;
+}
+
+.jui-tabs--border-card .jui-tabs__nav {
+  padding: 0 0.35rem;
+  background: var(--j-surface);
+}
+
+.jui-tabs--border-card .jui-tabs__tab.is-active {
+  background: var(--j-surface-2);
+  box-shadow: inset 0 -2px var(--j-primary);
+}
+
+.jui-tabs--border-card .jui-tabs__content {
+  padding: 1rem;
+}
+
+.jui-tabs--left,
+.jui-tabs--right {
+  flex-direction: row;
+}
+
+.jui-tabs--right .jui-tabs__nav {
+  order: 2;
+}
+
+.jui-tabs--bottom .jui-tabs__nav {
+  order: 2;
+}
+
+.jui-tabs--bottom .jui-tabs__content {
+  padding-top: 0;
+  padding-bottom: 1rem;
+}
+
+.jui-tabs--left .jui-tabs__nav,
+.jui-tabs--right .jui-tabs__nav {
+  flex-direction: column;
+  flex: 0 0 auto;
+  border-bottom: 0;
+}
+
+.jui-tabs--left .jui-tabs__nav {
+  border-right: 1px solid var(--j-border);
+}
+
+.jui-tabs--right .jui-tabs__nav {
+  border-left: 1px solid var(--j-border);
+}
+
+.jui-tabs--left .jui-tabs__content,
+.jui-tabs--right .jui-tabs__content {
+  flex: 1 1 auto;
+  padding-top: 0;
+}
+
+.jui-tabs--left .jui-tabs__content {
+  padding-left: 1rem;
+}
+
+.jui-tabs--right .jui-tabs__content {
+  padding-right: 1rem;
+}
+
+.jui-tabs--left .jui-tabs__tab::after,
+.jui-tabs--right .jui-tabs__tab::after {
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  height: auto;
+}
+
+.jui-tabs--left .jui-tabs__tab::after {
+  right: -1px;
+  left: auto;
+}
+
+.jui-tabs--right .jui-tabs__tab::after {
+  right: auto;
+  left: -1px;
+}
+</style>

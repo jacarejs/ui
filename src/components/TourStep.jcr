@@ -1,0 +1,122 @@
+import { pulse } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    selector: { type: 'string', default: '' }
+    title: { type: 'string', default: '' }
+    description: { type: 'string', default: '' }
+  }
+  slots: ['default']
+  emits: ['ready']
+</contract>
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function readyState(emitFn) {
+  if (!emitFn.__juiTourStepReady) emitFn.__juiTourStepReady = pulse(0)
+  return emitFn.__juiTourStepReady
+}
+
+function registerStep(emitFn, targetProp, titleProp, descriptionProp) {
+  read(readyState(emitFn))
+  const root = emitFn.__juiTourStepRoot
+  const tour = root?.closest?.('.jui-tour')
+  if (!tour?.tourSteps) return ''
+  const payload = {
+    target: String(read(targetProp) || ''),
+    title: String(read(titleProp) || ''),
+    description: String(read(descriptionProp) || ''),
+    id: stepId(emitFn),
+  }
+  const steps = read(tour.tourSteps) || []
+  const index = steps.findIndex((step) => step.id === payload.id)
+  const prev = index >= 0 ? steps[index] : null
+  if (
+    prev &&
+    prev.target === payload.target &&
+    prev.title === payload.title &&
+    prev.description === payload.description
+  ) {
+    return ''
+  }
+  const next = [...steps]
+  if (index >= 0) next[index] = payload
+  else next.push(payload)
+  tour.tourSteps.set(next)
+  return ''
+}
+
+function stepId(emitFn) {
+  if (!emitFn.__juiTourStepId) {
+    emitFn.__juiTourStepId = `tour-step-${Math.random().toString(36).slice(2, 9)}`
+  }
+  return emitFn.__juiTourStepId
+}
+
+function armStep(root, emitFn) {
+  if (!root) return
+  emitFn.__juiTourStepRoot = root
+  root.setAttribute('data-step-id', stepId(emitFn))
+  const ready = readyState(emitFn)
+  ready.set(read(ready) + 1)
+  const tour = root.closest('.jui-tour')
+  if (tour?.tourSteps) {
+    const steps = read(tour.tourSteps) || []
+    const payload = {
+      target: root.getAttribute('data-target') || '',
+      title: root.getAttribute('data-title') || '',
+      description: root.getAttribute('data-description') || '',
+      id: stepId(emitFn),
+    }
+    const index = steps.findIndex((step) => step.id === payload.id)
+    const next = [...steps]
+    if (index >= 0) next[index] = payload
+    else next.push(payload)
+    tour.tourSteps.set(next)
+  }
+}
+
+export <view>
+  <div
+    class="jui-tour-step"
+    data-step-id=${() => stepId(emit)}
+    data-target=${() => String(read(selector) || '')}
+    data-title=${() => String(read(title) || '')}
+    data-description=${() => String(read(description) || '')}
+  >
+    <img
+      class="jui-tour-step__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armStep(event.currentTarget.closest('.jui-tour-step'), emit)}
+    />
+    <span class="jui-tour-step__bind" aria-hidden="true">${() => registerStep(emit, selector, title, description)}</span>
+    <span class="jui-tour-step__slot" hidden><slot /></span>
+  </div>
+</view>
+
+export <style>
+.jui-tour-step {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-tour-step__boot,
+.jui-tour-step__bind,
+.jui-tour-step__slot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+</style>

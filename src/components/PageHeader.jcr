@@ -1,0 +1,95 @@
+import { read } from '../internal/utils.js'
+import { propText } from '../i18n/index.js'
+
+export <contract>
+  props: {
+    title: { type: 'string', default: 'Back' }
+    content: { type: 'string', default: '' }
+    showIcon: { type: 'boolean', default: true }
+  }
+  slots: ['default']
+  emits: ['back']
+</contract>
+
+export <view>
+  <section class="jui-page-header">
+    <header class="jui-page-header__back">
+      <button type="button" class="jui-page-header__title" on-click=${() => emit('back')}>
+        #if read(showIcon)
+          <span aria-hidden="true">‹</span>
+        #end
+        <span>${() => propText(title, 'j.pageHeader.back', 'Back')}</span>
+      </button>
+      #if read(content)
+        <h1 class="jui-page-header__content">${() => read(content)}</h1>
+      #end
+    </header>
+    <div class="jui-page-header__body">
+      <slot />
+    </div>
+  </section>
+</view>
+
+export <style>
+.jui-page-header {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  color: var(--j-text);
+}
+
+.jui-page-header__back {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.jui-page-header__title {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.5rem;
+  margin: 0;
+  padding: 0.4rem 0.65rem;
+  border: 0;
+  border-radius: var(--j-radius-sm);
+  background: transparent;
+  color: var(--j-muted);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.jui-page-header__title:hover {
+  background: var(--j-mint);
+  color: var(--j-forest);
+}
+
+.jui-page-header__title:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+}
+
+.jui-page-header__title > span[aria-hidden="true"] {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.jui-page-header__content {
+  min-width: 0;
+  margin: 0;
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--j-border);
+  color: var(--j-text);
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.jui-page-header__body {
+  min-width: 0;
+}
+</style>

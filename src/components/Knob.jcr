@@ -1,0 +1,535 @@
+import { effect } from '@jacare/core'
+import { read } from '../internal/utils.js'
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+const SVG_NS = 'http://www.w3.org/2000/svg'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'number', default: 0, model: true }
+    min: { type: 'number', default: 0 }
+    max: { type: 'number', default: 100 }
+    step: { type: 'number', default: 1 }
+    size: { type: 'number', default: 100 }
+    strokeWidth: { type: 'number', default: 14 }
+    showValue: { type: 'boolean', default: true }
+    valueTemplate: { type: 'string', default: '{value}' }
+    valueColor: { type: 'string', default: '' }
+    rangeColor: { type: 'string', default: '' }
+    textColor: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+    readonly: { type: 'boolean', default: false }
+    invalid: { type: 'boolean', default: false }
+    tabindex: { type: 'number', default: 0 }
+    ariaLabel: { type: 'string', default: '' }
+    ariaLabelledby: { type: 'string', default: '' }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change']
+</contract>
+
+const MATH_PI = 3.14159265358979
+const RADIUS = 40
+const MID_X = 50
+const MID_Y = 50
+const MIN_RADIANS = (4 * MATH_PI) / 3
+const MAX_RADIANS = -MATH_PI / 3
+
+function numberOr(value, fallback) {
+  const next = Number(read(value))
+  return Number.isFinite(next) ? next : fallback
+}
+
+function minOf(value) {
+  return numberOr(value, 0)
+}
+
+function maxOf(value) {
+  return numberOr(value, 100)
+}
+
+function stepOf(value) {
+  const next = numberOr(value, 1)
+  return next > 0 ? next : 1
+}
+
+function sizeOf(value) {
+  const next = Math.round(numberOr(value, 100))
+  return next > 0 ? next : 100
+}
+
+function strokeOf(value) {
+  const next = numberOr(value, 14)
+  return next > 0 ? next : 14
+}
+
+function clamp(raw, minProp, maxProp) {
+  const lo = minOf(minProp)
+  const hi = maxOf(maxProp)
+  return Math.min(hi, Math.max(lo, raw))
+}
+
+function snap(raw, minProp, maxProp, stepProp) {
+  const lo = minOf(minProp)
+  const step = stepOf(stepProp)
+  const snapped = Math.round((raw - lo) / step) * step + lo
+  const precision = String(step).includes('.') ? String(step).split('.')[1].length : 0
+  const rounded = precision ? Number(snapped.toFixed(precision)) : snapped
+  return clamp(rounded, minProp, maxProp)
+}
+
+function currentValue(model, minProp, maxProp) {
+  return clamp(numberOr(model, minOf(minProp)), minProp, maxProp)
+}
+
+function mapRange(x, inMin, inMax, outMin, outMax) {
+  if (inMax === inMin) return outMin
+  return ((x - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin
+}
+
+function zeroRadians(minProp, maxProp) {
+  const lo = minOf(minProp)
+  const hi = maxOf(maxProp)
+  if (lo > 0 && hi > 0) return mapRange(lo, lo, hi, MIN_RADIANS, MAX_RADIANS)
+  return mapRange(0, lo, hi, MIN_RADIANS, MAX_RADIANS)
+}
+
+function valueRadians(model, minProp, maxProp) {
+  return mapRange(currentValue(model, minProp, maxProp), minOf(minProp), maxOf(maxProp), MIN_RADIANS, MAX_RADIANS)
+}
+
+function point(radians) {
+  return {
+    x: MID_X + Math.cos(radians) * RADIUS,
+    y: MID_Y - Math.sin(radians) * RADIUS,
+  }
+}
+
+function rangePath() {
+  const start = point(MIN_RADIANS)
+  const end = point(MAX_RADIANS)
+  return `M ${start.x} ${start.y} A ${RADIUS} ${RADIUS} 0 1 1 ${end.x} ${end.y}`
+}
+
+function valuePath(model, minProp, maxProp) {
+  const zero = zeroRadians(minProp, maxProp)
+  const current = valueRadians(model, minProp, maxProp)
+  const start = point(zero)
+  const end = point(current)
+  const largeArc = Math.abs(zero - current) < MATH_PI ? 0 : 1
+  const sweep = current > zero ? 0 : 1
+  return `M ${start.x} ${start.y} A ${RADIUS} ${RADIUS} 0 ${largeArc} ${sweep} ${end.x} ${end.y}`
+}
+
+function displayValue(model, minProp, maxProp, templateProp) {
+  const current = currentValue(model, minProp, maxProp)
+  const template = read(templateProp)
+  if (typeof template === 'function') return String(template(current))
+  return String(template ?? '{value}').replace(/\{value\}/g, String(current))
+}
+
+function commit(model, next, minProp, maxProp, stepProp, emitFn) {
+  const value = snap(next, minProp, maxProp, stepProp)
+  if (model && typeof model.set === 'function') model.set(value)
+  emitFn('change', value)
+}
+
+function updateFromOffset(offsetX, offsetY, model, minProp, maxProp, stepProp, sizeProp, emitFn) {
+  const diameter = sizeOf(sizeProp)
+  const dx = offsetX - diameter / 2
+  const dy = diameter / 2 - offsetY
+  const angle = Math.atan2(dy, dx)
+  const start = -MATH_PI / 2 - MATH_PI / 6
+  let mapped
+  if (angle > MAX_RADIANS) mapped = mapRange(angle, MIN_RADIANS, MAX_RADIANS, minOf(minProp), maxOf(maxProp))
+  else if (angle < start) mapped = mapRange(angle + 2 * MATH_PI, MIN_RADIANS, MAX_RADIANS, minOf(minProp), maxOf(maxProp))
+  else return
+  commit(model, mapped, minProp, maxProp, stepProp, emitFn)
+}
+
+function interactive(disabledProp, readonlyProp) {
+  return !read(disabledProp) && !read(readonlyProp)
+}
+
+function offsetFromEvent(event, svg) {
+  const rect = svg.getBoundingClientRect()
+  const pointEvent = event.touches?.[0] || event.changedTouches?.[0] || event
+  return {
+    x: pointEvent.clientX - rect.left,
+    y: pointEvent.clientY - rect.top,
+  }
+}
+
+function onKeyDown(event, model, minProp, maxProp, stepProp, disabledProp, readonlyProp, emitFn) {
+  if (!interactive(disabledProp, readonlyProp)) return
+  const current = currentValue(model, minProp, maxProp)
+  const step = stepOf(stepProp)
+  switch (event.code) {
+    case 'ArrowRight':
+    case 'ArrowUp':
+      event.preventDefault()
+      commit(model, current + step, minProp, maxProp, stepProp, emitFn)
+      break
+    case 'ArrowLeft':
+    case 'ArrowDown':
+      event.preventDefault()
+      commit(model, current - step, minProp, maxProp, stepProp, emitFn)
+      break
+    case 'Home':
+      event.preventDefault()
+      commit(model, minOf(minProp), minProp, maxProp, stepProp, emitFn)
+      break
+    case 'End':
+      event.preventDefault()
+      commit(model, maxOf(maxProp), minProp, maxProp, stepProp, emitFn)
+      break
+    case 'PageUp':
+      event.preventDefault()
+      commit(model, current + step * 10, minProp, maxProp, stepProp, emitFn)
+      break
+    case 'PageDown':
+      event.preventDefault()
+      commit(model, current - step * 10, minProp, maxProp, stepProp, emitFn)
+      break
+    default:
+      break
+  }
+}
+
+function tabIndexOf(tabProp, disabledProp, readonlyProp) {
+  if (read(disabledProp) || read(readonlyProp)) return -1
+  return numberOr(tabProp, 0)
+}
+
+function rangeStroke(rangeColorProp) {
+  return String(read(rangeColorProp) || '').trim() || 'var(--jui-knob-range)'
+}
+
+function valueStroke(valueColorProp) {
+  return String(read(valueColorProp) || '').trim() || 'var(--jui-knob-value)'
+}
+
+function labelFill(textColorProp) {
+  return String(read(textColorProp) || '').trim() || 'var(--jui-knob-text)'
+}
+
+function shownError(errorProp) {
+  return String(read(errorProp) || '').trim()
+}
+
+function ariaName(ariaLabelProp, labelProp) {
+  return String(read(ariaLabelProp) || read(labelProp) || 'Knob')
+}
+
+function svgEl(tag) {
+  return document.createElementNS(SVG_NS, tag)
+}
+
+function setAttrs(node, attrs) {
+  for (const [key, next] of Object.entries(attrs)) {
+    if (next == null || next === false) node.removeAttribute(key)
+    else node.setAttribute(key, String(next))
+  }
+}
+
+function ensureDial(root) {
+  let svg = root.__juiKnobSvg
+  if (svg?.isConnected) return svg
+
+  const host = root.querySelector('[data-jui-knob-dial]')
+  if (!host) return null
+
+  svg = svgEl('svg')
+  svg.classList.add('jui-knob__svg')
+  setAttrs(svg, {
+    viewBox: '0 0 100 100',
+    role: 'slider',
+  })
+
+  const range = svgEl('path')
+  range.classList.add('jui-knob__range')
+  setAttrs(range, {
+    fill: 'none',
+    'stroke-linecap': 'round',
+    d: rangePath(),
+  })
+
+  const valuePathNode = svgEl('path')
+  valuePathNode.classList.add('jui-knob__value')
+  setAttrs(valuePathNode, {
+    fill: 'none',
+    'stroke-linecap': 'round',
+  })
+
+  const text = svgEl('text')
+  text.classList.add('jui-knob__text')
+  setAttrs(text, {
+    x: '50',
+    y: '57',
+    'text-anchor': 'middle',
+  })
+
+  svg.append(range, valuePathNode, text)
+  host.replaceChildren(svg)
+
+  root.__juiKnobSvg = svg
+  root.__juiKnobRange = range
+  root.__juiKnobValuePath = valuePathNode
+  root.__juiKnobText = text
+  return svg
+}
+
+function paintDial(root, model, minProp, maxProp, stepProp, sizeProp, strokeProp, showValueProp, templateProp, valueColorProp, rangeColorProp, textColorProp, disabledProp, readonlyProp, invalidProp, errorProp, tabProp, ariaLabelProp, ariaLabelledbyProp, labelProp) {
+  const svg = ensureDial(root)
+  if (!svg) return
+
+  const diameter = sizeOf(sizeProp)
+  const stroke = strokeOf(strokeProp)
+  const showValue = read(showValueProp) !== false
+  const labelledby = read(ariaLabelledbyProp)
+
+  setAttrs(svg, {
+    width: String(diameter),
+    height: String(diameter),
+    tabindex: String(tabIndexOf(tabProp, disabledProp, readonlyProp)),
+    'aria-valuemin': String(minOf(minProp)),
+    'aria-valuemax': String(maxOf(maxProp)),
+    'aria-valuenow': String(currentValue(model, minProp, maxProp)),
+    'aria-label': labelledby ? null : ariaName(ariaLabelProp, labelProp),
+    'aria-labelledby': labelledby || null,
+    'aria-disabled': read(disabledProp) ? 'true' : 'false',
+    'aria-readonly': read(readonlyProp) ? 'true' : 'false',
+    'aria-invalid': read(invalidProp) || shownError(errorProp) ? 'true' : 'false',
+  })
+
+  setAttrs(root.__juiKnobRange, {
+    'stroke-width': String(stroke),
+    stroke: rangeStroke(rangeColorProp),
+  })
+
+  setAttrs(root.__juiKnobValuePath, {
+    d: valuePath(model, minProp, maxProp),
+    'stroke-width': String(stroke),
+    stroke: valueStroke(valueColorProp),
+  })
+
+  const text = root.__juiKnobText
+  text.style.display = showValue ? '' : 'none'
+  if (showValue) {
+    setAttrs(text, { fill: labelFill(textColorProp) })
+    text.textContent = displayValue(model, minProp, maxProp, templateProp)
+  }
+}
+
+function armKnob(root, model, minProp, maxProp, stepProp, sizeProp, strokeProp, showValueProp, templateProp, valueColorProp, rangeColorProp, textColorProp, disabledProp, readonlyProp, invalidProp, errorProp, tabProp, ariaLabelProp, ariaLabelledbyProp, labelProp, emitFn) {
+  if (!root || root.__juiKnobArmed) return
+  root.__juiKnobArmed = true
+
+  const svg = ensureDial(root)
+  if (!svg) return
+
+  const move = (event) => {
+    if (!interactive(disabledProp, readonlyProp)) return
+    const next = offsetFromEvent(event, svg)
+    updateFromOffset(next.x, next.y, model, minProp, maxProp, stepProp, sizeProp, emitFn)
+    event.preventDefault()
+  }
+
+  const stopMouse = () => {
+    window.removeEventListener('mousemove', move)
+    window.removeEventListener('mouseup', stopMouse)
+  }
+
+  const stopTouch = () => {
+    window.removeEventListener('touchmove', move)
+    window.removeEventListener('touchend', stopTouch)
+  }
+
+  svg.addEventListener('mousedown', (event) => {
+    if (!interactive(disabledProp, readonlyProp)) return
+    window.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', stopMouse)
+    move(event)
+  })
+
+  svg.addEventListener('touchstart', (event) => {
+    if (!interactive(disabledProp, readonlyProp)) return
+    window.addEventListener('touchmove', move, { passive: false })
+    window.addEventListener('touchend', stopTouch)
+    move(event)
+  }, { passive: false })
+
+  svg.addEventListener('click', (event) => {
+    if (!interactive(disabledProp, readonlyProp)) return
+    const next = offsetFromEvent(event, svg)
+    updateFromOffset(next.x, next.y, model, minProp, maxProp, stepProp, sizeProp, emitFn)
+  })
+
+  svg.addEventListener('keydown', (event) => {
+    onKeyDown(event, model, minProp, maxProp, stepProp, disabledProp, readonlyProp, emitFn)
+  })
+
+  root.__juiKnobDispose = effect(() => {
+    paintDial(
+      root,
+      model,
+      minProp,
+      maxProp,
+      stepProp,
+      sizeProp,
+      strokeProp,
+      showValueProp,
+      templateProp,
+      valueColorProp,
+      rangeColorProp,
+      textColorProp,
+      disabledProp,
+      readonlyProp,
+      invalidProp,
+      errorProp,
+      tabProp,
+      ariaLabelProp,
+      ariaLabelledbyProp,
+      labelProp,
+    )
+  })
+}
+
+export <view>
+  <div
+    class="jui-knob"
+    class-is-disabled=${() => !!read(disabled)}
+    class-is-readonly=${() => !!read(readonly)}
+    class-has-error=${() => !!(read(invalid) || shownError(error))}
+    data-jui-knob
+  >
+    <img
+      class="jui-knob__boot"
+      alt=""
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armKnob(
+        event.currentTarget.closest('[data-jui-knob]'),
+        value,
+        min,
+        max,
+        step,
+        size,
+        strokeWidth,
+        showValue,
+        valueTemplate,
+        valueColor,
+        rangeColor,
+        textColor,
+        disabled,
+        readonly,
+        invalid,
+        error,
+        tabindex,
+        ariaLabel,
+        ariaLabelledby,
+        label,
+        emit,
+      )}
+    />
+
+    #if read(label)
+      <span class="jui-knob__label">${() => read(label)}</span>
+    #end
+
+    <div class="jui-knob__dial" data-jui-knob-dial></div>
+
+    #if shownError(error)
+      <span class="jui-knob__error" role="alert">${() => shownError(error)}</span>
+    #elif read(hint)
+      <span class="jui-knob__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-knob {
+  --jui-knob-range: color-mix(in srgb, var(--j-border) 70%, var(--j-surface-2));
+  --jui-knob-value: var(--j-primary);
+  --jui-knob-text: var(--j-text);
+  position: relative;
+  display: inline-grid;
+  justify-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  user-select: none;
+  touch-action: none;
+}
+
+.jui-knob__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-knob__label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest, var(--j-text));
+}
+
+.jui-knob__dial {
+  display: block;
+  line-height: 0;
+}
+
+.jui-knob__svg {
+  display: block;
+  outline: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.jui-knob__svg:focus-visible {
+  box-shadow: var(--j-focus);
+}
+
+.jui-knob__range,
+.jui-knob__value {
+  transition: stroke 120ms ease;
+}
+
+.jui-knob__text {
+  font-size: 1.1rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.jui-knob.is-readonly .jui-knob__svg,
+.jui-knob.is-disabled .jui-knob__svg {
+  cursor: default;
+}
+
+.jui-knob.is-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.jui-knob.has-error {
+  --jui-knob-value: var(--j-danger);
+}
+
+.jui-knob__hint,
+.jui-knob__error {
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.jui-knob__hint {
+  color: var(--j-muted);
+}
+
+.jui-knob__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

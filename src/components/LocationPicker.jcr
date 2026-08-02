@@ -1,0 +1,236 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'object', default: null, model: true }
+    disabled: { type: 'boolean', default: false }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+    locateLabel: { type: 'string', default: 'Use my location' }
+  }
+  emits: ['change', 'locate', 'locate-error']
+</contract>
+
+function coordsOf(model) {
+  const next = read(model)
+  if (!next || typeof next !== 'object') return { lat: '', lng: '' }
+  return {
+    lat: next.lat == null || next.lat === '' ? '' : String(next.lat),
+    lng: next.lng == null || next.lng === '' ? '' : String(next.lng),
+  }
+}
+
+function commit(model, next, emitFn) {
+  const payload = next && next.lat !== '' && next.lng !== ''
+    ? { lat: Number(next.lat), lng: Number(next.lng) }
+    : next
+  if (model && typeof model.set === 'function') model.set(payload)
+  emitFn('change', payload)
+}
+
+function updateField(field, event, model, emitFn) {
+  const current = coordsOf(model)
+  current[field] = event.target.value
+  if (current.lat === '' && current.lng === '') {
+    commit(model, null, emitFn)
+    return
+  }
+  commit(model, current, emitFn)
+}
+
+function mapsHref(model) {
+  const coords = coordsOf(model)
+  if (coords.lat === '' || coords.lng === '') return ''
+  return `https://www.openstreetmap.org/?mlat=${encodeURIComponent(coords.lat)}&mlon=${encodeURIComponent(coords.lng)}#map=16/${encodeURIComponent(coords.lat)}/${encodeURIComponent(coords.lng)}`
+}
+
+function locate(model, disabledValue, emitFn, event) {
+  if (read(disabledValue)) return
+  const button = event.currentTarget
+  if (!navigator.geolocation) {
+    emitFn('locate-error', new Error('Geolocation unavailable'))
+    return
+  }
+  button.disabled = true
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const next = {
+        lat: Number(position.coords.latitude.toFixed(6)),
+        lng: Number(position.coords.longitude.toFixed(6)),
+      }
+      commit(model, next, emitFn)
+      emitFn('locate', next)
+      button.disabled = !!read(disabledValue)
+    },
+    (error) => {
+      emitFn('locate-error', error)
+      button.disabled = !!read(disabledValue)
+    },
+    { enableHighAccuracy: true, timeout: 10000 },
+  )
+}
+
+export <view>
+  <div class="jui-location" class-has-error=${() => !!read(error)} class-is-disabled=${() => !!read(disabled)}>
+    #if read(label)
+      <span class="jui-location__label">${() => read(label)}</span>
+    #end
+
+    <div class="jui-location__row">
+      <label class="jui-location__field">
+        <span class="jui-location__field-label">Latitude</span>
+        <input
+          class="jui-location__input"
+          type="number"
+          step="any"
+          inputmode="decimal"
+          placeholder="-23.5505"
+          disabled=${() => !!read(disabled)}
+          value=${() => coordsOf(value).lat}
+          on-input=${(event) => updateField('lat', event, value, emit)}
+        />
+      </label>
+      <label class="jui-location__field">
+        <span class="jui-location__field-label">Longitude</span>
+        <input
+          class="jui-location__input"
+          type="number"
+          step="any"
+          inputmode="decimal"
+          placeholder="-46.6333"
+          disabled=${() => !!read(disabled)}
+          value=${() => coordsOf(value).lng}
+          on-input=${(event) => updateField('lng', event, value, emit)}
+        />
+      </label>
+    </div>
+
+    <div class="jui-location__actions">
+      <button
+        type="button"
+        class="jui-location__locate"
+        disabled=${() => !!read(disabled)}
+        on-click=${(event) => locate(value, disabled, emit, event)}
+      >
+        ${() => read(locateLabel) || 'Use my location'}
+      </button>
+      #if mapsHref(value)
+        <a class="jui-location__map" href=${() => mapsHref(value)} target="_blank" rel="noreferrer">
+          Open map
+        </a>
+      #end
+    </div>
+
+    #if read(error)
+      <span class="jui-location__error" role="alert">${() => read(error)}</span>
+    #elif read(hint)
+      <span class="jui-location__hint">${() => read(hint)}</span>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-location {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.jui-location__label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-forest);
+}
+
+.jui-location__row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.jui-location__field {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.jui-location__field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--j-muted);
+}
+
+.jui-location__input {
+  min-height: calc(var(--j-control-height, 2.5rem) + 0.1rem);
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  font: inherit;
+  outline: none;
+}
+
+.jui-location__input:focus {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-location__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.jui-location__locate {
+  min-height: var(--j-touch-target, 2.75rem);
+  padding: 0 0.95rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface);
+  color: var(--j-primary);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.jui-location__map {
+  color: var(--j-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.jui-location__map:hover {
+  text-decoration: underline;
+}
+
+.jui-location.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-location.has-error .jui-location__input {
+  border-color: var(--j-danger);
+}
+
+.jui-location__hint,
+.jui-location__error {
+  font-size: 0.8rem;
+}
+
+.jui-location__hint {
+  color: var(--j-muted);
+}
+
+.jui-location__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .jui-location__row {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

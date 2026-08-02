@@ -1,0 +1,162 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    text: { type: 'string', default: '' }
+    label: { type: 'string', default: '' }
+    type: { type: 'string', default: 'default' }
+    tone: { type: 'string', default: '' }
+    closable: { type: 'boolean', default: false }
+    size: { type: 'string', default: 'md' }
+    appearance: { type: 'string', default: 'light' }
+    round: { type: 'boolean', default: false }
+  }
+  slots: ['default']
+  emits: ['close']
+</contract>
+
+function toneOf(typeValue, toneValue) {
+  const next = String(read(toneValue) || read(typeValue) || 'default')
+  if (next === 'primary' || next === 'success' || next === 'info' || next === 'warning' || next === 'danger') return next
+  if (next === 'warn') return 'warning'
+  if (next === 'error') return 'danger'
+  return 'default'
+}
+
+function effectOf(value) {
+  const next = String(read(value) || 'light')
+  if (next === 'dark' || next === 'plain' || next === 'light') return next
+  return 'light'
+}
+
+function sizeOf(value) {
+  const next = String(read(value) || 'md')
+  if (next === 'sm' || next === 'lg') return next
+  return 'md'
+}
+
+function labelOf(textValue, labelValue) {
+  const text = String(read(textValue) || '').trim()
+  if (text) return text
+  return String(read(labelValue) || '').trim()
+}
+
+export <view>
+  <span
+    class="jui-tag"
+    class-jui-tag--primary=${() => toneOf(type, tone) === 'primary'}
+    class-jui-tag--success=${() => toneOf(type, tone) === 'success'}
+    class-jui-tag--info=${() => toneOf(type, tone) === 'info'}
+    class-jui-tag--warning=${() => toneOf(type, tone) === 'warning'}
+    class-jui-tag--danger=${() => toneOf(type, tone) === 'danger'}
+    class-jui-tag--dark=${() => effectOf(appearance) === 'dark'}
+    class-jui-tag--plain=${() => effectOf(appearance) === 'plain'}
+    class-jui-tag--sm=${() => sizeOf(size) === 'sm'}
+    class-jui-tag--lg=${() => sizeOf(size) === 'lg'}
+    class-jui-tag--round=${() => !!read(round)}
+  >
+    <span class="jui-tag__label">
+      ${() => labelOf(text, label)}
+      <slot />
+    </span>
+    #if read(closable)
+      <button
+        type="button"
+        class="jui-tag__close"
+        aria-label="Close"
+        on-click=${(event) => {
+          event.stopPropagation()
+          emit('close', event)
+        }}
+      >
+        <span aria-hidden="true">×</span>
+      </button>
+    #end
+  </span>
+</view>
+
+export <style>
+.jui-tag {
+  --jui-tag-color: var(--j-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 1.6rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--j-radius-sm);
+  border: 1px solid color-mix(in srgb, var(--jui-tag-color) 28%, transparent);
+  background: color-mix(in srgb, var(--jui-tag-color) 12%, var(--j-surface));
+  color: var(--jui-tag-color);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.jui-tag--primary { --jui-tag-color: var(--j-primary); }
+.jui-tag--success { --jui-tag-color: var(--j-success, var(--j-primary)); }
+.jui-tag--info { --jui-tag-color: var(--j-info); }
+.jui-tag--warning { --jui-tag-color: var(--j-warn); }
+.jui-tag--danger { --jui-tag-color: var(--j-danger); }
+
+.jui-tag--dark {
+  background: var(--jui-tag-color);
+  border-color: transparent;
+  color: #ffffff;
+}
+
+.jui-tag--plain {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--jui-tag-color) 55%, transparent);
+  color: var(--jui-tag-color);
+}
+
+.jui-tag--sm {
+  min-height: 1.25rem;
+  padding: 0.05rem 0.4rem;
+  font-size: 0.7rem;
+}
+
+.jui-tag--lg {
+  min-height: 2rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.88rem;
+}
+
+.jui-tag--round {
+  border-radius: var(--j-radius-pill);
+}
+
+.jui-tag__label {
+  min-width: 0;
+}
+
+.jui-tag__close {
+  appearance: none;
+  display: inline-grid;
+  place-items: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  margin-right: -0.15rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.72;
+}
+
+.jui-tag__close:hover {
+  opacity: 1;
+  background: color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.jui-tag__close:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+  opacity: 1;
+}
+</style>

@@ -1,0 +1,163 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    href: { type: 'string', default: '' }
+    type: { type: 'string', default: 'default' }
+    underline: { type: 'string', default: 'hover' }
+    disabled: { type: 'boolean', default: false }
+    linkTarget: { type: 'string', default: '' }
+  }
+  slots: ['default']
+  emits: ['press']
+</contract>
+
+function typeOf(value) {
+  const next = read(value)
+  if (
+    next === 'primary' ||
+    next === 'success' ||
+    next === 'warning' ||
+    next === 'danger' ||
+    next === 'info'
+  ) {
+    return next
+  }
+  return 'default'
+}
+
+function underlineOf(value) {
+  const next = read(value)
+  if (next === 'always' || next === 'never') return next
+  return 'hover'
+}
+
+function safeHref(value) {
+  const next = String(read(value) || '')
+  if (!next) return ''
+  if (/^\s*javascript:/i.test(next)) return '#'
+  return next
+}
+
+function hasHref(value) {
+  return !!safeHref(value)
+}
+
+function handleActivate(event, disabledProp, emitFn) {
+  if (read(disabledProp)) {
+    event.preventDefault()
+    return
+  }
+  emitFn('press', event)
+}
+
+export <view>
+  #if hasHref(href)
+    <a
+      class="jui-link"
+      class-jui-link--primary=${() => typeOf(type) === 'primary'}
+      class-jui-link--success=${() => typeOf(type) === 'success'}
+      class-jui-link--warning=${() => typeOf(type) === 'warning'}
+      class-jui-link--danger=${() => typeOf(type) === 'danger'}
+      class-jui-link--info=${() => typeOf(type) === 'info'}
+      class-jui-link--underline-always=${() => underlineOf(underline) === 'always'}
+      class-jui-link--underline-never=${() => underlineOf(underline) === 'never'}
+      class-is-disabled=${() => !!read(disabled)}
+      href=${() => safeHref(href)}
+      target=${() => read(linkTarget) || undefined}
+      rel=${() => (read(linkTarget) === '_blank' ? 'noopener noreferrer' : undefined)}
+      aria-disabled=${() => !!read(disabled)}
+      tabindex=${() => (read(disabled) ? -1 : undefined)}
+      on-click=${(event) => handleActivate(event, disabled, emit)}
+    ><slot /></a>
+  #else
+    <button
+      type="button"
+      class="jui-link"
+      class-jui-link--primary=${() => typeOf(type) === 'primary'}
+      class-jui-link--success=${() => typeOf(type) === 'success'}
+      class-jui-link--warning=${() => typeOf(type) === 'warning'}
+      class-jui-link--danger=${() => typeOf(type) === 'danger'}
+      class-jui-link--info=${() => typeOf(type) === 'info'}
+      class-jui-link--underline-always=${() => underlineOf(underline) === 'always'}
+      class-jui-link--underline-never=${() => underlineOf(underline) === 'never'}
+      class-is-disabled=${() => !!read(disabled)}
+      disabled=${() => !!read(disabled)}
+      on-click=${(event) => handleActivate(event, disabled, emit)}
+    ><slot /></button>
+  #end
+</view>
+
+export <style>
+.jui-link {
+  --jui-link-color: var(--j-text);
+  --jui-link-hover: var(--j-primary);
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--jui-link-color);
+  font: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color var(--j-duration-fast, 120ms) var(--j-ease-out, ease),
+    text-decoration-color var(--j-duration-fast, 120ms) var(--j-ease-out, ease);
+}
+
+.jui-link:hover {
+  color: var(--jui-link-hover);
+  text-decoration: underline;
+}
+
+.jui-link:focus-visible {
+  outline: none;
+  box-shadow: var(--j-focus);
+  border-radius: 2px;
+}
+
+.jui-link--underline-always {
+  text-decoration: underline;
+}
+
+.jui-link--underline-never,
+.jui-link--underline-never:hover {
+  text-decoration: none;
+}
+
+.jui-link--primary {
+  --jui-link-color: var(--j-primary);
+  --jui-link-hover: var(--j-leaf);
+}
+
+.jui-link--success {
+  --jui-link-color: var(--j-success, var(--j-primary));
+  --jui-link-hover: color-mix(in srgb, var(--j-success, var(--j-primary)) 82%, #000000);
+}
+
+.jui-link--warning {
+  --jui-link-color: var(--j-warn);
+  --jui-link-hover: color-mix(in srgb, var(--j-warn) 82%, #000000);
+}
+
+.jui-link--danger {
+  --jui-link-color: var(--j-danger);
+  --jui-link-hover: color-mix(in srgb, var(--j-danger) 82%, #000000);
+}
+
+.jui-link--info {
+  --jui-link-color: var(--j-info, #1f6feb);
+  --jui-link-hover: color-mix(in srgb, var(--j-info, #1f6feb) 82%, #000000);
+}
+
+.jui-link.is-disabled,
+.jui-link:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+  text-decoration: none;
+}
+</style>

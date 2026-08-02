@@ -1,0 +1,327 @@
+import { effect } from '@jacare/core'
+import { highlightCode } from '../internal/highlight.js'
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    label: { type: 'string', default: '' }
+    value: { type: 'string', default: '', model: true }
+    language: { type: 'string', default: 'text' }
+    rows: { type: 'number', default: 8 }
+    placeholder: { type: 'string', default: '' }
+    disabled: { type: 'boolean', default: false }
+    required: { type: 'boolean', default: false }
+    validateJson: { type: 'boolean', default: false }
+    highlight: { type: 'boolean', default: true }
+    theme: { type: 'string', default: 'dark' }
+    hint: { type: 'string', default: '' }
+    error: { type: 'string', default: '' }
+  }
+  emits: ['change', 'validate']
+</contract>
+
+function themeOf(value) {
+  return read(value) === 'light' ? 'light' : 'dark'
+}
+
+const BOOT_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+function rowCount(value) {
+  const next = Number(read(value))
+  return Number.isFinite(next) && next > 2 ? Math.round(next) : 8
+}
+
+function jsonError(model, validateJsonValue) {
+  if (!read(validateJsonValue)) return ''
+  const text = String(read(model) ?? '').trim()
+  if (!text) return ''
+  try {
+    JSON.parse(text)
+    return ''
+  } catch (error) {
+    return error?.message || 'Invalid JSON'
+  }
+}
+
+function displayError(errorProp, model, validateJsonValue) {
+  return String(read(errorProp) || jsonError(model, validateJsonValue) || '')
+}
+
+function commit(model, next, validateJsonValue, emitFn) {
+  if (model && typeof model.set === 'function') model.set(next)
+  emitFn('change', next)
+  if (read(validateJsonValue)) {
+    const text = String(next ?? '').trim()
+    if (!text) {
+      emitFn('validate', { valid: true, error: '' })
+      return
+    }
+    try {
+      JSON.parse(text)
+      emitFn('validate', { valid: true, error: '' })
+    } catch (error) {
+      emitFn('validate', { valid: false, error: error?.message || 'Invalid JSON' })
+    }
+  }
+}
+
+function paintHighlight(root, model, languageProp, highlightProp) {
+  const layer = root?.querySelector('[data-jui-code-highlight]')
+  if (!layer) return
+  if (read(highlightProp) === false) {
+    layer.innerHTML = ''
+    return
+  }
+  layer.innerHTML = highlightCode(read(model), read(languageProp))
+}
+
+function syncScroll(event) {
+  const root = event.currentTarget.closest('[data-jui-code-input]')
+  const layer = root?.querySelector('[data-jui-code-highlight]')
+  if (!layer) return
+  layer.scrollTop = event.currentTarget.scrollTop
+  layer.scrollLeft = event.currentTarget.scrollLeft
+}
+
+function armHighlight(root, model, languageProp, highlightProp) {
+  if (!root || root.juiCodeHighlightDispose) return
+  root.juiCodeHighlightDispose = effect(() => {
+    paintHighlight(root, model, languageProp, highlightProp)
+  })
+}
+
+export <view>
+  <label
+    class="jui-code-input"
+    class-jui-code-input--light=${() => themeOf(theme) === 'light'}
+    class-jui-code-input--dark=${() => themeOf(theme) === 'dark'}
+    class-has-error=${() => !!displayError(error, value, validateJson)}
+    class-is-disabled=${() => !!read(disabled)}
+    class-is-empty=${() => !String(read(value) ?? '')}
+    class-no-highlight=${() => read(highlight) === false}
+    data-jui-code-input
+  >
+    <img
+      class="jui-code-input__boot"
+      alt=""
+      width="0"
+      height="0"
+      aria-hidden="true"
+      src=${BOOT_SRC}
+      on-load=${(event) => armHighlight(event.currentTarget.closest('[data-jui-code-input]'), value, language, highlight)}
+    />
+
+    #if read(label)
+      <span class="jui-code-input__label">
+        ${() => read(label)}
+        #if read(required)
+          <span class="jui-code-input__req" aria-hidden="true">*</span>
+        #end
+      </span>
+    #end
+
+    <span class="jui-code-input__meta">
+      <span class="jui-code-input__lang">${() => read(language) || 'text'}</span>
+    </span>
+
+    <span class="jui-code-input__editor">
+      <pre class="jui-code-input__highlight" data-jui-code-highlight aria-hidden="true"></pre>
+      <textarea
+        class="jui-code-input__field"
+        rows=${() => rowCount(rows)}
+        spellcheck="false"
+        autocapitalize="off"
+        autocomplete="off"
+        autocorrect="off"
+        placeholder=${() => read(placeholder) || ''}
+        disabled=${() => !!read(disabled)}
+        required=${() => !!read(required)}
+        aria-invalid=${() => !!displayError(error, value, validateJson)}
+        bind-value=${value}
+        on-input=${(event) => commit(value, event.target.value, validateJson, emit)}
+        on-scroll=${syncScroll}
+      ></textarea>
+    </span>
+
+    #if displayError(error, value, validateJson)
+      <span class="jui-code-input__error" role="alert">${() => displayError(error, value, validateJson)}</span>
+    #elif read(hint)
+      <span class="jui-code-input__hint">${() => read(hint)}</span>
+    #end
+  </label>
+</view>
+
+export <style>
+.jui-code-input {
+  --jui-code-border: #2a2a2a;
+  --jui-code-bg: #0b0b0b;
+  --jui-code-fg: #f5f5f5;
+  --jui-code-muted: #9ca3af;
+  --jui-code-comment: #6b7280;
+  --jui-code-string: #86efac;
+  --jui-code-number: #fdba74;
+  --jui-code-keyword: #93c5fd;
+  --jui-code-literal: #d8b4fe;
+  --jui-code-function: #5eead4;
+  --jui-code-property: #7dd3fc;
+  --jui-code-selector: #bbf7d0;
+  --jui-code-tag: #f9a8d4;
+  --jui-code-attr: #fcd34d;
+  --jui-code-decorator: #f0abfc;
+  --jui-code-punctuation: #d1d5db;
+  position: relative;
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.jui-code-input--light {
+  --jui-code-border: #e5e7eb;
+  --jui-code-bg: #ffffff;
+  --jui-code-fg: #111827;
+  --jui-code-muted: #6b7280;
+  --jui-code-comment: #9ca3af;
+  --jui-code-string: #15803d;
+  --jui-code-number: #c2410c;
+  --jui-code-keyword: #1d4ed8;
+  --jui-code-literal: #7c3aed;
+  --jui-code-function: #0f766e;
+  --jui-code-property: #0369a1;
+  --jui-code-selector: #166534;
+  --jui-code-tag: #be185d;
+  --jui-code-attr: #a16207;
+  --jui-code-decorator: #a21caf;
+  --jui-code-punctuation: #4b5563;
+}
+
+.jui-code-input__boot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jui-code-input__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--j-text);
+}
+
+.jui-code-input__req {
+  color: var(--j-danger);
+}
+
+.jui-code-input__meta {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.jui-code-input__lang {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--jui-code-muted);
+}
+
+.jui-code-input__editor {
+  position: relative;
+  display: grid;
+  min-width: 0;
+}
+
+.jui-code-input__highlight,
+.jui-code-input__field {
+  grid-area: 1 / 1;
+  width: 100%;
+  min-height: 8rem;
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--jui-code-border);
+  border-radius: var(--j-radius-sm);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  tab-size: 2;
+  box-sizing: border-box;
+}
+
+.jui-code-input__highlight {
+  overflow: hidden;
+  border-color: transparent;
+  color: var(--jui-code-fg);
+  background: var(--jui-code-bg);
+  pointer-events: none;
+}
+
+.jui-code-input__field {
+  position: relative;
+  z-index: 1;
+  resize: vertical;
+  outline: none;
+  color: transparent;
+  caret-color: var(--jui-code-fg);
+  background: transparent;
+}
+
+.jui-code-input.is-empty .jui-code-input__field,
+.jui-code-input.no-highlight .jui-code-input__field {
+  color: var(--jui-code-fg);
+}
+
+.jui-code-input.no-highlight .jui-code-input__highlight {
+  visibility: hidden;
+}
+
+.jui-code-input__field::placeholder {
+  color: var(--jui-code-muted);
+  opacity: 1;
+}
+
+.jui-code-input__field:focus {
+  border-color: var(--j-primary);
+  box-shadow: var(--j-focus);
+}
+
+.jui-code-input.has-error .jui-code-input__field {
+  border-color: var(--j-danger);
+}
+
+.jui-code-input.is-disabled {
+  opacity: 0.65;
+}
+
+.jui-code-token--comment { color: var(--jui-code-comment); }
+.jui-code-token--string { color: var(--jui-code-string); }
+.jui-code-token--number { color: var(--jui-code-number); }
+.jui-code-token--keyword { color: var(--jui-code-keyword); }
+.jui-code-token--literal { color: var(--jui-code-literal); }
+.jui-code-token--function { color: var(--jui-code-function); }
+.jui-code-token--property { color: var(--jui-code-property); }
+.jui-code-token--selector { color: var(--jui-code-selector); }
+.jui-code-token--tag { color: var(--jui-code-tag); }
+.jui-code-token--attr { color: var(--jui-code-attr); }
+.jui-code-token--decorator { color: var(--jui-code-decorator); }
+.jui-code-token--punctuation { color: var(--jui-code-punctuation); }
+
+.jui-code-input__hint,
+.jui-code-input__error {
+  font-size: 0.8rem;
+}
+
+.jui-code-input__hint {
+  color: var(--j-muted);
+}
+
+.jui-code-input__error {
+  color: var(--j-danger);
+  font-weight: 600;
+}
+</style>

@@ -1,0 +1,78 @@
+import { read } from '../internal/utils.js'
+
+export <contract>
+  props: {
+    message: { type: 'string', default: 'This is a message.' }
+    type: { type: 'string', default: 'info' }
+    plain: { type: 'boolean', default: false }
+    showClose: { type: 'boolean', default: false }
+  }
+  emits: ['close']
+</contract>
+
+function typeOf(value) {
+  const next = String(read(value) || 'info')
+  if (next === 'success' || next === 'warning' || next === 'error' || next === 'primary' || next === 'info') return next
+  if (next === 'warn') return 'warning'
+  if (next === 'danger') return 'error'
+  return 'info'
+}
+
+export <view>
+  <div
+    class="jui-message-demo"
+    class-jui-message-demo--success=${() => typeOf(type) === 'success'}
+    class-jui-message-demo--warning=${() => typeOf(type) === 'warning'}
+    class-jui-message-demo--error=${() => typeOf(type) === 'error'}
+    class-jui-message-demo--primary=${() => typeOf(type) === 'primary'}
+    class-jui-message-demo--plain=${() => !!read(plain)}
+    role="status"
+  >
+    <span class="jui-message-demo__text">${() => read(message)}</span>
+    #if read(showClose)
+      <button type="button" class="jui-message-demo__close" aria-label="Close" on-click=${() => emit('close')}>×</button>
+    #end
+  </div>
+</view>
+
+export <style>
+.jui-message-demo {
+  --jui-message-tone: var(--j-info);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--jui-message-tone) 35%, var(--j-border));
+  border-radius: var(--j-radius);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  box-shadow: var(--j-shadow);
+  border-left-width: 3px;
+  border-left-color: var(--jui-message-tone);
+}
+
+.jui-message-demo--success { --jui-message-tone: var(--j-success, var(--j-primary)); }
+.jui-message-demo--warning { --jui-message-tone: var(--j-warn); }
+.jui-message-demo--error { --jui-message-tone: var(--j-danger); }
+.jui-message-demo--primary { --jui-message-tone: var(--j-primary); }
+
+.jui-message-demo--plain {
+  background: color-mix(in srgb, var(--jui-message-tone) 10%, var(--j-surface));
+  box-shadow: none;
+}
+
+.jui-message-demo__text {
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.jui-message-demo__close {
+  border: 0;
+  background: transparent;
+  color: var(--j-muted);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+</style>
