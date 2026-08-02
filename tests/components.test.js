@@ -2959,6 +2959,11 @@ describe('@jacare/ui components', () => {
     const Statistic = await loadComponent('Statistic')
     const host = document.createElement('div')
     const value = pulse(12840.5)
+    const format = (num, digits) =>
+      num.toLocaleString(undefined, {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
+      })
 
     Statistic.mount(host, {
       title: 'Revenue',
@@ -2970,10 +2975,10 @@ describe('@jacare/ui components', () => {
 
     expect(host.querySelector('.jui-statistic__title').textContent).toBe('Revenue')
     expect(host.querySelector('.jui-statistic__prefix').textContent).toBe('$')
-    expect(host.querySelector('.jui-statistic__value').textContent).toBe('12,840.5')
+    expect(host.querySelector('.jui-statistic__value').textContent).toBe(format(12840.5, 1))
 
     value.set(99.1)
-    expect(host.querySelector('.jui-statistic__value').textContent).toBe('99.1')
+    expect(host.querySelector('.jui-statistic__value').textContent).toBe(format(99.1, 1))
   })
 
   it('Statistic count-up animation advances toward the target', async () => {
@@ -2984,6 +2989,11 @@ describe('@jacare/ui components', () => {
     const originalCAF = globalThis.cancelAnimationFrame
     const originalNow = performance.now
     let now = 0
+    const format = (num) =>
+      num.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      })
 
     performance.now = () => now
     globalThis.requestAnimationFrame = (cb) => {
@@ -3000,17 +3010,18 @@ describe('@jacare/ui components', () => {
         duration: 1000,
       })
 
-      expect(host.querySelector('.jui-statistic__value').textContent).toBe('0')
+      expect(host.querySelector('.jui-statistic__value').textContent).toBe(format(0))
       expect(frames.length).toBe(1)
 
       now = 500
       frames.shift()(now)
-      expect(Number(host.querySelector('.jui-statistic__value').textContent.replace(/,/g, ''))).toBeGreaterThan(0)
-      expect(Number(host.querySelector('.jui-statistic__value').textContent.replace(/,/g, ''))).toBeLessThan(100)
+      const mid = host.querySelector('.jui-statistic__value').textContent
+      expect(mid).not.toBe(format(0))
+      expect(mid).not.toBe(format(100))
 
       now = 1000
       frames.shift()(now)
-      expect(host.querySelector('.jui-statistic__value').textContent).toBe('100')
+      expect(host.querySelector('.jui-statistic__value').textContent).toBe(format(100))
     } finally {
       globalThis.requestAnimationFrame = originalRAF
       globalThis.cancelAnimationFrame = originalCAF
