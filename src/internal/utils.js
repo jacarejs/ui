@@ -18,3 +18,18 @@ export function coalesce(...values) {
   }
   return undefined
 }
+
+export function isNarrowViewport(maxWidth = 640) {
+  if (typeof matchMedia !== 'function') return false
+  return matchMedia(`(max-width: ${maxWidth}px)`).matches
+}
+
+export function isCoarsePointer() {
+  if (typeof matchMedia !== 'function') return false
+  return matchMedia('(pointer: coarse)').matches
+}
+
+export function canHoverTrigger() {
+  if (typeof matchMedia !== 'function') return true
+  return matchMedia('(hover: hover) and (pointer: fine)').matches
+}
