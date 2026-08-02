@@ -1,0 +1,187 @@
+import Card from '@jacare/ui/components/Card.jcr'
+import ChartHeatmap from '@jacare/ui/components/ChartHeatmap.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  inCard,
+  points,
+  sized,
+  titled,
+  weekly,
+} from '../../examples/chart-heatmap.js'
+
+const contract = getContract('ChartHeatmap')
+const navLinks = previousNext('/components/chart-heatmap')
+
+const data = {
+  x: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+  y: ['Morning', 'Afternoon', 'Evening'],
+  values: [
+    [12, 18, 22, 16, 10],
+    [28, 34, 40, 36, 24],
+    [16, 20, 18, 14, 12],
+  ],
+}
+
+const pointsData = [
+  { x: 'A', y: 'Row 1', value: 12 },
+  { x: 'B', y: 'Row 1', value: 28 },
+  { x: 'C', y: 'Row 1', value: 18 },
+  { x: 'A', y: 'Row 2', value: 34 },
+  { x: 'B', y: 'Row 2', value: 22 },
+  { x: 'C', y: 'Row 2', value: 40 },
+]
+
+const weeklyData = {
+  x: ['W1', 'W2', 'W3', 'W4'],
+  y: ['North', 'South', 'East', 'West'],
+  values: [
+    [42, 38, 51, 47],
+    [36, 44, 39, 41],
+    [48, 52, 46, 50],
+    [30, 34, 28, 32],
+  ],
+}
+
+const compactData = {
+  x: ['A', 'B', 'C'],
+  y: ['1', '2'],
+  values: [
+    [8, 12, 10],
+    [14, 16, 11],
+  ],
+}
+
+const a11y = [
+  'SVG root uses role="img" with an aria-label from title',
+  'Each cell exposes row, column, and value in a title tooltip',
+  'Do not rely on color alone — keep captions for high and low meaning',
+  'Use title and caption to explain what warm and cool cells represent',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ChartHeatmap</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Charts'}
+      :title=${'ChartHeatmap'}
+      :description=${'Matrix intensity grid with a continuous color scale for row/column comparisons.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Pass x, y, and values matrix. Optional title, caption, width, and height frame the plot.'}
+      :code=${basic}
+      :filename=${'chart-heatmap-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <ChartHeatmap
+        :data=${data}
+        :title=${'Heatmap'}
+        :caption=${'Session activity by day'}
+        :width=${480}
+        :height=${300}
+      />
+    </Demo>
+
+    <DocsSection :id=${'data'} :title=${'Data shapes'}>
+      <Demo
+        :id=${'points'}
+        :title=${'Point array'}
+        :lead=${'Pass sparse { x, y, value } rows when the grid is not dense.'}
+        :code=${points}
+        :filename=${'chart-heatmap-points.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartHeatmap :data=${pointsData} :title=${'Point array'} :caption=${'Sparse x/y/value rows'} />
+      </Demo>
+
+      <Demo
+        :id=${'weekly'}
+        :title=${'Regional weekly load'}
+        :lead=${'Larger matrices work the same — labels scale with the grid.'}
+        :code=${weekly}
+        :filename=${'chart-heatmap-weekly.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartHeatmap
+          :data=${weeklyData}
+          :title=${'Regional weekly load'}
+          :caption=${'Higher values skew warm'}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'options'} :title=${'Options'}>
+      <Demo
+        :id=${'titled'}
+        :title=${'Title and caption'}
+        :lead=${'title sets the accessible label; caption explains the color scale.'}
+        :code=${titled}
+        :filename=${'chart-heatmap-titled.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartHeatmap
+          :data=${data}
+          :title=${'Support queue depth'}
+          :caption=${'Warm cells = higher ticket volume'}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'sized'}
+        :title=${'Custom size'}
+        :lead=${'width and height control the SVG viewBox and frame.'}
+        :code=${sized}
+        :filename=${'chart-heatmap-sized.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartHeatmap
+          :data=${compactData}
+          :title=${'Compact size'}
+          :width=${320}
+          :height=${200}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'in-card'}
+        :title=${'Inside Card'}
+        :lead=${'Compose ChartHeatmap in a Card for engagement panels.'}
+        :code=${inCard}
+        :filename=${'chart-heatmap-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Engagement'} :subtitle=${'By day and time slot'}>
+          <ChartHeatmap :data=${data} :height=${260} />
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

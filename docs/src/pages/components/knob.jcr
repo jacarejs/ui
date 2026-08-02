@@ -1,0 +1,128 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Knob from '@jacare/ui/components/Knob.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  colorExample,
+  minMax,
+  reactive,
+  sizeExample,
+  states,
+  stepExample,
+  strokeExample,
+  templateExample,
+} from '../../examples/knob.js'
+
+const contract = getContract('Knob')
+const navLinks = previousNext('/components/knob')
+
+const basicValue = pulse(50)
+const minMaxValue = pulse(10)
+const stepValue = pulse(50)
+const templateValue = pulse(60)
+const strokeValue = pulse(40)
+const sizeValue = pulse(60)
+const colorValue = pulse(50)
+const reactiveValue = pulse(0)
+const readonlyValue = pulse(50)
+const disabledValue = pulse(75)
+
+const a11y = [
+  'SVG control uses role="slider" with aria-valuemin, aria-valuemax, and aria-valuenow',
+  'Arrow keys step the value; Home and End jump to bounds; Page Up/Down move by 10 steps',
+  'readonly keeps focus semantics but blocks edits; disabled removes interaction',
+]
+
+function bump(delta) {
+  const next = Math.min(100, Math.max(0, Number(reactiveValue()) + delta))
+  reactiveValue.set(next)
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Knob</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Selection'}
+      :title=${'Knob'}
+      :description=${'Dial-style number input — drag, keyboard, step, colors, and value templates.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :lead=${'Bind a numeric pulse — click or drag the dial to change the value.'} :code=${basic} :filename=${'knob-basic.jcr'}>
+      <Knob bind-value=${basicValue} />
+    </Demo>
+
+    <Demo :id=${'minmax'} :title=${'Min / Max'} :lead=${'Boundaries default to 0–100 and can be any numeric range.'} :code=${minMax} :filename=${'knob-minmax.jcr'}>
+      <Knob :min=${-50} :max=${50} bind-value=${minMaxValue} />
+    </Demo>
+
+    <Demo :id=${'step'} :title=${'Step'} :lead=${'step controls pointer and keyboard increments.'} :code=${stepExample} :filename=${'knob-step.jcr'}>
+      <Knob :step=${10} bind-value=${stepValue} />
+    </Demo>
+
+    <Demo :id=${'template'} :title=${'Value template'} :lead=${'valueTemplate replaces {value} in the center label.'} :code=${templateExample} :filename=${'knob-template.jcr'}>
+      <Knob :valueTemplate=${'{value}%'} bind-value=${templateValue} />
+    </Demo>
+
+    <Demo :id=${'stroke'} :title=${'Stroke'} :lead=${'strokeWidth sets the arc thickness in SVG user units.'} :code=${strokeExample} :filename=${'knob-stroke.jcr'}>
+      <Knob :strokeWidth=${5} bind-value=${strokeValue} />
+    </Demo>
+
+    <Demo :id=${'size'} :title=${'Size'} :lead=${'size is the diameter in pixels.'} :code=${sizeExample} :filename=${'knob-size.jcr'}>
+      <Knob :size=${200} bind-value=${sizeValue} />
+    </Demo>
+
+    <Demo :id=${'color'} :title=${'Color'} :lead=${'Customize valueColor, rangeColor, and textColor.'} :code=${colorExample} :filename=${'knob-color.jcr'}>
+      <Knob
+        :valueColor=${'PeachPuff'}
+        :rangeColor=${'MediumTurquoise'}
+        :textColor=${'#0f172a'}
+        bind-value=${colorValue}
+      />
+    </Demo>
+
+    <Demo :id=${'reactive'} :title=${'Reactive'} :lead=${'Use readonly and external buttons when the dial should mirror other controls.'} :code=${reactive} :filename=${'knob-reactive.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <Knob :size=${150} :readonly=${true} bind-value=${reactiveValue} />
+        <Stack :direction=${'row'} :gap=${'sm'}>
+          <Button
+            :label=${'+'}
+            :iconOnly=${true}
+            :disabled=${() => reactiveValue() >= 100}
+            on-click=${() => bump(1)}
+          />
+          <Button
+            :label=${'−'}
+            :iconOnly=${true}
+            :disabled=${() => reactiveValue() <= 0}
+            on-click=${() => bump(-1)}
+          />
+        </Stack>
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'states'} :title=${'Read only and disabled'} :code=${states} :filename=${'knob-states.jcr'} :layout=${'stack'}>
+      <Stack :direction=${'row'} :gap=${'lg'}>
+        <Knob :label=${'Read only'} :readonly=${true} bind-value=${readonlyValue} />
+        <Knob :label=${'Disabled'} :disabled=${true} bind-value=${disabledValue} />
+      </Stack>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

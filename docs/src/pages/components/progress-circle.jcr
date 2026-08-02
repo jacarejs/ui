@@ -1,0 +1,179 @@
+import ProgressCircle from '@jacare/ui/components/ProgressCircle.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  indeterminate,
+  sizes,
+  slot,
+  thickness,
+  tones,
+} from '../../examples/progress-circle.js'
+
+const contract = getContract('ProgressCircle')
+const navLinks = previousNext('/components/progress-circle')
+const a11y = [
+  'Expose role=progressbar with aria-valuemin, aria-valuemax, and aria-valuenow when determinate',
+  'Provide label for indeterminate loading states',
+  'Do not rely on the center percentage alone when the task meaning needs context',
+  'Respect prefers-reduced-motion for indeterminate spin animation',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ProgressCircle</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Feedback'}
+      :title=${'ProgressCircle'}
+      :description=${'Circular progress with a clear center label, soft track, rounded stroke, semantic tones, and an indeterminate spin for loading.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Pass value (and optional max) to fill the ring. The center shows the computed percent by default.'}
+      :code=${basic}
+      :filename=${'progress-circle-basic.jcr'}
+      :layout=${'stack'}
+      :align=${'center'}
+    >
+      <ProgressCircle :value=${72} />
+    </Demo>
+
+    <Demo
+      :id=${'sizes'}
+      :title=${'Sizes'}
+      :lead=${'Presets sm / md / lg, or any pixel size like 96px.'}
+      :code=${sizes}
+      :filename=${'progress-circle-sizes.jcr'}
+      :layout=${'stack'}
+      :align=${'center'}
+    >
+      <Stack :direction=${'row'} :gap=${'xl'} :wrap=${true} :align=${'end'} :justify=${'center'}>
+        <Stack :gap=${'sm'} :align=${'center'}>
+          <ProgressCircle :value=${64} :size=${'sm'} />
+          <Text :tone=${'muted'} :size=${'sm'}>sm</Text>
+        </Stack>
+        <Stack :gap=${'sm'} :align=${'center'}>
+          <ProgressCircle :value=${64} />
+          <Text :tone=${'muted'} :size=${'sm'}>md</Text>
+        </Stack>
+        <Stack :gap=${'sm'} :align=${'center'}>
+          <ProgressCircle :value=${64} :size=${'lg'} />
+          <Text :tone=${'muted'} :size=${'sm'}>lg</Text>
+        </Stack>
+        <Stack :gap=${'sm'} :align=${'center'}>
+          <ProgressCircle :value=${64} :size=${'96px'} />
+          <Text :tone=${'muted'} :size=${'sm'}>96px</Text>
+        </Stack>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'tones'}
+      :title=${'Tones'}
+      :lead=${'primary, success, warn, and danger tint both the stroke and the soft track.'}
+      :code=${tones}
+      :filename=${'progress-circle-tones.jcr'}
+      :layout=${'stack'}
+      :align=${'center'}
+    >
+      <Stack :direction=${'row'} :gap=${'xl'} :wrap=${true} :justify=${'center'}>
+        <Stack :gap=${'sm'} :align=${'center'}>
+          <ProgressCircle :value=${40} :tone=${'primary'} />
+          <Text :tone=${'muted'} :size=${'sm'}>primary</Text>
+        </Stack>
+        <Stack :gap=${'sm'} :align=${'center'}>
+          <ProgressCircle :value=${72} :tone=${'success'} />
+          <Text :tone=${'muted'} :size=${'sm'}>success</Text>
+        </Stack>
+        <Stack :gap=${'sm'} :align=${'center'}>
+          <ProgressCircle :value=${55} :tone=${'warn'} />
+          <Text :tone=${'muted'} :size=${'sm'}>warn</Text>
+        </Stack>
+        <Stack :gap=${'sm'} :align=${'center'}>
+          <ProgressCircle :value=${28} :tone=${'danger'} />
+          <Text :tone=${'muted'} :size=${'sm'}>danger</Text>
+        </Stack>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'thickness'}
+      :title=${'Thickness'}
+      :lead=${'thickness is a fraction of the diameter (0.04–0.35). Default is 0.1.'}
+      :code=${thickness}
+      :filename=${'progress-circle-thickness.jcr'}
+      :layout=${'stack'}
+      :align=${'center'}
+    >
+      <Stack :direction=${'row'} :gap=${'xl'} :wrap=${true} :justify=${'center'}>
+        <Stack :gap=${'sm'} :align=${'center'}>
+          <ProgressCircle :value=${50} :thickness=${0.06} />
+          <Text :tone=${'muted'} :size=${'sm'}>0.06</Text>
+        </Stack>
+        <Stack :gap=${'sm'} :align=${'center'}>
+          <ProgressCircle :value=${50} :thickness=${0.1} />
+          <Text :tone=${'muted'} :size=${'sm'}>0.1</Text>
+        </Stack>
+        <Stack :gap=${'sm'} :align=${'center'}>
+          <ProgressCircle :value=${50} :thickness=${0.18} />
+          <Text :tone=${'muted'} :size=${'sm'}>0.18</Text>
+        </Stack>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'indeterminate'}
+      :title=${'Indeterminate'}
+      :lead=${'Hide the percent and spin a short arc while work is in progress.'}
+      :code=${indeterminate}
+      :filename=${'progress-circle-indeterminate.jcr'}
+      :layout=${'stack'}
+      :align=${'center'}
+    >
+      <Stack :gap=${'sm'} :align=${'center'}>
+        <ProgressCircle :indeterminate=${true} :label=${'Loading profile'} />
+        <Text :tone=${'muted'} :size=${'sm'}>Loading profile…</Text>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'slot'}
+      :title=${'Center slot'}
+      :lead=${'Replace the percent with custom center content. Set showValue false when the slot carries the meaning.'}
+      :code=${slot}
+      :filename=${'progress-circle-slot.jcr'}
+      :layout=${'stack'}
+      :align=${'center'}
+    >
+      <ProgressCircle :value=${86} :showValue=${false} :size=${'lg'} :tone=${'success'}>
+        <span>OK</span>
+      </ProgressCircle>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

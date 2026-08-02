@@ -1,0 +1,268 @@
+import { pulse } from '@jacare/core'
+import Dropdown from '@jacare/ui/components/Dropdown.jcr'
+import DropdownMenu from '@jacare/ui/components/DropdownMenu.jcr'
+import DropdownItem from '@jacare/ui/components/DropdownItem.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import Space from '@jacare/ui/components/Space.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  disabled,
+  disabledItems,
+  hideOnClick,
+  hover,
+  placements,
+  scrollable,
+  textTrigger,
+  topPlacements,
+} from '../../examples/dropdown.js'
+
+const contract = getContract('Dropdown')
+const itemContract = getContract('DropdownItem')
+const navLinks = previousNext('/components/dropdown')
+const command = pulse('No command yet')
+const picks = pulse([])
+
+const a11y = [
+  'The native details/summary trigger exposes expanded state',
+  'Items use menu and menuitem roles with real buttons',
+  'Disabled commands remain visible but cannot be focused or selected',
+  'Escape closes an open click-triggered menu',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Dropdown</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Navigation'}
+      :title=${'Dropdown'}
+      :description=${'Action menu with click or hover triggers, placements, disabled state, hideOnClick, danger items, and scrollable panels. Nested Button triggers open reliably.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Click trigger'}
+      :lead=${'Click the Button (or any trigger content) to open. DropdownItem command values bubble through the parent command event.'}
+      :code=${basic}
+      :filename=${'dropdown-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <div style="display:grid;gap:0.75rem;min-height:12rem;align-content:start">
+        <Dropdown on-command=${(value) => command.set(String(value))}>
+          <Button>Actions</Button>
+          <DropdownMenu slot="dropdown">
+            <DropdownItem :command=${'edit'}>Edit</DropdownItem>
+            <DropdownItem :command=${'duplicate'}>Duplicate</DropdownItem>
+            <DropdownItem :command=${'archive'} :divided=${true}>Archive</DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
+        <Text :tone=${'muted'}>Last command: ${() => command()}</Text>
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'triggers'} :title=${'Triggers'}>
+      <Demo
+        :id=${'hover'}
+        :title=${'Hover trigger'}
+        :lead=${'Hover opens while the pointer remains over the trigger or panel. Clicking an item keeps the menu open until the pointer leaves. On coarse pointers, click still works.'}
+        :code=${hover}
+        :filename=${'dropdown-hover.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="min-height:10rem">
+          <Dropdown :trigger=${'hover'}>
+            <Button :variant=${'secondary'}>Hover for options</Button>
+            <DropdownMenu slot="dropdown">
+              <DropdownItem :command=${'preview'}>Preview</DropdownItem>
+              <DropdownItem :command=${'share'}>Share</DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'text-trigger'}
+        :title=${'Custom trigger'}
+        :lead=${'Any slotted content can act as the trigger — not only Button.'}
+        :code=${textTrigger}
+        :filename=${'dropdown-text-trigger.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="min-height:10rem">
+          <Dropdown>
+            <span style="font-weight:700;color:var(--j-primary);cursor:pointer">More ▾</span>
+            <DropdownMenu slot="dropdown">
+              <DropdownItem :command=${'docs'}>Docs</DropdownItem>
+              <DropdownItem :command=${'api'}>API</DropdownItem>
+              <DropdownItem :command=${'support'}>Support</DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'placements'} :title=${'Placements'}>
+      <Demo
+        :id=${'bottom-placements'}
+        :title=${'Bottom alignment'}
+        :lead=${'Align the menu to the start, center, or end of its trigger.'}
+        :code=${placements}
+        :filename=${'dropdown-placements.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="min-height:10rem">
+          <Space :wrap=${true}>
+            <Dropdown :placement=${'bottom-start'}>
+              <Button :size=${'sm'}>Bottom start</Button>
+              <DropdownMenu slot="dropdown"><DropdownItem :command=${'one'}>First action</DropdownItem></DropdownMenu>
+            </Dropdown>
+            <Dropdown :placement=${'bottom'}>
+              <Button :size=${'sm'}>Bottom</Button>
+              <DropdownMenu slot="dropdown"><DropdownItem :command=${'center'}>Centered</DropdownItem></DropdownMenu>
+            </Dropdown>
+            <Dropdown :placement=${'bottom-end'}>
+              <Button :size=${'sm'}>Bottom end</Button>
+              <DropdownMenu slot="dropdown"><DropdownItem :command=${'two'}>Second action</DropdownItem></DropdownMenu>
+            </Dropdown>
+          </Space>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'top-placements'}
+        :title=${'Top alignment'}
+        :lead=${'Use top placements when the trigger sits near the bottom edge.'}
+        :code=${topPlacements}
+        :filename=${'dropdown-top-placements.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="min-height:10rem;display:flex;align-items:flex-end">
+          <Space :wrap=${true}>
+            <Dropdown :placement=${'top-start'}>
+              <Button :size=${'sm'}>Top start</Button>
+              <DropdownMenu slot="dropdown"><DropdownItem :command=${'start'}>Aligned start</DropdownItem></DropdownMenu>
+            </Dropdown>
+            <Dropdown :placement=${'top'}>
+              <Button :size=${'sm'}>Top</Button>
+              <DropdownMenu slot="dropdown"><DropdownItem :command=${'mid'}>Aligned center</DropdownItem></DropdownMenu>
+            </Dropdown>
+            <Dropdown :placement=${'top-end'}>
+              <Button :size=${'sm'}>Top end</Button>
+              <DropdownMenu slot="dropdown"><DropdownItem :command=${'end'}>Aligned end</DropdownItem></DropdownMenu>
+            </Dropdown>
+          </Space>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'items'} :title=${'Items and behavior'}>
+      <Demo
+        :id=${'disabled-items'}
+        :title=${'Disabled and danger items'}
+        :lead=${'disabled keeps an item visible but inert. danger styles destructive commands.'}
+        :code=${disabledItems}
+        :filename=${'dropdown-disabled-items.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="min-height:12rem">
+          <Dropdown>
+            <Button :variant=${'secondary'}>Account</Button>
+            <DropdownMenu slot="dropdown">
+              <DropdownItem :command=${'profile'}>Profile</DropdownItem>
+              <DropdownItem :command=${'billing'} :disabled=${true}>Billing (soon)</DropdownItem>
+              <DropdownItem :command=${'delete'} :divided=${true} :danger=${true}>Delete account</DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'hide-on-click'}
+        :title=${'Keep open on select'}
+        :lead=${'Set hideOnClick to false when selecting should not dismiss the menu.'}
+        :code=${hideOnClick}
+        :filename=${'dropdown-hide-on-click.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="display:grid;gap:0.75rem;min-height:12rem;align-content:start">
+          <Dropdown :hideOnClick=${false} on-command=${(value) => picks.set([...picks(), value])}>
+            <Button>Multi-pick</Button>
+            <DropdownMenu slot="dropdown">
+              <DropdownItem :command=${'alpha'}>Alpha</DropdownItem>
+              <DropdownItem :command=${'beta'}>Beta</DropdownItem>
+              <DropdownItem :command=${'gamma'}>Gamma</DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+          <Text :tone=${'muted'}>Picked: ${() => picks().join(', ') || '—'}</Text>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'scrollable'}
+        :title=${'Scrollable panel'}
+        :lead=${'maxHeight caps the menu and enables overflow scrolling for long lists.'}
+        :code=${scrollable}
+        :filename=${'dropdown-scrollable.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="min-height:12rem">
+          <Dropdown :maxHeight=${160}>
+            <Button :variant=${'secondary'}>Long list</Button>
+            <DropdownMenu slot="dropdown">
+              <DropdownItem :command=${'1'}>Item 1</DropdownItem>
+              <DropdownItem :command=${'2'}>Item 2</DropdownItem>
+              <DropdownItem :command=${'3'}>Item 3</DropdownItem>
+              <DropdownItem :command=${'4'}>Item 4</DropdownItem>
+              <DropdownItem :command=${'5'}>Item 5</DropdownItem>
+              <DropdownItem :command=${'6'}>Item 6</DropdownItem>
+              <DropdownItem :command=${'7'}>Item 7</DropdownItem>
+              <DropdownItem :command=${'8'}>Item 8</DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'disabled'}
+        :title=${'Disabled dropdown'}
+        :lead=${'disabled blocks open interactions on the whole control.'}
+        :code=${disabled}
+        :filename=${'dropdown-disabled.jcr'}
+        :layout=${'stack'}
+      >
+        <Dropdown :disabled=${true}>
+          <Button>Disabled menu</Button>
+          <DropdownMenu slot="dropdown">
+            <DropdownItem :command=${'noop'}>Cannot open</DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+      <div style="height:1rem"></div>
+      <PropsTable :contract=${itemContract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

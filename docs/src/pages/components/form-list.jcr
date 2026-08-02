@@ -1,0 +1,218 @@
+import { pulse } from '@jacare/core'
+import FormList from '@jacare/ui/components/FormList.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  disabledExample,
+  fixedOrder,
+  hintAndError,
+  limits,
+  reactive,
+  strings,
+} from '../../examples/form-list.js'
+
+const contract = getContract('FormList')
+const navLinks = previousNext('/components/form-list')
+
+const contacts = pulse([{ name: 'Ada Lovelace', email: 'ada@example.com' }])
+const tags = pulse(['Design', 'Accessibility'])
+const dependents = pulse([{ name: '' }])
+const lineItems = pulse([
+  { product: 'Starter kit', qty: '2' },
+  { product: 'Support plan', qty: '1' },
+])
+const hinted = pulse([{ name: 'Pat' }])
+const invalid = pulse([])
+const locked = pulse([{ name: 'Grace Hopper', email: 'grace@example.com' }])
+const team = pulse([{ name: 'Ada Lovelace', role: 'Engineer' }])
+const lastEvent = pulse('Idle')
+
+const contactFields = [
+  { key: 'name', label: 'Name', placeholder: 'Full name' },
+  { key: 'email', label: 'Email', placeholder: 'you@example.com', type: 'email' },
+]
+const lineFields = [
+  { key: 'product', label: 'Product' },
+  { key: 'qty', label: 'Qty', type: 'number' },
+]
+const teamFields = [
+  { key: 'name', label: 'Name' },
+  { key: 'role', label: 'Role' },
+]
+
+const a11y = [
+  'Each row exposes Move up, Move down, and Remove with clear aria-labels',
+  'Add is disabled when max is reached; Remove respects min',
+  'String mode inputs keep an aria-label from the item heading',
+  'error announces with role="alert"',
+  'disabled blocks add, remove, reorder, and field edits',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>FormList</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Form'}
+      :title=${'FormList'}
+      :description=${'Dynamic rows with add, remove, and reorder — contacts, line items, dependents. Bind an array and describe fields.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Object rows'}
+      :lead=${'Pass fields to edit object rows. min/max gate add and remove.'}
+      :code=${basic}
+      :filename=${'form-list-basic.jcr'}
+    >
+      <FormList
+        :label=${'Emergency contacts'}
+        :fields=${contactFields}
+        :min=${1}
+        :max=${5}
+        :addLabel=${'Add contact'}
+        :itemLabel=${'Contact'}
+        bind-value=${contacts}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'strings'}
+      :title=${'String rows'}
+      :lead=${'Omit fields to bind a string array — one input per row.'}
+      :code=${strings}
+      :filename=${'form-list-strings.jcr'}
+    >
+      <FormList
+        :label=${'Skills'}
+        :addLabel=${'Add skill'}
+        :itemLabel=${'Skill'}
+        :reorderable=${true}
+        bind-value=${tags}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'limits'}
+      :title=${'Min and max'}
+      :lead=${'Keep at least min rows; stop adding once max is reached.'}
+      :code=${limits}
+      :filename=${'form-list-limits.jcr'}
+    >
+      <FormList
+        :label=${'Dependents'}
+        :fields=${[{ key: 'name', label: 'Full name' }]}
+        :min=${1}
+        :max=${3}
+        :hint=${'Between 1 and 3 dependents'}
+        bind-value=${dependents}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'fixed-order'}
+      :title=${'Fixed order'}
+      :lead=${'reorderable=false hides the move controls when sequence must stay fixed.'}
+      :code=${fixedOrder}
+      :filename=${'form-list-fixed-order.jcr'}
+    >
+      <FormList
+        :label=${'Line items'}
+        :fields=${lineFields}
+        :reorderable=${false}
+        :addLabel=${'Add line'}
+        :itemLabel=${'Line'}
+        :hint=${'reorderable=false hides move controls'}
+        bind-value=${lineItems}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'hint-error'}
+      :title=${'Hint and error'}
+      :lead=${'hint guides setup; error replaces it and marks the list invalid.'}
+      :code=${hintAndError}
+      :filename=${'form-list-states.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'lg'}>
+        <FormList
+          :label=${'Guests'}
+          :fields=${[{ key: 'name', label: 'Name' }]}
+          :hint=${'Add everyone who needs a badge'}
+          :addLabel=${'Add guest'}
+          :itemLabel=${'Guest'}
+          bind-value=${hinted}
+        />
+        <FormList
+          :label=${'Required attendees'}
+          :fields=${[{ key: 'name', label: 'Name' }]}
+          :min=${1}
+          :error=${'Add at least one attendee'}
+          :addLabel=${'Add attendee'}
+          :itemLabel=${'Attendee'}
+          bind-value=${invalid}
+        />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'disabled'}
+      :title=${'Disabled'}
+      :lead=${'Freeze the list after publish — edits, add, remove, and reorder are blocked.'}
+      :code=${disabledExample}
+      :filename=${'form-list-disabled.jcr'}
+    >
+      <FormList
+        :label=${'Archived contacts'}
+        :fields=${contactFields}
+        :disabled=${true}
+        :hint=${'Locked while the roster is published'}
+        bind-value=${locked}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'reactive'}
+      :title=${'Events'}
+      :lead=${'Listen to add, remove, and reorder while the bound array stays in sync.'}
+      :code=${reactive}
+      :filename=${'form-list-reactive.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <FormList
+          :label=${'Team'}
+          :fields=${teamFields}
+          :max=${6}
+          :addLabel=${'Add member'}
+          :itemLabel=${'Member'}
+          bind-value=${team}
+          on-add=${({ index }) => lastEvent.set('Added member ' + (index + 1))}
+          on-remove=${({ index }) => lastEvent.set('Removed index ' + index)}
+          on-reorder=${({ from, to }) => lastEvent.set('Moved ' + (from + 1) + ' → ' + (to + 1))}
+        />
+        <Text :tone=${'muted'}>
+          ${() => team().length + ' member(s) · ' + lastEvent()}
+        </Text>
+      </Stack>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

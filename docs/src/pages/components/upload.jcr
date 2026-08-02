@@ -1,8 +1,10 @@
 import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
 import Field from '@jacare/ui/components/Field.jcr'
 import Switch from '@jacare/ui/components/Switch.jcr'
 import Stack from '@jacare/ui/components/Stack.jcr'
 import Select from '@jacare/ui/components/Select.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
 import Upload from '@jacare/ui/components/Upload.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
@@ -10,14 +12,21 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
 import {
   basic,
+  disabledExample,
+  documents,
   dragExample,
-  pictureExample,
+  events,
+  limitExample,
   pictureCardExample,
+  pictureExample,
   playgroundCode as buildPlaygroundCode,
+  single,
+  slotExample,
 } from '../../examples/upload.js'
 
 const contract = getContract('Upload')
@@ -39,9 +48,24 @@ const playListType = pulse('picture')
 const playHint = pulse('Drag images here or click to browse')
 
 const basicFiles = pulse([])
+const singleFiles = pulse([])
+const documentFiles = pulse([])
 const dragFiles = pulse([])
 const pictureFiles = pulse([])
 const pictureCardFiles = pulse([])
+const limitFiles = pulse([])
+const limitStatus = pulse('Pick up to 2 images')
+const eventFiles = pulse([])
+const eventStatus = pulse('Waiting')
+const disabledFiles = pulse([])
+const slotFiles = pulse([])
+
+const a11y = [
+  'Drop zone is keyboard activatable and exposes aria-label / aria-disabled',
+  'accept filters by MIME type or extension before files enter the model',
+  'limit emits exceed when the user tries to add more than the allowed count',
+  'remove keeps the file list operable; disabled blocks picking and dropping',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -55,6 +79,22 @@ function playgroundCode() {
   })
 }
 
+function onLimitChange(next) {
+  limitStatus.set(next.length + ' file(s) ready')
+}
+
+function onLimitExceed(payload) {
+  limitStatus.set('Limit exceeded: max ' + payload.limit + ' files')
+}
+
+function onEventChange(next) {
+  eventStatus.set('change: ' + next.length + ' file(s)')
+}
+
+function onEventRemove() {
+  eventStatus.set('remove fired')
+}
+
 export <view>
   <article class="docs-page">
     <nav class="docs-breadcrumb" aria-label="Breadcrumb">
@@ -64,7 +104,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Upload'}
       :title=${'Upload'}
       :description=${'Pick or drag files into a drop zone. Image files get instant blob previews in text, picture, and picture-card layouts.'}
       :status=${'stable'}
@@ -73,7 +113,7 @@ export <view>
     <DocsSection :id=${'playground'} :title=${'Playground'}>
       <div class="docs-alert-play">
         <div class="docs-alert-play__controls docs-panel">
-          <Field :label=${'Accept'} :hint=${'e.g. image/*'} bind-value=${playAccept} />
+          <Field :label=${'Accept'} :hint=${'e.g. image/* or .pdf,.doc'} bind-value=${playAccept} />
           <Field :label=${'Limit'} :type=${'number'} :hint=${'0 = unlimited'} bind-value=${playLimit} />
           <Field :label=${'Hint'} bind-value=${playHint} />
           <Select :label=${'List type'} :options=${listTypeOptions} bind-value=${playListType} />
@@ -106,35 +146,148 @@ export <view>
       <Upload bind-value=${basicFiles} />
     </Demo>
 
-    <Demo :id=${'drag'} :title=${'Drag and drop'} :code=${dragExample} :filename=${'upload-drag.jcr'}>
-      <Upload
-        :drag=${true}
-        :multiple=${true}
-        :accept=${'image/*'}
-        :hint=${'PNG, JPG, or WebP'}
-        bind-value=${dragFiles}
-      />
-    </Demo>
+    <DocsSection :id=${'modes'} :title=${'Modes'}>
+      <Demo
+        :id=${'single'}
+        :title=${'Single file'}
+        :lead=${'Turn off multiple and drag for a simple click-to-pick control.'}
+        :code=${single}
+        :filename=${'upload-single.jcr'}
+        :layout=${'stack'}
+      >
+        <Upload
+          :multiple=${false}
+          :drag=${false}
+          :accept=${'.pdf'}
+          :hint=${'One PDF only'}
+          bind-value=${singleFiles}
+        />
+      </Demo>
 
-    <Demo :id=${'picture'} :title=${'Picture preview'} :code=${pictureExample} :filename=${'upload-picture.jcr'}>
-      <Upload
-        :listType=${'picture'}
-        :multiple=${true}
-        :accept=${'image/*'}
-        :limit=${4}
-        bind-value=${pictureFiles}
-      />
-    </Demo>
+      <Demo
+        :id=${'documents'}
+        :title=${'Documents'}
+        :lead=${'Filter by extension for contracts and text files.'}
+        :code=${documents}
+        :filename=${'upload-documents.jcr'}
+        :layout=${'stack'}
+      >
+        <Upload
+          :multiple=${true}
+          :accept=${'.pdf,.doc,.docx,.txt'}
+          :hint=${'Contracts and notes'}
+          :limit=${5}
+          bind-value=${documentFiles}
+        />
+      </Demo>
 
-    <Demo :id=${'picture-card'} :title=${'Picture card'} :code=${pictureCardExample} :filename=${'upload-picture-card.jcr'}>
-      <Upload
-        :listType=${'picture-card'}
-        :multiple=${true}
-        :accept=${'image/*'}
-        :limit=${6}
-        bind-value=${pictureCardFiles}
-      />
-    </Demo>
+      <Demo :id=${'drag'} :title=${'Drag and drop'} :code=${dragExample} :filename=${'upload-drag.jcr'}>
+        <Upload
+          :drag=${true}
+          :multiple=${true}
+          :accept=${'image/*'}
+          :hint=${'PNG, JPG, or WebP'}
+          bind-value=${dragFiles}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'layouts'} :title=${'List layouts'}>
+      <Demo :id=${'picture'} :title=${'Picture preview'} :code=${pictureExample} :filename=${'upload-picture.jcr'}>
+        <Upload
+          :listType=${'picture'}
+          :multiple=${true}
+          :accept=${'image/*'}
+          :limit=${4}
+          bind-value=${pictureFiles}
+        />
+      </Demo>
+
+      <Demo :id=${'picture-card'} :title=${'Picture card'} :code=${pictureCardExample} :filename=${'upload-picture-card.jcr'}>
+        <Upload
+          :listType=${'picture-card'}
+          :multiple=${true}
+          :accept=${'image/*'}
+          :limit=${6}
+          bind-value=${pictureCardFiles}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'limits'} :title=${'Limit and exceed'}>
+      <Demo
+        :id=${'limit'}
+        :title=${'Max files'}
+        :lead=${'limit caps the list. Extra picks fire on-exceed.'}
+        :code=${limitExample}
+        :filename=${'upload-limit.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'sm'}>
+          <Upload
+            :multiple=${true}
+            :accept=${'image/*'}
+            :limit=${2}
+            :hint=${'Maximum 2 images'}
+            bind-value=${limitFiles}
+            on-change=${onLimitChange}
+            on-exceed=${onLimitExceed}
+          />
+          <Text :tone=${'muted'}>${limitStatus}</Text>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'events'} :title=${'Events'}>
+      <Demo
+        :id=${'events-demo'}
+        :title=${'change and remove'}
+        :code=${events}
+        :filename=${'upload-events.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'sm'}>
+          <Upload
+            :multiple=${true}
+            :listType=${'text'}
+            bind-value=${eventFiles}
+            on-change=${onEventChange}
+            on-remove=${onEventRemove}
+          />
+          <Text :tone=${'muted'}>${eventStatus}</Text>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'custom'} :title=${'Custom trigger'}>
+      <Demo
+        :id=${'slot'}
+        :title=${'Default slot'}
+        :lead=${'Replace the drop copy with your own trigger content.'}
+        :code=${slotExample}
+        :filename=${'upload-slot.jcr'}
+        :layout=${'stack'}
+      >
+        <Upload :multiple=${true} :drag=${false} bind-value=${slotFiles}>
+          <Button :variant=${'secondary'}>Choose files</Button>
+        </Upload>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'states'} :title=${'States'}>
+      <Demo :id=${'disabled'} :title=${'Disabled'} :code=${disabledExample} :filename=${'upload-disabled.jcr'} :layout=${'stack'}>
+        <Upload
+          :disabled=${true}
+          :drag=${true}
+          :hint=${'Uploads are locked for this draft'}
+          bind-value=${disabledFiles}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

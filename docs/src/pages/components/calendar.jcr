@@ -1,0 +1,281 @@
+import { pulse } from '@jacare/core'
+import Calendar from '@jacare/ui/components/Calendar.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  advanced,
+  basic,
+  empty,
+  future,
+  markers,
+  multiple,
+  past,
+  rangeExample,
+  scheduling,
+  tooltipsExample,
+} from '../../examples/calendar.js'
+
+const contract = getContract('Calendar')
+const navLinks = previousNext('/components/calendar')
+
+const selectedDate = pulse('2026-08-01')
+const multiDates = pulse(['2026-08-03', '2026-08-10', '2026-08-17'])
+const rangeDates = pulse(['2026-08-10', '2026-08-16'])
+const markerDay = pulse('2026-08-12')
+const scheduleWindow = pulse(['2026-08-18', '2026-08-22'])
+const sessions = pulse(['2026-08-05', '2026-08-12', '2026-08-26'])
+
+const statusMarkers = [
+  { date: '2026-08-03', color: 'success', label: 'Available' },
+  { date: '2026-08-08', color: 'warn', label: 'Limited' },
+  { date: '2026-08-12', color: 'primary', label: 'Interview' },
+  { date: '2026-08-12', color: 'info', label: 'Follow-up' },
+  { date: '2026-08-19', color: 'danger', label: 'Blocked' },
+  { date: '2026-08-22', color: '#7c3aed', label: 'Launch' },
+]
+
+const tooltipMarkers = [
+  { date: '2026-08-03', color: 'success', label: 'Open slots · 4 remaining' },
+  { date: '2026-08-08', color: 'warn', label: 'Limited · afternoon only' },
+  { date: '2026-08-12', color: 'primary', label: 'Interview · 10:30' },
+  { date: '2026-08-12', color: 'info', label: 'Follow-up call · 15:00' },
+  { date: '2026-08-19', color: 'danger', label: 'Blocked · holiday' },
+  { date: '2026-08-22', color: '#7c3aed', label: 'Product launch' },
+]
+
+const tooltipDay = pulse('2026-08-12')
+
+const scheduleMarkers = [
+  { date: '2026-08-18', color: 'success', label: 'Kickoff' },
+  { date: '2026-08-20', color: 'primary', label: 'Review' },
+  { date: '2026-08-22', color: 'warn', label: 'Deadline' },
+]
+
+const clinicMarkers = [
+  { date: '2026-08-05', color: 'success', label: 'Clinic A' },
+  { date: '2026-08-05', color: 'info', label: 'Clinic B' },
+  { date: '2026-08-12', color: 'primary', label: 'Workshop' },
+  { date: '2026-08-19', color: 'danger', label: 'Holiday' },
+  { date: '2026-08-26', color: 'warn', label: 'Overflow' },
+]
+
+const a11y = [
+  'Provide surrounding context that explains what date is being chosen',
+  'Day controls expose their date and selected state',
+  'Range and multiple modes announce selection progress in the footer hint',
+  'With tooltips, marker labels also appear in the day aria-label — do not rely on color alone',
+]
+
+function joinDates(list) {
+  if (!Array.isArray(list) || !list.length) return '—'
+  return list.join(', ')
+}
+
+function rangeLabel(list) {
+  if (!Array.isArray(list) || list.length !== 2) return 'Pick start and end'
+  return list[0] + ' → ' + list[1]
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Calendar</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Pickers'}
+      :title=${'Calendar'}
+      :description=${'Full month grid for single, multiple, or range selection. Add colored marker dots and floating tooltips for schedules and availability.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Single date'}
+      :lead=${'Bind an ISO date string to receive day changes.'}
+      :code=${basic}
+      :filename=${'calendar-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <div style="width:min(22rem,100%)">
+        <Calendar bind-value=${selectedDate} />
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'multiple'} :title=${'Multiple selection'}>
+      <Demo
+        :id=${'multiple-demo'}
+        :title=${'Pick several days'}
+        :lead=${'Set multiple and bind an array of ISO dates. Tap again to deselect.'}
+        :code=${multiple}
+        :filename=${'calendar-multiple.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="width:min(22rem,100%)">
+          <Stack :gap=${'sm'}>
+            <Calendar :multiple=${true} bind-value=${multiDates} />
+            <Text :tone=${'muted'}>Selected: ${() => joinDates(multiDates)}</Text>
+          </Stack>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'range'} :title=${'Range scheduling'}>
+      <Demo
+        :id=${'range-demo'}
+        :title=${'Stay window'}
+        :lead=${'Set range to choose a start and end date. The inclusive span is highlighted.'}
+        :code=${rangeExample}
+        :filename=${'calendar-range.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="width:min(22rem,100%)">
+          <Stack :gap=${'sm'}>
+            <Calendar :range=${true} bind-value=${rangeDates} />
+            <Text :tone=${'muted'}>Stay: ${() => rangeLabel(rangeDates)}</Text>
+          </Stack>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'markers'} :title=${'Colored markers'}>
+      <Demo
+        :id=${'markers-demo'}
+        :title=${'Status dots'}
+        :lead=${'Pass markers as { date, color, label }. Colors accept tones (success, warn, danger, info, primary) or any CSS color.'}
+        :code=${markers}
+        :filename=${'calendar-markers.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="width:min(22rem,100%)">
+          <Stack :gap=${'sm'}>
+            <Calendar :markers=${statusMarkers} bind-value=${markerDay} />
+            <Text :tone=${'muted'}>Dots mark schedule status without replacing the selected day.</Text>
+          </Stack>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'tooltips'}
+        :title=${'Marker tooltips'}
+        :lead=${'tooltips (default true) shows a floating tip when you hover or focus a day that has marker labels. Use richer label text for agenda details.'}
+        :code=${tooltipsExample}
+        :filename=${'calendar-tooltips.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="width:min(26rem,100%)">
+          <Stack :gap=${'sm'}>
+            <Calendar :markers=${tooltipMarkers} :tooltips=${true} bind-value=${tooltipDay} />
+            <Text :tone=${'muted'}>Hover Aug 12 to see Interview · 10:30 and Follow-up call · 15:00.</Text>
+          </Stack>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'scheduling'} :title=${'Scheduling'}>
+      <Demo
+        :id=${'scheduling-demo'}
+        :title=${'Range plus agenda dots'}
+        :lead=${'Combine range with markers and min/max for a booking window.'}
+        :code=${scheduling}
+        :filename=${'calendar-scheduling.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="width:min(22rem,100%)">
+          <Stack :gap=${'sm'}>
+            <Calendar
+              :range=${true}
+              :markers=${scheduleMarkers}
+              :min=${'2026-08-01'}
+              :max=${'2026-08-31'}
+              bind-value=${scheduleWindow}
+            />
+            <Text :tone=${'muted'}>August booking window with colored agenda dots.</Text>
+          </Stack>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'advanced'} :title=${'Advanced'}>
+      <Demo
+        :id=${'advanced-demo'}
+        :title=${'Multi-day clinic schedule'}
+        :lead=${'Multiple selection, markers, and month bounds for an operations calendar.'}
+        :code=${advanced}
+        :filename=${'calendar-advanced.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="width:min(22rem,100%)">
+          <Stack :gap=${'sm'}>
+            <Calendar
+              :multiple=${true}
+              :markers=${clinicMarkers}
+              :min=${'2026-08-01'}
+              :max=${'2026-08-31'}
+              bind-value=${sessions}
+            />
+            <Text :tone=${'muted'}>
+              Sessions: ${() => joinDates(sessions)}
+            </Text>
+          </Stack>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'past'}
+        :title=${'Past month'}
+        :code=${past}
+        :filename=${'calendar-past.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="width:min(22rem,100%)">
+          <Calendar :value=${'2024-02-29'} />
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'future'}
+        :title=${'Future month'}
+        :code=${future}
+        :filename=${'calendar-future.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="width:min(22rem,100%)">
+          <Calendar :value=${'2030-12-25'} />
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'empty'}
+        :title=${'No selection'}
+        :code=${empty}
+        :filename=${'calendar-empty.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="width:min(22rem,100%)">
+          <Calendar :value=${''} />
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

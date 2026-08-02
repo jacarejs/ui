@@ -1,0 +1,255 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Parallax from '@jacare/ui/components/Parallax.jcr'
+import Select from '@jacare/ui/components/Select.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  coolImage,
+  demoImage,
+  heights,
+  overlay,
+  playgroundCode as buildPlaygroundCode,
+  reversed,
+  scrims,
+  speed,
+  stacked,
+  warmImage,
+} from '../../examples/parallax.js'
+
+const contract = getContract('Parallax')
+const navLinks = previousNext('/components/parallax')
+
+const heightOptions = [
+  { value: '220', label: '220px' },
+  { value: '320', label: '320px' },
+  { value: '420', label: '420px' },
+]
+const speedOptions = [
+  { value: '0.2', label: 'Mild 0.2' },
+  { value: '0.45', label: 'Medium 0.45' },
+  { value: '0.75', label: 'Strong 0.75' },
+]
+const scrimOptions = [
+  { value: 'dark', label: 'Dark' },
+  { value: 'light', label: 'Light' },
+  { value: 'none', label: 'None' },
+]
+
+const playHeight = pulse('320')
+const playSpeed = pulse('0.45')
+const playScrim = pulse('dark')
+const playReversed = pulse(false)
+
+const a11y = [
+  'Keep motion subtle and disable the effect when prefers-reduced-motion is set',
+  'Provide meaningful alt text for the background image',
+  'Do not hide essential content inside the moving background layer',
+  'Use dark or light scrim so overlay text meets contrast on imagery',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    height: Number(playHeight()) || 320,
+    speed: Number(playSpeed()) || 0.45,
+    scrim: playScrim(),
+    reversed: playReversed(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Parallax</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'Parallax'}
+      :description=${'Scroll-linked background imagery with a readable overlay slot. Tune height, speed, reversed direction, and scrim tone. Motion stops when prefers-reduced-motion is set.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Select :label=${'Height'} :options=${heightOptions} bind-value=${playHeight} />
+          <Select :label=${'Speed'} :options=${speedOptions} bind-value=${playSpeed} />
+          <Select :label=${'Scrim'} :options=${scrimOptions} bind-value=${playScrim} />
+          <Switch :label=${'Reversed'} bind-checked=${playReversed} />
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <Parallax
+              :src=${demoImage}
+              :alt=${'Playground hero'}
+              :height=${() => Number(playHeight()) || 320}
+              :speed=${() => Number(playSpeed()) || 0.45}
+              :scrim=${playScrim}
+              :reversed=${playReversed}
+            >
+              <Text :as=${'h2'} :weight=${'bold'}>Scroll-linked imagery</Text>
+              <Text :tone=${'muted'}>Adjust speed, height, and scrim.</Text>
+              <Button>Explore docs</Button>
+            </Parallax>
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'parallax-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Pass src and optional overlay content. Scroll the page to see the background shift.'}
+      :code=${basic}
+      :filename=${'parallax-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Parallax :src=${demoImage} :alt=${'Forest gradient'} :height=${320} :speed=${0.45}>
+        <Text :as=${'h2'} :weight=${'bold'}>Scroll to see depth</Text>
+        <Text :tone=${'muted'}>Background shifts as the band enters the viewport.</Text>
+      </Parallax>
+    </Demo>
+
+    <DocsSection :id=${'options'} :title=${'Options'}>
+      <Demo
+        :id=${'overlay'}
+        :title=${'Hero overlay'}
+        :lead=${'Compose title, supporting text, and actions in the default slot.'}
+        :code=${overlay}
+        :filename=${'parallax-overlay.jcr'}
+        :layout=${'stack'}
+      >
+        <Parallax :src=${demoImage} :alt=${'Call to action'} :height=${360} :speed=${0.4}>
+          <Text :as=${'h2'} :weight=${'bold'}>Build with Jacaré</Text>
+          <Text :tone=${'muted'}>Composable UI with tokens, motion, and accessible defaults.</Text>
+          <Button>Get started</Button>
+        </Parallax>
+      </Demo>
+
+      <Demo
+        :id=${'scrims'}
+        :title=${'Scrim types'}
+        :lead=${"scrim dark (default), light, or none controls overlay contrast."}
+        :code=${scrims}
+        :filename=${'parallax-scrims.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'lg'}>
+          <Parallax :src=${demoImage} :height=${220} :scrim=${'dark'}>
+            <Text :weight=${'bold'}>Dark scrim</Text>
+            <Text :tone=${'muted'}>Default — light text on imagery.</Text>
+          </Parallax>
+          <Parallax :src=${warmImage} :height=${220} :scrim=${'light'}>
+            <Text :weight=${'bold'}>Light scrim</Text>
+            <Text :tone=${'muted'}>Forest text on a washed surface.</Text>
+          </Parallax>
+          <Parallax :src=${coolImage} :height=${220} :scrim=${'none'}>
+            <Text :weight=${'bold'}>No scrim</Text>
+          </Parallax>
+        </Stack>
+      </Demo>
+
+      <Demo
+        :id=${'speed'}
+        :title=${'Speed'}
+        :lead=${'speed from 0 to 1 controls how far the background travels.'}
+        :code=${speed}
+        :filename=${'parallax-speed.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'lg'}>
+          <Parallax :src=${demoImage} :height=${220} :speed=${0.2}>
+            <Text :weight=${'bold'}>Mild (0.2)</Text>
+          </Parallax>
+          <Parallax :src=${warmImage} :height=${220} :speed=${0.55}>
+            <Text :weight=${'bold'}>Medium (0.55)</Text>
+          </Parallax>
+          <Parallax :src=${coolImage} :height=${220} :speed=${0.85}>
+            <Text :weight=${'bold'}>Strong (0.85)</Text>
+          </Parallax>
+        </Stack>
+      </Demo>
+
+      <Demo
+        :id=${'reversed'}
+        :title=${'Reversed'}
+        :lead=${'reversed flips the scroll-linked direction.'}
+        :code=${reversed}
+        :filename=${'parallax-reversed.jcr'}
+        :layout=${'stack'}
+      >
+        <Parallax :src=${coolImage} :alt=${'Reversed motion'} :height=${280} :speed=${0.55} :reversed=${true}>
+          <Text :as=${'h2'} :weight=${'bold'}>Reversed parallax</Text>
+          <Text :tone=${'muted'}>Motion runs opposite to scroll direction.</Text>
+        </Parallax>
+      </Demo>
+
+      <Demo
+        :id=${'heights'}
+        :title=${'Heights'}
+        :lead=${'Use shorter bands for section breaks and taller ones for heroes.'}
+        :code=${heights}
+        :filename=${'parallax-heights.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'lg'}>
+          <Parallax :src=${demoImage} :height=${180} :speed=${0.35}>
+            <Text :weight=${'bold'}>Compact band</Text>
+          </Parallax>
+          <Parallax :src=${coolImage} :height=${420} :speed=${0.45}>
+            <Text :as=${'h2'} :weight=${'bold'}>Tall feature band</Text>
+            <Text :tone=${'muted'}>Use taller heights for landing heroes.</Text>
+          </Parallax>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'stacked'}
+        :title=${'Stacked bands'}
+        :lead=${'Mix speeds and directions across a page for layered depth.'}
+        :code=${stacked}
+        :filename=${'parallax-stacked.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'md'}>
+          <Parallax :src=${demoImage} :height=${200} :speed=${0.3}>
+            <Text :weight=${'bold'}>Tokens</Text>
+          </Parallax>
+          <Parallax :src=${warmImage} :height=${200} :speed=${0.45} :reversed=${true}>
+            <Text :weight=${'bold'}>Motion</Text>
+          </Parallax>
+          <Parallax :src=${coolImage} :height=${200} :speed=${0.6}>
+            <Text :weight=${'bold'}>Accessibility</Text>
+          </Parallax>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

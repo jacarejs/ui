@@ -96,79 +96,68 @@ export <view>
 </view>`
 
 export const icons = `import Button from '@jacare/ui/Button'
+import Icon from '@jacare/ui/Icon'
 import Stack from '@jacare/ui/Stack'
 import VisuallyHidden from '@jacare/ui/VisuallyHidden'
 
 export <view>
   <Stack :direction=\${'row'} :align=\${'center'} :gap=\${'md'} :wrap=\${true}>
     <Button>
-      <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 5v14M5 12h14" />
-      </svg>
+      <Icon :name=\${'plus'} />
       Add item
     </Button>
 
     <Button :variant=\${'secondary'}>
       Continue
-      <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M5 12h14M13 6l6 6-6 6" />
-      </svg>
+      <Icon :name=\${'chevron-right'} />
     </Button>
 
     <Button :iconOnly=\${true} :shape=\${'circle'} :variant=\${'outline'}>
-      <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="11" cy="11" r="7" />
-        <path d="m20 20-3.5-3.5" />
-      </svg>
+      <Icon :name=\${'search'} />
       <VisuallyHidden>Search</VisuallyHidden>
     </Button>
 
     <Button :iconOnly=\${true} :variant=\${'ghost'}>
-      <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 7h16M4 12h16M4 17h16" />
-      </svg>
+      <Icon :name=\${'menu'} />
       <VisuallyHidden>Open menu</VisuallyHidden>
     </Button>
   </Stack>
 </view>`
 
 export const iconStart = `import Button from '@jacare/ui/Button'
+import Icon from '@jacare/ui/Icon'
 
 export <view>
   <Button>
-    <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 5v14M5 12h14" />
-    </svg>
+    <Icon :name=\${'plus'} />
     Add item
   </Button>
 </view>`
 
 export const iconEnd = `import Button from '@jacare/ui/Button'
+import Icon from '@jacare/ui/Icon'
 
 export <view>
   <Button :variant=\${'secondary'}>
     Continue
-    <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 12h14M13 6l6 6-6 6" />
-    </svg>
+    <Icon :name=\${'chevron-right'} />
   </Button>
 </view>`
 
 export const iconOnly = `import Button from '@jacare/ui/Button'
+import Icon from '@jacare/ui/Icon'
 import VisuallyHidden from '@jacare/ui/VisuallyHidden'
 
 export <view>
   <Button :iconOnly=\${true} :shape=\${'circle'} :variant=\${'outline'}>
-    <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="11" cy="11" r="7" />
-      <path d="m20 20-3.5-3.5" />
-    </svg>
+    <Icon :name=\${'search'} />
     <VisuallyHidden>Search</VisuallyHidden>
   </Button>
 </view>`
 
 export const menu = `import { pulse } from '@jacare/core'
 import Button from '@jacare/ui/Button'
+import Icon from '@jacare/ui/Icon'
 import VisuallyHidden from '@jacare/ui/VisuallyHidden'
 
 const open = pulse(false)
@@ -179,9 +168,7 @@ export <view>
     :iconOnly=\${true}
     on-press=\${() => open.set(!open())}
   >
-    <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 7h16M4 12h16M4 17h16" />
-    </svg>
+    <Icon :name=\${'menu'} />
     <VisuallyHidden>Open menu</VisuallyHidden>
   </Button>
 </view>`
@@ -195,6 +182,9 @@ export function playgroundCode(state) {
     "import Button from '@jacare/ui/Button'",
   ]
 
+  if (state.iconMode && state.iconMode !== 'none') {
+    lines.push("import Icon from '@jacare/ui/Icon'")
+  }
   if (state.iconMode === 'only' || state.iconMode === 'menu') {
     lines.push("import VisuallyHidden from '@jacare/ui/VisuallyHidden'")
   }
@@ -215,25 +205,16 @@ export function playgroundCode(state) {
   lines.push('  >')
 
   if (state.iconMode === 'start') {
-    lines.push('    <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">')
-    lines.push('      <path d="M12 5v14M5 12h14" />')
-    lines.push('    </svg>')
+    lines.push("    <Icon :name=\${'plus'} />")
     lines.push(`    ${quote(state.label) || 'Button'}`)
   } else if (state.iconMode === 'end') {
     lines.push(`    ${quote(state.label) || 'Button'}`)
-    lines.push('    <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">')
-    lines.push('      <path d="M5 12h14M13 6l6 6-6 6" />')
-    lines.push('    </svg>')
+    lines.push("    <Icon :name=\${'chevron-right'} />")
   } else if (state.iconMode === 'only') {
-    lines.push('    <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">')
-    lines.push('      <circle cx="11" cy="11" r="7" />')
-    lines.push('      <path d="m20 20-3.5-3.5" />')
-    lines.push('    </svg>')
+    lines.push("    <Icon :name=\${'search'} />")
     lines.push(`    <VisuallyHidden>${quote(state.label) || 'Search'}</VisuallyHidden>`)
   } else if (state.iconMode === 'menu') {
-    lines.push('    <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">')
-    lines.push('      <path d="M4 7h16M4 12h16M4 17h16" />')
-    lines.push('    </svg>')
+    lines.push("    <Icon :name=\${'menu'} />")
     lines.push('    <VisuallyHidden>Open menu</VisuallyHidden>')
   } else {
     lines.push(`    ${quote(state.label) || 'Button'}`)

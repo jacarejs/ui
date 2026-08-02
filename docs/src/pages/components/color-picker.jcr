@@ -88,7 +88,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Pickers'}
       :title=${'ColorPicker'}
       :description=${'Pick a color with a visual swatch and hex field. Bind value to a pulse for theme tokens or brand settings. Optional presets, sizes, hints, and validation states.'}
       :status=${'stable'}

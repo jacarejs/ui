@@ -1,0 +1,106 @@
+import Link from '@jacare/ui/components/Link.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, types, underline, target, disabled } from '../../examples/link.js'
+
+const contract = getContract('Link')
+const navLinks = previousNext('/components/link')
+const a11y = [
+  'Write link text that identifies the destination',
+  'Use always-underlined links when color alone would be ambiguous',
+  'Tell users when a destination opens a new tab or external site',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Link</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Navigation'}
+      :title=${'Link'}
+      :description=${'Inline navigation link with semantic types, underline behavior, disabled state, and target control.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :code=${basic}
+      :filename=${'link-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Link :href=${'#api'} :type=${'primary'}>Read the API</Link>
+    </Demo>
+
+    <Demo
+      :id=${'types'}
+      :title=${'Types'}
+      :code=${types}
+      :filename=${'link-types.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+        <Link :href=${'#default'}>Default</Link>
+        <Link :href=${'#primary'} :type=${'primary'}>Primary</Link>
+        <Link :href=${'#success'} :type=${'success'}>Success</Link>
+        <Link :href=${'#warning'} :type=${'warning'}>Warning</Link>
+        <Link :href=${'#danger'} :type=${'danger'}>Danger</Link>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'underline'}
+      :title=${'Underline'}
+      :code=${underline}
+      :filename=${'link-underline.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :direction=${'row'} :gap=${'lg'}>
+        <Link :href=${'#hover'} :underline=${'hover'}>Hover underline</Link>
+        <Link :href=${'#always'} :underline=${'always'}>Always underlined</Link>
+        <Link :href=${'#never'} :underline=${'never'}>Never underlined</Link>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'target'}
+      :title=${'New tab'}
+      :code=${target}
+      :filename=${'link-target.jcr'}
+      :layout=${'stack'}
+    >
+      <Link :href=${'https://github.com/jacarejs/ui'} :linkTarget=${'_blank'}>Open repository</Link>
+    </Demo>
+
+    <Demo
+      :id=${'disabled'}
+      :title=${'Disabled'}
+      :code=${disabled}
+      :filename=${'link-disabled.jcr'}
+      :layout=${'stack'}
+    >
+      <Link :href=${'#unavailable'} :disabled=${true}>Unavailable link</Link>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

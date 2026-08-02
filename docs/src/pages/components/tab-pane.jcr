@@ -1,0 +1,38 @@
+import Tabs from '@jacare/ui/components/Tabs.jcr'
+import TabPane from '@jacare/ui/components/TabPane.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { composition, disabled, content } from '../../examples/tab-pane.js'
+
+const contract = getContract('TabPane')
+const navLinks = previousNext('/components/tab-pane')
+const a11y = [
+  'Compose TabPane only inside Tabs',
+  'Use stable, unique names and descriptive labels',
+  'Do not place essential content exclusively in a disabled pane',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb"><a jacare-go="/components" href="/components">Components</a><span aria-hidden="true">/</span><span>TabPane</span></nav>
+    <DocsHero :kicker=${'Navigation'} :title=${'TabPane'} :description=${'Content panel registered with a Tabs parent through a stable name, visible label, and optional disabled state.'} :status=${'stable'} />
+    <Demo :id=${'composition'} :title=${'Parent composition'} :code=${composition} :filename=${'tab-pane-composition.jcr'} :layout=${'stack'}>
+      <Tabs :value=${'preview'}><TabPane :name=${'preview'} :label=${'Preview'}>Rendered document</TabPane><TabPane :name=${'source'} :label=${'Source'}>Document source</TabPane></Tabs>
+    </Demo>
+    <Demo :id=${'disabled'} :title=${'Disabled pane'} :code=${disabled} :filename=${'tab-pane-disabled.jcr'} :layout=${'stack'}>
+      <Tabs :value=${'public'} :type=${'card'}><TabPane :name=${'public'} :label=${'Public'}>Visible to everyone</TabPane><TabPane :name=${'private'} :label=${'Private'} :disabled=${true}>Permission required</TabPane></Tabs>
+    </Demo>
+    <Demo :id=${'content'} :title=${'Rich content and fallback label'} :code=${content} :filename=${'tab-pane-content.jcr'} :layout=${'stack'}>
+      <Tabs :value=${'details'}><TabPane :name=${'details'} :label=${'Details'}><h3>Release details</h3><p>Version 2.0 is ready for review.</p></TabPane><TabPane :name=${'logs'}>Logs</TabPane><TabPane :name=${'admin'} :label=${'Admin'} :disabled=${true}>Restricted content</TabPane></Tabs>
+    </Demo>
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}><AccessibilityChecklist :items=${a11y} /></DocsSection>
+    <DocsSection :id=${'api'} :title=${'API'}><PropsTable :contract=${contract} /></DocsSection>
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

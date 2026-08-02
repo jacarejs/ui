@@ -9,9 +9,10 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/tree-select.js'
+import { basic, multiple, playgroundCode as buildPlaygroundCode, states, strict } from '../../examples/tree-select.js'
 
 const contract = getContract('TreeSelect')
 const navLinks = previousNext('/components/tree-select')
@@ -49,6 +50,17 @@ const playMultiple = pulse(false)
 const playClearable = pulse(true)
 const playDisabled = pulse(false)
 const basicValue = pulse('')
+const multipleValue = pulse(['input', 'select'])
+const strictValue = pulse(['form'])
+const invalidValue = pulse('')
+const lockedValue = pulse('api')
+
+const a11yItems = [
+  'The trigger identifies the popup as a tree and exposes validation state',
+  'Rows expose treeitem levels and expansion state',
+  'Multiple mode uses checkbox semantics, including mixed parent state',
+  'Expand, clear, and selection actions are keyboard-focusable buttons',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -69,7 +81,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Selection'}
       :title=${'TreeSelect'}
       :description=${'Select a node from a nested tree. Pass data with children and bind value to a pulse (string or array when multiple).'}
       :status=${'stable'}
@@ -115,6 +127,25 @@ export <view>
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'tree-select-basic.jcr'}>
       <TreeSelect :label=${'Page'} :data=${data} bind-value=${basicValue} />
     </Demo>
+
+    <Demo :id=${'multiple'} :title=${'Multiple selection'} :lead=${'Parent and child selections stay synchronized by default.'} :code=${multiple} :filename=${'tree-select-multiple.jcr'}>
+      <TreeSelect :label=${'Components'} :data=${data} :multiple=${true} bind-value=${multipleValue} />
+    </Demo>
+
+    <Demo :id=${'strict'} :title=${'Strict checking'} :lead=${'checkStrictly lets parent and child nodes be selected independently.'} :code=${strict} :filename=${'tree-select-strict.jcr'}>
+      <TreeSelect :label=${'Independent nodes'} :data=${data} :multiple=${true} :checkStrictly=${true} bind-value=${strictValue} />
+    </Demo>
+
+    <Demo :id=${'states'} :title=${'Error and disabled'} :code=${states} :filename=${'tree-select-states.jcr'}>
+      <Stack :gap=${'md'}>
+        <TreeSelect :label=${'Page'} :data=${data} :placeholder=${'Choose a page'} :clearable=${false} :error=${'Select a page'} bind-value=${invalidValue} />
+        <TreeSelect :label=${'Locked page'} :data=${data} :disabled=${true} bind-value=${lockedValue} />
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11yItems} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

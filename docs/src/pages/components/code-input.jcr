@@ -1,0 +1,197 @@
+import { pulse } from '@jacare/core'
+import CodeInput from '@jacare/ui/components/CodeInput.jcr'
+import Segmented from '@jacare/ui/components/Segmented.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  invalidJson,
+  jacareSample,
+  jsonValidation,
+  languages,
+  phpSample,
+  pythonSample,
+  reactSample,
+  requiredHint,
+  rowsExample,
+  states,
+  themes,
+  validateEvent,
+  vueSample,
+} from '../../examples/code-input.js'
+
+const contract = getContract('CodeInput')
+const navLinks = previousNext('/components/code-input')
+
+const themeOptions = [
+  { value: 'dark', label: 'Dark' },
+  { value: 'light', label: 'Light' },
+]
+
+const basicCode = pulse('console.log("hello")')
+const themeCode = pulse('export function greet(name) {\n  return `hi ${name}`\n}')
+const themeValue = pulse('dark')
+const jsonCode = pulse('{ "ok": true, "items": [1, 2, 3] }')
+const brokenJson = pulse('{ "ok": true, }')
+const jacareCode = pulse(jacareSample)
+const vueCode = pulse(vueSample)
+const reactCode = pulse(reactSample)
+const phpCode = pulse(phpSample)
+const pythonCode = pulse(pythonSample)
+const jsCode = pulse('export function sum(a, b) {\n  return a + b\n}')
+const cssCode = pulse('.card {\n  padding: 1rem;\n  border-radius: 8px;\n}')
+const sqlCode = pulse('SELECT id, name\nFROM users\nWHERE active = true;')
+const compactCode = pulse('ok')
+const tallCode = pulse('line 1\nline 2\nline 3\nline 4\nline 5')
+const requiredCode = pulse('')
+const validateCode = pulse('{ "count": 2 }')
+const validateStatus = pulse('Waiting for edits')
+const errorCode = pulse('not-json')
+const lockedCode = pulse('SELECT 1;')
+
+const a11y = [
+  'Monospace textarea keeps spellcheck, autocorrect, and autocapitalize off',
+  'JSON validation announces errors with role="alert"',
+  'required marks the control for native form semantics',
+  'disabled fields remain non-interactive',
+]
+
+function onValidate(result) {
+  validateStatus.set(result.valid ? 'JSON is valid' : `Invalid: ${result.error}`)
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>CodeInput</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Inputs'}
+      :title=${'CodeInput'}
+      :description=${'Short monospace snippet editor with syntax highlighting and dark or light editor themes.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'code-input-basic.jcr'}>
+      <CodeInput
+        :label=${'Snippet'}
+        :language=${'javascript'}
+        :theme=${'dark'}
+        :placeholder=${'Paste a short script…'}
+        bind-value=${basicCode}
+      />
+    </Demo>
+
+    <Demo :id=${'themes'} :title=${'Themes'} :lead=${'theme switches the editor surface between dark (black) and light (white).'} :code=${themes} :filename=${'code-input-themes.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <Segmented bind-value=${themeValue} :options=${themeOptions} />
+        <CodeInput
+          :label=${'Theme preview'}
+          :language=${'javascript'}
+          :theme=${themeValue}
+          :rows=${6}
+          bind-value=${themeCode}
+        />
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'json'} :title=${'JSON validation'} :lead=${'Set validateJson to surface parse errors while editing.'} :code=${jsonValidation} :filename=${'code-input-json.jcr'}>
+      <CodeInput
+        :label=${'Webhook payload'}
+        :language=${'json'}
+        :theme=${'dark'}
+        :validateJson=${true}
+        :hint=${'Invalid JSON shows an inline parse error'}
+        bind-value=${jsonCode}
+      />
+    </Demo>
+
+    <Demo :id=${'invalid-json'} :title=${'Invalid JSON'} :lead=${'A trailing comma fails JSON.parse and shows the parser message.'} :code=${invalidJson} :filename=${'code-input-invalid-json.jcr'}>
+      <CodeInput
+        :label=${'Broken payload'}
+        :language=${'json'}
+        :validateJson=${true}
+        :rows=${6}
+        bind-value=${brokenJson}
+      />
+    </Demo>
+
+    <Demo :id=${'languages'} :title=${'Languages'} :lead=${'language picks the highlighter (jacare, vue, react, php, python, javascript, css, sql, json) and shows a badge.'} :code=${languages} :filename=${'code-input-languages.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <CodeInput :label=${'Jacaré'} :language=${'jacare'} :rows=${6} bind-value=${jacareCode} />
+        <CodeInput :label=${'Vue'} :language=${'vue'} :rows=${7} bind-value=${vueCode} />
+        <CodeInput :label=${'React'} :language=${'react'} :rows=${5} bind-value=${reactCode} />
+        <CodeInput :label=${'PHP'} :language=${'php'} :rows=${5} bind-value=${phpCode} />
+        <CodeInput :label=${'Python'} :language=${'python'} :rows=${4} bind-value=${pythonCode} />
+        <CodeInput :label=${'JavaScript'} :language=${'javascript'} :rows=${5} bind-value=${jsCode} />
+        <CodeInput :label=${'CSS'} :language=${'css'} :rows=${5} bind-value=${cssCode} />
+        <CodeInput :label=${'SQL'} :language=${'sql'} :rows=${5} bind-value=${sqlCode} />
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'rows'} :title=${'Rows'} :lead=${'rows controls the initial textarea height (minimum 3).'} :code=${rowsExample} :filename=${'code-input-rows.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <CodeInput :label=${'Compact'} :language=${'text'} :rows=${3} bind-value=${compactCode} />
+        <CodeInput :label=${'Tall'} :language=${'text'} :rows=${12} bind-value=${tallCode} />
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'required'} :title=${'Required with placeholder'} :code=${requiredHint} :filename=${'code-input-required.jcr'}>
+      <CodeInput
+        :label=${'App config'}
+        :language=${'json'}
+        :required=${true}
+        :validateJson=${true}
+        :placeholder=${'{ "theme": "light" }'}
+        :hint=${'Required before saving the form'}
+        :rows=${6}
+        bind-value=${requiredCode}
+      />
+    </Demo>
+
+    <Demo :id=${'validate-event'} :title=${'Validate event'} :lead=${'Listen for validate when validateJson is enabled — useful for form submit gates.'} :code=${validateEvent} :filename=${'code-input-validate.jcr'} :layout=${'stack'}>
+      <CodeInput
+        :label=${'API body'}
+        :language=${'json'}
+        :validateJson=${true}
+        :rows=${6}
+        bind-value=${validateCode}
+        on-validate=${onValidate}
+      />
+      <Text :tone=${'muted'}>${validateStatus}</Text>
+    </Demo>
+
+    <Demo :id=${'states'} :title=${'Error and disabled'} :code=${states} :filename=${'code-input-states.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <CodeInput
+          :label=${'Manual error'}
+          :language=${'json'}
+          :error=${'Payload must be an object'}
+          :rows=${4}
+          bind-value=${errorCode}
+        />
+        <CodeInput
+          :label=${'Read-only query'}
+          :language=${'sql'}
+          :disabled=${true}
+          :rows=${4}
+          bind-value=${lockedCode}
+        />
+      </Stack>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

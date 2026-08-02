@@ -1,0 +1,54 @@
+import { pulse } from '@jacare/core'
+import Loading from '@jacare/ui/components/Loading.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import { showLoading, closeLoading } from '@jacare/ui/feedback'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, text, background, service, inactive, fullscreen, local_service } from '../../examples/loading.js'
+
+const contract = getContract('Loading')
+const navLinks = previousNext('/components/loading')
+const fullscreenLoading = pulse(false)
+const a11y = [
+  'Use loading text when the operation or expected wait is not obvious',
+  'The wrapped region exposes aria-busy while loading',
+  'Avoid blocking the entire screen for work limited to one region',
+]
+
+function load() {
+  showLoading({ text: 'Publishing…' })
+  setTimeout(() => closeLoading(), 1200)
+}
+
+function showFullscreenComponent() {
+  fullscreenLoading.set(true)
+  setTimeout(() => fullscreenLoading.set(false), 1200)
+}
+
+function loadPanel() {
+  const instance = showLoading({ target: '#docs-loading-panel', text: 'Refreshing…', background: 'rgba(255,255,255,.88)' })
+  setTimeout(() => instance.close(), 1200)
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb"><a jacare-go="/components" href="/components">Components</a><span aria-hidden="true">/</span><span>Loading</span></nav>
+    <DocsHero :kicker=${'Feedback'} :title=${'Loading'} :description=${'Loading overlay for local content plus showLoading and closeLoading services for imperative or fullscreen tasks.'} :status=${'stable'} />
+    <Demo :id=${'basic'} :title=${'Content overlay'} :code=${basic} :filename=${'loading-basic.jcr'} :layout=${'stack'}><Loading :loading=${true}><div style="min-height:8rem;padding:1rem">Dashboard content</div></Loading></Demo>
+    <Demo :id=${'text'} :title=${'Status text'} :code=${text} :filename=${'loading-text.jcr'} :layout=${'stack'}><Loading :loading=${true} :text=${'Preparing your workspace…'}><div style="min-height:8rem;padding:1rem">Workspace</div></Loading></Demo>
+    <Demo :id=${'background'} :title=${'Custom background'} :code=${background} :filename=${'loading-background.jcr'} :layout=${'stack'}><Loading :loading=${true} :background=${'rgba(220, 239, 232, 0.92)'}><div style="min-height:8rem;padding:1rem">Report</div></Loading></Demo>
+    <Demo :id=${'service'} :title=${'Imperative service'} :lead=${'showLoading returns a closable instance; closeLoading dismisses the shared fullscreen instance.'} :code=${service} :filename=${'loading-service.jcr'} :layout=${'stack'}><Button on-press=${load}>Show fullscreen loading</Button></Demo>
+    <Demo :id=${'inactive'} :title=${'Inactive state'} :code=${inactive} :filename=${'loading-inactive.jcr'} :layout=${'stack'}><Loading :loading=${false} :text=${'Not displayed'}><div style="min-height:8rem;padding:1rem">Content remains interactive</div></Loading></Demo>
+    <Demo :id=${'fullscreen'} :title=${'Fullscreen component'} :code=${fullscreen} :filename=${'loading-fullscreen.jcr'} :layout=${'stack'}><Button on-press=${showFullscreenComponent}>Show fullscreen component</Button><Loading :loading=${fullscreenLoading} :fullscreen=${true} :text=${'Loading application…'} /></Demo>
+    <Demo :id=${'local-service'} :title=${'Local service target'} :code=${local_service} :filename=${'loading-local-service.jcr'} :layout=${'stack'}><div id="docs-loading-panel" style="min-height:8rem;padding:1rem"><Button on-press=${loadPanel}>Refresh panel</Button></div></Demo>
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}><AccessibilityChecklist :items=${a11y} /></DocsSection>
+    <DocsSection :id=${'api'} :title=${'API'}><PropsTable :contract=${contract} /></DocsSection>
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

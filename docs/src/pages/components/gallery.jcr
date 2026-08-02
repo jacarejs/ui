@@ -1,0 +1,137 @@
+import { pulse } from '@jacare/core'
+import Gallery from '@jacare/ui/components/Gallery.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, controlled, noThumbs, customThumbs, many } from '../../examples/gallery.js'
+
+const contract = getContract('Gallery')
+const navLinks = previousNext('/components/gallery')
+const images = [
+  {
+    src: 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 320 240%27%3E%3Crect width=%27320%27 height=%27240%27 fill=%27%23dcefe8%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 fill=%27%23235548%27 font-size=%2724%27%3EOne%3C/text%3E%3C/svg%3E',
+    alt: 'Gallery image one',
+  },
+  {
+    src: 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 320 240%27%3E%3Crect width=%27320%27 height=%27240%27 fill=%27%23d7e8ff%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 fill=%27%231d4f91%27 font-size=%2724%27%3ETwo%3C/text%3E%3C/svg%3E',
+    alt: 'Gallery image two',
+  },
+  {
+    src: 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 320 240%27%3E%3Crect width=%27320%27 height=%27240%27 fill=%27%23f6e8d7%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 fill=%27%23864d1b%27 font-size=%2724%27%3EThree%3C/text%3E%3C/svg%3E',
+    alt: 'Gallery image three',
+  },
+]
+const customImages = [
+  {
+    src: 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 640 480%27%3E%3Crect width=%27640%27 height=%27480%27 fill=%27%23dcefe8%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 fill=%27%23235548%27 font-size=%2748%27%3ELarge%3C/text%3E%3C/svg%3E',
+    thumb: 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 120 120%27%3E%3Crect width=%27120%27 height=%27120%27 fill=%27%23dcefe8%27/%3E%3C/svg%3E',
+    alt: 'Large preview',
+  },
+  {
+    src: 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 640 480%27%3E%3Crect width=%27640%27 height=%27480%27 fill=%27%23d7e8ff%27/%3E%3C/svg%3E',
+    thumb: 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 120 120%27%3E%3Crect width=%27120%27 height=%27120%27 fill=%27%23d7e8ff%27/%3E%3C/svg%3E',
+    alt: 'Second preview',
+  },
+]
+const fills = ['dcefe8', 'd7e8ff', 'f6e8d7', 'e8dff6', 'dff6e8', 'f6dfe8', 'dfe8f6', 'e8f6df']
+const manyImages = fills.map((fill, index) => ({
+  src: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 240'%3E%3Crect width='320' height='240' fill='%23${fill}'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23235548' font-size='24'%3E${index + 1}%3C/text%3E%3C/svg%3E`,
+  alt: `Image ${index + 1}`,
+}))
+const activeIndex = pulse(1)
+const open = pulse(false)
+const overlayOpen = pulse(false)
+const a11y = [
+  'Provide alt text for every gallery image',
+  'Lightbox controls are keyboard reachable and dismiss with Escape',
+  'Keep thumbnail labels distinct when multiple images look similar',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Gallery</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'Gallery'}
+      :description=${'Thumbnail grid that opens a fullscreen lightbox with navigation, zoom controls, and bound active index.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :code=${basic}
+      :filename=${'gallery-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Gallery :images=${images} />
+    </Demo>
+
+    <Demo
+      :id=${'controlled'}
+      :title=${'Controlled state'}
+      :lead=${'Bind activeIndex and open when coordinating with external UI.'}
+      :code=${controlled}
+      :filename=${'gallery-controlled.jcr'}
+      :layout=${'stack'}
+    >
+      <Gallery :images=${images.slice(0, 2)} bind-activeIndex=${activeIndex} bind-open=${open} />
+    </Demo>
+
+    <Demo
+      :id=${'no-thumbs'}
+      :title=${'Without thumbnails'}
+      :code=${noThumbs}
+      :filename=${'gallery-no-thumbs.jcr'}
+      :layout=${'stack'}
+    >
+      <Button on-click=${() => overlayOpen.set(true)}>Open gallery</Button>
+      <Gallery
+        :images=${[images[0]]}
+        :showThumbnails=${false}
+        bind-open=${overlayOpen}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'custom-thumbs'}
+      :title=${'Custom thumbnails'}
+      :code=${customThumbs}
+      :filename=${'gallery-custom-thumbs.jcr'}
+      :layout=${'stack'}
+    >
+      <Gallery :images=${customImages} />
+    </Demo>
+
+    <Demo
+      :id=${'many'}
+      :title=${'Many images'}
+      :code=${many}
+      :filename=${'gallery-many.jcr'}
+      :layout=${'stack'}
+    >
+      <Gallery :images=${manyImages} />
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

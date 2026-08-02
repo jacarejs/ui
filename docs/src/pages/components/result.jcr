@@ -1,0 +1,102 @@
+import Result from '@jacare/ui/components/Result.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { success, info, warning, error, plain } from '../../examples/result.js'
+
+const contract = getContract('Result')
+const navLinks = previousNext('/components/result')
+const a11y = [
+  'State the outcome in the title instead of relying on the icon',
+  'Use subTitle for the cause or the next useful step',
+  'Keep the primary recovery action close to the result message',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Result</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'Result'}
+      :description=${'Outcome summary for informational, success, warning, error, and neutral states.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'success'}
+      :title=${'Success'}
+      :code=${success}
+      :filename=${'result-success.jcr'}
+      :layout=${'stack'}
+    >
+      <Result :icon=${'success'} :title=${'Submitted'} :subTitle=${'Your changes are saved.'}>
+        <Button>Back to dashboard</Button>
+      </Result>
+    </Demo>
+
+    <Demo
+      :id=${'info'}
+      :title=${'Information'}
+      :code=${info}
+      :filename=${'result-info.jcr'}
+      :layout=${'stack'}
+    >
+      <Result :icon=${'info'} :title=${'Update available'} :subTitle=${'Version 2.4 can be installed now.'} />
+    </Demo>
+
+    <Demo
+      :id=${'warning'}
+      :title=${'Warning'}
+      :code=${warning}
+      :filename=${'result-warning.jcr'}
+      :layout=${'stack'}
+    >
+      <Result :icon=${'warning'} :title=${'Review required'} :subTitle=${'Two fields need attention before publishing.'}>
+        <Button>Review fields</Button>
+      </Result>
+    </Demo>
+
+    <Demo
+      :id=${'error'}
+      :title=${'Error'}
+      :code=${error}
+      :filename=${'result-error.jcr'}
+      :layout=${'stack'}
+    >
+      <Result :icon=${'error'} :title=${'Publish failed'} :subTitle=${'Check your connection and try again.'}>
+        <Button>Try again</Button>
+      </Result>
+    </Demo>
+
+    <Demo
+      :id=${'plain'}
+      :title=${'Neutral'}
+      :code=${plain}
+      :filename=${'result-plain.jcr'}
+      :layout=${'stack'}
+    >
+      <Result :title=${'All caught up'} :subTitle=${'There are no pending reviews.'} />
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

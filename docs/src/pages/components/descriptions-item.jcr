@@ -1,0 +1,68 @@
+import Descriptions from '@jacare/ui/components/Descriptions.jcr'
+import DescriptionsItem from '@jacare/ui/components/DescriptionsItem.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { labeledValues, spanningItem, vertical } from '../../examples/descriptions-item.js'
+
+const contract = getContract('DescriptionsItem')
+const navLinks = previousNext('/components/descriptions-item')
+const a11y = [
+  'Use concise labels that identify values without relying on position',
+  'Keep related DescriptionsItem values together inside one Descriptions parent',
+  'Choose spans that preserve a logical reading order on narrow layouts',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>DescriptionsItem</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'DescriptionsItem'}
+      :description=${'DescriptionsItem is a label and value pair used inside Descriptions. label names the value and span lets an item occupy multiple parent columns.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'labeled-values'} :title=${'Labeled values'} :lead=${'label identifies each value in the Descriptions grid.'} :code=${labeledValues} :filename=${'descriptions-item-labels.jcr'}>
+       <Descriptions :title=${'Project details'} :column=${2} :border=${true}>
+        <DescriptionsItem :label=${'Owner'}>Jacare UI</DescriptionsItem>
+        <DescriptionsItem :label=${'Status'}>Beta</DescriptionsItem>
+        <DescriptionsItem :label=${'Package'} :span=${2}>@jacare/ui</DescriptionsItem>
+       </Descriptions>
+    </Demo>
+    <Demo :id=${'spanning-item'} :title=${'Spanning item'} :lead=${'span lets long content occupy more than one parent column.'} :code=${spanningItem} :filename=${'descriptions-item-span.jcr'}>
+      <Descriptions :title=${'Deployment'} :column=${3}>
+        <DescriptionsItem :label=${'Region'}>us-east-1</DescriptionsItem>
+        <DescriptionsItem :label=${'Status'}>Healthy</DescriptionsItem>
+        <DescriptionsItem :label=${'URL'} :span=${3}>https://example.com</DescriptionsItem>
+      </Descriptions>
+    </Demo>
+    <Demo :id=${'vertical'} :title=${'Vertical layout'} :lead=${'Items adapt their label/value presentation to the parent direction.'} :code=${vertical} :filename=${'descriptions-item-vertical.jcr'}>
+      <Descriptions :column=${2} :direction=${'vertical'} :border=${true}>
+        <DescriptionsItem :label=${'Plan'}>Team</DescriptionsItem>
+        <DescriptionsItem :label=${'Seats'}>12</DescriptionsItem>
+        <DescriptionsItem :label=${'Notes'} :span=${2}>Renews on September 1.</DescriptionsItem>
+      </Descriptions>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

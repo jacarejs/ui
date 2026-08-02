@@ -1,0 +1,86 @@
+import Container from '@jacare/ui/components/Container.jcr'
+import Header from '@jacare/ui/components/Header.jcr'
+import Aside from '@jacare/ui/components/Aside.jcr'
+import Main from '@jacare/ui/components/Main.jcr'
+import Footer from '@jacare/ui/components/Footer.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { inspector, scrolling, shell, widths } from '../../examples/aside.js'
+
+const contract = getContract('Aside')
+const navLinks = previousNext('/components/aside')
+const a11y = [
+  'Aside renders a complementary landmark for secondary content',
+  'Give navigation inside an Aside its own accessible label',
+  'Preserve a usable main region when choosing a fixed sidebar width',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Aside</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Layout'}
+      :title=${'Aside'}
+      :description=${'Scrollable complementary sidebar with a fixed CSS width, designed for horizontal Container shells.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'shell'} :title=${'Shell sidebar'} :lead=${'Place Aside beside Main inside a horizontal Container.'} :code=${shell} :filename=${'aside-shell.jcr'}>
+      <div style="height:260px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container>
+          <Header>Team workspace</Header>
+          <Container :direction=${'horizontal'}>
+            <Aside :width=${'176px'}>Projects and teams</Aside>
+            <Main :padding=${'1rem'}>Current project</Main>
+          </Container>
+          <Footer :height=${'40px'}>Workspace footer</Footer>
+        </Container>
+      </div>
+    </Demo>
+    <Demo :id=${'width'} :title=${'Custom width'} :lead=${'width controls both width and minimum width; the Main region fills the remainder.'} :code=${widths} :filename=${'aside-width.jcr'}>
+      <div style="height:200px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container :direction=${'horizontal'}>
+          <Aside :width=${'120px'}>Compact nav</Aside>
+          <Main :padding=${'1rem'}>Content adapts to the remaining width.</Main>
+        </Container>
+      </div>
+    </Demo>
+    <Demo :id=${'inspector'} :title=${'Right-side inspector'} :lead=${'Aside can follow Main for complementary controls on the trailing edge.'} :code=${inspector} :filename=${'aside-inspector.jcr'}>
+      <div style="height:200px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container :direction=${'horizontal'}>
+          <Main :padding=${'1rem'}>Canvas</Main>
+          <Aside :width=${'220px'}><div style="padding:1rem">Properties inspector</div></Aside>
+        </Container>
+      </div>
+    </Demo>
+    <Demo :id=${'scrolling'} :title=${'Scrollable navigation'} :lead=${'Long secondary content scrolls inside Aside while the neighboring Main remains independent.'} :code=${scrolling} :filename=${'aside-scrolling.jcr'}>
+      <div style="height:180px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container :direction=${'horizontal'}>
+          <Aside :width=${'180px'}><nav aria-label="Project files"><div style="height:360px;padding:1rem">Scrollable file navigation</div></nav></Aside>
+          <Main :padding=${'1rem'}>Editor stays in place</Main>
+        </Container>
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -13,10 +13,13 @@ import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
 import {
+  autosize,
+  autosizeMax,
   basic,
   count,
   playgroundCode as buildPlaygroundCode,
   resize,
+  rows,
   states,
 } from '../../examples/textarea.js'
 
@@ -31,12 +34,20 @@ const playError = pulse('')
 const playRequired = pulse(false)
 const playDisabled = pulse(false)
 const playShowCount = pulse(true)
+const playAutosize = pulse(false)
 const playRows = pulse('4')
+const playMaxRows = pulse('0')
 const playMaxLength = pulse('280')
 const playResize = pulse('vertical')
 const basicValue = pulse('')
 const countValue = pulse('')
-const resizeValue = pulse('')
+const rowsCompact = pulse('')
+const rowsTall = pulse('')
+const autosizeValue = pulse('Type more lines and the field grows with the content.')
+const autosizeMaxValue = pulse('Starts small, grows up to six rows, then scrolls.')
+const resizeNone = pulse('')
+const resizeVertical = pulse('')
+const resizeBoth = pulse('')
 const statesRequiredValue = pulse('')
 const statesErrorValue = pulse('')
 const statesDisabledValue = pulse('Locked notes')
@@ -46,6 +57,7 @@ const a11y = [
   'error sets aria-invalid and surfaces validation copy with role="alert"',
   'required marks the control and shows a visual asterisk',
   'maxLength uses the native maxlength attribute when greater than zero',
+  'autosize keeps resize none and grows height from content within rows and maxRows',
 ]
 
 function playgroundCode() {
@@ -58,7 +70,9 @@ function playgroundCode() {
     required: playRequired(),
     disabled: playDisabled(),
     showCount: playShowCount(),
+    autosize: playAutosize(),
     rows: Number(playRows()) || 4,
+    maxRows: Number(playMaxRows()) || 0,
     maxLength: Number(playMaxLength()) || 0,
     resize: playResize(),
   })
@@ -73,9 +87,9 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Inputs'}
       :title=${'Textarea'}
-      :description=${'Multiline field with hint, error, optional character count, and resize control. Bind value to a pulse like Field.'}
+      :description=${'Multiline field with hint, error, character count, resize, and autosize that grows with content.'}
       :status=${'stable'}
     />
 
@@ -86,14 +100,16 @@ export <view>
           <Field :label=${'Placeholder'} bind-value=${playPlaceholder} />
           <Field :label=${'Hint'} bind-value=${playHint} />
           <Field :label=${'Error'} :hint=${'Leave empty for a valid field'} bind-value=${playError} />
-          <Field :label=${'Rows'} :type=${'number'} bind-value=${playRows} />
+          <Field :label=${'Rows'} :type=${'number'} :hint=${'Minimum rows when autosize is on'} bind-value=${playRows} />
+          <Field :label=${'Max rows'} :type=${'number'} :hint=${'0 means no cap when autosize is on'} bind-value=${playMaxRows} />
           <Field :label=${'Max length'} :type=${'number'} :hint=${'0 disables the limit'} bind-value=${playMaxLength} />
-          <Field :label=${'Resize'} :hint=${'none, vertical, horizontal, or both'} bind-value=${playResize} />
+          <Field :label=${'Resize'} :hint=${'Ignored when autosize is on'} bind-value=${playResize} />
 
           <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
             <Switch :label=${'Required'} bind-checked=${playRequired} />
             <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
             <Switch :label=${'Show count'} bind-checked=${playShowCount} />
+            <Switch :label=${'Autosize'} bind-checked=${playAutosize} />
           </Stack>
         </div>
 
@@ -107,7 +123,9 @@ export <view>
               :required=${playRequired}
               :disabled=${playDisabled}
               :showCount=${playShowCount}
+              :autosize=${playAutosize}
               :rows=${() => Number(playRows()) || 4}
+              :maxRows=${() => Number(playMaxRows()) || 0}
               :maxLength=${() => Number(playMaxLength()) || 0}
               :resize=${playResize}
               bind-value=${playValue}
@@ -124,6 +142,44 @@ export <view>
       </div>
     </Demo>
 
+    <DocsSection :id=${'rows'} :title=${'Rows'}>
+      <Demo :id=${'rows-demo'} :title=${'Compact and tall'} :code=${rows} :filename=${'textarea-rows.jcr'} :layout=${'stack'}>
+        <div style="width:min(28rem,100%)">
+          <Stack :gap=${'md'}>
+            <Textarea :label=${'Compact'} :rows=${2} :placeholder=${'Two rows'} bind-value=${rowsCompact} />
+            <Textarea :label=${'Tall'} :rows=${8} :placeholder=${'Eight rows'} bind-value=${rowsTall} />
+          </Stack>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'autosize'} :title=${'Autosize'}>
+      <Demo :id=${'autosize-demo'} :title=${'Grows with content'} :code=${autosize} :filename=${'textarea-autosize.jcr'} :layout=${'stack'}>
+        <div style="width:min(28rem,100%)">
+          <Textarea
+            :label=${'Notes'}
+            :autosize=${true}
+            :rows=${2}
+            :hint=${'Height grows as you type'}
+            bind-value=${autosizeValue}
+          />
+        </div>
+      </Demo>
+
+      <Demo :id=${'autosize-max'} :title=${'Capped with maxRows'} :code=${autosizeMax} :filename=${'textarea-autosize-max.jcr'} :layout=${'stack'}>
+        <div style="width:min(28rem,100%)">
+          <Textarea
+            :label=${'Capped growth'}
+            :autosize=${true}
+            :rows=${2}
+            :maxRows=${6}
+            :hint=${'Grows until maxRows, then scrolls'}
+            bind-value=${autosizeMaxValue}
+          />
+        </div>
+      </Demo>
+    </DocsSection>
+
     <DocsSection :id=${'count'} :title=${'Character count'}>
       <Demo :id=${'count-demo'} :title=${'Max length with counter'} :code=${count} :filename=${'textarea-count.jcr'} :layout=${'bleed'}>
         <div style="width:min(28rem,100%)">
@@ -139,9 +195,13 @@ export <view>
     </DocsSection>
 
     <DocsSection :id=${'resize'} :title=${'Resize'}>
-      <Demo :id=${'resize-demo'} :title=${'Fixed height'} :code=${resize} :filename=${'textarea-resize.jcr'} :layout=${'rail'}>
+      <Demo :id=${'resize-demo'} :title=${'None, vertical, and both'} :code=${resize} :filename=${'textarea-resize.jcr'} :layout=${'stack'}>
         <div style="width:min(28rem,100%)">
-          <Textarea :label=${'Fixed height'} :resize=${'none'} :rows=${5} bind-value=${resizeValue} />
+          <Stack :gap=${'md'}>
+            <Textarea :label=${'Fixed height'} :resize=${'none'} :rows=${4} bind-value=${resizeNone} />
+            <Textarea :label=${'Vertical'} :resize=${'vertical'} :rows=${4} bind-value=${resizeVertical} />
+            <Textarea :label=${'Both axes'} :resize=${'both'} :rows=${4} bind-value=${resizeBoth} />
+          </Stack>
         </div>
       </Demo>
     </DocsSection>

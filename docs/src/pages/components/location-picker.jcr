@@ -1,0 +1,161 @@
+import { pulse } from '@jacare/core'
+import LocationPicker from '@jacare/ui/components/LocationPicker.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  disabledExample,
+  empty,
+  hintAndError,
+  locateLabel,
+  reactive,
+} from '../../examples/location-picker.js'
+
+const contract = getContract('LocationPicker')
+const navLinks = previousNext('/components/location-picker')
+
+const coords = pulse({ lat: -23.5505, lng: -46.6333 })
+const emptyCoords = pulse(null)
+const venue = pulse({ lat: -22.9068, lng: -43.1729 })
+const hinted = pulse(null)
+const invalid = pulse({ lat: '', lng: '' })
+const locked = pulse({ lat: -15.7939, lng: -47.8828 })
+const branch = pulse({ lat: -3.119, lng: -60.0217 })
+
+const a11y = [
+  'Latitude and longitude inputs are labeled fields with decimal inputmode',
+  'Locate button is keyboard reachable and temporarily disabled while GPS resolves',
+  'Map opens in a new tab with rel=noreferrer when both coordinates are set',
+  'error uses role="alert"; hint appears under the control when there is no error',
+  'disabled dims the control and blocks typing, locate, and interaction',
+]
+
+function summary(value) {
+  if (!value || value.lat == null || value.lng == null || value.lat === '' || value.lng === '') {
+    return 'No coordinates selected'
+  }
+  return `lat ${value.lat}, lng ${value.lng}`
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>LocationPicker</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Pickers'}
+      :title=${'LocationPicker'}
+      :description=${'Latitude/longitude fields with use-my-location and an OpenStreetMap link when both coordinates are set.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Bind a { lat, lng } pulse — Open map appears once both values are present.'}
+      :code=${basic}
+      :filename=${'location-picker-basic.jcr'}
+    >
+      <LocationPicker :label=${'Store location'} bind-value=${coords} />
+    </Demo>
+
+    <Demo
+      :id=${'empty'}
+      :title=${'Empty value'}
+      :lead=${'Start with null — type decimals or ask the browser for the current position.'}
+      :code=${empty}
+      :filename=${'location-picker-empty.jcr'}
+    >
+      <LocationPicker
+        :label=${'Delivery drop-off'}
+        :hint=${'Type coordinates or use the locate button — map link appears when both fields are set'}
+        bind-value=${emptyCoords}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'locate-label'}
+      :title=${'Custom locate label'}
+      :lead=${'Override the geolocation button copy with locateLabel.'}
+      :code=${locateLabel}
+      :filename=${'location-picker-locate-label.jcr'}
+    >
+      <LocationPicker
+        :label=${'Event venue'}
+        :locateLabel=${'Detect my position'}
+        bind-value=${venue}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'hint-error'}
+      :title=${'Hint and error'}
+      :lead=${'hint guides setup; error replaces it and marks the inputs invalid.'}
+      :code=${hintAndError}
+      :filename=${'location-picker-states.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'lg'}>
+        <LocationPicker
+          :label=${'Warehouse'}
+          :hint=${'WGS84 decimals — OpenStreetMap opens when both values are present'}
+          bind-value=${hinted}
+        />
+        <LocationPicker
+          :label=${'Pickup point'}
+          :error=${'Latitude and longitude are required'}
+          bind-value=${invalid}
+        />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'disabled'}
+      :title=${'Disabled'}
+      :lead=${'Freeze verified coordinates — fields and locate stay non-interactive.'}
+      :code=${disabledExample}
+      :filename=${'location-picker-disabled.jcr'}
+    >
+      <LocationPicker
+        :label=${'HQ coordinates'}
+        :disabled=${true}
+        :hint=${'Locked after the site was verified'}
+        bind-value=${locked}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'reactive'}
+      :title=${'Reactive summary'}
+      :lead=${'Read the bound pulse to mirror the current lat/lng elsewhere in the UI.'}
+      :code=${reactive}
+      :filename=${'location-picker-reactive.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <LocationPicker
+          :label=${'Branch office'}
+          :locateLabel=${'Use device GPS'}
+          bind-value=${branch}
+        />
+        <Text :tone=${'muted'}>
+          ${() => summary(branch())}
+        </Text>
+      </Stack>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

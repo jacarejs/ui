@@ -1,0 +1,68 @@
+import { pulse } from '@jacare/core'
+import Drawer from '@jacare/ui/components/Drawer.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, directions, bottom, persistent, top, playgroundCode as buildPlaygroundCode } from '../../examples/drawer.js'
+
+const contract = getContract('Drawer')
+const navLinks = previousNext('/components/drawer')
+const basicOpen = pulse(false)
+const leftOpen = pulse(false)
+const bottomOpen = pulse(false)
+const taskOpen = pulse(false)
+const topOpen = pulse(false)
+const playOpen = pulse(false)
+const playDirection = pulse('rtl')
+const playSize = pulse('30%')
+const playModalClose = pulse(true)
+const playShowClose = pulse(true)
+const directionsList = ['rtl', 'ltr', 'ttb', 'btt']
+const a11y = [
+  'Provide a concise title so the dialog has an accessible name',
+  'Keep a visible close action unless the task supplies an explicit completion action',
+  'Focus remains trapped while open and returns to the trigger after dismissal',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({ direction: playDirection(), size: playSize(), closeOnClickModal: playModalClose(), showClose: playShowClose() })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb"><a jacare-go="/components" href="/components">Components</a><span aria-hidden="true">/</span><span>Drawer</span></nav>
+    <DocsHero :kicker=${'Overlay'} :title=${'Drawer'} :description=${'Focus-trapped side or edge panel with controlled state, configurable size, backdrop behavior, and four directions. On narrow viewports it goes full-bleed with safe-area padding.'} :status=${'stable'} />
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Size'} bind-value=${playSize} />
+          <div class="docs-hero-actions">
+            #for directionsList as option
+              <Button :size=${'sm'} :variant=${() => playDirection() === option ? 'primary' : 'secondary'} on-press=${() => playDirection.set(option)}>${option}</Button>
+            #end
+          </div>
+          <Switch :label=${'Close on modal click'} bind-checked=${playModalClose} />
+          <Switch :label=${'Show close'} bind-checked=${playShowClose} />
+        </div>
+        <div class="docs-alert-play__preview"><div class="docs-panel"><Button on-press=${() => playOpen.set(true)}>Open preview</Button><Drawer bind-open=${playOpen} :title=${'Preview'} :direction=${playDirection} :size=${playSize} :closeOnClickModal=${playModalClose} :showClose=${playShowClose}>Drawer content</Drawer></div><CodeBlock :code=${() => playgroundCode()} :filename=${'drawer-playground.jcr'} :language=${'jacare'} /></div>
+      </div>
+    </DocsSection>
+    <Demo :id=${'basic'} :title=${'Right drawer'} :code=${basic} :filename=${'drawer-basic.jcr'} :layout=${'stack'}><Button on-press=${() => basicOpen.set(true)}>Open drawer</Button><Drawer bind-open=${basicOpen} :title=${'Project settings'}>Drawer content</Drawer></Demo>
+    <Demo :id=${'left'} :title=${'Left drawer'} :code=${directions} :filename=${'drawer-left.jcr'} :layout=${'stack'}><Button on-press=${() => leftOpen.set(true)}>Open from left</Button><Drawer bind-open=${leftOpen} :title=${'Navigation'} :direction=${'ltr'} :size=${'22rem'}>Workspace navigation</Drawer></Demo>
+    <Demo :id=${'bottom'} :title=${'Bottom drawer'} :code=${bottom} :filename=${'drawer-bottom.jcr'} :layout=${'stack'}><Button on-press=${() => bottomOpen.set(true)}>Open bottom sheet</Button><Drawer bind-open=${bottomOpen} :title=${'Quick actions'} :direction=${'btt'} :size=${'40%'}>Choose an action.</Drawer></Demo>
+    <Demo :id=${'persistent'} :title=${'Explicit completion'} :code=${persistent} :filename=${'drawer-persistent.jcr'} :layout=${'stack'}><Button on-press=${() => taskOpen.set(true)}>Open focused task</Button><Drawer bind-open=${taskOpen} :title=${'Complete setup'} :closeOnClickModal=${false} :showClose=${false}><Button on-press=${() => taskOpen.set(false)}>Finish</Button></Drawer></Demo>
+    <Demo :id=${'top'} :title=${'Top drawer'} :code=${top} :filename=${'drawer-top.jcr'} :layout=${'stack'}><Button on-press=${() => topOpen.set(true)}>Open top drawer</Button><Drawer bind-open=${topOpen} :title=${'Announcements'} :direction=${'ttb'} :size=${'16rem'}>New release available.</Drawer></Demo>
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}><AccessibilityChecklist :items=${a11y} /></DocsSection>
+    <DocsSection :id=${'api'} :title=${'API'}><PropsTable :contract=${contract} /></DocsSection>
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -1,0 +1,191 @@
+import { pulse } from '@jacare/core'
+import Card from '@jacare/ui/components/Card.jcr'
+import ChartWaterfall from '@jacare/ui/components/ChartWaterfall.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  budget,
+  colors as colorsExample,
+  inCard,
+  playgroundCode as buildPlaygroundCode,
+  sized,
+} from '../../examples/chart-waterfall.js'
+
+const contract = getContract('ChartWaterfall')
+const navLinks = previousNext('/components/chart-waterfall')
+
+const playCustomColors = pulse(false)
+
+const data = [
+  { label: 'Start', value: 40 },
+  { label: 'Sales', value: 28 },
+  { label: 'Refunds', value: -12 },
+  { label: 'Fees', value: -6 },
+  { label: 'Total', type: 'total' },
+]
+
+const budgetData = [
+  { label: 'Budget', value: 100 },
+  { label: 'Payroll', value: -42 },
+  { label: 'Infra', value: -18 },
+  { label: 'Marketing', value: -12 },
+  { label: 'Remaining', type: 'total' },
+]
+
+const compactData = [
+  { label: 'Start', value: 40 },
+  { label: 'Sales', value: 28 },
+  { label: 'Total', type: 'total' },
+]
+
+const totalColor = ['#1f6feb']
+
+const a11y = [
+  'SVG root uses role="img" with an aria-label from title',
+  'Each step exposes label and delta in a title tooltip',
+  'Use a caption that explains up, down, and total tones',
+  'Mark the final step with type="total" for the closing bar',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    customColors: playCustomColors(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ChartWaterfall</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Charts'}
+      :title=${'ChartWaterfall'}
+      :description=${'Running total steps for gains, losses, and totals with optional custom colors.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Switch :label=${'Custom total color'} bind-checked=${playCustomColors} />
+          <Text :tone=${'muted'}>Toggle options to preview waterfall chart chrome.</Text>
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <ChartWaterfall
+              :data=${data}
+              :title=${'Waterfall'}
+              :caption=${'Playground preview'}
+              :colors=${() => (playCustomColors() ? totalColor : null)}
+              :width=${480}
+              :height=${280}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'chart-waterfall-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Pass steps with positive and negative value. End with type="total" for the closing bar.'}
+      :code=${basic}
+      :filename=${'chart-waterfall-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <ChartWaterfall
+        :data=${data}
+        :title=${'Waterfall'}
+        :caption=${'Running total with gains and losses'}
+        :width=${480}
+        :height=${280}
+      />
+    </Demo>
+
+    <DocsSection :id=${'data'} :title=${'Data shapes'}>
+      <Demo
+        :id=${'budget'}
+        :title=${'Budget burn'}
+        :lead=${'Negative values draw downward steps from the running total.'}
+        :code=${budget}
+        :filename=${'chart-waterfall-budget.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartWaterfall :data=${budgetData} :title=${'Budget burn'} :caption=${'Quarter to date'} />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'options'} :title=${'Options'}>
+      <Demo
+        :id=${'colors'}
+        :title=${'Custom total color'}
+        :lead=${'colors overrides the total bar tone; up/down keep default green and red.'}
+        :code=${colorsExample}
+        :filename=${'chart-waterfall-colors.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartWaterfall
+          :data=${data}
+          :title=${'Custom total color'}
+          :colors=${totalColor}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'sized'}
+        :title=${'Custom size'}
+        :lead=${'width and height control the SVG viewBox and frame.'}
+        :code=${sized}
+        :filename=${'chart-waterfall-sized.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartWaterfall
+          :data=${compactData}
+          :title=${'Compact size'}
+          :width=${320}
+          :height=${200}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'in-card'}
+        :title=${'Inside Card'}
+        :lead=${'Compose ChartWaterfall in a Card for revenue bridge panels.'}
+        :code=${inCard}
+        :filename=${'chart-waterfall-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Revenue bridge'} :subtitle=${'Month over month'}>
+          <ChartWaterfall :data=${data} :height=${240} />
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

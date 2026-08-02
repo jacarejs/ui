@@ -1,0 +1,250 @@
+import { pulse } from '@jacare/core'
+import Card from '@jacare/ui/components/Card.jcr'
+import ChartGauge from '@jacare/ui/components/ChartGauge.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  caption as captionExample,
+  color as colorExample,
+  inCard,
+  label as labelExample,
+  playgroundCode as buildPlaygroundCode,
+  range,
+  sized,
+  titleExample,
+  valueExample,
+} from '../../examples/chart-gauge.js'
+
+const contract = getContract('ChartGauge')
+const navLinks = previousNext('/components/chart-gauge')
+
+const playValue = pulse('72')
+const playMin = pulse('0')
+const playMax = pulse('100')
+const playTitle = pulse('Gauge')
+const playCaption = pulse('Playground preview')
+const playLabel = pulse('72%')
+const playCustomColor = pulse(false)
+
+const a11y = [
+  'SVG root uses role="img" with an aria-label from title',
+  'Provide an explicit label that states the unit or percent',
+  'Keep min and max meaningful for assistive context nearby',
+  'Use color to reinforce status, not as the only signal',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    value: Number(playValue()) || 0,
+    min: Number(playMin()) || 0,
+    max: Number(playMax()) || 100,
+    title: playTitle(),
+    caption: playCaption(),
+    label: playLabel(),
+    customColor: playCustomColor(),
+    color: '#be185d',
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ChartGauge</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Charts'}
+      :title=${'ChartGauge'}
+      :description=${'Semi-circle meter for a single bounded value with custom scale, color, and center label.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Value'} :type=${'number'} bind-value=${playValue} />
+          <Field :label=${'Min'} :type=${'number'} bind-value=${playMin} />
+          <Field :label=${'Max'} :type=${'number'} bind-value=${playMax} />
+          <Field :label=${'Title'} bind-value=${playTitle} />
+          <Field :label=${'Caption'} bind-value=${playCaption} />
+          <Field :label=${'Label'} bind-value=${playLabel} />
+          <Switch :label=${'Custom color'} bind-checked=${playCustomColor} />
+          <Text :tone=${'muted'}>Adjust value and scale to preview gauge chrome.</Text>
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <ChartGauge
+              :value=${() => Number(playValue()) || 0}
+              :min=${() => Number(playMin()) || 0}
+              :max=${() => Number(playMax()) || 100}
+              :title=${playTitle}
+              :caption=${playCaption}
+              :label=${playLabel}
+              :color=${() => (playCustomColor() ? '#be185d' : '')}
+              :width=${320}
+              :height=${220}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'chart-gauge-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Pass value, min, max, and label. Optional title, caption, width, and height frame the meter.'}
+      :code=${basic}
+      :filename=${'chart-gauge-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <ChartGauge
+        :value=${72}
+        :min=${0}
+        :max=${100}
+        :label=${'72%'}
+        :title=${'Gauge'}
+        :caption=${'Server CPU utilization'}
+        :width=${320}
+        :height=${220}
+      />
+    </Demo>
+
+    <DocsSection :id=${'options'} :title=${'Options'}>
+      <Demo
+        :id=${'value'}
+        :title=${'Value'}
+        :lead=${'value sets the needle position between min and max.'}
+        :code=${valueExample}
+        :filename=${'chart-gauge-value.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartGauge :value=${86} :min=${0} :max=${100} :label=${'86%'} :title=${'High load'} />
+      </Demo>
+
+      <Demo
+        :id=${'range'}
+        :title=${'Min and max'}
+        :lead=${'min and max define the scale endpoints for non-percent metrics.'}
+        :code=${range}
+        :filename=${'chart-gauge-range.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartGauge
+          :value=${18}
+          :min=${0}
+          :max=${50}
+          :label=${'18°C'}
+          :title=${'Temperature'}
+          :caption=${'Custom min and max scale'}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'title'}
+        :title=${'Title'}
+        :lead=${'title sets the chart heading and SVG aria-label.'}
+        :code=${titleExample}
+        :filename=${'chart-gauge-title.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartGauge :value=${72} :label=${'72%'} :title=${'CPU usage'} />
+      </Demo>
+
+      <Demo
+        :id=${'caption'}
+        :title=${'Caption'}
+        :lead=${'caption adds supporting context below the title.'}
+        :code=${captionExample}
+        :filename=${'chart-gauge-caption.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartGauge :value=${72} :label=${'72%'} :title=${'Gauge'} :caption=${'Updated every 30 seconds'} />
+      </Demo>
+
+      <Demo
+        :id=${'sized'}
+        :title=${'Custom size'}
+        :lead=${'width and height control the SVG viewBox and frame.'}
+        :code=${sized}
+        :filename=${'chart-gauge-sized.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartGauge
+          :value=${72}
+          :label=${'72%'}
+          :title=${'Compact gauge'}
+          :width=${240}
+          :height=${160}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'color'}
+        :title=${'Custom color'}
+        :lead=${'color overrides the default arc stroke for status emphasis.'}
+        :code=${colorExample}
+        :filename=${'chart-gauge-color.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartGauge :value=${92} :label=${'92%'} :title=${'Critical'} :color=${'#be185d'} />
+      </Demo>
+
+      <Demo
+        :id=${'label'}
+        :title=${'Label'}
+        :lead=${'label renders the center text — use units or status words, not color alone.'}
+        :code=${labelExample}
+        :filename=${'chart-gauge-label.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartGauge
+          :value=${72}
+          :min=${0}
+          :max=${100}
+          :label=${'Healthy'}
+          :title=${'Status'}
+          :caption=${'Explicit center label text'}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'in-card'}
+        :title=${'Inside Card'}
+        :lead=${'Compose ChartGauge in a Card for dashboard KPI panels.'}
+        :code=${inCard}
+        :filename=${'chart-gauge-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Infrastructure'} :subtitle=${'Live metrics'}>
+          <ChartGauge :value=${72} :label=${'72%'} :height=${180} />
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

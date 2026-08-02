@@ -1,0 +1,232 @@
+import { pulse } from '@jacare/core'
+import Empty from '@jacare/ui/components/Empty.jcr'
+import EmptyImage from '@jacare/ui/components/EmptyImage.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Select from '@jacare/ui/components/Select.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  colors,
+  downloadable,
+  playgroundCode as buildPlaygroundCode,
+  types,
+  withEmpty,
+} from '../../examples/empty-image.js'
+
+const contract = getContract('EmptyImage')
+const navLinks = previousNext('/components/empty-image')
+
+const typeOptions = [
+  { value: 'default', label: 'Default' },
+  { value: 'search', label: 'Search' },
+  { value: 'inbox', label: 'Inbox' },
+  { value: 'error', label: 'Error' },
+  { value: 'success', label: 'Success' },
+  { value: 'box', label: 'Box' },
+  { value: 'folder', label: 'Folder' },
+  { value: 'cloud', label: 'Cloud' },
+  { value: 'files', label: 'Files' },
+  { value: 'users', label: 'Users' },
+]
+
+const playType = pulse('folder')
+const playSize = pulse('160')
+const playColor = pulse('#c45c26')
+const playBackground = pulse('')
+const playHalo = pulse(true)
+const playDownload = pulse(true)
+const playFormat = pulse('svg')
+const playImage = pulse('')
+
+const a11y = [
+  'Preview image exposes an alt derived from alt, label, or type',
+  'Download control is a real button when downloadable is enabled',
+  'Generated SVGs are decorative when fed into Empty :image — keep Empty title and description meaningful',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    type: playType(),
+    size: Number(playSize()) || 160,
+    color: playColor(),
+    background: playBackground(),
+    halo: playHalo(),
+    downloadable: playDownload(),
+    downloadFormat: playFormat(),
+    label: 'Preview',
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>EmptyImage</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'EmptyImage'}
+      :description=${'Generate empty-state SVG illustrations — pick a scene, tint colors, preview live, and download SVG or PNG for Empty :image.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Select :label=${'Type'} :options=${typeOptions} bind-value=${playType} />
+          <Field :label=${'Size'} :type=${'number'} bind-value=${playSize} />
+          <Field :label=${'Color'} bind-value=${playColor} />
+          <Field :label=${'Background'} bind-value=${playBackground} />
+          <Switch :label=${'Halo'} bind-checked=${playHalo} />
+          <Switch :label=${'Downloadable'} bind-checked=${playDownload} />
+          <Select
+            :label=${'Download format'}
+            :options=${[{ value: 'svg', label: 'SVG' }, { value: 'png', label: 'PNG' }]}
+            bind-value=${playFormat}
+          />
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <EmptyImage
+              :type=${playType}
+              :size=${() => Number(playSize()) || 160}
+              :color=${playColor}
+              :background=${playBackground}
+              :halo=${playHalo}
+              :downloadable=${playDownload}
+              :downloadFormat=${playFormat}
+              :label=${'Preview'}
+              :hint=${'Use on-ready or download to capture the data URL'}
+              on-ready=${(url) => playImage.set(url)}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'empty-image-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Renders a typed empty illustration as an SVG data URL preview.'}
+      :code=${basic}
+      :filename=${'empty-image-basic.jcr'}
+    >
+      <EmptyImage
+        :label=${'Default scene'}
+        :hint=${'SVG data URL ready for Empty :image'}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'types'}
+      :title=${'Scenes'}
+      :lead=${'Ten built-in scenes covering Empty types plus box, folder, cloud, files, and users.'}
+      :code=${types}
+      :filename=${'empty-image-types.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+        <EmptyImage :label=${'Default'} :type=${'default'} :size=${120} />
+        <EmptyImage :label=${'Search'} :type=${'search'} :size=${120} />
+        <EmptyImage :label=${'Inbox'} :type=${'inbox'} :size=${120} />
+        <EmptyImage :label=${'Error'} :type=${'error'} :size=${120} :color=${'#c0392b'} />
+        <EmptyImage :label=${'Success'} :type=${'success'} :size=${120} :color=${'#2f7d4a'} />
+        <EmptyImage :label=${'Box'} :type=${'box'} :size=${120} />
+        <EmptyImage :label=${'Folder'} :type=${'folder'} :size=${120} />
+        <EmptyImage :label=${'Cloud'} :type=${'cloud'} :size=${120} />
+        <EmptyImage :label=${'Files'} :type=${'files'} :size=${120} />
+        <EmptyImage :label=${'Users'} :type=${'users'} :size=${120} />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'colors'}
+      :title=${'Colors'}
+      :lead=${'Tint the accent and optional background baked into the SVG.'}
+      :code=${colors}
+      :filename=${'empty-image-colors.jcr'}
+    >
+      <EmptyImage
+        :label=${'Brand tint'}
+        :type=${'cloud'}
+        :color=${'#1f6feb'}
+        :background=${'#eef5ff'}
+        :hint=${'color and background tint the generated SVG'}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'downloadable'}
+      :title=${'Download'}
+      :lead=${'downloadable exports SVG by default, or PNG when downloadFormat is png.'}
+      :code=${downloadable}
+      :filename=${'empty-image-download.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+        <EmptyImage
+          :label=${'SVG'}
+          :type=${'folder'}
+          :downloadable=${true}
+          :downloadLabel=${'Save SVG'}
+        />
+        <EmptyImage
+          :label=${'PNG'}
+          :type=${'box'}
+          :downloadable=${true}
+          :downloadFormat=${'png'}
+          :downloadLabel=${'Save PNG'}
+        />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'with-empty'}
+      :title=${'Feed Empty'}
+      :lead=${'Listen to ready and pass the data URL into Empty image.'}
+      :code=${withEmpty}
+      :filename=${'empty-image-with-empty.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <EmptyImage
+          :label=${'Generator'}
+          :type=${'files'}
+          :size=${140}
+          :color=${'#235548'}
+          on-ready=${(url) => playImage.set(url)}
+        />
+        <Empty
+          :title=${'Nothing archived'}
+          :description=${'Feed Empty with the generated data URL.'}
+          :image=${playImage}
+          :imageSize=${96}
+        />
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

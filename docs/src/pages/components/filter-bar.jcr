@@ -1,0 +1,238 @@
+import { pulse } from '@jacare/core'
+import FilterBar from '@jacare/ui/components/FilterBar.jcr'
+import Segmented from '@jacare/ui/components/Segmented.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  actionsExample,
+  basic,
+  chipsExample,
+  debounceExample,
+  disabledExample,
+  reactive,
+  searchOnly,
+} from '../../examples/filter-bar.js'
+
+const contract = getContract('FilterBar')
+const navLinks = previousNext('/components/filter-bar')
+
+const sortOptions = [
+  { value: 'new', label: 'Newest' },
+  { value: 'name', label: 'Name' },
+]
+const richSortOptions = [
+  { value: 'new', label: 'Newest' },
+  { value: 'name', label: 'Name' },
+  { value: 'updated', label: 'Recently updated' },
+]
+const debounceOptions = [
+  { value: 0, label: '0ms' },
+  { value: 150, label: '150ms' },
+  { value: 250, label: '250ms' },
+  { value: 500, label: '500ms' },
+]
+
+const query = pulse('')
+const sort = pulse('new')
+const chips = pulse([{ key: 'active', label: 'Active' }])
+
+const chipQuery = pulse('')
+const chipSort = pulse('name')
+const manyChips = pulse([
+  { key: 'active', label: 'Active' },
+  { key: 'beta', label: 'Beta' },
+  { key: 'owner', label: 'Owned by me' },
+])
+
+const searchQuery = pulse('jacaré')
+
+const debounceQuery = pulse('')
+const debounceSort = pulse('new')
+const debounceChips = pulse([{ key: 'open', label: 'Open' }])
+const debounceMs = pulse(250)
+const lastSearch = pulse('Idle')
+
+const actionQuery = pulse('')
+const actionSort = pulse('new')
+const actionChips = pulse([{ key: 'draft', label: 'Draft' }])
+
+const lockedQuery = pulse('locked')
+const lockedSort = pulse('name')
+const lockedChips = pulse([{ key: 'active', label: 'Active' }])
+
+const liveQuery = pulse('')
+const liveSort = pulse('new')
+const liveChips = pulse([
+  { key: 'active', label: 'Active' },
+  { key: 'mine', label: 'Mine' },
+])
+const status = pulse('Idle')
+
+const a11y = [
+  'Search uses role=search from InputSearch',
+  'Chips expose close buttons; Clear filters removes the whole set',
+  'Sort is a labeled Select when sortOptions are provided',
+  'disabled dims search, sort, chips, and clear',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>FilterBar</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Form'}
+      :title=${'FilterBar'}
+      :description=${'Search, removable chips, and a compact sort select for list filters — bind query, sort, and chips together.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Bind query, sort, and chips. Sort appears when sortOptions are provided.'}
+      :code=${basic}
+      :filename=${'filter-bar-basic.jcr'}
+    >
+      <FilterBar
+        bind-query=${query}
+        bind-sort=${sort}
+        bind-chips=${chips}
+        :sortOptions=${sortOptions}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'chips'}
+      :title=${'Filter chips'}
+      :lead=${'Closable tags for active filters, plus Clear filters to reset the set.'}
+      :code=${chipsExample}
+      :filename=${'filter-bar-chips.jcr'}
+    >
+      <FilterBar
+        bind-query=${chipQuery}
+        bind-sort=${chipSort}
+        bind-chips=${manyChips}
+        :sortOptions=${richSortOptions}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'search-only'}
+      :title=${'Search only'}
+      :lead=${'Omit sortOptions and chips for a compact search row.'}
+      :code=${searchOnly}
+      :filename=${'filter-bar-search.jcr'}
+    >
+      <FilterBar :placeholder=${'Search projects…'} bind-query=${searchQuery} />
+    </Demo>
+
+    <Demo
+      :id=${'debounce'}
+      :title=${'Debounced search'}
+      :lead=${'debounce delays the search emit from InputSearch.'}
+      :code=${debounceExample}
+      :filename=${'filter-bar-debounce.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <Segmented bind-value=${debounceMs} :options=${debounceOptions} :block=${true} />
+        <FilterBar
+          bind-query=${debounceQuery}
+          bind-sort=${debounceSort}
+          bind-chips=${debounceChips}
+          :debounce=${debounceMs}
+          :sortOptions=${sortOptions}
+          on-search=${(next) => lastSearch.set(next ? 'search "' + next + '"' : 'cleared')}
+        />
+        <Text :tone=${'muted'}>Active debounce: ${debounceMs}ms · ${lastSearch}</Text>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'actions'}
+      :title=${'Actions slot'}
+      :lead=${'Place trailing actions with slot="actions" — export, create, or bulk tools.'}
+      :code=${actionsExample}
+      :filename=${'filter-bar-actions.jcr'}
+    >
+      <FilterBar
+        bind-query=${actionQuery}
+        bind-sort=${actionSort}
+        bind-chips=${actionChips}
+        :sortOptions=${sortOptions}
+      >
+        <button type="button" class="docs-filter-bar-action" slot="actions">Export</button>
+      </FilterBar>
+    </Demo>
+
+    <Demo
+      :id=${'disabled'}
+      :title=${'Disabled'}
+      :lead=${'Freeze the bar while a list is loading or locked.'}
+      :code=${disabledExample}
+      :filename=${'filter-bar-disabled.jcr'}
+    >
+      <FilterBar
+        :disabled=${true}
+        bind-query=${lockedQuery}
+        bind-sort=${lockedSort}
+        bind-chips=${lockedChips}
+        :sortOptions=${sortOptions}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'reactive'}
+      :title=${'Change events'}
+      :lead=${'change reports query, sort, and chips together; chip close and clear have dedicated emits.'}
+      :code=${reactive}
+      :filename=${'filter-bar-reactive.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <FilterBar
+          bind-query=${liveQuery}
+          bind-sort=${liveSort}
+          bind-chips=${liveChips}
+          :sortOptions=${sortOptions}
+          on-change=${(next) => status.set('q="' + (next.query || '') + '" · sort=' + (next.sort || 'none') + ' · ' + ((next.chips || []).length) + ' chip(s)')}
+        />
+        <Text :tone=${'muted'}>${status}</Text>
+      </Stack>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>
+
+export <style>
+.docs-filter-bar-action {
+  min-height: 2.5rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-sm);
+  background: var(--j-surface-2);
+  color: var(--j-text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.docs-filter-bar-action:hover {
+  border-color: var(--j-primary);
+  color: var(--j-primary);
+}
+</style>

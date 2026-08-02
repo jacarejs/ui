@@ -1,0 +1,77 @@
+import Form from '@jacare/ui/components/Form.jcr'
+import FormItem from '@jacare/ui/components/FormItem.jcr'
+import Input from '@jacare/ui/components/Input.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { error, hint, required, withInput } from '../../examples/form-item.js'
+
+const contract = getContract('FormItem')
+const navLinks = previousNext('/components/form-item')
+
+const a11y = [
+  'Failed fields expose aria-invalid on focusable controls',
+  'Error text uses role=alert for assistive technology',
+  'Required markers are visual; pair with Form rules via prop',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>FormItem</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Form'}
+      :title=${'FormItem'}
+      :description=${'Labeled form row for Form. Pass prop to bind a rule key from createForm, or set error manually for static copy.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'required'} :title=${'Required'} :lead=${'required adds the visual marker; use Form rules to enforce the requirement.'} :code=${required} :filename=${'form-item-required.jcr'}>
+      <Form>
+        <FormItem :label=${'Project name'} :required=${true}>
+          <Input :placeholder=${'Jacare UI'} />
+        </FormItem>
+      </Form>
+    </Demo>
+    <Demo :id=${'hint'} :title=${'Hint'} :lead=${'Hint text appears below the control until an error takes precedence.'} :code=${hint} :filename=${'form-item-hint.jcr'}>
+      <Form>
+        <FormItem :label=${'Workspace URL'} :hint=${'Use lowercase letters and hyphens'}>
+          <Input :placeholder=${'design-system'} />
+        </FormItem>
+      </Form>
+    </Demo>
+    <Demo :id=${'error'} :title=${'Manual error'} :lead=${'error marks descendant controls invalid and announces its message with role="alert".'} :code=${error} :filename=${'form-item-error.jcr'}>
+      <Form>
+        <FormItem :label=${'Email'} :error=${'Enter a valid email address'}>
+          <Input :type=${'email'} :value=${'team@'} />
+        </FormItem>
+      </Form>
+    </Demo>
+    <Demo :id=${'with-input'} :title=${'With Input'} :lead=${'FormItem supplies label and supporting text while Input owns the interactive field behavior.'} :code=${withInput} :filename=${'form-item-input.jcr'}>
+      <Form>
+        <FormItem :label=${'Search query'} :hint=${'Try a component name'}>
+          <Input :clearable=${true} />
+        </FormItem>
+      </Form>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

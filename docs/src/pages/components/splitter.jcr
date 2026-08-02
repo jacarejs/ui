@@ -1,0 +1,103 @@
+import { pulse } from '@jacare/core'
+import Splitter from '@jacare/ui/components/Splitter.jcr'
+import SplitterPanel from '@jacare/ui/components/SplitterPanel.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, vertical, fixed, resize } from '../../examples/splitter.js'
+
+const contract = getContract('Splitter')
+const navLinks = previousNext('/components/splitter')
+const sizes = pulse('Drag a handle')
+
+const a11y = [
+  'Resize handles expose the separator role and orientation',
+  'Do not place essential content in a panel that can collapse below usability',
+  'Provide sensible initial and minimum sizes for keyboard and zoom users',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Splitter</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Layout'}
+      :title=${'Splitter'}
+      :description=${'Resizable horizontal or vertical workspace composed from SplitterPanel regions with initial, minimum, maximum, and fixed sizes. Resize handles use a larger touch hit area (~44px).'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Horizontal panels'}
+      :lead=${'Drag the separator to resize the first panel within its min and max constraints.'}
+      :code=${basic}
+      :filename=${'splitter-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <div style="height:220px"><Splitter>
+        <SplitterPanel :size=${'35%'} :min=${'160px'} :max=${'70%'}><div style="padding:1rem">Navigation</div></SplitterPanel>
+        <SplitterPanel><div style="padding:1rem">Editor</div></SplitterPanel>
+      </Splitter></div>
+    </Demo>
+    <Demo
+      :id=${'vertical'}
+      :title=${'Vertical layout'}
+      :lead=${'Vertical layout turns panel boundaries into horizontal resize handles.'}
+      :code=${vertical}
+      :filename=${'splitter-vertical.jcr'}
+      :layout=${'stack'}
+    >
+      <div style="height:260px"><Splitter :layout=${'vertical'}>
+        <SplitterPanel :size=${'45%'} :min=${'80px'}><div style="padding:1rem">Preview</div></SplitterPanel>
+        <SplitterPanel><div style="padding:1rem">Console</div></SplitterPanel>
+      </Splitter></div>
+    </Demo>
+    <Demo
+      :id=${'fixed'}
+      :title=${'Fixed companion panel'}
+      :lead=${'Set resizable false on a panel whose boundary should remain fixed.'}
+      :code=${fixed}
+      :filename=${'splitter-fixed.jcr'}
+      :layout=${'stack'}
+    >
+      <div style="height:180px"><Splitter>
+        <SplitterPanel :size=${'220px'} :resizable=${false}><div style="padding:1rem">Fixed rail</div></SplitterPanel>
+        <SplitterPanel><div style="padding:1rem">Flexible content</div></SplitterPanel>
+      </Splitter></div>
+    </Demo>
+    <Demo
+      :id=${'resize'}
+      :title=${'Resize event'}
+      :lead=${'resize reports current panel sizes for persistence or status UI.'}
+      :code=${resize}
+      :filename=${'splitter-resize.jcr'}
+      :layout=${'stack'}
+    >
+      <p aria-live="polite">${sizes}</p>
+      <div style="height:180px"><Splitter on-resize=${(value) => sizes.set(value.sizes.join(' / '))}>
+        <SplitterPanel :size=${'40%'} :min=${'120px'}><div style="padding:1rem">Outline</div></SplitterPanel>
+        <SplitterPanel><div style="padding:1rem">Document</div></SplitterPanel>
+      </Splitter></div>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

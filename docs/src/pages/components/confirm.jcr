@@ -16,6 +16,7 @@ import { previousNext } from '../../nav-data.js'
 import {
   basic,
   busy,
+  labels,
   neutral,
   playgroundCode as buildPlaygroundCode,
 } from '../../examples/confirm.js'
@@ -34,6 +35,7 @@ const basicOpen = pulse(false)
 const neutralOpen = pulse(false)
 const busyOpen = pulse(false)
 const busyBusy = pulse(false)
+const labelsOpen = pulse(false)
 
 const a11y = [
   'Dialog renders only while open, keeping inert content out of the accessibility tree',
@@ -156,6 +158,19 @@ export <view>
         />
       </Demo>
     </DocsSection>
+
+    <Demo :id=${'labels'} :title=${'Custom action labels'} :lead=${'Use specific verbs so each outcome is clear before the user acts.'} :code=${labels} :filename=${'confirm-labels.jcr'} :layout=${'stack'}>
+      <Button on-press=${() => labelsOpen.set(true)}>Publish changes</Button>
+      <Confirm
+        bind-open=${labelsOpen}
+        :title=${'Publish changes?'}
+        :message=${'The new version becomes visible immediately.'}
+        :confirmLabel=${'Publish now'}
+        :cancelLabel=${'Keep editing'}
+        on-confirm=${() => labelsOpen.set(false)}
+        on-cancel=${() => labelsOpen.set(false)}
+      />
+    </Demo>
 
     <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
       <AccessibilityChecklist :items=${a11y} />

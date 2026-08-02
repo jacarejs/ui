@@ -1,0 +1,81 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Modal from '@jacare/ui/components/Modal.jcr'
+import ModalFooter from '@jacare/ui/components/ModalFooter.jcr'
+import ModalHeader from '@jacare/ui/components/ModalHeader.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { customTitle } from '../../examples/modal-header.js'
+
+const contract = getContract('ModalHeader')
+const navLinks = previousNext('/components/modal-header')
+const open = pulse(false)
+const a11y = [
+  'Use ModalHeader when the default title string is not enough',
+  'Keep a clear heading for assistive tech inside the custom header',
+  'Prefer Modal title prop for simple single-line titles',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ModalHeader</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Overlay'}
+      :title=${'ModalHeader'}
+      :description=${'Custom header region composed inside Modal. Use it when you need more than the title string — subtitles, badges, or stacked labels.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'related'} :title=${'Related'}>
+      <p class="docs-lead">
+        Pair with <a jacare-go="/components/modal" href="/components/modal">Modal</a>
+        ${' '}and <a jacare-go="/components/modal-footer" href="/components/modal-footer">ModalFooter</a>.
+      </p>
+    </DocsSection>
+
+    <Demo
+      :id=${'custom-title'}
+      :title=${'Custom header'}
+      :lead=${'Omit the title prop and place rich content in ModalHeader.'}
+      :code=${customTitle}
+      :filename=${'modal-header-custom.jcr'}
+      :layout=${'stack'}
+    >
+      <Button on-press=${() => open.set(true)}>Open modal</Button>
+      <Modal bind-open=${open}>
+        <ModalHeader>
+          <Stack :gap=${'xs'}>
+            <strong>Workspace settings</strong>
+            <span style="color:var(--j-muted);font-size:0.875rem">Billing and members</span>
+          </Stack>
+        </ModalHeader>
+        <p>Choose how teammates join this workspace.</p>
+        <ModalFooter>
+          <Button on-press=${() => open.set(false)}>Done</Button>
+        </ModalFooter>
+      </Modal>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

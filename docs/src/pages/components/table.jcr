@@ -1,0 +1,323 @@
+import { pulse } from '@jacare/core'
+import FilterBar from '@jacare/ui/components/FilterBar.jcr'
+import Select from '@jacare/ui/components/Select.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Table from '@jacare/ui/components/Table.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  alignExample,
+  basic,
+  bordered,
+  empty,
+  filterExample,
+  options,
+  playgroundCode as buildPlaygroundCode,
+  sizes,
+  sortable,
+  striped,
+} from '../../examples/table.js'
+
+const contract = getContract('Table')
+const navLinks = previousNext('/components/table')
+
+const sizeOptions = [
+  { value: 'sm', label: 'Small' },
+  { value: 'md', label: 'Medium' },
+  { value: 'lg', label: 'Large' },
+]
+
+const columns = [
+  { prop: 'name', label: 'Name', sortable: true, width: 160 },
+  { prop: 'status', label: 'Status', sortable: true, width: 120 },
+  { prop: 'owner', label: 'Owner', sortable: true, width: 140 },
+]
+const plainColumns = [
+  { prop: 'name', label: 'Name', width: 160 },
+  { prop: 'status', label: 'Status', width: 120 },
+]
+const alignColumns = [
+  { prop: 'name', label: 'Name', width: 180 },
+  { prop: 'version', label: 'Version', width: 100, align: 'center' },
+  { prop: 'downloads', label: 'Downloads', width: 120, align: 'end' },
+]
+
+const data = [
+  { id: 1, name: 'API', status: 'Ready', owner: 'Platform' },
+  { id: 2, name: 'Docs', status: 'Draft', owner: 'Design' },
+  { id: 3, name: 'Site', status: 'Queued', owner: 'Growth' },
+  { id: 4, name: 'Theme', status: 'Ready', owner: 'Design' },
+  { id: 5, name: 'Tokens', status: 'Draft', owner: 'Design' },
+]
+const sortData = [
+  { id: 1, name: 'Theme', status: 'Ready', owner: 'Design' },
+  { id: 2, name: 'API', status: 'Draft', owner: 'Platform' },
+  { id: 3, name: 'Docs', status: 'Queued', owner: 'Design' },
+  { id: 4, name: 'Site', status: 'Ready', owner: 'Growth' },
+]
+const alignData = [
+  { id: 1, name: 'Button', version: '0.1.3', downloads: '12.4k' },
+  { id: 2, name: 'Table', version: '0.1.3', downloads: '8.1k' },
+  { id: 3, name: 'Empty', version: '0.1.2', downloads: '3.6k' },
+]
+
+const statusOptions = [
+  { value: 'all', label: 'All statuses' },
+  { value: 'Ready', label: 'Ready' },
+  { value: 'Draft', label: 'Draft' },
+  { value: 'Queued', label: 'Queued' },
+]
+
+const playStripe = pulse(true)
+const playBorder = pulse(true)
+const playSize = pulse('md')
+const playSortField = pulse('name')
+const playSortOrder = pulse(1)
+
+const sortField = pulse('name')
+const sortOrder = pulse(1)
+const filterQuery = pulse('')
+const filterStatus = pulse('all')
+const filterSortField = pulse('name')
+const filterSortOrder = pulse(1)
+
+const a11y = [
+  'Keep column labels short, unique, and descriptive',
+  'Sortable headers are buttons with explicit aria-labels',
+  'Use text as well as color for status and state',
+  'Use TableV2 when row virtualization is necessary, or DataTable for selection',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    stripe: playStripe(),
+    border: playBorder(),
+    size: playSize(),
+  })
+}
+
+function filteredRows() {
+  const q = String(filterQuery() || '').trim().toLowerCase()
+  const st = String(filterStatus() || 'all')
+  return data.filter((row) => {
+    const matchesQuery = !q || [row.name, row.status, row.owner].join(' ').toLowerCase().includes(q)
+    const matchesStatus = st === 'all' || row.status === st
+    return matchesQuery && matchesStatus
+  })
+}
+
+function sortLabel() {
+  const order = sortOrder() === -1 ? 'desc' : 'asc'
+  return 'Sorted by ' + sortField() + ' (' + order + ')'
+}
+
+function filterCountLabel() {
+  return filteredRows().length + ' row(s)'
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Table</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'Table'}
+      :description=${'Semantic table for small and medium data sets. Configure stripe, border, and size; mark columns sortable for order; compose FilterBar and Select for filtering.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Select :label=${'Size'} :options=${sizeOptions} bind-value=${playSize} />
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Stripe'} bind-checked=${playStripe} />
+            <Switch :label=${'Border'} bind-checked=${playBorder} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <Table
+              :columns=${columns}
+              :data=${data}
+              :stripe=${playStripe}
+              :border=${playBorder}
+              :size=${playSize}
+              bind-sortField=${playSortField}
+              bind-sortOrder=${playSortOrder}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'table-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Pass column definitions and row objects with matching prop keys.'}
+      :code=${basic}
+      :filename=${'table-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Table :columns=${columns} :data=${data} />
+    </Demo>
+
+    <DocsSection :id=${'types'} :title=${'Types and options'}>
+      <Demo
+        :id=${'striped'}
+        :title=${'Striped rows'}
+        :lead=${'Zebra striping helps readers track wide rows.'}
+        :code=${striped}
+        :filename=${'table-striped.jcr'}
+        :layout=${'stack'}
+      >
+        <Table :columns=${plainColumns} :data=${data} :stripe=${true} />
+      </Demo>
+
+      <Demo
+        :id=${'bordered'}
+        :title=${'Bordered'}
+        :lead=${'Borders make dense grids and adjacent values easier to separate.'}
+        :code=${bordered}
+        :filename=${'table-bordered.jcr'}
+        :layout=${'stack'}
+      >
+        <Table :columns=${plainColumns} :data=${data} :border=${true} />
+      </Demo>
+
+      <Demo
+        :id=${'options'}
+        :title=${'Combined options'}
+        :lead=${'Mix stripe, border, and size for denser admin views.'}
+        :code=${options}
+        :filename=${'table-options.jcr'}
+        :layout=${'stack'}
+      >
+        <Table
+          :columns=${columns}
+          :data=${data}
+          :stripe=${true}
+          :border=${true}
+          :size=${'sm'}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'sizes'}
+        :title=${'Sizes'}
+        :code=${sizes}
+        :filename=${'table-sizes.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'lg'}>
+          <Text :weight=${'bold'}>Small</Text>
+          <Table :columns=${plainColumns} :data=${data} :size=${'sm'} :border=${true} />
+          <Text :weight=${'bold'}>Medium</Text>
+          <Table :columns=${plainColumns} :data=${data} :size=${'md'} :border=${true} />
+          <Text :weight=${'bold'}>Large</Text>
+          <Table :columns=${plainColumns} :data=${data} :size=${'lg'} :border=${true} />
+        </Stack>
+      </Demo>
+
+      <Demo
+        :id=${'align'}
+        :title=${'Column alignment'}
+        :lead=${'Set align to start, center, or end on a column definition.'}
+        :code=${alignExample}
+        :filename=${'table-align.jcr'}
+        :layout=${'stack'}
+      >
+        <Table :columns=${alignColumns} :data=${alignData} :border=${true} />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'order'} :title=${'Order'}>
+      <Demo
+        :id=${'sortable'}
+        :title=${'Sortable columns'}
+        :lead=${'Mark columns with sortable and bind sortField / sortOrder. Click a header to toggle asc and desc.'}
+        :code=${sortable}
+        :filename=${'table-sortable.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'sm'}>
+          <Table
+            :columns=${columns}
+            :data=${sortData}
+            bind-sortField=${sortField}
+            bind-sortOrder=${sortOrder}
+            :border=${true}
+            :stripe=${true}
+          />
+          <Text :tone=${'muted'}>${() => sortLabel()}</Text>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'filter'} :title=${'Filter'}>
+      <Demo
+        :id=${'filter-sort'}
+        :title=${'Search, status filter, and sort'}
+        :lead=${'Filter rows before they reach Table, then keep header sorting on the filtered set.'}
+        :code=${filterExample}
+        :filename=${'table-filter.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'md'}>
+          <Stack :direction=${'row'} :gap=${'md'} :wrap=${true} :align=${'end'}>
+            <FilterBar :placeholder=${'Search releases…'} bind-query=${filterQuery} />
+            <Select :label=${'Status'} :options=${statusOptions} bind-value=${filterStatus} />
+          </Stack>
+          <Table
+            :columns=${columns}
+            :data=${() => filteredRows()}
+            bind-sortField=${filterSortField}
+            bind-sortOrder=${filterSortOrder}
+            :border=${true}
+            :stripe=${true}
+            :emptyText=${'No matching releases'}
+          />
+          <Text :tone=${'muted'}>${() => filterCountLabel()}</Text>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'empty'} :title=${'Empty'}>
+      <Demo
+        :id=${'empty-state'}
+        :title=${'Empty state'}
+        :lead=${'Use emptyText to explain why no rows are available.'}
+        :code=${empty}
+        :filename=${'table-empty.jcr'}
+        :layout=${'stack'}
+      >
+        <Table :columns=${plainColumns} :data=${[]} :emptyText=${'No releases found'} :border=${true} />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

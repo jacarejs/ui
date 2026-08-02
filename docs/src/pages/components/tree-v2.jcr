@@ -1,0 +1,123 @@
+import { pulse } from '@jacare/core'
+import TreeV2 from '@jacare/ui/components/TreeV2.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, expanded, checkboxes, accordion, compact } from '../../examples/tree-v2.js'
+
+const contract = getContract('TreeV2')
+const navLinks = previousNext('/components/tree-v2')
+const treeData = [
+  {
+    value: 'docs',
+    label: 'Documentation',
+    children: [
+      { value: 'install', label: 'Installation' },
+      { value: 'theme', label: 'Theme' },
+      {
+        value: 'components',
+        label: 'Components',
+        children: [
+          { value: 'forms', label: 'Forms' },
+          { value: 'display', label: 'Data display' },
+        ],
+      },
+    ],
+  },
+  { value: 'changelog', label: 'Changelog' },
+]
+const selected = pulse('theme')
+const checked = pulse(['install', 'theme'])
+const accordionValue = pulse('theme')
+const a11y = [
+  'Use concise node labels that remain distinct out of context',
+  'Preserve a logical parent and child hierarchy in data',
+  'Do not use checkbox selection when a single active node is expected',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>TreeV2</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'TreeV2'}
+      :description=${'Alias-compatible tree with the same selection, checkbox, expansion, and accordion patterns as Tree.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Selection'}
+      :lead=${'Bind value to the selected node key.'}
+      :code=${basic}
+      :filename=${'tree-v2-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <TreeV2 :data=${treeData} bind-value=${selected} />
+    </Demo>
+
+    <Demo
+      :id=${'expanded'}
+      :title=${'Expand all'}
+      :lead=${'Reveal the whole hierarchy on first render.'}
+      :code=${expanded}
+      :filename=${'tree-v2-expanded.jcr'}
+      :layout=${'stack'}
+    >
+      <TreeV2 :data=${treeData} :value=${'display'} :defaultExpandAll=${true} />
+    </Demo>
+
+    <Demo
+      :id=${'checkboxes'}
+      :title=${'Checkbox selection'}
+      :lead=${'Checkbox mode accepts an array of selected keys.'}
+      :code=${checkboxes}
+      :filename=${'tree-v2-checkboxes.jcr'}
+      :layout=${'stack'}
+    >
+      <TreeV2 :data=${treeData} bind-value=${checked} :showCheckbox=${true} :defaultExpandAll=${true} />
+    </Demo>
+
+    <Demo
+      :id=${'accordion'}
+      :title=${'Accordion branches'}
+      :lead=${'Opening one branch closes its sibling branch.'}
+      :code=${accordion}
+      :filename=${'tree-v2-accordion.jcr'}
+      :layout=${'stack'}
+    >
+      <TreeV2 :data=${treeData} bind-value=${accordionValue} :accordion=${true} />
+    </Demo>
+
+    <Demo
+      :id=${'compact'}
+      :title=${'Collapsed initially'}
+      :lead=${'Keep large trees compact until users choose a branch.'}
+      :code=${compact}
+      :filename=${'tree-v2-compact.jcr'}
+      :layout=${'stack'}
+    >
+      <TreeV2 :data=${treeData} :value=${'changelog'} />
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

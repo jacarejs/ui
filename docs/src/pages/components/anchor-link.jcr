@@ -1,0 +1,115 @@
+import Anchor from '@jacare/ui/components/Anchor.jcr'
+import AnchorLink from '@jacare/ui/components/AnchorLink.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { titles, slotLabels, stickyOffset } from '../../examples/anchor-link.js'
+
+const contract = getContract('AnchorLink')
+const navLinks = previousNext('/components/anchor-link')
+const a11y = [
+  'Use descriptive link text that identifies each destination',
+  'Keep section ids unique and matched to each href',
+  'Account for sticky headers with Anchor offset so headings remain visible',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>AnchorLink</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Navigation'}
+      :title=${'AnchorLink'}
+      :description=${'AnchorLink defines a section link used inside Anchor. Set href for the target and use title or the default slot for its accessible label.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'titles'} :title=${'Title prop'} :lead=${'title provides the visible link label while href identifies the section target. Demos use a local scroll panel.'} :code=${titles} :filename=${'anchor-link-titles.jcr'} :layout=${'stack'}>
+      <div style="display:grid;grid-template-columns:8rem 1fr;gap:1rem;height:200px;border:1px solid var(--j-border);border-radius:var(--j-radius);padding:0.75rem">
+        <Anchor :offset=${12}>
+          <AnchorLink :href=${'#alink-intro'} :title=${'Intro'} />
+          <AnchorLink :href=${'#alink-usage'} :title=${'Usage'} />
+        </Anchor>
+        <div style="overflow:auto;min-height:0">
+          <section id="alink-intro" style="min-height:120px;padding-bottom:1rem">
+            <h4 style="margin:0 0 0.35rem">Intro</h4>
+            <p style="margin:0;color:var(--j-muted)">Jump between sections in long documents.</p>
+          </section>
+          <section id="alink-usage" style="min-height:120px;padding-bottom:1rem">
+            <h4 style="margin:0 0 0.35rem">Usage</h4>
+            <p style="margin:0;color:var(--j-muted)">Anchor links can account for sticky headers with an offset.</p>
+          </section>
+        </div>
+      </div>
+    </Demo>
+
+    <Demo :id=${'slot-labels'} :title=${'Slot labels'} :lead=${'Omit title to render richer link text from the default slot.'} :code=${slotLabels} :filename=${'anchor-link-slot-labels.jcr'} :layout=${'stack'}>
+      <div style="display:grid;gap:0.75rem;height:180px;border:1px solid var(--j-border);border-radius:var(--j-radius);padding:0.75rem">
+        <Anchor :direction=${'horizontal'} :type=${'underline'} :offset=${8}>
+          <AnchorLink :href=${'#alink-overview'}>Package overview</AnchorLink>
+          <AnchorLink :href=${'#alink-api'}>API reference</AnchorLink>
+        </Anchor>
+        <div style="overflow:auto;min-height:0">
+          <section id="alink-overview" style="min-height:100px;padding-bottom:1rem">
+            <h4 style="margin:0 0 0.35rem">Package overview</h4>
+            <p style="margin:0;color:var(--j-muted)">Omit title to render richer link text from the default slot.</p>
+          </section>
+          <section id="alink-api" style="min-height:100px;padding-bottom:1rem">
+            <h4 style="margin:0 0 0.35rem">API reference</h4>
+            <p style="margin:0;color:var(--j-muted)">Slot labels stay available to assistive tech.</p>
+          </section>
+        </div>
+      </div>
+    </Demo>
+
+    <Demo :id=${'sticky-offset'} :title=${'Sticky header offset'} :lead=${'Anchor applies its offset when an AnchorLink scrolls to a section.'} :code=${stickyOffset} :filename=${'anchor-link-sticky-offset.jcr'} :layout=${'stack'}>
+      <div style="display:grid;grid-template-columns:9rem 1fr;height:220px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <div style="padding:0.75rem;border-right:1px solid var(--j-border)">
+          <Anchor :offset=${48}>
+            <AnchorLink :href=${'#alink-install'} :title=${'Install'} />
+            <AnchorLink :href=${'#alink-configure'} :title=${'Configure'} />
+            <AnchorLink :href=${'#alink-ship'} :title=${'Ship'} />
+          </Anchor>
+        </div>
+        <div style="min-height:0;display:grid;grid-template-rows:auto 1fr">
+          <div style="padding:0.55rem 0.75rem;background:var(--j-surface-2);border-bottom:1px solid var(--j-border);font-size:0.85rem;font-weight:600">
+            Sticky header (offset 48)
+          </div>
+          <div style="overflow:auto;min-height:0;padding:0.75rem">
+            <section id="alink-install" style="min-height:130px;padding-bottom:1rem">
+              <h4 style="margin:0 0 0.35rem">Install</h4>
+              <p style="margin:0;color:var(--j-muted)">offset leaves room under sticky chrome.</p>
+            </section>
+            <section id="alink-configure" style="min-height:130px;padding-bottom:1rem">
+              <h4 style="margin:0 0 0.35rem">Configure</h4>
+              <p style="margin:0;color:var(--j-muted)">Match offset to the sticky header height.</p>
+            </section>
+            <section id="alink-ship" style="min-height:130px;padding-bottom:1rem">
+              <h4 style="margin:0 0 0.35rem">Ship</h4>
+              <p style="margin:0;color:var(--j-muted)">Click through the steps to verify scroll + offset.</p>
+            </section>
+          </div>
+        </div>
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

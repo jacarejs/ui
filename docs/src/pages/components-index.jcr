@@ -1,33 +1,125 @@
+import { pulse } from '@jacare/core'
+import Field from '@jacare/ui/components/Field.jcr'
 import DocsHero from '../ui/DocsHero.jcr'
 import PreviousNext from '../ui/PreviousNext.jcr'
-import { componentsByGroup, componentHref, previousNext } from '../nav-data.js'
+import { componentsByGroup, componentHref, previousNext, shippedComponents } from '../nav-data.js'
 
 const navLinks = previousNext('/components')
-const catalogGroups = componentsByGroup()
+const query = pulse('')
+const shippedCount = shippedComponents.length
+const allGroups = componentsByGroup()
+const categoryCount = allGroups.length
+
+const catalogDescription = `Discover ${shippedCount} accessible Jacaré primitives across ${categoryCount} categories — actions, form, inputs, selection, pickers, data, charts, overlays, layout, and utilities. Open any card for live demos, contract API, and accessibility notes.`
 
 function groupId(title) {
   return `catalog-${String(title).toLowerCase().replace(/\s+/g, '-')}`
 }
 
+function matchesQuery(item, raw) {
+  const q = String(raw || '').trim().toLowerCase()
+  if (!q) return true
+  return `${item.name} ${item.blurb} ${item.group}`.toLowerCase().includes(q)
+}
+
+function filteredGroups() {
+  const q = query()
+  return allGroups
+    .map((group) => ({
+      title: group.title,
+      items: group.items.filter((item) => matchesQuery(item, q)),
+    }))
+    .filter((group) => group.items.length > 0)
+}
+
+function visibleCount() {
+  return filteredGroups().reduce((sum, group) => sum + group.items.length, 0)
+}
+
+function hasNoMatches() {
+  return filteredGroups().length === 0
+}
+
+function initialOf(name) {
+  return String(name || '?').slice(0, 1).toUpperCase()
+}
+
+function previewTone(name) {
+  const tones = ['mint', 'leaf', 'lime', 'primary', 'forest']
+  let hash = 0
+  for (const char of String(name)) hash = (hash + char.charCodeAt(0) * 17) % tones.length
+  return tones[hash]
+}
+
 export <view>
-  <article class="docs-page">
+  <article class="docs-page docs-components-showcase">
     <DocsHero
       :kicker=${'Components'}
-      :title=${'Catalog'}
-      :description=${'Browse every shipped primitive in @jacare/ui, grouped by role. Each card opens a page with a playground, live demos, Jacaré source, generated API from the .jcr contract, and previous/next navigation.'}
+      :title=${'Component library'}
+      :description=${catalogDescription}
     />
 
-    #for catalogGroups as group (group.title)
+    <div class="docs-showcase-stats" aria-label="Catalog summary">
+      <div class="docs-showcase-stat docs-panel">
+        <strong>${shippedCount}</strong>
+        <span>Components</span>
+      </div>
+      <div class="docs-showcase-stat docs-panel">
+        <strong>${categoryCount}</strong>
+        <span>Categories</span>
+      </div>
+      <div class="docs-showcase-stat docs-panel">
+        <strong>${() => String(visibleCount())}</strong>
+        <span>Showing</span>
+      </div>
+    </div>
+
+    <div class="docs-showcase-toolbar docs-panel">
+      <Field
+        :label=${'Search components'}
+        :placeholder=${'DataTable, Gallery, InputMask…'}
+        :clearable=${true}
+        bind-value=${query}
+      />
+      <nav class="docs-showcase-jumps" aria-label="Jump to category">
+        #for allGroups as group (group.title)
+          <a class="docs-showcase-jump" href=${() => `#${groupId(group.title)}`}>${group.title}</a>
+        #end
+      </nav>
+    </div>
+
+    #if hasNoMatches()
+      <p class="docs-lead docs-showcase-empty">No components match “${query}”.</p>
+    #end
+
+    #for filteredGroups() as group (group.title)
       <section class="docs-catalog-group" aria-labelledby=${() => groupId(group.title)}>
         <div class="docs-catalog-group__head">
           <h2 class="docs-catalog-group__title" id=${() => groupId(group.title)}>${group.title}</h2>
           <span class="docs-catalog-group__count">${() => String(group.items.length)}</span>
         </div>
-        <div class="docs-card-grid">
+        <div class="docs-showcase-grid">
           #for group.items as item (item.name)
-            <a class="docs-card docs-panel" jacare-go=${componentHref(item.name)} href=${componentHref(item.name)}>
-              <h3>${item.name}</h3>
-              <p>${item.blurb}</p>
+            <a
+              class="docs-showcase-card docs-panel"
+              jacare-go=${componentHref(item.name)}
+              href=${componentHref(item.name)}
+            >
+              <div
+                class="docs-showcase-card__preview"
+                class-docs-showcase-card__preview--mint=${() => previewTone(item.name) === 'mint'}
+                class-docs-showcase-card__preview--leaf=${() => previewTone(item.name) === 'leaf'}
+                class-docs-showcase-card__preview--lime=${() => previewTone(item.name) === 'lime'}
+                class-docs-showcase-card__preview--primary=${() => previewTone(item.name) === 'primary'}
+                class-docs-showcase-card__preview--forest=${() => previewTone(item.name) === 'forest'}
+                aria-hidden="true"
+              >
+                <span class="docs-showcase-card__glyph">${() => initialOf(item.name)}</span>
+              </div>
+              <div class="docs-showcase-card__body">
+                <h3>${item.name}</h3>
+                <p>${item.blurb}</p>
+              </div>
             </a>
           #end
         </div>

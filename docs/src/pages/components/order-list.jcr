@@ -1,0 +1,130 @@
+import { pulse } from '@jacare/core'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import OrderList from '@jacare/ui/components/OrderList.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, disabled, disabledItems, filterable, playgroundCode as buildPlaygroundCode } from '../../examples/order-list.js'
+
+const contract = getContract('OrderList')
+const navLinks = previousNext('/components/order-list')
+
+const playValue = pulse([
+  { key: '1', label: 'Design system' },
+  { key: '2', label: 'Documentation' },
+  { key: '3', label: 'Components' },
+  { key: '4', label: 'Theme tokens' },
+  { key: '5', label: 'Accessibility' },
+])
+const playFilterable = pulse(false)
+const playDisabled = pulse(false)
+const basicValue = pulse([
+  { key: '1', label: 'Design system' },
+  { key: '2', label: 'Documentation' },
+  { key: '3', label: 'Components' },
+  { key: '4', label: 'Theme tokens' },
+])
+const filterValue = pulse([
+  { key: 'design', label: 'Design' },
+  { key: 'engineering', label: 'Engineering' },
+  { key: 'finance', label: 'Finance' },
+  { key: 'operations', label: 'Operations' },
+])
+const itemsValue = pulse([
+  { key: '1', label: 'Public reports' },
+  { key: '2', label: 'Private reports' },
+  { key: '3', label: 'Billing', disabled: true },
+])
+const disabledValue = pulse([
+  { key: '1', label: 'Intro' },
+  { key: '2', label: 'Usage' },
+])
+
+const a11yItems = [
+  'Reorder controls expose explicit aria-labels for each direction',
+  'Native checkboxes preserve keyboard selection of one or more items',
+  'Disabled items cannot be selected or moved',
+  'Optional filter narrows visible items without changing the bound order',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    value: playValue(),
+    header: 'Release checklist',
+    filterable: playFilterable(),
+    disabled: playDisabled(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>OrderList</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'OrderList'}
+      :description=${'Reorder a bound list of keyed items with multi-select and optional filtering.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Filterable'} bind-checked=${playFilterable} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <OrderList
+              bind-value=${playValue}
+              header="Release checklist"
+              :filterable=${playFilterable}
+              :disabled=${playDisabled}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'order-list-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'order-list-basic.jcr'}>
+      <OrderList bind-value=${basicValue} header="Release checklist" />
+    </Demo>
+
+    <Demo :id=${'filterable'} :title=${'Filterable'} :lead=${'Filtering narrows the visible list without changing the bound order.'} :code=${filterable} :filename=${'order-list-filterable.jcr'}>
+      <OrderList bind-value=${filterValue} :filterable=${true} header="Team priorities" />
+    </Demo>
+
+    <Demo :id=${'disabled-items'} :title=${'Disabled items'} :lead=${'Individual items can be marked disabled to prevent selection and reordering.'} :code=${disabledItems} :filename=${'order-list-disabled-items.jcr'}>
+      <OrderList bind-value=${itemsValue} header="Report order" />
+    </Demo>
+
+    <Demo :id=${'disabled'} :title=${'Disabled'} :code=${disabled} :filename=${'order-list-disabled.jcr'}>
+      <OrderList bind-value=${disabledValue} :disabled=${true} header="Locked order" />
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11yItems} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

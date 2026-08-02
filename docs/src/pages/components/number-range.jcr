@@ -1,0 +1,305 @@
+import { pulse } from '@jacare/core'
+import NumberRange from '@jacare/ui/components/NumberRange.jcr'
+import Segmented from '@jacare/ui/components/Segmented.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  arrayModel,
+  basic,
+  changeEvent,
+  customLabels,
+  disabledExample,
+  hintAndError,
+  percentFilter,
+  presets,
+  reactive,
+  stepPrecision,
+} from '../../examples/number-range.js'
+
+const contract = getContract('NumberRange')
+const navLinks = previousNext('/components/number-range')
+
+const range = pulse({ min: 10, max: 80 })
+const ages = pulse({ min: 18, max: 65 })
+const rating = pulse({ min: 1.5, max: 4.25 })
+const hinted = pulse({ min: 100, max: 500 })
+const invalid = pulse({ min: 0, max: 0 })
+const locked = pulse({ min: 20, max: 80 })
+const salary = pulse({ min: 120, max: 480 })
+const scoreBand = pulse([25, 75])
+const completion = pulse({ min: 20, max: 90 })
+const price = pulse({ min: 40, max: 180 })
+const preset = pulse('mid')
+const quantity = pulse({ min: 2, max: 12 })
+const lastChange = pulse('Idle')
+
+const presetOptions = [
+  { value: 'budget', label: 'Budget' },
+  { value: 'mid', label: 'Mid' },
+  { value: 'premium', label: 'Premium' },
+]
+
+const PRESETS = {
+  budget: { min: 0, max: 80 },
+  mid: { min: 40, max: 180 },
+  premium: { min: 150, max: 500 },
+}
+
+function applyPreset(next) {
+  preset.set(next)
+  price.set(PRESETS[next] || PRESETS.mid)
+}
+
+const a11y = [
+  'Each bound keeps its own labeled InputNumber control',
+  'Max is clamped so it never falls below min when either side changes',
+  'error uses role="alert"; hint appears under the pair when there is no error',
+  'disabled dims both steppers and blocks interaction',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>NumberRange</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Inputs'}
+      :title=${'NumberRange'}
+      :description=${'Two linked InputNumber controls for min/max ranges — bind { min, max } (or [min, max]) and keep max ≥ min automatically.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Bind a { min, max } pulse. Outer min/max props limit both steppers.'}
+      :code=${basic}
+      :filename=${'number-range-basic.jcr'}
+    >
+      <NumberRange :label=${'Price'} bind-value=${range} :min=${0} :max=${1000} />
+    </Demo>
+
+    <Demo
+      :id=${'custom-labels'}
+      :title=${'Custom field labels'}
+      :lead=${'Override the default Min / Max captions with minLabel and maxLabel.'}
+      :code=${customLabels}
+      :filename=${'number-range-labels.jcr'}
+    >
+      <NumberRange
+        :label=${'Age filter'}
+        :minLabel=${'From'}
+        :maxLabel=${'To'}
+        :min=${0}
+        :max=${120}
+        bind-value=${ages}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'step-precision'}
+      :title=${'Step and precision'}
+      :lead=${'Forward step and precision to both InputNumber controls.'}
+      :code=${stepPrecision}
+      :filename=${'number-range-step.jcr'}
+    >
+      <NumberRange
+        :label=${'Rating band'}
+        :min=${0}
+        :max=${5}
+        :step=${0.25}
+        :precision=${2}
+        :hint=${'step 0.25 with two decimal places'}
+        bind-value=${rating}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'array-model'}
+      :title=${'Array model'}
+      :lead=${'Start from [min, max] if your API already uses tuples — commits still normalize to { min, max }.'}
+      :code=${arrayModel}
+      :filename=${'number-range-array.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <NumberRange
+          :label=${'Score band'}
+          :min=${0}
+          :max=${100}
+          :minLabel=${'Low'}
+          :maxLabel=${'High'}
+          :hint=${'Also accepts [min, max] arrays — commits back as { min, max }'}
+          bind-value=${scoreBand}
+        />
+        <Text :tone=${'muted'}>
+          ${() => {
+            const next = scoreBand()
+            if (Array.isArray(next)) return 'Array model → [' + next[0] + ', ' + next[1] + ']'
+            return 'Object model → { min: ' + next.min + ', max: ' + next.max + '}'
+          }}
+        </Text>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'percent'}
+      :title=${'Completion filter'}
+      :lead=${'0–100 progress bands for dashboards and project lists.'}
+      :code=${percentFilter}
+      :filename=${'number-range-percent.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <NumberRange
+          :label=${'Completion %'}
+          :min=${0}
+          :max=${100}
+          :step=${5}
+          :minLabel=${'At least'}
+          :maxLabel=${'At most'}
+          :hint=${'Filter projects by progress percentage'}
+          bind-value=${completion}
+        />
+        <Text :tone=${'muted'}>
+          ${() => {
+            const next = completion() || { min: 0, max: 0 }
+            return 'Showing ' + next.min + '% – ' + next.max + '%'
+          }}
+        </Text>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'presets'}
+      :title=${'Presets + editable range'}
+      :lead=${'Drive the pulse from quick presets, then fine-tune with the steppers.'}
+      :code=${presets}
+      :filename=${'number-range-presets.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <Segmented :options=${presetOptions} :block=${true} bind-value=${preset} on-change=${applyPreset} />
+        <NumberRange
+          :label=${'Nightly rate'}
+          :min=${0}
+          :max=${500}
+          :step=${10}
+          :minLabel=${'From $'}
+          :maxLabel=${'To $'}
+          bind-value=${price}
+        />
+        <Text :tone=${'muted'}>
+          ${() => {
+            const next = price() || { min: 0, max: 0 }
+            return 'Listing $' + next.min + ' – $' + next.max + ' / night'
+          }}
+        </Text>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'change'}
+      :title=${'Change event'}
+      :lead=${'Listen to change for analytics, URL sync, or dependent queries.'}
+      :code=${changeEvent}
+      :filename=${'number-range-change.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <NumberRange
+          :label=${'Order quantity'}
+          :min=${1}
+          :max=${48}
+          :step=${1}
+          :minLabel=${'Min qty'}
+          :maxLabel=${'Max qty'}
+          :hint=${'on-change fires whenever either bound updates'}
+          bind-value=${quantity}
+          on-change=${(next) => lastChange.set('Changed to ' + next.min + '–' + next.max)}
+        />
+        <Text :tone=${'muted'}>${lastChange}</Text>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'hint-error'}
+      :title=${'Hint and error'}
+      :lead=${'hint guides setup; error replaces it and marks the pair invalid.'}
+      :code=${hintAndError}
+      :filename=${'number-range-states.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'lg'}>
+        <NumberRange
+          :label=${'Budget'}
+          :min=${0}
+          :max=${10000}
+          :hint=${'Values are stored as { min, max }; max never falls below min'}
+          bind-value=${hinted}
+        />
+        <NumberRange
+          :label=${'Required range'}
+          :error=${'Set a range greater than zero'}
+          bind-value=${invalid}
+        />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'disabled'}
+      :title=${'Disabled'}
+      :lead=${'Freeze both bounds — useful for published filters.'}
+      :code=${disabledExample}
+      :filename=${'number-range-disabled.jcr'}
+    >
+      <NumberRange
+        :label=${'Frozen band'}
+        :disabled=${true}
+        :hint=${'Locked while the report is published'}
+        bind-value=${locked}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'reactive'}
+      :title=${'Reactive summary'}
+      :lead=${'Read the bound pulse to show span or format the range elsewhere.'}
+      :code=${reactive}
+      :filename=${'number-range-reactive.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <NumberRange
+          :label=${'Salary range'}
+          :min=${0}
+          :max=${1000}
+          :step=${10}
+          :minLabel=${'Low'}
+          :maxLabel=${'High'}
+          bind-value=${salary}
+        />
+        <Text :tone=${'muted'}>
+          ${() => {
+            const next = salary() || { min: 0, max: 0 }
+            return next.min + ' – ' + next.max + ' (span ' + (next.max - next.min) + ')'
+          }}
+        </Text>
+      </Stack>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -9,9 +9,10 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/input-number.js'
+import { basic, playgroundCode as buildPlaygroundCode, sizes, states, steps, withoutControls } from '../../examples/input-number.js'
 
 const contract = getContract('InputNumber')
 const navLinks = previousNext('/components/input-number')
@@ -24,6 +25,22 @@ const playStep = pulse('1')
 const playControls = pulse(true)
 const playDisabled = pulse(false)
 const basicValue = pulse(3)
+const stepInteger = pulse(10)
+const stepDecimal = pulse(1.25)
+const sizeSm = pulse(1)
+const sizeMd = pulse(2)
+const sizeLg = pulse(3)
+const noControlsValue = pulse(12)
+const requiredValue = pulse(0)
+const errorValue = pulse(14)
+const disabledValue = pulse(8)
+const a11y = [
+  'The field uses decimal input mode and supports Arrow Up and Arrow Down stepping',
+  'Increment and decrement buttons have accessible names and stop at min and max',
+  'required is forwarded to the native input and shown in the label',
+  'error sets aria-invalid and announces validation text with role="alert"',
+  'disabled prevents typing and step controls from changing the value',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -46,7 +63,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Inputs'}
       :title=${'InputNumber'}
       :description=${'Numeric field with increment and decrement controls, min/max clamping, and precision rounding.'}
       :status=${'stable'}
@@ -85,6 +102,37 @@ export <view>
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'input-number-basic.jcr'}>
       <InputNumber :label=${'Quantity'} :min=${0} :max=${10} bind-value=${basicValue} />
     </Demo>
+
+    <Demo :id=${'steps'} :title=${'Steps and precision'} :lead=${'Use precision to normalize decimal steps.'} :code=${steps} :filename=${'input-number-steps.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <InputNumber :label=${'Tickets'} :step=${5} bind-value=${stepInteger} />
+        <InputNumber :label=${'Price'} :step=${0.25} :precision=${2} bind-value=${stepDecimal} />
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'sizes'} :title=${'Sizes'} :code=${sizes} :filename=${'input-number-sizes.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <InputNumber :label=${'Small'} :size=${'sm'} bind-value=${sizeSm} />
+        <InputNumber :label=${'Medium'} :size=${'md'} bind-value=${sizeMd} />
+        <InputNumber :label=${'Large'} :size=${'lg'} bind-value=${sizeLg} />
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'without-controls'} :title=${'Without controls'} :lead=${'Hide buttons for direct numeric entry.'} :code=${withoutControls} :filename=${'input-number-without-controls.jcr'}>
+      <InputNumber :label=${'Guests'} :controls=${false} :placeholder=${'Enter a number'} bind-value=${noControlsValue} />
+    </Demo>
+
+    <Demo :id=${'states'} :title=${'Validation and disabled states'} :code=${states} :filename=${'input-number-states.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <InputNumber :label=${'Seats'} :required=${true} :hint=${'Choose at least one seat'} bind-value=${requiredValue} />
+        <InputNumber :label=${'Age'} :error=${'Age must be 18 or older'} bind-value=${errorValue} />
+        <InputNumber :label=${'Locked quantity'} :disabled=${true} bind-value=${disabledValue} />
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

@@ -1,0 +1,320 @@
+import { effect, pulse, untrack } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Card from '@jacare/ui/components/Card.jcr'
+import Collapse from '@jacare/ui/components/Collapse.jcr'
+import CollapseItem from '@jacare/ui/components/CollapseItem.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Tag from '@jacare/ui/components/Tag.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  accordion,
+  basic,
+  collapsed,
+  controlled,
+  disabled,
+  faq,
+  inCard,
+  multiple,
+  playgroundCode as buildPlaygroundCode,
+  rich,
+} from '../../examples/collapse.js'
+
+const contract = getContract('Collapse')
+const navLinks = previousNext('/components/collapse')
+
+const playAccordion = pulse(false)
+const playValue = pulse(['overview'])
+
+const openBasic = pulse(['overview'])
+const openMultiple = pulse(['overview', 'usage'])
+const openAccordion = pulse('overview')
+const openDisabled = pulse(['ready'])
+const openFaq = pulse('shipping')
+const openRich = pulse(['tokens'])
+const openCard = pulse('profile')
+const openControlled = pulse(['overview'])
+
+const a11y = [
+  'Panel headers expose expanded state and use native buttons',
+  'Keep titles descriptive enough to predict panel content',
+  'Do not put essential information only inside a disabled panel',
+  'In accordion mode, only one panel stays open at a time',
+]
+
+effect(() => {
+  const accordionMode = playAccordion()
+  const current = untrack(() => playValue())
+  if (accordionMode) {
+    if (Array.isArray(current)) playValue.set(current[0] || 'overview')
+  } else if (!Array.isArray(current)) {
+    playValue.set(current ? [String(current)] : [])
+  }
+})
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    accordion: playAccordion(),
+  })
+}
+
+function openLabel() {
+  const value = playValue()
+  if (Array.isArray(value)) return value.length ? value.join(', ') : 'none'
+  return String(value || 'none')
+}
+
+function openAll() {
+  openControlled.set(['overview', 'usage', 'api'])
+}
+
+function closeAll() {
+  openControlled.set([])
+}
+
+function controlledLabel() {
+  const value = openControlled()
+  return Array.isArray(value) ? value.join(', ') || 'none' : String(value || 'none')
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Collapse</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'Collapse'}
+      :description=${'Stacked disclosure panels. Bind value as an array for multiple open items, or use accordion for a single open panel. Disable items and compose rich body content.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Switch :label=${'Accordion'} bind-checked=${playAccordion} />
+          <Text :tone=${'muted'}>${() => 'Open: ' + openLabel()}</Text>
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <Collapse bind-value=${playValue} :accordion=${playAccordion}>
+              <CollapseItem :name=${'overview'} :title=${'Overview'}>
+                Package purpose and installation notes.
+              </CollapseItem>
+              <CollapseItem :name=${'usage'} :title=${'Usage'}>
+                Component composition and binding patterns.
+              </CollapseItem>
+              <CollapseItem :name=${'api'} :title=${'API'}>
+                Props, slots, and emitted events.
+              </CollapseItem>
+            </Collapse>
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'collapse-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Bind value to an array of panel names. Click a header to toggle that panel.'}
+      :code=${basic}
+      :filename=${'collapse-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Collapse bind-value=${openBasic}>
+        <CollapseItem :name=${'overview'} :title=${'Overview'}>Package purpose and installation notes.</CollapseItem>
+        <CollapseItem :name=${'usage'} :title=${'Usage'}>Component composition and binding patterns.</CollapseItem>
+        <CollapseItem :name=${'api'} :title=${'API'}>Props, slots, and emitted events.</CollapseItem>
+      </Collapse>
+    </Demo>
+
+    <DocsSection :id=${'options'} :title=${'Options'}>
+      <Demo
+        :id=${'multiple'}
+        :title=${'Multiple panels'}
+        :lead=${'Without accordion, several panels can stay open at once.'}
+        :code=${multiple}
+        :filename=${'collapse-multiple.jcr'}
+        :layout=${'stack'}
+      >
+        <Collapse bind-value=${openMultiple}>
+          <CollapseItem :name=${'overview'} :title=${'Overview'}>Package purpose and installation notes.</CollapseItem>
+          <CollapseItem :name=${'usage'} :title=${'Usage'}>Component composition and binding patterns.</CollapseItem>
+          <CollapseItem :name=${'api'} :title=${'API'}>Props, slots, and emitted events.</CollapseItem>
+        </Collapse>
+      </Demo>
+
+      <Demo
+        :id=${'accordion'}
+        :title=${'Accordion'}
+        :lead=${'With accordion, value is a single panel name and opening one closes the others.'}
+        :code=${accordion}
+        :filename=${'collapse-accordion.jcr'}
+        :layout=${'stack'}
+      >
+        <Collapse bind-value=${openAccordion} :accordion=${true}>
+          <CollapseItem :name=${'overview'} :title=${'Overview'}>Package purpose and installation notes.</CollapseItem>
+          <CollapseItem :name=${'usage'} :title=${'Usage'}>Component composition and binding patterns.</CollapseItem>
+          <CollapseItem :name=${'api'} :title=${'API'}>Props, slots, and emitted events.</CollapseItem>
+        </Collapse>
+      </Demo>
+
+      <Demo
+        :id=${'collapsed'}
+        :title=${'Initially collapsed'}
+        :lead=${'Pass an empty array (or empty string in accordion) so every panel starts closed.'}
+        :code=${collapsed}
+        :filename=${'collapse-collapsed.jcr'}
+        :layout=${'stack'}
+      >
+        <Collapse :value=${[]}>
+          <CollapseItem :name=${'overview'} :title=${'Overview'}>Package purpose and installation notes.</CollapseItem>
+          <CollapseItem :name=${'usage'} :title=${'Usage'}>Component composition and binding patterns.</CollapseItem>
+          <CollapseItem :name=${'api'} :title=${'API'}>Props, slots, and emitted events.</CollapseItem>
+        </Collapse>
+      </Demo>
+
+      <Demo
+        :id=${'disabled'}
+        :title=${'Disabled item'}
+        :lead=${'disabled keeps a panel visible but not toggleable.'}
+        :code=${disabled}
+        :filename=${'collapse-disabled.jcr'}
+        :layout=${'stack'}
+      >
+        <Collapse bind-value=${openDisabled}>
+          <CollapseItem :name=${'ready'} :title=${'Ready'}>This panel can be opened.</CollapseItem>
+          <CollapseItem :name=${'locked'} :title=${'Locked'} :disabled=${true}>This panel is unavailable.</CollapseItem>
+        </Collapse>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'faq'}
+        :title=${'FAQ accordion'}
+        :lead=${'Accordion works well for help centers and product FAQs.'}
+        :code=${faq}
+        :filename=${'collapse-faq.jcr'}
+        :layout=${'stack'}
+      >
+        <Collapse bind-value=${openFaq} :accordion=${true}>
+          <CollapseItem :name=${'shipping'} :title=${'How long does shipping take?'}>
+            <Text :tone=${'muted'}>
+              Standard orders ship in 2–4 business days. Express arrives next day in most regions.
+            </Text>
+          </CollapseItem>
+          <CollapseItem :name=${'returns'} :title=${'What is the return policy?'}>
+            <Text :tone=${'muted'}>
+              Unused items can be returned within 30 days. Print a prepaid label from your account.
+            </Text>
+          </CollapseItem>
+          <CollapseItem :name=${'billing'} :title=${'Can I change my billing cycle?'}>
+            <Text :tone=${'muted'}>
+              Yes. Switch monthly or yearly anytime; the next invoice reflects the new cycle.
+            </Text>
+          </CollapseItem>
+        </Collapse>
+      </Demo>
+
+      <Demo
+        :id=${'rich'}
+        :title=${'Rich panel content'}
+        :lead=${'Compose Text, Tag, Button, and Stack inside CollapseItem.'}
+        :code=${rich}
+        :filename=${'collapse-rich.jcr'}
+        :layout=${'stack'}
+      >
+        <Collapse bind-value=${openRich}>
+          <CollapseItem :name=${'tokens'} :title=${'Design tokens'}>
+            <Stack :gap=${'sm'}>
+              <Text :tone=${'muted'}>Color, spacing, and typography primitives for product UI.</Text>
+              <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+                <Tag :text=${'theme'} :type=${'info'} :size=${'sm'} />
+                <Tag :text=${'stable'} :type=${'success'} :size=${'sm'} />
+              </Stack>
+              <Button :size=${'sm'}>Open token reference</Button>
+            </Stack>
+          </CollapseItem>
+          <CollapseItem :name=${'forms'} :title=${'Forms'}>
+            <Stack :gap=${'sm'}>
+              <Text :tone=${'muted'}>Validation helpers and labeled inputs for settings screens.</Text>
+              <Tag :text=${'forms'} :type=${'warning'} :size=${'sm'} />
+            </Stack>
+          </CollapseItem>
+          <CollapseItem :name=${'feedback'} :title=${'Feedback'}>
+            <Text :tone=${'muted'}>Alerts, toasts, and dialogs for status and confirmations.</Text>
+          </CollapseItem>
+        </Collapse>
+      </Demo>
+
+      <Demo
+        :id=${'controlled'}
+        :title=${'Open and close all'}
+        :lead=${'Drive value from outside the Collapse for bulk expand and collapse.'}
+        :code=${controlled}
+        :filename=${'collapse-controlled.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'md'}>
+          <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+            <Button :size=${'sm'} on-press=${() => openAll()}>Open all</Button>
+            <Button :size=${'sm'} :variant=${'ghost'} on-press=${() => closeAll()}>Close all</Button>
+          </Stack>
+          <Collapse bind-value=${openControlled}>
+            <CollapseItem :name=${'overview'} :title=${'Overview'}>High-level package notes.</CollapseItem>
+            <CollapseItem :name=${'usage'} :title=${'Usage'}>Composition and binding patterns.</CollapseItem>
+            <CollapseItem :name=${'api'} :title=${'API'}>Props, slots, and events.</CollapseItem>
+          </Collapse>
+          <Text :tone=${'muted'}>Open: ${() => controlledLabel()}</Text>
+        </Stack>
+      </Demo>
+
+      <Demo
+        :id=${'in-card'}
+        :title=${'Inside Card'}
+        :lead=${'Pair with Card for settings groups and account sections.'}
+        :code=${inCard}
+        :filename=${'collapse-in-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Account settings'} :subtitle=${'Expand a section to edit'}>
+          <Collapse bind-value=${openCard} :accordion=${true}>
+            <CollapseItem :name=${'profile'} :title=${'Profile'}>
+              <Text :tone=${'muted'}>Name, avatar, and preferred language.</Text>
+            </CollapseItem>
+            <CollapseItem :name=${'security'} :title=${'Security'}>
+              <Text :tone=${'muted'}>Password, sessions, and two-factor authentication.</Text>
+            </CollapseItem>
+            <CollapseItem :name=${'notifications'} :title=${'Notifications'}>
+              <Text :tone=${'muted'}>Email and in-app alert preferences.</Text>
+            </CollapseItem>
+          </Collapse>
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

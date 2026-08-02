@@ -1,0 +1,246 @@
+import { pulse } from '@jacare/core'
+import Field from '@jacare/ui/components/Field.jcr'
+import Segmented from '@jacare/ui/components/Segmented.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  block,
+  change,
+  disabled,
+  numeric,
+  optionDisabled,
+  playgroundCode as buildPlaygroundCode,
+  sizes,
+  strings,
+  twoOptions,
+} from '../../examples/segmented.js'
+
+const contract = getContract('Segmented')
+const navLinks = previousNext('/components/segmented')
+
+const options = [
+  { label: 'Day', value: 'day' },
+  { label: 'Week', value: 'week' },
+  { label: 'Month', value: 'month' },
+]
+const numericOptions = [
+  { label: '15 min', value: 15 },
+  { label: '30 min', value: 30 },
+  { label: '60 min', value: 60 },
+]
+const planOptions = [
+  { label: 'Free', value: 'free' },
+  { label: 'Pro', value: 'pro' },
+  { label: 'Enterprise', value: 'enterprise', disabled: true },
+]
+const modeOptions = [
+  { label: 'View', value: 'view' },
+  { label: 'Edit', value: 'edit' },
+  { label: 'Share', value: 'share' },
+]
+const themeOptions = [
+  { label: 'Light', value: 'light' },
+  { label: 'Dark', value: 'dark' },
+]
+
+const playValue = pulse('week')
+const playSize = pulse('md')
+const playBlock = pulse(false)
+const playDisabled = pulse(false)
+const period = pulse('week')
+const stringsValue = pulse('List')
+const sizeSm = pulse('day')
+const sizeMd = pulse('week')
+const sizeLg = pulse('month')
+const blockValue = pulse('week')
+const optionDisabledValue = pulse('free')
+const numericValue = pulse(30)
+const changeValue = pulse('edit')
+const lastChange = pulse('edit')
+const twoValue = pulse('light')
+
+const a11y = [
+  'Uses role="radiogroup" with each option as role="radio"',
+  'aria-checked reflects the selected segment',
+  'Keep option labels short enough to scan as a group',
+  'Do not use Segmented for unrelated actions',
+  'The selected state must remain distinguishable without color alone',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    value: playValue(),
+    size: playSize(),
+    block: playBlock(),
+    disabled: playDisabled(),
+  })
+}
+
+function onChange(next) {
+  lastChange.set(String(next))
+}
+
+function selectedLabel(value) {
+  return value == null || value === '' ? '—' : String(value)
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Segmented</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Selection'}
+      :title=${'Segmented'}
+      :description=${'Compact single-choice control for switching views, periods, and related modes. Bind value to a pulse and pass string or object options.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Size'} :hint=${'sm, md, or lg'} bind-value=${playSize} />
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Block'} bind-checked=${playBlock} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <Stack :gap=${'sm'}>
+              <Segmented
+                bind-value=${playValue}
+                :options=${options}
+                :size=${playSize}
+                :block=${playBlock}
+                :disabled=${playDisabled}
+              />
+              <Text :tone=${'muted'}>Selected: ${() => selectedLabel(playValue)}</Text>
+            </Stack>
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'segmented-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Use for one choice among a small set of closely related modes.'}
+      :code=${basic}
+      :filename=${'segmented-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Segmented bind-value=${period} :options=${options} />
+    </Demo>
+
+    <DocsSection :id=${'options'} :title=${'Options'}>
+      <Demo
+        :id=${'strings'}
+        :title=${'String options'}
+        :lead=${'Pass a string array when label and value are the same.'}
+        :code=${strings}
+        :filename=${'segmented-strings.jcr'}
+        :layout=${'stack'}
+      >
+        <Segmented bind-value=${stringsValue} :options=${['List', 'Grid', 'Board']} />
+      </Demo>
+
+      <Demo
+        :id=${'two-options'}
+        :title=${'Two options'}
+        :lead=${'A compact binary switch for related modes.'}
+        :code=${twoOptions}
+        :filename=${'segmented-two.jcr'}
+        :layout=${'stack'}
+      >
+        <Segmented bind-value=${twoValue} :options=${themeOptions} />
+      </Demo>
+
+      <Demo
+        :id=${'numeric'}
+        :title=${'Numeric values'}
+        :lead=${'Option values can be strings or numbers.'}
+        :code=${numeric}
+        :filename=${'segmented-numeric.jcr'}
+        :layout=${'stack'}
+      >
+        <Segmented bind-value=${numericValue} :options=${numericOptions} />
+      </Demo>
+
+      <Demo
+        :id=${'option-disabled'}
+        :title=${'Disabled option'}
+        :lead=${'Disable one unavailable choice without locking the whole control.'}
+        :code=${optionDisabled}
+        :filename=${'segmented-option-disabled.jcr'}
+        :layout=${'stack'}
+      >
+        <Segmented bind-value=${optionDisabledValue} :options=${planOptions} />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'sizes'} :title=${'Sizes'}>
+      <Demo :id=${'sizes-demo'} :title=${'sm, md, and lg'} :code=${sizes} :filename=${'segmented-sizes.jcr'} :layout=${'stack'}>
+        <Stack :gap=${'md'}>
+          <Segmented bind-value=${sizeSm} :options=${options} :size=${'sm'} />
+          <Segmented bind-value=${sizeMd} :options=${options} :size=${'md'} />
+          <Segmented bind-value=${sizeLg} :options=${options} :size=${'lg'} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'layout'} :title=${'Layout'}>
+      <Demo
+        :id=${'block'}
+        :title=${'Block'}
+        :lead=${'Block mode distributes choices across the available width.'}
+        :code=${block}
+        :filename=${'segmented-block.jcr'}
+        :layout=${'stack'}
+      >
+        <Segmented bind-value=${blockValue} :options=${options} :block=${true} />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'events'} :title=${'Events'}>
+      <Demo :id=${'change-demo'} :title=${'on-change'} :code=${change} :filename=${'segmented-change.jcr'} :layout=${'stack'}>
+        <Stack :gap=${'sm'}>
+          <Segmented bind-value=${changeValue} :options=${modeOptions} on-change=${onChange} />
+          <Text :tone=${'muted'}>Last change: ${() => selectedLabel(lastChange)}</Text>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'states'} :title=${'States'}>
+      <Demo :id=${'disabled'} :title=${'Disabled'} :code=${disabled} :filename=${'segmented-disabled.jcr'} :layout=${'stack'}>
+        <Segmented :value=${'week'} :options=${options} :disabled=${true} />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

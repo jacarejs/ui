@@ -1,0 +1,334 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Card from '@jacare/ui/components/Card.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Select from '@jacare/ui/components/Select.jcr'
+import Skeleton from '@jacare/ui/components/Skeleton.jcr'
+import SkeletonItem from '@jacare/ui/components/SkeletonItem.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  animated,
+  avatar,
+  basic,
+  cardMedia,
+  count,
+  custom,
+  dashboard,
+  itemSizes,
+  loaded,
+  playgroundCode as buildPlaygroundCode,
+  profileCard,
+  sizes,
+  variants,
+} from '../../examples/skeleton.js'
+
+const contract = getContract('Skeleton')
+const navLinks = previousNext('/components/skeleton')
+
+const sizeOptions = [
+  { value: 'sm', label: 'Small' },
+  { value: 'md', label: 'Medium' },
+  { value: 'lg', label: 'Large' },
+]
+
+const playRows = pulse('3')
+const playCount = pulse('2')
+const playSize = pulse('md')
+const playAnimated = pulse(true)
+const playAvatar = pulse(false)
+const playLoading = pulse(true)
+
+const toggleLoading = pulse(true)
+
+const a11y = [
+  'Mark the surrounding region busy while content is loading',
+  'Keep placeholders close to the final content dimensions',
+  'Respect reduced-motion preferences when animation is enabled',
+  'Skeleton items are decorative and stay hidden from assistive technology',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    rows: Number(playRows()) || 3,
+    count: Number(playCount()) || 1,
+    size: playSize(),
+    animated: playAnimated(),
+    avatar: playAvatar(),
+    loading: playLoading(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Skeleton</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'Skeleton'}
+      :description=${'Loading placeholders with sizes, avatar lists, shimmer animation, and composable SkeletonItem shapes for cards, profiles, and dashboards.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Rows'} :type=${'number'} bind-value=${playRows} />
+          <Field :label=${'Count'} :type=${'number'} bind-value=${playCount} />
+          <Select :label=${'Size'} :options=${sizeOptions} bind-value=${playSize} />
+          <Switch :label=${'Animated'} bind-checked=${playAnimated} />
+          <Switch :label=${'Avatar'} bind-checked=${playAvatar} />
+          <Switch :label=${'Loading'} bind-checked=${playLoading} />
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <Skeleton
+              :rows=${() => Number(playRows()) || 3}
+              :count=${() => Number(playCount()) || 1}
+              :size=${playSize}
+              :animated=${playAnimated}
+              :avatar=${playAvatar}
+              :loading=${playLoading}
+            >
+              <Stack :gap=${'sm'}>
+                <Text>Release ready</Text>
+                <Text :tone=${'muted'}>The loaded content replaces the placeholder.</Text>
+              </Stack>
+            </Skeleton>
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'skeleton-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Rows'}
+      :lead=${'Match the approximate shape and line count of the pending content.'}
+      :code=${basic}
+      :filename=${'skeleton-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Skeleton :rows=${3} />
+    </Demo>
+
+    <DocsSection :id=${'styles'} :title=${'Styles'}>
+      <Demo
+        :id=${'animated'}
+        :title=${'Animated shimmer'}
+        :code=${animated}
+        :filename=${'skeleton-animated.jcr'}
+        :layout=${'stack'}
+      >
+        <Skeleton :rows=${4} :animated=${true} />
+      </Demo>
+
+      <Demo
+        :id=${'sizes'}
+        :title=${'Sizes'}
+        :lead=${'size scales text row thickness and avatar diameter.'}
+        :code=${sizes}
+        :filename=${'skeleton-sizes.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'lg'}>
+          <Skeleton :rows=${3} :size=${'sm'} :animated=${true} />
+          <Skeleton :rows=${3} :size=${'md'} :animated=${true} />
+          <Skeleton :rows=${3} :size=${'lg'} :animated=${true} />
+        </Stack>
+      </Demo>
+
+      <Demo
+        :id=${'count'}
+        :title=${'Repeated groups'}
+        :lead=${'count repeats a placeholder group for list-like content.'}
+        :code=${count}
+        :filename=${'skeleton-count.jcr'}
+        :layout=${'stack'}
+      >
+        <Skeleton :rows=${2} :count=${3} :animated=${true} />
+      </Demo>
+
+      <Demo
+        :id=${'avatar'}
+        :title=${'Avatar list'}
+        :lead=${'avatar adds a circle beside each text group.'}
+        :code=${avatar}
+        :filename=${'skeleton-avatar.jcr'}
+        :layout=${'stack'}
+      >
+        <Skeleton :avatar=${true} :rows=${2} :count=${3} :animated=${true} />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'items'} :title=${'SkeletonItem shapes'}>
+      <Demo
+        :id=${'variants'}
+        :title=${'Variants'}
+        :lead=${'text, circle, rect, image, and button silhouettes.'}
+        :code=${variants}
+        :filename=${'skeleton-variants.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'md'}>
+          <Stack :gap=${'sm'}>
+            <Text :tone=${'muted'} :size=${'sm'}>text</Text>
+            <SkeletonItem :variant=${'text'} :animated=${true} />
+          </Stack>
+          <Stack :direction=${'row'} :gap=${'md'} :align=${'center'} :wrap=${true}>
+            <Stack :gap=${'sm'} :align=${'center'}>
+              <Text :tone=${'muted'} :size=${'sm'}>circle</Text>
+              <SkeletonItem :variant=${'circle'} :animated=${true} />
+            </Stack>
+            <Stack :gap=${'sm'}>
+              <Text :tone=${'muted'} :size=${'sm'}>button</Text>
+              <SkeletonItem :variant=${'button'} :animated=${true} />
+            </Stack>
+          </Stack>
+          <Stack :gap=${'sm'}>
+            <Text :tone=${'muted'} :size=${'sm'}>rect</Text>
+            <SkeletonItem :variant=${'rect'} :animated=${true} />
+          </Stack>
+          <Stack :gap=${'sm'}>
+            <Text :tone=${'muted'} :size=${'sm'}>image</Text>
+            <SkeletonItem :variant=${'image'} :animated=${true} />
+          </Stack>
+        </Stack>
+      </Demo>
+
+      <Demo
+        :id=${'item-sizes'}
+        :title=${'Item sizes'}
+        :code=${itemSizes}
+        :filename=${'skeleton-item-sizes.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :direction=${'row'} :gap=${'lg'} :align=${'end'} :wrap=${true}>
+          <SkeletonItem :variant=${'circle'} :size=${'sm'} :animated=${true} />
+          <SkeletonItem :variant=${'circle'} :size=${'md'} :animated=${true} />
+          <SkeletonItem :variant=${'circle'} :size=${'lg'} :animated=${true} />
+          <SkeletonItem :variant=${'button'} :size=${'sm'} :animated=${true} />
+          <SkeletonItem :variant=${'button'} :size=${'md'} :animated=${true} />
+          <SkeletonItem :variant=${'button'} :size=${'lg'} :animated=${true} />
+        </Stack>
+      </Demo>
+
+      <Demo
+        :id=${'custom'}
+        :title=${'Custom widths'}
+        :lead=${'Use width on SkeletonItem when lines should not fill the row.'}
+        :code=${custom}
+        :filename=${'skeleton-custom.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :direction=${'row'} :gap=${'md'} :align=${'center'}>
+          <SkeletonItem :variant=${'circle'} :animated=${true} />
+          <Stack :gap=${'sm'}>
+            <SkeletonItem :variant=${'text'} :animated=${true} />
+            <SkeletonItem :variant=${'text'} :width=${'70%'} :animated=${true} />
+          </Stack>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'card-media'}
+        :title=${'Media card'}
+        :code=${cardMedia}
+        :filename=${'skeleton-card-media.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :shadow=${'hover'} :padding=${'sm'}>
+          <Stack :gap=${'sm'}>
+            <SkeletonItem :variant=${'image'} :animated=${true} />
+            <SkeletonItem :variant=${'text'} :animated=${true} />
+            <SkeletonItem :variant=${'text'} :width=${'72%'} :animated=${true} />
+            <SkeletonItem :variant=${'button'} :size=${'sm'} :animated=${true} />
+          </Stack>
+        </Card>
+      </Demo>
+
+      <Demo
+        :id=${'profile'}
+        :title=${'Profile card'}
+        :code=${profileCard}
+        :filename=${'skeleton-profile.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Member'} :shadow=${'hover'}>
+          <Stack :direction=${'row'} :gap=${'md'} :align=${'center'}>
+            <SkeletonItem :variant=${'circle'} :size=${'lg'} :animated=${true} />
+            <Stack :gap=${'sm'}>
+              <SkeletonItem :variant=${'text'} :size=${'lg'} :width=${'11rem'} :animated=${true} />
+              <SkeletonItem :variant=${'text'} :width=${'8rem'} :animated=${true} />
+            </Stack>
+          </Stack>
+        </Card>
+      </Demo>
+
+      <Demo
+        :id=${'dashboard'}
+        :title=${'Dashboard mosaic'}
+        :code=${dashboard}
+        :filename=${'skeleton-dashboard.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'md'}>
+          <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+            <SkeletonItem :variant=${'rect'} :size=${'sm'} :width=${'8rem'} :animated=${true} />
+            <SkeletonItem :variant=${'rect'} :size=${'sm'} :width=${'8rem'} :animated=${true} />
+            <SkeletonItem :variant=${'rect'} :size=${'sm'} :width=${'8rem'} :animated=${true} />
+          </Stack>
+          <SkeletonItem :variant=${'image'} :size=${'lg'} :animated=${true} />
+          <Skeleton :rows=${3} :animated=${true} />
+        </Stack>
+      </Demo>
+
+      <Demo
+        :id=${'loaded'}
+        :title=${'Loading toggle'}
+        :lead=${'Set loading false to reveal the default slot.'}
+        :code=${loaded}
+        :filename=${'skeleton-loaded.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'md'}>
+          <Switch :label=${'Loading'} bind-checked=${toggleLoading} />
+          <Skeleton :loading=${toggleLoading} :rows=${3} :animated=${true}>
+            <Stack :gap=${'sm'}>
+              <Text>Release ready</Text>
+              <Text :tone=${'muted'}>The loaded content replaces the placeholder.</Text>
+              <Button :size=${'sm'}>Open release</Button>
+            </Stack>
+          </Skeleton>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

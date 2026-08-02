@@ -1,0 +1,202 @@
+import { pulse } from '@jacare/core'
+import Tour from '@jacare/ui/components/Tour.jcr'
+import TourStep from '@jacare/ui/components/TourStep.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import Input from '@jacare/ui/components/Input.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, controlled, events, playground, single } from '../../examples/tour.js'
+
+const contract = getContract('Tour')
+const stepContract = getContract('TourStep')
+const navLinks = previousNext('/components/tour')
+const playgroundOpen = pulse(false)
+const playgroundStatus = pulse('Press Start tour')
+const tourOpen = pulse(false)
+const eventTourOpen = pulse(false)
+const eventText = pulse('Ready')
+const tipOpen = pulse(false)
+const controlledOpen = pulse(false)
+const controlledStatus = pulse('Tour is closed')
+
+const a11y = [
+  'The active card is an aria-modal dialog',
+  'Step count and Back, Next, or Done controls communicate progress',
+  'Target selectors should point at visible, focusable content when possible',
+  'Keep descriptions concise and never make a tour the only path to essential information',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Tour</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Navigation'}
+      :title=${'Tour'}
+      :description=${'Guided walkthrough that spotlights each TourStep target, positions the tip nearby, and emits change, finish, and close.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'playground'}
+      :title=${'Functional workspace tour'}
+      :lead=${'Start the tour to spotlight Search, navigation, and the create action. Next / Back / Done drive the flow; clicking the dimmed mask dismisses it.'}
+      :code=${playground}
+      :filename=${'tour-playground.jcr'}
+      :layout=${'stack'}
+    >
+      <div style="display:grid;gap:1rem;padding:1rem;border:1px solid var(--j-border);border-radius:var(--j-radius);background:var(--j-surface)">
+        <div style="display:flex;justify-content:space-between;gap:0.75rem;align-items:center;flex-wrap:wrap">
+          <Text :weight=${'bold'}>Workspace</Text>
+          <div id="tour-demo-start">
+            <Button on-press=${() => {
+              playgroundStatus.set('Tour running')
+              playgroundOpen.set(true)
+            }}>Start tour</Button>
+          </div>
+        </div>
+        <div id="tour-demo-search">
+          <Input :placeholder=${'Search projects…'} />
+        </div>
+        <div id="tour-demo-nav" style="display:flex;gap:0.5rem;flex-wrap:wrap">
+          <Button :variant=${'secondary'} :size=${'sm'}>Overview</Button>
+          <Button :variant=${'secondary'} :size=${'sm'}>Reports</Button>
+          <Button :variant=${'secondary'} :size=${'sm'}>Team</Button>
+        </div>
+        <div id="tour-demo-cta">
+          <Button :variant=${'success'}>Create project</Button>
+        </div>
+        <Text :tone=${'muted'}>${() => playgroundStatus()}</Text>
+      </div>
+      <Tour
+        bind-open=${playgroundOpen}
+        on-change=${(index) => playgroundStatus.set('Step ' + (index + 1))}
+        on-finish=${() => playgroundStatus.set('Tour completed')}
+        on-close=${() => playgroundStatus.set('Tour dismissed')}
+      >
+        <TourStep
+          :selector=${'#tour-demo-start'}
+          :title=${'Start here'}
+          :description=${'Open the guided tour any time from this button.'}
+        />
+        <TourStep
+          :selector=${'#tour-demo-search'}
+          :title=${'Find work fast'}
+          :description=${'Search filters the workspace list as you type.'}
+        />
+        <TourStep
+          :selector=${'#tour-demo-nav'}
+          :title=${'Jump sections'}
+          :description=${'Switch between Overview, Reports, and Team.'}
+        />
+        <TourStep
+          :selector=${'#tour-demo-cta'}
+          :title=${'Create something'}
+          :description=${'Finish onboarding by creating your first project.'}
+        />
+      </Tour>
+    </Demo>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'basic'}
+        :title=${'Centered steps'}
+        :lead=${'Without a matching selector, the tip stays centered over a full mask.'}
+        :code=${basic}
+        :filename=${'tour-basic.jcr'}
+        :layout=${'stack'}
+      >
+        <Button on-press=${() => tourOpen.set(true)}>Start centered tour</Button>
+        <Tour bind-open=${tourOpen}>
+          <TourStep :title=${'Welcome'} :description=${'Learn the main workspace controls.'} />
+          <TourStep :title=${'Finish'} :description=${'Review changes before publishing.'} />
+        </Tour>
+      </Demo>
+
+      <Demo
+        :id=${'events'}
+        :title=${'Lifecycle events'}
+        :lead=${'Observe change, finish, and close to synchronize onboarding state.'}
+        :code=${events}
+        :filename=${'tour-events.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="display:grid;gap:0.75rem">
+          <Button on-press=${() => eventTourOpen.set(true)}>Start event tour</Button>
+          <Text :tone=${'muted'}>${() => eventText()}</Text>
+          <Tour
+            bind-open=${eventTourOpen}
+            on-change=${(index) => eventText.set('Step ' + (index + 1))}
+            on-finish=${() => eventText.set('Finished')}
+            on-close=${() => eventText.set('Closed')}
+          >
+            <TourStep :title=${'First'} :description=${'The change event reports the active index.'} />
+            <TourStep :title=${'Second'} :description=${'Done emits finish and closes the tour.'} />
+          </Tour>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'single'}
+        :title=${'Single-step tip'}
+        :lead=${'A one-step tour turns the primary action into Done.'}
+        :code=${single}
+        :filename=${'tour-single.jcr'}
+        :layout=${'stack'}
+      >
+        <Button :variant=${'secondary'} on-press=${() => tipOpen.set(true)}>Show tip</Button>
+        <Tour bind-open=${tipOpen}>
+          <TourStep :title=${'Quick tip'} :description=${'Keep one-step guidance concise and optional.'} />
+        </Tour>
+      </Demo>
+
+      <Demo
+        :id=${'controlled'}
+        :title=${'Controlled state'}
+        :lead=${'bind-open keeps the trigger and lifecycle feedback synchronized with the dialog state.'}
+        :code=${controlled}
+        :filename=${'tour-controlled.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="display:grid;gap:0.75rem">
+          <Button on-press=${() => {
+            controlledStatus.set('Tour is open')
+            controlledOpen.set(true)
+          }}>Open controlled tour</Button>
+          <p aria-live="polite">${controlledStatus}</p>
+          <Tour
+            bind-open=${controlledOpen}
+            on-close=${() => controlledStatus.set('Tour was dismissed')}
+            on-finish=${() => controlledStatus.set('Tour was completed')}
+          >
+            <TourStep :title=${'Profile'} :description=${'Confirm your public profile details.'} />
+            <TourStep :title=${'Preferences'} :description=${'Choose notifications before continuing.'} />
+          </Tour>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+      <div style="height:1rem"></div>
+      <PropsTable :contract=${stepContract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

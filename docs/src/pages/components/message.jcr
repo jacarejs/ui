@@ -1,0 +1,52 @@
+import { pulse } from '@jacare/core'
+import MessageDemo from '@jacare/ui/components/Message.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import { Message } from '@jacare/ui/feedback'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, types, plain, closable, service, placements, close_all } from '../../examples/message.js'
+
+const contract = getContract('Message')
+const navLinks = previousNext('/components/message')
+const visible = pulse(true)
+const a11y = [
+  'Keep transient messages short enough to understand before dismissal',
+  'Error messages use an alert role while other messages use status',
+  'Provide a close button for persistent messages and never rely on color alone',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb"><a jacare-go="/components" href="/components">Components</a><span aria-hidden="true">/</span><span>Message</span></nav>
+    <DocsHero :kicker=${'Feedback'} :title=${'Message'} :description=${'Inline Message demo component and imperative Message service for transient global feedback.'} :status=${'stable'} />
+    <Demo :id=${'basic'} :title=${'Inline message'} :code=${basic} :filename=${'message-basic.jcr'} :layout=${'stack'}><MessageDemo :message=${'Your changes were saved.'} /></Demo>
+    <Demo :id=${'types'} :title=${'Semantic types'} :code=${types} :filename=${'message-types.jcr'} :layout=${'stack'}><MessageDemo :type=${'primary'} :message=${'Primary action available'} /><MessageDemo :type=${'success'} :message=${'Deployment complete'} /><MessageDemo :type=${'warning'} :message=${'Review two fields'} /><MessageDemo :type=${'info'} :message=${'A new version is available'} /><MessageDemo :type=${'error'} :message=${'Could not save'} /></Demo>
+    <Demo :id=${'plain'} :title=${'Plain appearance'} :code=${plain} :filename=${'message-plain.jcr'} :layout=${'stack'}><MessageDemo :type=${'primary'} :plain=${true} :message=${'A quiet inline update'} /></Demo>
+    <Demo :id=${'closable'} :title=${'Closable'} :code=${closable} :filename=${'message-closable.jcr'} :layout=${'stack'}>
+      #if visible()
+        <MessageDemo :showClose=${true} :message=${'Dismiss this message'} on-close=${() => visible.set(false)} />
+      #else
+        <Button :variant=${'secondary'} on-press=${() => visible.set(true)}>Restore</Button>
+      #end
+    </Demo>
+    <Demo :id=${'service'} :title=${'Imperative Message'} :code=${service} :filename=${'message-service.jcr'} :layout=${'stack'}><Button on-press=${() => Message.success({ message: 'Saved', showClose: true })}>Show message</Button></Demo>
+    <Demo :id=${'placements'} :title=${'Service placements'} :code=${placements} :filename=${'message-placements.jcr'} :layout=${'stack'}>
+      #for ['top', 'top-left', 'top-right', 'bottom', 'bottom-left', 'bottom-right'] as placement
+        <Button on-press=${() => Message({ message: placement, placement, showClose: true })}>${placement}</Button>
+      #end
+    </Demo>
+    <Demo :id=${'close-all'} :title=${'Persistent messages and closeAll'} :code=${close_all} :filename=${'message-close-all.jcr'} :layout=${'stack'}>
+      <Button on-press=${() => { Message.primary({ message: 'Primary', duration: 0, plain: true }); Message.info({ message: 'Information', duration: 0 }); Message.error({ message: 'Error', duration: 0, showClose: true }) }}>Open persistent messages</Button>
+      <Button on-press=${Message.closeAll}>Close all</Button>
+    </Demo>
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}><AccessibilityChecklist :items=${a11y} /></DocsSection>
+    <DocsSection :id=${'api'} :title=${'API'}><PropsTable :contract=${contract} /></DocsSection>
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

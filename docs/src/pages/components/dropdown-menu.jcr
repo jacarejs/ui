@@ -1,0 +1,64 @@
+import Dropdown from '@jacare/ui/components/Dropdown.jcr'
+import DropdownMenu from '@jacare/ui/components/DropdownMenu.jcr'
+import DropdownItem from '@jacare/ui/components/DropdownItem.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { actionList, hoverMenu, groupedActions } from '../../examples/dropdown-menu.js'
+
+const contract = getContract('DropdownMenu')
+const navLinks = previousNext('/components/dropdown-menu')
+const a11y = [
+  'Place DropdownMenu in the Dropdown dropdown slot',
+  'Populate the menu with DropdownItem actions in task order',
+  'Keep menus short and group destructive actions with a divider',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>DropdownMenu</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Navigation'}
+      :title=${'DropdownMenu'}
+      :description=${'DropdownMenu is the semantic menu wrapper used in the dropdown slot of Dropdown. Compose DropdownItem children inside it to define available actions.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'action-list'} :title=${'Action list'} :lead=${'DropdownMenu groups related DropdownItem commands in the parent popup.'} :code=${actionList} :filename=${'dropdown-menu-actions.jcr'}>
+       <Dropdown>
+        <Button>Actions</Button>
+        <DropdownMenu slot="dropdown">
+          <DropdownItem :command=${'edit'}>Edit</DropdownItem>
+          <DropdownItem :command=${'archive'}>Archive</DropdownItem>
+        </DropdownMenu>
+       </Dropdown>
+    </Demo>
+    <Demo :id=${'hover-menu'} :title=${'Hover trigger'} :lead=${'The same menu composition works with trigger behavior configured on Dropdown.'} :code=${hoverMenu} :filename=${'dropdown-menu-hover.jcr'}>
+      <Dropdown :trigger=${'hover'}><Button>Share</Button><DropdownMenu slot="dropdown"><DropdownItem :command=${'copy'}>Copy link</DropdownItem><DropdownItem :command=${'email'}>Send email</DropdownItem></DropdownMenu></Dropdown>
+    </Demo>
+    <Demo :id=${'grouped-actions'} :title=${'Grouped actions'} :lead=${'Use divided on an item to separate a final or destructive command.'} :code=${groupedActions} :filename=${'dropdown-menu-groups.jcr'}>
+      <Dropdown :placement=${'bottom-end'}><Button>Account</Button><DropdownMenu slot="dropdown"><DropdownItem :command=${'profile'}>Profile</DropdownItem><DropdownItem :command=${'settings'}>Settings</DropdownItem><DropdownItem :command=${'signout'} :divided=${true}>Sign out</DropdownItem></DropdownMenu></Dropdown>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

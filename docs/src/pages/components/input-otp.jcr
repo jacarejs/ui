@@ -9,9 +9,10 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/input-otp.js'
+import { basic, lengths, masked, playgroundCode as buildPlaygroundCode, sizes, states } from '../../examples/input-otp.js'
 
 const contract = getContract('InputOtp')
 const navLinks = previousNext('/components/input-otp')
@@ -22,6 +23,22 @@ const playLength = pulse('6')
 const playMask = pulse(false)
 const playDisabled = pulse(false)
 const basicValue = pulse('')
+const shortValue = pulse('')
+const recoveryValue = pulse('')
+const maskedValue = pulse('42')
+const sizeSm = pulse('')
+const sizeMd = pulse('')
+const sizeLg = pulse('')
+const hintedValue = pulse('')
+const errorValue = pulse('1234')
+const disabledValue = pulse('246810')
+const a11y = [
+  'Digit fields are grouped and each one is named by its one-based position',
+  'The first field uses autocomplete="one-time-code" for platform code suggestions',
+  'Pasting filters non-digits and fills the configured number of boxes',
+  'Arrow keys move between boxes and Backspace returns to the previous empty box',
+  'error marks every box invalid and announces the message with role="alert"',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -42,7 +59,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Inputs'}
       :title=${'InputOtp'}
       :description=${'One-time-code entry with auto-advancing digit boxes, paste support, and a finish event.'}
       :status=${'stable'}
@@ -77,6 +94,37 @@ export <view>
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'input-otp-basic.jcr'}>
       <InputOtp :label=${'Verification code'} :length=${6} bind-value=${basicValue} />
     </Demo>
+
+    <Demo :id=${'lengths'} :title=${'Code lengths'} :code=${lengths} :filename=${'input-otp-lengths.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <InputOtp :label=${'Four-digit PIN'} :length=${4} bind-value=${shortValue} />
+        <InputOtp :label=${'Eight-digit recovery code'} :length=${8} bind-value=${recoveryValue} />
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'masked'} :title=${'Masked code'} :code=${masked} :filename=${'input-otp-masked.jcr'}>
+      <InputOtp :label=${'Secure PIN'} :length=${4} :mask=${true} :hint=${'Digits are hidden after entry'} bind-value=${maskedValue} />
+    </Demo>
+
+    <Demo :id=${'sizes'} :title=${'Sizes'} :code=${sizes} :filename=${'input-otp-sizes.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <InputOtp :label=${'Small'} :length=${4} :size=${'sm'} bind-value=${sizeSm} />
+        <InputOtp :label=${'Medium'} :length=${4} :size=${'md'} bind-value=${sizeMd} />
+        <InputOtp :label=${'Large'} :length=${4} :size=${'lg'} bind-value=${sizeLg} />
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'states'} :title=${'Help, error, and disabled'} :code=${states} :filename=${'input-otp-states.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <InputOtp :label=${'Confirmation code'} :hint=${'Paste all six digits at once'} bind-value=${hintedValue} />
+        <InputOtp :label=${'Expired code'} :length=${4} :error=${'Request a new verification code'} bind-value=${errorValue} />
+        <InputOtp :label=${'Used code'} :disabled=${true} bind-value=${disabledValue} />
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

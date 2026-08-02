@@ -1,0 +1,238 @@
+import { pulse } from '@jacare/core'
+import Card from '@jacare/ui/components/Card.jcr'
+import ChartRadar from '@jacare/ui/components/ChartRadar.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  colors as colorsExample,
+  inCard,
+  noLegend,
+  playgroundCode as buildPlaygroundCode,
+  single,
+  sized,
+  unfilled,
+} from '../../examples/chart-radar.js'
+
+const contract = getContract('ChartRadar')
+const navLinks = previousNext('/components/chart-radar')
+
+const playShowLegend = pulse(true)
+const playFilled = pulse(true)
+const playCustomColors = pulse(false)
+
+const data = {
+  axes: ['Speed', 'Quality', 'Support', 'Features', 'Price'],
+  series: [
+    { name: 'Us', data: [80, 90, 70, 85, 60] },
+    { name: 'Peer', data: [65, 75, 80, 70, 85] },
+  ],
+}
+
+const singleData = {
+  axes: ['Design', 'Performance', 'Accessibility', 'Docs'],
+  series: [{ name: 'Score', data: [88, 76, 92, 84] }],
+}
+
+const colorsData = {
+  axes: ['UX', 'Reliability', 'Speed', 'Support'],
+  series: [
+    { name: 'Current', data: [72, 80, 68, 74] },
+    { name: 'Target', data: [90, 88, 85, 82] },
+  ],
+}
+
+const npsData = {
+  axes: ['A', 'B', 'C', 'D'],
+  series: [{ name: 'NPS', data: [32, 38, 41, 45] }],
+}
+
+const compactData = {
+  axes: ['A', 'B', 'C', 'D', 'E'],
+  series: [{ name: 'Score', data: [8, 12, 10, 16, 14] }],
+}
+
+const customColors = ['#be185d', '#0f766e']
+
+const a11y = [
+  'SVG root uses role="img" with an aria-label from title',
+  'Axis labels remain around the plot for context',
+  'Legend identifies overlapping polygons when multiple series are shown',
+  'Use filled=false when semi-transparent fills reduce contrast',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    showLegend: playShowLegend(),
+    filled: playFilled(),
+    customColors: playCustomColors(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ChartRadar</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Charts'}
+      :title=${'ChartRadar'}
+      :description=${'Radial multi-axis comparison polygons with optional fill, custom colors, and legend.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Switch :label=${'Show legend'} bind-checked=${playShowLegend} />
+          <Switch :label=${'Filled'} bind-checked=${playFilled} />
+          <Switch :label=${'Custom colors'} bind-checked=${playCustomColors} />
+          <Text :tone=${'muted'}>Toggle options to preview radar chart chrome.</Text>
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <ChartRadar
+              :data=${data}
+              :title=${'Radar'}
+              :caption=${'Playground preview'}
+              :showLegend=${playShowLegend}
+              :filled=${playFilled}
+              :colors=${() => (playCustomColors() ? customColors : null)}
+              :width=${480}
+              :height=${320}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'chart-radar-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Pass axes + series. Optional title, caption, width, and height frame the plot.'}
+      :code=${basic}
+      :filename=${'chart-radar-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <ChartRadar
+        :data=${data}
+        :title=${'Radar'}
+        :caption=${'Multi-axis comparison'}
+        :width=${480}
+        :height=${320}
+      />
+    </Demo>
+
+    <DocsSection :id=${'data'} :title=${'Data shapes'}>
+      <Demo
+        :id=${'single'}
+        :title=${'Single series'}
+        :lead=${'One polygon is enough for scorecards and audits.'}
+        :code=${single}
+        :filename=${'chart-radar-single.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartRadar :data=${singleData} :title=${'Product scorecard'} :showLegend=${false} />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'options'} :title=${'Options'}>
+      <Demo
+        :id=${'colors'}
+        :title=${'Custom colors'}
+        :lead=${'colors overrides the default palette in series order.'}
+        :code=${colorsExample}
+        :filename=${'chart-radar-colors.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartRadar
+          :data=${colorsData}
+          :title=${'Custom palette'}
+          :colors=${['#be185d', '#1f6feb']}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'unfilled'}
+        :title=${'Stroke only'}
+        :lead=${'filled=false removes the semi-transparent polygon fill.'}
+        :code=${unfilled}
+        :filename=${'chart-radar-unfilled.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartRadar :data=${data} :title=${'Stroke only'} :filled=${false} />
+      </Demo>
+
+      <Demo
+        :id=${'no-legend'}
+        :title=${'Hide legend'}
+        :lead=${'showLegend=false for compact dashboard tiles.'}
+        :code=${noLegend}
+        :filename=${'chart-radar-no-legend.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartRadar
+          :data=${npsData}
+          :title=${'Compact'}
+          :caption=${'Legend hidden for dense dashboards'}
+          :showLegend=${false}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'sized'}
+        :title=${'Custom size'}
+        :lead=${'width and height control the SVG viewBox and frame.'}
+        :code=${sized}
+        :filename=${'chart-radar-sized.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartRadar
+          :data=${compactData}
+          :title=${'Compact size'}
+          :width=${320}
+          :height=${240}
+          :showLegend=${false}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'in-card'}
+        :title=${'Inside Card'}
+        :lead=${'Compose ChartRadar in a Card for benchmark panels.'}
+        :code=${inCard}
+        :filename=${'chart-radar-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Benchmark'} :subtitle=${'Us vs peer'}>
+          <ChartRadar :data=${data} :showLegend=${true} :height=${260} />
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

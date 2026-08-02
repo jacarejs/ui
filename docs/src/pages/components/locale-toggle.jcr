@@ -1,0 +1,74 @@
+import { pulse } from '@jacare/core'
+import LocaleToggle from '@jacare/ui/components/LocaleToggle.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { setupI18n } from '../../examples/i18n/setup.js'
+import { change, labels, locales, objects } from '../../examples/locale-toggle.js'
+
+setupI18n()
+
+const contract = getContract('LocaleToggle')
+const navLinks = previousNext('/components/locale-toggle')
+const a11y = [
+  'The control exposes a Locale group and pressed state for the active locale',
+  'Use recognizable language names rather than flags alone',
+  'Changing locale should update all nearby translated content consistently',
+]
+
+const localeLabels = {
+  en: 'English',
+  'pt-BR': 'Português',
+}
+
+const localeObjects = [
+  { id: 'en', label: 'EN' },
+  { value: 'pt-BR', label: 'PT' },
+]
+const localeStatus = pulse('Choose a language')
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>LocaleToggle</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Primitives'}
+      :title=${'LocaleToggle'}
+      :description=${'Pressed-button locale switcher for configured language IDs, custom labels, or object options.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'locales'} :title=${'Locale IDs'} :lead=${'Pass locale IDs directly; selecting one updates the shared i18n locale and emits change.'} :code=${locales} :filename=${'locale-toggle-locales.jcr'}>
+      <LocaleToggle :locales=${['en', 'pt-BR', 'es']} />
+    </Demo>
+    <Demo :id=${'labels'} :title=${'Custom labels'} :lead=${'labels maps locale IDs to human-readable button text.'} :code=${labels} :filename=${'locale-toggle-labels.jcr'}>
+      <LocaleToggle :locales=${['en', 'pt-BR']} :labels=${localeLabels} />
+    </Demo>
+    <Demo :id=${'objects'} :title=${'Object options'} :lead=${'Object entries accept id or value and may provide their own label.'} :code=${objects} :filename=${'locale-toggle-objects.jcr'}>
+      <LocaleToggle :locales=${localeObjects} />
+    </Demo>
+    <Demo :id=${'change'} :title=${'Locale change'} :lead=${'change reports the selected locale after the shared i18n state updates.'} :code=${change} :filename=${'locale-toggle-change.jcr'} :layout=${'stack'}>
+      <LocaleToggle :locales=${['en', 'pt-BR']} on-change=${(locale) => localeStatus.set('Active locale: ' + locale)} />
+      <p aria-live="polite">${localeStatus}</p>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

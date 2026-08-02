@@ -1,0 +1,281 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Tag from '@jacare/ui/components/Tag.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  appearances,
+  basic,
+  closable,
+  playgroundCode as buildPlaygroundCode,
+  round,
+  sizes,
+  types,
+} from '../../examples/tag.js'
+
+const contract = getContract('Tag')
+const navLinks = previousNext('/components/tag')
+
+const playText = pulse('Tag')
+const playType = pulse('primary')
+const playAppearance = pulse('light')
+const playSize = pulse('md')
+const playRound = pulse(false)
+const playClosable = pulse(true)
+const playOpen = pulse(true)
+
+const typeOptions = ['default', 'primary', 'success', 'info', 'warning', 'danger']
+const appearanceOptions = ['light', 'dark', 'plain']
+const sizeOptions = ['sm', 'md', 'lg']
+
+const closableOpen = pulse(true)
+
+const a11y = [
+  'Tag label is real text content',
+  'Closable control is a button with aria-label=Close',
+  'Do not rely on color alone for status meaning',
+  'Focus ring uses --j-focus on the close button',
+]
+
+function setType(next) {
+  playType.set(next)
+}
+
+function setAppearance(next) {
+  playAppearance.set(next)
+}
+
+function setSize(next) {
+  playSize.set(next)
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    text: playText(),
+    type: playType(),
+    appearance: playAppearance(),
+    size: playSize(),
+    round: playRound(),
+    closable: playClosable(),
+  })
+}
+
+function showPlayTag() {
+  playOpen.set(true)
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Tag</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'Tag'}
+      :description=${'Compact label chip for status and taxonomy. Pick a type, light/dark/plain appearance, size, optional round shape, and closable control.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Text'} bind-value=${playText} />
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Type</span>
+            <div class="docs-hero-actions">
+              #for typeOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playType() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setType(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Appearance</span>
+            <div class="docs-hero-actions">
+              #for appearanceOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playAppearance() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setAppearance(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <div class="docs-alert-play__group">
+            <span class="docs-alert-play__label">Size</span>
+            <div class="docs-hero-actions">
+              #for sizeOptions as option
+                <Button
+                  :size=${'sm'}
+                  :variant=${() => (playSize() === option ? 'primary' : 'secondary')}
+                  on-press=${() => setSize(option)}
+                >${option}</Button>
+              #end
+            </div>
+          </div>
+
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Round'} bind-checked=${playRound} />
+            <Switch :label=${'Closable'} bind-checked=${playClosable} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            #if playOpen()
+              <Tag
+                :type=${playType}
+                :appearance=${playAppearance}
+                :size=${playSize}
+                :round=${playRound}
+                :closable=${playClosable}
+                on-close=${() => playOpen.set(false)}
+              >${() => playText()}</Tag>
+            #else
+              <Button :size=${'sm'} :variant=${'secondary'} on-press=${showPlayTag}>Show tag</Button>
+            #end
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'tag-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :code=${basic}
+      :filename=${'tag-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+        <Tag>Default</Tag>
+        <Tag :type=${'primary'}>Primary</Tag>
+        <Tag :type=${'success'}>Success</Tag>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'types'}
+      :title=${'Types'}
+      :lead=${'type (or tone) sets the semantic color token.'}
+      :code=${types}
+      :filename=${'tag-types.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+        <Tag :type=${'default'}>Default</Tag>
+        <Tag :type=${'primary'}>Primary</Tag>
+        <Tag :type=${'success'}>Success</Tag>
+        <Tag :type=${'info'}>Info</Tag>
+        <Tag :type=${'warning'}>Warning</Tag>
+        <Tag :type=${'danger'}>Danger</Tag>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'appearances'}
+      :title=${'Appearances'}
+      :lead=${'appearance is light (soft fill), dark (solid), or plain (outline).'}
+      :code=${appearances}
+      :filename=${'tag-appearances.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+          <Tag :type=${'primary'} :appearance=${'light'}>Light</Tag>
+          <Tag :type=${'success'} :appearance=${'light'}>Light</Tag>
+          <Tag :type=${'danger'} :appearance=${'light'}>Light</Tag>
+        </Stack>
+        <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+          <Tag :type=${'primary'} :appearance=${'dark'}>Dark</Tag>
+          <Tag :type=${'success'} :appearance=${'dark'}>Dark</Tag>
+          <Tag :type=${'danger'} :appearance=${'dark'}>Dark</Tag>
+        </Stack>
+        <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+          <Tag :type=${'primary'} :appearance=${'plain'}>Plain</Tag>
+          <Tag :type=${'success'} :appearance=${'plain'}>Plain</Tag>
+          <Tag :type=${'danger'} :appearance=${'plain'}>Plain</Tag>
+        </Stack>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'sizes'}
+      :title=${'Sizes'}
+      :code=${sizes}
+      :filename=${'tag-sizes.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true} :align=${'center'}>
+        <Tag :type=${'primary'} :size=${'sm'}>Small</Tag>
+        <Tag :type=${'primary'} :size=${'md'}>Medium</Tag>
+        <Tag :type=${'primary'} :size=${'lg'}>Large</Tag>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'round'}
+      :title=${'Round'}
+      :code=${round}
+      :filename=${'tag-round.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+        <Tag :type=${'info'} :round=${true}>Rounded</Tag>
+        <Tag :type=${'warning'} :round=${true} :appearance=${'dark'}>Pill</Tag>
+        <Tag :type=${'success'} :round=${true} :appearance=${'plain'}>Outline</Tag>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'closable'}
+      :title=${'Closable'}
+      :lead=${'closable adds a dismiss button and emits close.'}
+      :code=${closable}
+      :filename=${'tag-closable.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+        #if closableOpen()
+          <Tag :type=${'primary'} :closable=${true} on-close=${() => closableOpen.set(false)}>
+            Removable
+          </Tag>
+        #else
+          <Button :size=${'sm'} :variant=${'secondary'} on-press=${() => closableOpen.set(true)}>
+            Restore
+          </Button>
+        #end
+        <Tag :type=${'danger'} :closable=${true} :appearance=${'dark'}>Closable</Tag>
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

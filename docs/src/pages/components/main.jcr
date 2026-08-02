@@ -1,0 +1,85 @@
+import Container from '@jacare/ui/components/Container.jcr'
+import Header from '@jacare/ui/components/Header.jcr'
+import Aside from '@jacare/ui/components/Aside.jcr'
+import Main from '@jacare/ui/components/Main.jcr'
+import Footer from '@jacare/ui/components/Footer.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { padding, reading, scrolling, shell } from '../../examples/main.js'
+
+const contract = getContract('Main')
+const navLinks = previousNext('/components/main')
+const a11y = [
+  'Main renders the semantic main landmark for primary page content',
+  'Use a single Main landmark for the primary content of a document',
+  'Keep focusable content reachable when Main becomes its own scroll region',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Main</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Layout'}
+      :title=${'Main'}
+      :description=${'Flexible, scrollable main-content landmark with optional CSS padding.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'shell'} :title=${'Shell content'} :lead=${'Main grows into remaining shell space and scrolls independently when content overflows.'} :code=${shell} :filename=${'main-shell.jcr'}>
+      <div style="height:260px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container>
+          <Header>Content studio</Header>
+          <Container :direction=${'horizontal'}>
+            <Aside :width=${'150px'}>Sections</Aside>
+            <Main :padding=${'1.5rem'}>Editable article content</Main>
+          </Container>
+          <Footer :height=${'40px'}>Draft saved</Footer>
+        </Container>
+      </div>
+    </Demo>
+    <Demo :id=${'padding'} :title=${'Padding'} :lead=${'Leave padding empty for edge-to-edge tools or pass a CSS value for reading surfaces.'} :code=${padding} :filename=${'main-padding.jcr'}>
+      <div style="height:180px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container :direction=${'horizontal'}>
+          <Main>Edge-to-edge canvas</Main>
+          <Main :padding=${'2rem'}>Padded reading surface</Main>
+        </Container>
+      </div>
+    </Demo>
+    <Demo :id=${'scrolling'} :title=${'Independent scrolling'} :lead=${'Main absorbs remaining height and scrolls long content without moving fixed shell regions.'} :code=${scrolling} :filename=${'main-scrolling.jcr'}>
+      <div style="height:200px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container>
+          <Header :height=${'44px'}>Fixed header</Header>
+          <Main :padding=${'1rem'}><div style="height:420px">Main scrolls while the shell stays bounded.</div></Main>
+        </Container>
+      </div>
+    </Demo>
+    <Demo :id=${'reading'} :title=${'Responsive reading surface'} :lead=${'padding accepts responsive CSS values for content that needs wider gutters on larger screens.'} :code=${reading} :filename=${'main-reading.jcr'}>
+      <div style="height:180px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container>
+          <Main :padding=${'clamp(1rem, 4vw, 3rem)'}><article><h2>Release notes</h2><p>Responsive CSS padding keeps reading content comfortable across widths.</p></article></Main>
+        </Container>
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

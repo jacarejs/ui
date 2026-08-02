@@ -1,0 +1,195 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Card from '@jacare/ui/components/Card.jcr'
+import Hover from '@jacare/ui/components/Hover.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, disabled, focus, media, styled } from '../../examples/hover.js'
+
+const contract = getContract('Hover')
+const navLinks = previousNext('/components/hover')
+const basicHovered = pulse(false)
+const focusHovered = pulse(false)
+const liftHovered = pulse(false)
+const scaleHovered = pulse(false)
+const tintHovered = pulse(false)
+const glowHovered = pulse(false)
+const mediaHovered = pulse(false)
+
+const a11y = [
+  'Wrap interactive content so keyboard focus updates the same model as pointer hover',
+  'Do not rely on hover alone for essential information',
+  'Keep disabled wrappers from toggling the bound value',
+  'Pair visual hover feedback with readable labels or context',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Hover</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Utility'}
+      :title=${'Hover'}
+      :description=${'Track pointer and keyboard hover state with v-model, data-hovered, and a default slot for styled children.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Bound state'}
+      :lead=${'bind-value mirrors pointer enter/leave and focus within the slotted content.'}
+      :code=${basic}
+      :filename=${'hover-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <div style="display:grid;gap:0.75rem;max-width:22rem">
+        <Hover bind-value=${basicHovered}>
+          <Card :title=${'Hover me'} :subtitle=${() => (basicHovered() ? 'Hovered' : 'Idle')} />
+        </Hover>
+        <Text :tone=${'muted'}>Model: ${() => (basicHovered() ? 'true' : 'false')}</Text>
+      </div>
+    </Demo>
+
+    <Demo
+      :id=${'styled'}
+      :title=${'Visual feedback'}
+      :lead=${'Drive CSS from the bound model — lift, scale, tint, or focus ring — without duplicating hover listeners.'}
+      :code=${styled}
+      :filename=${'hover-styled.jcr'}
+      :layout=${'stack'}
+    >
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:0.85rem;width:100%">
+        <Hover bind-value=${liftHovered}>
+          <div
+            style="padding:1.1rem 1rem;border-radius:var(--j-radius);border:1px solid var(--j-border);background:var(--j-surface);transition:transform var(--j-duration-fast) var(--j-ease-out),box-shadow var(--j-duration-fast) var(--j-ease-out);cursor:default"
+            :style=${() =>
+              liftHovered()
+                ? 'transform:translateY(-3px);box-shadow:var(--j-shadow-md, var(--j-shadow-sm))'
+                : 'transform:none;box-shadow:none'}
+          >
+            <div style="display:grid;gap:0.25rem">
+              <Text :weight=${'bold'}>Lift</Text>
+              <Text :tone=${'muted'}>Shadow + raise</Text>
+            </div>
+          </div>
+        </Hover>
+        <Hover bind-value=${scaleHovered}>
+          <div
+            style="padding:1.1rem 1rem;border-radius:var(--j-radius);border:1px solid var(--j-border);background:var(--j-surface);transition:transform var(--j-duration-fast) var(--j-ease-out);cursor:default"
+            :style=${() => (scaleHovered() ? 'transform:scale(1.03)' : 'transform:none')}
+          >
+            <div style="display:grid;gap:0.25rem">
+              <Text :weight=${'bold'}>Scale</Text>
+              <Text :tone=${'muted'}>Slight grow</Text>
+            </div>
+          </div>
+        </Hover>
+        <Hover bind-value=${tintHovered}>
+          <div
+            style="padding:1.1rem 1rem;border-radius:var(--j-radius);border:1px solid var(--j-border);transition:background var(--j-duration-fast) var(--j-ease-out),border-color var(--j-duration-fast) var(--j-ease-out);cursor:default"
+            :style=${() =>
+              tintHovered()
+                ? 'background:color-mix(in srgb,var(--j-primary) 12%,var(--j-surface));border-color:color-mix(in srgb,var(--j-primary) 35%,var(--j-border))'
+                : 'background:var(--j-surface);border-color:var(--j-border)'}
+          >
+            <div style="display:grid;gap:0.25rem">
+              <Text :weight=${'bold'}>Tint</Text>
+              <Text :tone=${'muted'}>Brand wash</Text>
+            </div>
+          </div>
+        </Hover>
+        <Hover bind-value=${glowHovered}>
+          <div
+            style="padding:1.1rem 1rem;border-radius:var(--j-radius);border:1px solid var(--j-border);background:var(--j-surface);transition:box-shadow var(--j-duration-fast) var(--j-ease-out),border-color var(--j-duration-fast) var(--j-ease-out);cursor:default"
+            :style=${() =>
+              glowHovered()
+                ? 'border-color:var(--j-primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--j-primary) 22%,transparent)'
+                : 'border-color:var(--j-border);box-shadow:none'}
+          >
+            <div style="display:grid;gap:0.25rem">
+              <Text :weight=${'bold'}>Ring</Text>
+              <Text :tone=${'muted'}>Focus halo</Text>
+            </div>
+          </div>
+        </Hover>
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'media'}
+        :title=${'Media emphasize'}
+        :lead=${'Use the same model to brighten a cover surface while keeping copy readable.'}
+        :code=${media}
+        :filename=${'hover-media.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="max-width:22rem;width:100%">
+          <Hover bind-value=${mediaHovered}>
+            <div
+              style="position:relative;overflow:hidden;border-radius:var(--j-radius);border:1px solid var(--j-border);min-height:9rem;display:grid;place-items:end start;padding:1rem;background:linear-gradient(145deg,color-mix(in srgb,var(--j-primary) 18%,var(--j-surface)),var(--j-surface-2));transition:filter var(--j-duration-normal) var(--j-ease-out);cursor:default"
+              :style=${() => (mediaHovered() ? 'filter:saturate(1.15) brightness(1.03)' : 'filter:none')}
+            >
+              <div style="display:grid;gap:0.2rem">
+                <Text :weight=${'bold'}>${() => (mediaHovered() ? 'Ready to open' : 'Project cover')}</Text>
+                <Text :tone=${'muted'}>Hover or focus to emphasize media</Text>
+              </div>
+            </div>
+          </Hover>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'focus'}
+        :title=${'Keyboard focus'}
+        :lead=${'Focus inside the slot sets the same model as pointer hover — useful for buttons and links.'}
+        :code=${focus}
+        :filename=${'hover-focus.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="display:grid;gap:0.75rem">
+          <Hover bind-value=${focusHovered}>
+            <Button>Tab to focus</Button>
+          </Hover>
+          <Text :tone=${'muted'}>State: ${() => (focusHovered() ? 'active' : 'idle')}</Text>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'disabled'}
+        :title=${'Disabled'}
+        :lead=${'Disabled wrappers ignore pointer and focus and keep the model off.'}
+        :code=${disabled}
+        :filename=${'hover-disabled.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="max-width:22rem">
+          <Hover :disabled=${true}>
+            <Card :title=${'Disabled'} :subtitle=${'Hover state stays off'} />
+          </Hover>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

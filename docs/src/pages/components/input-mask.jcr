@@ -1,0 +1,231 @@
+import { pulse } from '@jacare/core'
+import InputMask from '@jacare/ui/components/InputMask.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  card,
+  customText,
+  dates,
+  documents,
+  phone,
+  sizes,
+  unmasked,
+} from '../../examples/input-mask.js'
+
+const contract = getContract('InputMask')
+const navLinks = previousNext('/components/input-mask')
+
+const basicValue = pulse('')
+const mobile = pulse('')
+const landline = pulse('')
+const cpf = pulse('')
+const cnpj = pulse('')
+const cep = pulse('')
+const rg = pulse('')
+const pis = pulse('')
+const date = pulse('')
+const time = pulse('')
+const cardNumber = pulse('')
+const expiry = pulse('')
+const cvv = pulse('')
+const plate = pulse('')
+const code = pulse('')
+const serial = pulse('')
+const rawCpf = pulse('')
+const sizeSm = pulse('')
+const sizeMd = pulse('')
+const sizeLg = pulse('')
+
+const a11y = [
+  'Label wraps the control so assistive tech announces the field name',
+  'error sets aria-invalid and shows validation copy under the field',
+  'Digit-only masks set inputmode=numeric for mobile keyboards',
+  'Clear is a button with aria-label=Clear',
+  'Prefer unmask when submitting raw digits to an API',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>InputMask</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Inputs'}
+      :title=${'InputMask'}
+      :description=${'Pattern-based text mask for documents, phones, dates, cards, and custom formats. Tokens: # digit, A letter, * alphanumeric. Literals stay in place.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'related'} :title=${'Related'}>
+      <p class="docs-lead">
+        Currency amounts belong on
+        <a jacare-go="/components/input-money" href="/components/input-money">InputMoney</a>.
+      </p>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'CPF preset'}
+      :lead=${'Use preset for common Brazilian patterns, or pass a custom mask string.'}
+      :code=${basic}
+      :filename=${'input-mask-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <InputMask
+        :label=${'CPF'}
+        :preset=${'cpf'}
+        :placeholder=${'000.000.000-00'}
+        :clearable=${true}
+        bind-value=${basicValue}
+      />
+      <p class="docs-demo-lead">Value: ${() => basicValue() || '—'}</p>
+    </Demo>
+
+    <Demo
+      :id=${'phone'}
+      :title=${'Phone'}
+      :code=${phone}
+      :filename=${'input-mask-phone.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <InputMask :label=${'Mobile'} :preset=${'phone'} bind-value=${mobile} />
+        <InputMask :label=${'Landline'} :preset=${'phone-landline'} bind-value=${landline} />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'documents'}
+      :title=${'Documents'}
+      :lead=${'CPF, CNPJ, CEP, RG, and PIS presets.'}
+      :code=${documents}
+      :filename=${'input-mask-documents.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <InputMask :label=${'CPF'} :preset=${'cpf'} bind-value=${cpf} />
+        <InputMask :label=${'CNPJ'} :preset=${'cnpj'} bind-value=${cnpj} />
+        <InputMask :label=${'CEP'} :preset=${'cep'} bind-value=${cep} />
+        <InputMask :label=${'RG'} :preset=${'rg'} bind-value=${rg} />
+        <InputMask :label=${'PIS'} :preset=${'pis'} bind-value=${pis} />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'dates'}
+      :title=${'Date and time'}
+      :code=${dates}
+      :filename=${'input-mask-dates.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+        <InputMask :label=${'Date'} :preset=${'date'} :placeholder=${'DD/MM/YYYY'} bind-value=${date} />
+        <InputMask :label=${'Time'} :preset=${'time'} :placeholder=${'HH:MM'} bind-value=${time} />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'card'}
+      :title=${'Payment card'}
+      :code=${card}
+      :filename=${'input-mask-card.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <InputMask :label=${'Card number'} :preset=${'card'} bind-value=${cardNumber} />
+        <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+          <InputMask :label=${'Expiry'} :mask=${'##/##'} :placeholder=${'MM/YY'} bind-value=${expiry} />
+          <InputMask :label=${'CVV'} :preset=${'cvv'} bind-value=${cvv} />
+        </Stack>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'custom'}
+      :title=${'Custom text masks'}
+      :lead=${'Mix A, #, and * with literals for plates, codes, and serials.'}
+      :code=${customText}
+      :filename=${'input-mask-custom.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <InputMask
+          :label=${'License plate'}
+          :mask=${'AAA-#A##'}
+          :hint=${'# = digit, A = letter'}
+          bind-value=${plate}
+        />
+        <InputMask
+          :label=${'Promo code'}
+          :mask=${'****-****'}
+          :hint=${'* = letter or digit'}
+          bind-value=${code}
+        />
+        <InputMask
+          :label=${'Serial'}
+          :mask=${'AA-####-AA'}
+          bind-value=${serial}
+        />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'unmask'}
+      :title=${'Unmasked model'}
+      :lead=${'When unmask is true the pulse stores raw characters (digits/letters) while the field still shows the mask.'}
+      :code=${unmasked}
+      :filename=${'input-mask-unmask.jcr'}
+      :layout=${'stack'}
+    >
+      <InputMask
+        :label=${'CPF (raw model)'}
+        :preset=${'cpf'}
+        :unmask=${true}
+        :hint=${'Model stores digits only'}
+        bind-value=${rawCpf}
+      />
+      <p class="docs-demo-lead">Raw value: ${() => rawCpf() || '—'}</p>
+    </Demo>
+
+    <Demo
+      :id=${'sizes'}
+      :title=${'Sizes'}
+      :code=${sizes}
+      :filename=${'input-mask-sizes.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <InputMask :label=${'Small'} :size=${'sm'} :preset=${'phone'} bind-value=${sizeSm} />
+        <InputMask :label=${'Medium'} :size=${'md'} :preset=${'phone'} bind-value=${sizeMd} />
+        <InputMask :label=${'Large'} :size=${'lg'} :preset=${'phone'} bind-value=${sizeLg} />
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'presets'} :title=${'Presets'}>
+      <p class="docs-lead">
+        Built-in presets: <code>cpf</code>,${' '}<code>cnpj</code>,${' '}<code>phone</code>,${' '}<code>phone-landline</code>,${' '}<code>cep</code>,${' '}<code>date</code>,${' '}<code>time</code>,${' '}<code>card</code>,${' '}<code>cvv</code>,${' '}<code>rg</code>,${' '}<code>pis</code>.${' '}Pass <code>mask</code>${' '}to override.
+      </p>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -12,7 +12,15 @@ import CodeBlock from '../../ui/CodeBlock.jcr'
 import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, bounds, playgroundCode as buildPlaygroundCode } from '../../examples/date-picker-panel.js'
+import {
+  basic,
+  borderless,
+  bounds,
+  disabled,
+  multiple,
+  playgroundCode as buildPlaygroundCode,
+  range,
+} from '../../examples/date-picker-panel.js'
 
 const contract = getContract('DatePickerPanel')
 const navLinks = previousNext('/components/date-picker-panel')
@@ -24,11 +32,16 @@ const playBorder = pulse(true)
 const playDisabled = pulse(false)
 const basicValue = pulse('2026-07-15')
 const boundsValue = pulse('2026-07-10')
+const borderlessValue = pulse('2026-07-15')
+const disabledValue = pulse('2026-07-15')
+const rangeValue = pulse(['2026-07-10', '2026-07-18'])
+const multipleValue = pulse(['2026-07-08', '2026-07-15', '2026-07-22'])
 
 const a11yItems = [
   'Each day button has a full date aria-label',
   'Disabled days (outside min/max) are not selectable',
   'Month and year selects remain keyboard accessible',
+  'Range and multiple modes announce selection state in the hint',
   'Today action jumps to the current date when allowed',
 ]
 
@@ -42,6 +55,11 @@ function playgroundCode() {
   })
 }
 
+function formatList(values) {
+  const list = Array.isArray(values) ? values : []
+  return list.length ? list.join(', ') : 'None'
+}
+
 export <view>
   <article class="docs-page">
     <nav class="docs-breadcrumb" aria-label="Breadcrumb">
@@ -51,9 +69,9 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Pickers'}
       :title=${'DatePickerPanel'}
-      :description=${'Inline calendar panel that binds an ISO YYYY-MM-DD string. Embed it in popovers, side panels, or next to other form fields when you do not need DatePicker chrome.'}
+      :description=${'Inline calendar panel for a single ISO date, a date range, or multiple dates. Embed it in popovers, side panels, or next to other form fields when you do not need DatePicker chrome.'}
       :status=${'stable'}
     />
 
@@ -91,6 +109,54 @@ export <view>
       :filename=${'date-picker-panel-basic.jcr'}
     >
       <DatePickerPanel bind-value=${basicValue} />
+    </Demo>
+
+    <Demo
+      :id=${'range'}
+      :title=${'Range'}
+      :lead=${'Set range and bind an array of two ISO dates. First click sets the start; second click completes the range.'}
+      :code=${range}
+      :filename=${'date-picker-panel-range.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <DatePickerPanel :range=${true} bind-value=${rangeValue} />
+        <p class="docs-lead">${() => `Selected: ${formatList(rangeValue())}`}</p>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'multiple'}
+      :title=${'Multiple'}
+      :lead=${'Set multiple and bind an array of ISO dates. Tap again to deselect a day.'}
+      :code=${multiple}
+      :filename=${'date-picker-panel-multiple.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <DatePickerPanel :multiple=${true} bind-value=${multipleValue} />
+        <p class="docs-lead">${() => `Selected: ${formatList(multipleValue())}`}</p>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'borderless'}
+      :title=${'Borderless'}
+      :lead=${'Remove the panel border when a surrounding surface already provides containment.'}
+      :code=${borderless}
+      :filename=${'date-picker-panel-borderless.jcr'}
+    >
+      <DatePickerPanel :border=${false} bind-value=${borderlessValue} />
+    </Demo>
+
+    <Demo
+      :id=${'disabled'}
+      :title=${'Disabled'}
+      :lead=${'Navigation, selects, days, and the Today action become non-interactive together.'}
+      :code=${disabled}
+      :filename=${'date-picker-panel-disabled.jcr'}
+    >
+      <DatePickerPanel :disabled=${true} bind-value=${disabledValue} />
     </Demo>
 
     <Demo

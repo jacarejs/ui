@@ -1,0 +1,96 @@
+import Row from '@jacare/ui/components/Row.jcr'
+import Col from '@jacare/ui/components/Col.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, justify, align, evenly } from '../../examples/row.js'
+
+const contract = getContract('Row')
+const navLinks = previousNext('/components/row')
+
+const a11y = [
+  'Row and Col preserve source order across wrapping and alignment',
+  'Gutters should not create horizontal page overflow',
+  'Do not use visual alignment as the only signal of content relationships',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Row</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Layout'}
+      :title=${'Row'}
+      :description=${'Wrapping 24-column row with CSS-length gutters plus horizontal justification and vertical alignment controls.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Gutters'}
+      :lead=${'gutter controls both column padding and wrapped row spacing.'}
+      :code=${basic}
+      :filename=${'row-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Row :gutter=${16}><Col :span=${12}><div class="docs-panel">Half</div></Col><Col :span=${12}><div class="docs-panel">Half</div></Col></Row>
+    </Demo>
+    <Demo
+      :id=${'justify'}
+      :title=${'Justification'}
+      :lead=${'Use center, end, between, around, or evenly when columns do not fill 24 units.'}
+      :code=${justify}
+      :filename=${'row-justify.jcr'}
+      :layout=${'stack'}
+    >
+      <Row :gutter=${12} :justify=${'between'}><Col :span=${6}><div class="docs-panel">Start</div></Col><Col :span=${6}><div class="docs-panel">End</div></Col></Row>
+    </Demo>
+    <Demo
+      :id=${'align'}
+      :title=${'Vertical alignment'}
+      :lead=${'top, middle, and bottom align columns with different content heights.'}
+      :code=${align}
+      :filename=${'row-align.jcr'}
+      :layout=${'stack'}
+    >
+      <Row :gutter=${12} :align=${'middle'}>
+        <Col :span=${8}><div class="docs-panel" style="min-height:48px">Short</div></Col>
+        <Col :span=${8}><div class="docs-panel" style="min-height:96px">Tall</div></Col>
+        <Col :span=${8}><div class="docs-panel" style="min-height:64px">Medium</div></Col>
+      </Row>
+    </Demo>
+    <Demo
+      :id=${'evenly'}
+      :title=${'Even spacing and bottom alignment'}
+      :lead=${'Combine justification and alignment when columns leave unused row space.'}
+      :code=${evenly}
+      :filename=${'row-evenly.jcr'}
+      :layout=${'stack'}
+    >
+      <Row :gutter=${'0.75rem'} :justify=${'evenly'} :align=${'bottom'}>
+        <Col :span=${5}><div class="docs-panel" style="min-height:48px">One</div></Col>
+        <Col :span=${5}><div class="docs-panel" style="min-height:80px">Two</div></Col>
+        <Col :span=${5}><div class="docs-panel" style="min-height:64px">Three</div></Col>
+      </Row>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

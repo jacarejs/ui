@@ -1,0 +1,67 @@
+import Carousel from '@jacare/ui/components/Carousel.jcr'
+import CarouselItem from '@jacare/ui/components/CarouselItem.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { contentSlides, fixedHeight, initialSlide } from '../../examples/carousel-item.js'
+
+const contract = getContract('CarouselItem')
+const navLinks = previousNext('/components/carousel-item')
+const a11y = [
+  'Use CarouselItem only inside Carousel so slide visibility is managed correctly',
+  'Keep essential controls outside slides that may be hidden',
+  'Avoid autoplay for content that requires reading or interaction',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>CarouselItem</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'CarouselItem'}
+      :description=${'CarouselItem is the slide container used inside Carousel. Its default slot accepts any slide content while Carousel controls navigation and sizing.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'content-slides'} :title=${'Content slides'} :lead=${'Each CarouselItem fills one complete slide in its parent track.'} :code=${contentSlides} :filename=${'carousel-item-content.jcr'}>
+       <Carousel :autoplay=${false} :arrow=${'always'}>
+        <CarouselItem><div style="display:grid;place-items:center;height:100%;background:var(--j-mint)">Overview</div></CarouselItem>
+        <CarouselItem><div style="display:grid;place-items:center;height:100%;background:var(--j-surface-2)">Usage</div></CarouselItem>
+        <CarouselItem><div style="display:grid;place-items:center;height:100%;background:var(--j-leaf);color:#ffffff">Ship</div></CarouselItem>
+       </Carousel>
+    </Demo>
+    <Demo :id=${'fixed-height'} :title=${'Fixed height'} :lead=${'Carousel supplies a shared height while every item stretches to fill it.'} :code=${fixedHeight} :filename=${'carousel-item-height.jcr'}>
+      <Carousel :height=${'260px'} :autoplay=${false} :indicatorPosition=${'outside'}>
+        <CarouselItem><div style="display:grid;place-items:center;height:100%;background:var(--j-mint)">First release</div></CarouselItem>
+        <CarouselItem><div style="display:grid;place-items:center;height:100%;background:var(--j-surface-2)">Second release</div></CarouselItem>
+      </Carousel>
+    </Demo>
+    <Demo :id=${'initial-slide'} :title=${'Initial slide'} :lead=${'The parent initialIndex selects which CarouselItem is visible first.'} :code=${initialSlide} :filename=${'carousel-item-initial.jcr'}>
+      <Carousel :autoplay=${false} :initialIndex=${1} :arrow=${'always'}>
+        <CarouselItem><div style="display:grid;place-items:center;height:100%">Draft</div></CarouselItem>
+        <CarouselItem><div style="display:grid;place-items:center;height:100%;background:var(--j-leaf);color:white">Published</div></CarouselItem>
+        <CarouselItem><div style="display:grid;place-items:center;height:100%">Archived</div></CarouselItem>
+      </Carousel>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

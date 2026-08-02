@@ -1,0 +1,91 @@
+import { pulse } from '@jacare/core'
+import Scrollbar from '@jacare/ui/components/Scrollbar.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, maxHeight, native, always } from '../../examples/scrollbar.js'
+
+const contract = getContract('Scrollbar')
+const navLinks = previousNext('/components/scrollbar')
+const scrollPosition = pulse('0')
+
+const a11y = [
+  'Scrollable content remains in normal document order',
+  'Do not hide focus indicators inside clipped regions',
+  'Provide another cue when horizontal scrolling is required',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Scrollbar</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Layout'}
+      :title=${'Scrollbar'}
+      :description=${'Bounded scroll region with height or max-height constraints, styled or native scrollbars, persistent tracks, and scroll events.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Fixed height'}
+      :lead=${'height creates a predictable vertical scrolling viewport.'}
+      :code=${basic}
+      :filename=${'scrollbar-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Scrollbar :height=${'180px'}><div style="height:420px;padding:0.75rem">Scrollable content<br />Keep scrolling to inspect the styled thumb.</div></Scrollbar>
+    </Demo>
+    <Demo
+      :id=${'maxHeight'}
+      :title=${'Content-aware height'}
+      :lead=${'maxHeight lets short content shrink while bounding long content.'}
+      :code=${maxHeight}
+      :filename=${'scrollbar-maxHeight.jcr'}
+      :layout=${'stack'}
+    >
+      <Scrollbar :maxHeight=${'140px'} :always=${true}><div style="min-height:300px;padding:0.75rem">The track remains visible because always is true.</div></Scrollbar>
+    </Demo>
+    <Demo
+      :id=${'native'}
+      :title=${'Native and scroll event'}
+      :lead=${'native delegates scrollbar presentation to the platform; scroll reports both axes.'}
+      :code=${native}
+      :filename=${'scrollbar-native.jcr'}
+      :layout=${'stack'}
+    >
+      <Scrollbar :height=${'150px'} :native=${true} on-scroll=${(value) => scrollPosition.set(String(value.scrollTop))}>
+        <div style="width:640px;height:320px;padding:0.75rem">Native two-axis scrolling surface</div>
+      </Scrollbar>
+    </Demo>
+    <Demo
+      :id=${'always'}
+      :title=${'Persistent tracks'}
+      :lead=${'always keeps both tracks visible when discoverability matters.'}
+      :code=${always}
+      :filename=${'scrollbar-always.jcr'}
+      :layout=${'stack'}
+    >
+      <Scrollbar :height=${'140px'} :always=${true}><div style="width:520px;height:280px;padding:0.75rem">Persistent vertical and horizontal tracks</div></Scrollbar>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

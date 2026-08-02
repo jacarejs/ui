@@ -1,0 +1,270 @@
+import { pulse } from '@jacare/core'
+import CheckboxGroup from '@jacare/ui/components/CheckboxGroup.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  cards,
+  change,
+  disabled,
+  error,
+  hint,
+  optionDisabled,
+  playgroundCode as buildPlaygroundCode,
+  required,
+  selectAll,
+  strings,
+} from '../../examples/checkbox-group.js'
+
+const contract = getContract('CheckboxGroup')
+const navLinks = previousNext('/components/checkbox-group')
+
+const featureOptions = [
+  { value: 'billing', label: 'Billing', description: 'Invoices and receipts' },
+  { value: 'reports', label: 'Reports', description: 'Weekly digests' },
+  { value: 'sso', label: 'SSO', description: 'SAML and OIDC' },
+]
+
+const playLabel = pulse('Features')
+const playValue = pulse(['billing'])
+const playHint = pulse('Choose everything you need')
+const playError = pulse('')
+const playRequired = pulse(false)
+const playDisabled = pulse(false)
+const playCards = pulse(false)
+const playSelectAll = pulse(false)
+const basicValue = pulse(['billing'])
+const stringsValue = pulse(['Mon', 'Wed'])
+const hintValue = pulse(['product'])
+const selectAllValue = pulse(['americas'])
+const cardsValue = pulse(['email'])
+const optionDisabledValue = pulse(['analytics'])
+const changeValue = pulse(['email'])
+const lastChange = pulse('email')
+const requiredValue = pulse([])
+const errorValue = pulse([])
+const lockedValue = pulse(['email'])
+
+const a11y = [
+  'Fieldset + legend name the group for assistive technologies',
+  'Select-all uses aria-checked="mixed" while partially selected',
+  'Each option is a native checkbox with visible focus on the control',
+  'disabled dims the group and blocks pointer interaction',
+  'Per-option disabled keeps unavailable choices visible without locking the group',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    label: playLabel(),
+    value: playValue(),
+    layout: playCards() ? 'cards' : 'list',
+    selectAll: playSelectAll(),
+    selectAllLabel: 'Select all',
+    required: playRequired(),
+    disabled: playDisabled(),
+    hint: playHint(),
+    error: playError(),
+  })
+}
+
+function onChange(next) {
+  lastChange.set(Array.isArray(next) ? next.join(', ') : String(next))
+}
+
+function selectionSummary(list) {
+  if (!Array.isArray(list) || !list.length) return 'Nothing selected'
+  return list.join(', ')
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>CheckboxGroup</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Selection'}
+      :title=${'CheckboxGroup'}
+      :description=${'Multi-select group with list or cards layout, optional select-all with indeterminate state, hints, and validation.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Label'} bind-value=${playLabel} />
+          <Field :label=${'Hint'} bind-value=${playHint} />
+          <Field :label=${'Error'} :hint=${'Leave empty for a valid group'} bind-value=${playError} />
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Cards'} bind-checked=${playCards} />
+            <Switch :label=${'Select all'} bind-checked=${playSelectAll} />
+            <Switch :label=${'Required'} bind-checked=${playRequired} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <CheckboxGroup
+              :label=${playLabel}
+              :options=${featureOptions}
+              :layout=${() => (playCards() ? 'cards' : 'list')}
+              :selectAll=${playSelectAll}
+              :required=${playRequired}
+              :disabled=${playDisabled}
+              :hint=${playHint}
+              :error=${playError}
+              bind-value=${playValue}
+            />
+            <Text :tone=${'muted'}>Selected: ${() => selectionSummary(playValue)}</Text>
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'checkbox-group-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'checkbox-group-basic.jcr'} :layout=${'stack'}>
+      <CheckboxGroup :label=${'Features'} :options=${featureOptions} bind-value=${basicValue} />
+    </Demo>
+
+    <DocsSection :id=${'options'} :title=${'Options'}>
+      <Demo :id=${'strings'} :title=${'String options'} :code=${strings} :filename=${'checkbox-group-strings.jcr'} :layout=${'stack'}>
+        <CheckboxGroup
+          :label=${'Weekdays'}
+          :options=${['Mon', 'Tue', 'Wed', 'Thu', 'Fri']}
+          bind-value=${stringsValue}
+        />
+      </Demo>
+
+      <Demo :id=${'hint'} :title=${'With hint'} :code=${hint} :filename=${'checkbox-group-hint.jcr'} :layout=${'stack'}>
+        <CheckboxGroup
+          :label=${'Newsletter topics'}
+          :hint=${'You can change these anytime'}
+          :options=${[
+            { value: 'product', label: 'Product updates' },
+            { value: 'security', label: 'Security advisories' },
+            { value: 'events', label: 'Events' },
+          ]}
+          bind-value=${hintValue}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'option-disabled'}
+        :title=${'Disabled option'}
+        :lead=${'Disable one unavailable choice without locking the whole group.'}
+        :code=${optionDisabled}
+        :filename=${'checkbox-group-option-disabled.jcr'}
+        :layout=${'stack'}
+      >
+        <CheckboxGroup
+          :label=${'Add-ons'}
+          :hint=${'Unavailable items stay visible'}
+          :options=${[
+            { value: 'analytics', label: 'Analytics' },
+            { value: 'audit', label: 'Audit log' },
+            { value: 'legacy', label: 'Legacy export', disabled: true },
+          ]}
+          bind-value=${optionDisabledValue}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'select-all'} :title=${'Select all'}>
+      <Demo :id=${'select-all-demo'} :title=${'Indeterminate control'} :code=${selectAll} :filename=${'checkbox-group-select-all.jcr'} :layout=${'stack'}>
+        <CheckboxGroup
+          :label=${'Regions'}
+          :selectAll=${true}
+          :selectAllLabel=${'All regions'}
+          :options=${[
+            { value: 'americas', label: 'Americas' },
+            { value: 'europe', label: 'Europe' },
+            { value: 'asia', label: 'Asia Pacific' },
+          ]}
+          bind-value=${selectAllValue}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'cards'} :title=${'Card layout'}>
+      <Demo :id=${'cards-demo'} :title=${'Selectable cards'} :code=${cards} :filename=${'checkbox-group-cards.jcr'} :layout=${'bleed'}>
+        <CheckboxGroup
+          :label=${'Channels'}
+          :layout=${'cards'}
+          :options=${[
+            { value: 'email', label: 'Email', description: 'Daily digest' },
+            { value: 'push', label: 'Push', description: 'Instant alerts' },
+            { value: 'sms', label: 'SMS', description: 'Critical only' },
+          ]}
+          bind-value=${cardsValue}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'events'} :title=${'Events'}>
+      <Demo :id=${'change-demo'} :title=${'on-change'} :code=${change} :filename=${'checkbox-group-change.jcr'} :layout=${'stack'}>
+        <Stack :gap=${'sm'}>
+          <CheckboxGroup
+            :label=${'Channels'}
+            :options=${['email', 'push', 'sms']}
+            bind-value=${changeValue}
+            on-change=${onChange}
+          />
+          <Text :tone=${'muted'}>Last change: ${() => lastChange() || '—'}</Text>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'states'} :title=${'States'}>
+      <Demo :id=${'required'} :title=${'Required'} :code=${required} :filename=${'checkbox-group-required.jcr'} :layout=${'stack'}>
+        <CheckboxGroup
+          :label=${'Required'}
+          :required=${true}
+          :options=${['One', 'Two', 'Three']}
+          bind-value=${requiredValue}
+        />
+      </Demo>
+
+      <Demo :id=${'error'} :title=${'Error'} :code=${error} :filename=${'checkbox-group-error.jcr'} :layout=${'stack'}>
+        <CheckboxGroup
+          :label=${'Permissions'}
+          :error=${'Pick at least one permission'}
+          :options=${['read', 'write', 'admin']}
+          bind-value=${errorValue}
+        />
+      </Demo>
+
+      <Demo :id=${'disabled'} :title=${'Disabled'} :code=${disabled} :filename=${'checkbox-group-disabled.jcr'} :layout=${'stack'}>
+        <CheckboxGroup
+          :label=${'Locked'}
+          :disabled=${true}
+          :options=${['email', 'push', 'sms']}
+          bind-value=${lockedValue}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

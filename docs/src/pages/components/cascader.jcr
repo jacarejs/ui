@@ -9,9 +9,19 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/cascader.js'
+import {
+  basic,
+  changeOnSelectExample,
+  customSeparator,
+  filterableExample,
+  multipleExample,
+  playgroundCode as buildPlaygroundCode,
+  selectedPath,
+  states,
+} from '../../examples/cascader.js'
 
 const contract = getContract('Cascader')
 const navLinks = previousNext('/components/cascader')
@@ -55,12 +65,52 @@ const options = [
   },
 ]
 
+const regionOptions = [
+  {
+    value: 'americas',
+    label: 'Americas',
+    children: [
+      {
+        value: 'brazil',
+        label: 'Brazil',
+        children: [
+          { value: 'recife', label: 'Recife' },
+          { value: 'sp', label: 'São Paulo' },
+        ],
+      },
+    ],
+  },
+  {
+    value: 'europe',
+    label: 'Europe',
+    children: [{ value: 'portugal', label: 'Portugal' }],
+  },
+]
+
 const playLabel = pulse('Category')
 const playPlaceholder = pulse('Select')
 const playValue = pulse([])
 const playClearable = pulse(true)
 const playDisabled = pulse(false)
+const playFilterable = pulse(false)
+const playChangeOnSelect = pulse(false)
+const playMultiple = pulse(false)
 const basicValue = pulse([])
+const selectedValue = pulse(['component', 'form', 'select'])
+const regionValue = pulse(['guide', 'navigation', 'side nav'])
+const filterValue = pulse([])
+const anyLevelValue = pulse([])
+const multipleValue = pulse([])
+const invalidValue = pulse([])
+const lockedValue = pulse(['guide', 'disciplines', 'feedback'])
+
+const a11yItems = [
+  'The trigger announces a dialog picker and tracks its expanded state',
+  'Columns expose listbox and option semantics with selected states',
+  'Escape closes the picker and returns focus to the trigger',
+  'filterable search focuses an input; results stay keyboard-clickable options',
+  'On mobile, the bottom sheet keeps large targets and an explicit back action',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -68,6 +118,9 @@ function playgroundCode() {
     placeholder: playPlaceholder(),
     clearable: playClearable(),
     disabled: playDisabled(),
+    filterable: playFilterable(),
+    changeOnSelect: playChangeOnSelect(),
+    multiple: playMultiple(),
   })
 }
 
@@ -80,9 +133,9 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Selection'}
       :title=${'Cascader'}
-      :description=${'Hierarchical picker for nested options. Bind value to a pulse of path segments and pass trees of value/label/children. On narrow viewports it opens as a bottom sheet with single-column drill-down.'}
+      :description=${'Hierarchical path picker. Model is a path array (or array of paths when multiple). Adds filterable search, changeOnSelect for any level, and multiple selection — prefer CascadeSelect when you only need a single leaf value via optionLabel / optionValue / optionGroupChildren.'}
       :status=${'stable'}
     />
 
@@ -94,6 +147,9 @@ export <view>
           <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
             <Switch :label=${'Clearable'} bind-checked=${playClearable} />
             <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+            <Switch :label=${'Filterable'} bind-checked=${playFilterable} />
+            <Switch :label=${'Change on select'} bind-checked=${playChangeOnSelect} />
+            <Switch :label=${'Multiple'} bind-checked=${playMultiple} />
           </Stack>
         </div>
 
@@ -105,6 +161,9 @@ export <view>
               :options=${options}
               :clearable=${playClearable}
               :disabled=${playDisabled}
+              :filterable=${playFilterable}
+              :changeOnSelect=${playChangeOnSelect}
+              :multiple=${playMultiple}
               bind-value=${playValue}
             />
           </div>
@@ -113,9 +172,58 @@ export <view>
       </div>
     </DocsSection>
 
-    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'cascader-basic.jcr'}>
+    <Demo :id=${'basic'} :title=${'Basic'} :lead=${'Bind value to a pulse of path segments: root → … → leaf.'} :code=${basic} :filename=${'cascader-basic.jcr'}>
       <Cascader :label=${'Category'} :options=${options} bind-value=${basicValue} />
     </Demo>
+
+    <Demo :id=${'filterable'} :title=${'Filterable'} :lead=${'Search across leaf paths. Distinct from CascadeSelect, which has no filter.'} :code=${filterableExample} :filename=${'cascader-filterable.jcr'}>
+      <Cascader
+        :label=${'Search pages'}
+        :options=${options}
+        :filterable=${true}
+        :hint=${'Type to jump to a leaf path'}
+        bind-value=${filterValue}
+      />
+    </Demo>
+
+    <Demo :id=${'change-on-select'} :title=${'Change on select'} :lead=${'Parents are selectable. The model stays a path array ending at the clicked node.'} :code=${changeOnSelectExample} :filename=${'cascader-change-on-select.jcr'}>
+      <Cascader
+        :label=${'Region'}
+        :options=${regionOptions}
+        :changeOnSelect=${true}
+        :hint=${'Click Americas or Brazil without drilling to a city'}
+        bind-value=${anyLevelValue}
+      />
+    </Demo>
+
+    <Demo :id=${'multiple'} :title=${'Multiple'} :lead=${'Model becomes an array of path arrays. Toggle leaves to add or remove.'} :code=${multipleExample} :filename=${'cascader-multiple.jcr'}>
+      <Cascader
+        :label=${'Topics'}
+        :options=${options}
+        :multiple=${true}
+        :hint=${'Select several leaf paths'}
+        bind-value=${multipleValue}
+      />
+    </Demo>
+
+    <Demo :id=${'selected'} :title=${'Selected path'} :lead=${'Seed the path array to show a committed selection.'} :code=${selectedPath} :filename=${'cascader-selected.jcr'}>
+      <Cascader :label=${'Component'} :options=${options} bind-value=${selectedValue} />
+    </Demo>
+
+    <Demo :id=${'separator'} :title=${'Custom separator'} :code=${customSeparator} :filename=${'cascader-separator.jcr'}>
+      <Cascader :label=${'Documentation'} :options=${options} :separator=${'›'} :hint=${'Choose the most specific page'} bind-value=${regionValue} />
+    </Demo>
+
+    <Demo :id=${'states'} :title=${'Error and disabled'} :code=${states} :filename=${'cascader-states.jcr'}>
+      <Stack :gap=${'md'}>
+        <Cascader :label=${'Destination'} :options=${options} :clearable=${false} :error=${'Select a destination'} bind-value=${invalidValue} />
+        <Cascader :label=${'Locked path'} :options=${options} :disabled=${true} bind-value=${lockedValue} />
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11yItems} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

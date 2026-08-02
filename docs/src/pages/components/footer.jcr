@@ -1,0 +1,87 @@
+import Container from '@jacare/ui/components/Container.jcr'
+import Header from '@jacare/ui/components/Header.jcr'
+import Aside from '@jacare/ui/components/Aside.jcr'
+import Main from '@jacare/ui/components/Main.jcr'
+import Footer from '@jacare/ui/components/Footer.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { actions, heights, links, shell } from '../../examples/footer.js'
+
+const contract = getContract('Footer')
+const navLinks = previousNext('/components/footer')
+const a11y = [
+  'Footer renders a semantic footer landmark',
+  'Keep legal, status, and supporting links understandable out of context',
+  'Do not rely on footer position alone to communicate critical status',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Footer</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Layout'}
+      :title=${'Footer'}
+      :description=${'Semantic bottom region with a configurable fixed height for status, legal, or supporting actions.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'shell'} :title=${'Shell footer'} :lead=${'Footer closes a vertical shell after the flexible body region.'} :code=${shell} :filename=${'footer-shell.jcr'}>
+      <div style="height:260px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container>
+          <Header>Deployment center</Header>
+          <Container :direction=${'horizontal'}>
+            <Aside :width=${'150px'}>Environments</Aside>
+            <Main :padding=${'1rem'}>Release details</Main>
+          </Container>
+          <Footer>Version 2.4.0 · Production</Footer>
+        </Container>
+      </div>
+    </Demo>
+    <Demo :id=${'height'} :title=${'Custom height'} :lead=${'Use a shorter footer for compact metadata and status lines.'} :code=${heights} :filename=${'footer-height.jcr'}>
+      <div style="height:180px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container>
+          <Main :padding=${'1rem'}>Checkout summary</Main>
+          <Footer :height=${'48px'}>Secure checkout · USD</Footer>
+        </Container>
+      </div>
+    </Demo>
+    <Demo :id=${'links'} :title=${'Legal navigation'} :lead=${'Footer can pair ownership text with a labeled group of supporting links.'} :code=${links} :filename=${'footer-links.jcr'}>
+      <div style="height:180px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container>
+          <Main :padding=${'1rem'}>Account settings</Main>
+          <Footer :height=${'52px'}><span>© Jacaré</span><nav aria-label="Legal" style="margin-left:auto">Privacy · Terms</nav></Footer>
+        </Container>
+      </div>
+    </Demo>
+    <Demo :id=${'actions'} :title=${'Action footer'} :lead=${'Pair supporting state with a trailing action in bounded review or editing flows.'} :code=${actions} :filename=${'footer-actions.jcr'}>
+      <div style="height:190px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container>
+          <Main :padding=${'1rem'}>Review the pending changes.</Main>
+          <Footer :height=${'64px'}><span>3 changes</span><div style="margin-left:auto"><Button>Save changes</Button></div></Footer>
+        </Container>
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

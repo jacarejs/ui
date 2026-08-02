@@ -1,0 +1,176 @@
+import { pulse } from '@jacare/core'
+import InputMask from '@jacare/ui/components/InputMask.jcr'
+import InputMoney from '@jacare/ui/components/InputMoney.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  checkout,
+  currencies,
+  negative,
+  precision,
+  sizes,
+} from '../../examples/input-money.js'
+
+const contract = getContract('InputMoney')
+const navLinks = previousNext('/components/input-money')
+
+const basicAmount = pulse(0)
+const brl = pulse(1250.9)
+const usd = pulse(89.5)
+const eur = pulse(40)
+const cents = pulse(19.9)
+const whole = pulse(20)
+const adjustment = pulse(-15.5)
+const sizeSm = pulse(10)
+const sizeMd = pulse(25.5)
+const sizeLg = pulse(100)
+const price = pulse(199.9)
+const card = pulse('')
+const expiry = pulse('')
+const cvv = pulse('')
+
+const a11y = [
+  'Label wraps the control so assistive tech announces the field name',
+  'Uses inputmode=decimal for numeric mobile keyboards',
+  'error sets aria-invalid and shows validation copy under the field',
+  'Model value is a number — format is display-only',
+  'Clear resets the amount to 0',
+]
+
+function moneyLabel(amount) {
+  return Number.isFinite(amount) ? String(amount) : '—'
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>InputMoney</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Inputs'}
+      :title=${'InputMoney'}
+      :description=${'Currency amount field. Digits type from the right (cents-first), the model stays a number, and Intl formats the display for the chosen locale and currency.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'related'} :title=${'Related'}>
+      <p class="docs-lead">
+        For CPF, phone, CEP, and custom patterns use
+        <a jacare-go="/components/input-mask" href="/components/input-mask">InputMask</a>.
+      </p>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic BRL'}
+      :lead=${'Type digits to build the amount. Clear resets to 0.'}
+      :code=${basic}
+      :filename=${'input-money-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <InputMoney
+        :label=${'Amount'}
+        :currency=${'BRL'}
+        :locale=${'pt-BR'}
+        :clearable=${true}
+        bind-value=${basicAmount}
+      />
+      <p class="docs-demo-lead">Model: ${() => moneyLabel(basicAmount())}</p>
+    </Demo>
+
+    <Demo
+      :id=${'currencies'}
+      :title=${'Currencies'}
+      :code=${currencies}
+      :filename=${'input-money-currencies.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <InputMoney :label=${'BRL'} :currency=${'BRL'} :locale=${'pt-BR'} bind-value=${brl} />
+        <InputMoney :label=${'USD'} :currency=${'USD'} :locale=${'en-US'} bind-value=${usd} />
+        <InputMoney :label=${'EUR'} :currency=${'EUR'} :locale=${'de-DE'} bind-value=${eur} />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'precision'}
+      :title=${'Precision'}
+      :code=${precision}
+      :filename=${'input-money-precision.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <InputMoney :label=${'With cents'} :precision=${2} bind-value=${cents} />
+        <InputMoney :label=${'Whole reais'} :precision=${0} :hint=${'No decimal places'} bind-value=${whole} />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'negative'}
+      :title=${'Negative amounts'}
+      :code=${negative}
+      :filename=${'input-money-negative.jcr'}
+      :layout=${'stack'}
+    >
+      <InputMoney
+        :label=${'Adjustment'}
+        :allowNegative=${true}
+        :hint=${'Type - to start a negative amount'}
+        bind-value=${adjustment}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'sizes'}
+      :title=${'Sizes'}
+      :code=${sizes}
+      :filename=${'input-money-sizes.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <InputMoney :label=${'Small'} :size=${'sm'} bind-value=${sizeSm} />
+        <InputMoney :label=${'Medium'} :size=${'md'} bind-value=${sizeMd} />
+        <InputMoney :label=${'Large'} :size=${'lg'} bind-value=${sizeLg} />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'checkout'}
+      :title=${'With InputMask'}
+      :lead=${'Compose money and card masks in the same form.'}
+      :code=${checkout}
+      :filename=${'input-money-checkout.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <InputMoney :label=${'Charge'} :currency=${'BRL'} bind-value=${price} />
+        <InputMask :label=${'Card'} :preset=${'card'} bind-value=${card} />
+        <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+          <InputMask :label=${'Expiry'} :mask=${'##/##'} bind-value=${expiry} />
+          <InputMask :label=${'CVV'} :preset=${'cvv'} bind-value=${cvv} />
+        </Stack>
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

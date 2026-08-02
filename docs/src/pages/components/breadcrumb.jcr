@@ -1,0 +1,181 @@
+import Breadcrumb from '@jacare/ui/components/Breadcrumb.jcr'
+import BreadcrumbItem from '@jacare/ui/components/BreadcrumbItem.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  arrow as arrowExample,
+  basic,
+  chevron as chevronExample,
+  dot as dotExample,
+  longPath,
+  separator,
+  single as singleExample,
+  twoLevels as twoLevelsExample,
+} from '../../examples/breadcrumb.js'
+
+const contract = getContract('Breadcrumb')
+const navLinks = previousNext('/components/breadcrumb')
+
+const a11y = [
+  'The root is a Breadcrumb navigation landmark',
+  'Use links for ancestors and plain text for the current page',
+  'Decorative separators are generated outside the link text',
+  'Keep the final crumb as the current page without an href',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Breadcrumb</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Navigation'}
+      :title=${'Breadcrumb'}
+      :description=${'Hierarchical path trail with spaced separators, wrap-friendly layout, and BreadcrumbItem links for ancestors.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Path trail'}
+      :lead=${'Omit href on the final item to represent the current page. Separators keep even space on both sides.'}
+      :code=${basic}
+      :filename=${'breadcrumb-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Breadcrumb>
+        <BreadcrumbItem :href=${'/'}>Home</BreadcrumbItem>
+        <BreadcrumbItem :href=${'/components'}>Components</BreadcrumbItem>
+        <BreadcrumbItem>Breadcrumb</BreadcrumbItem>
+      </Breadcrumb>
+    </Demo>
+
+    <DocsSection :id=${'separators'} :title=${'Separators'}>
+      <Demo
+        :id=${'separator'}
+        :title=${'Chevron separator'}
+        :lead=${'separator accepts any short text glyph appropriate to the locale.'}
+        :code=${separator}
+        :filename=${'breadcrumb-separator.jcr'}
+        :layout=${'stack'}
+      >
+        <Breadcrumb :separator=${'›'}>
+          <BreadcrumbItem :href=${'/workspace'}>Workspace</BreadcrumbItem>
+          <BreadcrumbItem :href=${'/workspace/projects'}>Projects</BreadcrumbItem>
+          <BreadcrumbItem>Jacaré UI</BreadcrumbItem>
+        </Breadcrumb>
+      </Demo>
+
+      <Demo
+        :id=${'slash'}
+        :title=${'Slash path'}
+        :lead=${'Default slash works well for docs and file-like hierarchies.'}
+        :code=${chevronExample}
+        :filename=${'breadcrumb-slash.jcr'}
+        :layout=${'stack'}
+      >
+        <Breadcrumb :separator=${'/'}>
+          <BreadcrumbItem :href=${'/'}>Home</BreadcrumbItem>
+          <BreadcrumbItem :href=${'/docs'}>Docs</BreadcrumbItem>
+          <BreadcrumbItem :href=${'/docs/navigation'}>Navigation</BreadcrumbItem>
+          <BreadcrumbItem>Breadcrumb</BreadcrumbItem>
+        </Breadcrumb>
+      </Demo>
+
+      <Demo
+        :id=${'arrow'}
+        :title=${'Arrow separator'}
+        :lead=${'separatorIcon stays in the contract for tooling; separator supplies the visible glyph.'}
+        :code=${arrowExample}
+        :filename=${'breadcrumb-arrow.jcr'}
+        :layout=${'stack'}
+      >
+        <Breadcrumb :separator=${'→'} :separatorIcon=${'arrow-right'}>
+          <BreadcrumbItem :href=${'/account'}>Account</BreadcrumbItem>
+          <BreadcrumbItem :href=${'/account/security'}>Security</BreadcrumbItem>
+          <BreadcrumbItem>Sessions</BreadcrumbItem>
+        </Breadcrumb>
+      </Demo>
+
+      <Demo
+        :id=${'dot'}
+        :title=${'Dot separator'}
+        :lead=${'Use a middle dot for quieter retail or content trails.'}
+        :code=${dotExample}
+        :filename=${'breadcrumb-dot.jcr'}
+        :layout=${'stack'}
+      >
+        <Breadcrumb :separator=${'·'}>
+          <BreadcrumbItem :href=${'/shop'}>Shop</BreadcrumbItem>
+          <BreadcrumbItem :href=${'/shop/men'}>Men</BreadcrumbItem>
+          <BreadcrumbItem>Sneakers</BreadcrumbItem>
+        </Breadcrumb>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'lengths'} :title=${'Path lengths'}>
+      <Demo
+        :id=${'two-levels'}
+        :title=${'Two levels'}
+        :lead=${'Short trails still mark the current page in the final crumb.'}
+        :code=${twoLevelsExample}
+        :filename=${'breadcrumb-two-levels.jcr'}
+        :layout=${'stack'}
+      >
+        <Breadcrumb>
+          <BreadcrumbItem :href=${'/settings'}>Settings</BreadcrumbItem>
+          <BreadcrumbItem>Profile</BreadcrumbItem>
+        </Breadcrumb>
+      </Demo>
+
+      <Demo
+        :id=${'single'}
+        :title=${'Single crumb'}
+        :lead=${'A lone current page is valid when there is no ancestor to link.'}
+        :code=${singleExample}
+        :filename=${'breadcrumb-single.jcr'}
+        :layout=${'stack'}
+      >
+        <Breadcrumb>
+          <BreadcrumbItem>Dashboard</BreadcrumbItem>
+        </Breadcrumb>
+      </Demo>
+
+      <Demo
+        :id=${'long-path'}
+        :title=${'Long responsive path'}
+        :lead=${'Items wrap when a deep hierarchy cannot fit on one line.'}
+        :code=${longPath}
+        :filename=${'breadcrumb-long-path.jcr'}
+        :layout=${'stack'}
+      >
+        <Breadcrumb :separator=${'›'}>
+          <BreadcrumbItem :href=${'/organization'}>Organization</BreadcrumbItem>
+          <BreadcrumbItem :href=${'/organization/workspaces'}>Workspaces</BreadcrumbItem>
+          <BreadcrumbItem :href=${'/organization/workspaces/design-system'}>Design system</BreadcrumbItem>
+          <BreadcrumbItem :href=${'/organization/workspaces/design-system/a11y'}>Accessibility</BreadcrumbItem>
+          <BreadcrumbItem>Review</BreadcrumbItem>
+        </Breadcrumb>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

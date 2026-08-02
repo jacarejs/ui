@@ -1,0 +1,97 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Modal from '@jacare/ui/components/Modal.jcr'
+import ModalFooter from '@jacare/ui/components/ModalFooter.jcr'
+import Space from '@jacare/ui/components/Space.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { inModal, stackedActions } from '../../examples/modal-footer.js'
+
+const contract = getContract('ModalFooter')
+const navLinks = previousNext('/components/modal-footer')
+const basicOpen = pulse(false)
+const dangerOpen = pulse(false)
+const a11y = [
+  'Place ModalFooter as a direct child of Modal so actions land in the footer region',
+  'Keep primary and destructive actions clearly labeled',
+  'Ensure Cancel remains keyboard reachable before confirming irreversible actions',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ModalFooter</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Overlay'}
+      :title=${'ModalFooter'}
+      :description=${'Footer actions region composed inside Modal. Place buttons or Space groups as children — Modal moves the marker into the dialog footer.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'related'} :title=${'Related'}>
+      <p class="docs-lead">
+        See <a jacare-go="/components/modal" href="/components/modal">Modal</a>
+        ${' '}for sizes, sheet placement, and dismiss behavior.
+      </p>
+    </DocsSection>
+
+    <Demo
+      :id=${'in-modal'}
+      :title=${'Inside Modal'}
+      :lead=${'Compose Cancel and primary actions in ModalFooter.'}
+      :code=${inModal}
+      :filename=${'modal-footer-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Button on-press=${() => basicOpen.set(true)}>Open modal</Button>
+      <Modal bind-open=${basicOpen} :title=${'Invite teammate'}>
+        <p>They will receive an email with a one-time join link.</p>
+        <ModalFooter>
+          <Space>
+            <Button :variant=${'secondary'} on-press=${() => basicOpen.set(false)}>Cancel</Button>
+            <Button on-press=${() => basicOpen.set(false)}>Send invite</Button>
+          </Space>
+        </ModalFooter>
+      </Modal>
+    </Demo>
+
+    <Demo
+      :id=${'stacked'}
+      :title=${'Destructive action'}
+      :code=${stackedActions}
+      :filename=${'modal-footer-danger.jcr'}
+      :layout=${'stack'}
+    >
+      <Button :variant=${'danger'} on-press=${() => dangerOpen.set(true)}>Delete project</Button>
+      <Modal bind-open=${dangerOpen} :title=${'Delete project'}>
+        <p>This permanently removes the project and its history.</p>
+        <ModalFooter>
+          <Space>
+            <Button :variant=${'ghost'} on-press=${() => dangerOpen.set(false)}>Keep</Button>
+            <Button :variant=${'danger'} on-press=${() => dangerOpen.set(false)}>Delete</Button>
+          </Space>
+        </ModalFooter>
+      </Modal>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

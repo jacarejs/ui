@@ -1,0 +1,511 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Card from '@jacare/ui/components/Card.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Pagination from '@jacare/ui/components/Pagination.jcr'
+import Spinner from '@jacare/ui/components/Spinner.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Table from '@jacare/ui/components/Table.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  background,
+  basic,
+  cardToolbar,
+  compact,
+  controlled,
+  disabled,
+  fewPages,
+  full,
+  hideSingle,
+  manyPages,
+  pageSizes,
+  playgroundCode as buildPlaygroundCode,
+  serverSide,
+  simple,
+  tableFooter,
+  withTotal,
+} from '../../examples/pagination.js'
+
+const contract = getContract('Pagination')
+const navLinks = previousNext('/components/pagination')
+
+const playTotal = pulse(240)
+const playPage = pulse(3)
+const playSize = pulse(10)
+const playPagerCount = pulse(7)
+const playBackground = pulse(true)
+const playDisabled = pulse(false)
+const playHideSingle = pulse(false)
+const playShowSizes = pulse(true)
+const playShowTotal = pulse(true)
+const playEvent = pulse('—')
+
+const basicPage = pulse(2)
+const simplePage = pulse(1)
+const totalPage = pulse(3)
+const bgPage = pulse(1)
+const fullPage = pulse(2)
+const fullSize = pulse(20)
+const manyPage = pulse(8)
+const sizesPage = pulse(1)
+const sizesSize = pulse(10)
+const compactPage = pulse(4)
+const fewPage = pulse(2)
+const hidePage = pulse(1)
+const tablePage = pulse(1)
+const tableSize = pulse(3)
+const controlledPage = pulse(1)
+const controlledSize = pulse(10)
+const controlledLast = pulse('—')
+const cardPage = pulse(1)
+
+const serverPage = pulse(1)
+const serverSize = pulse(5)
+const serverTotal = pulse(0)
+const serverRows = pulse([])
+const serverLoading = pulse(false)
+const serverStatus = pulse('Loading…')
+let serverRequestId = 0
+
+const tableColumns = [
+  { prop: 'name', label: 'Name', width: 160 },
+  { prop: 'status', label: 'Status', width: 120 },
+]
+const tableRows = [
+  { id: 1, name: 'API', status: 'Ready' },
+  { id: 2, name: 'Docs', status: 'Draft' },
+  { id: 3, name: 'Site', status: 'Queued' },
+  { id: 4, name: 'Theme', status: 'Ready' },
+  { id: 5, name: 'Tokens', status: 'Draft' },
+  { id: 6, name: 'Charts', status: 'Ready' },
+]
+
+const serverColumns = [
+  { prop: 'name', label: 'Project', width: 160 },
+  { prop: 'owner', label: 'Owner', width: 120 },
+  { prop: 'status', label: 'Status', width: 100 },
+]
+const serverCatalog = Array.from({ length: 87 }, (_, index) => ({
+  id: index + 1,
+  name: 'Project ' + (index + 1),
+  owner: ['Alex', 'Jordan', 'Sam', 'Riley'][index % 4],
+  status: ['Ready', 'Draft', 'Queued'][index % 3],
+}))
+
+const a11y = [
+  'Root uses nav with aria-label=Pagination',
+  'Active page sets aria-current=page',
+  'Previous and next expose clear aria-labels',
+  'Disabled state blocks pager and size controls',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    total: playTotal(),
+    currentPage: playPage(),
+    pageSize: playSize(),
+    pagerCount: playPagerCount(),
+    background: playBackground(),
+    disabled: playDisabled(),
+    hideOnSinglePage: playHideSingle(),
+    showSizes: playShowSizes(),
+    showTotal: playShowTotal(),
+  })
+}
+
+function onPlayChange(payload) {
+  playEvent.set('page ' + payload.page + ' · size ' + payload.pageSize)
+}
+
+function tableVisibleRows() {
+  const start = (tablePage() - 1) * tableSize()
+  return tableRows.slice(start, start + tableSize())
+}
+
+function jump(next) {
+  controlledPage.set(next)
+}
+
+function onControlledChange(payload) {
+  controlledLast.set('page ' + payload.page + ' · size ' + payload.pageSize)
+}
+
+async function fetchServerPage(nextPage, nextSize) {
+  const id = ++serverRequestId
+  serverLoading.set(true)
+  serverStatus.set('Fetching page ' + nextPage + '…')
+  await new Promise((resolve) => window.setTimeout(resolve, 450))
+  if (id !== serverRequestId) return
+  const start = (nextPage - 1) * nextSize
+  serverRows.set(serverCatalog.slice(start, start + nextSize))
+  serverTotal.set(serverCatalog.length)
+  serverLoading.set(false)
+  serverStatus.set('Loaded page ' + nextPage + ' · ' + nextSize + ' / page')
+}
+
+function onServerChange(payload) {
+  fetchServerPage(payload.page, payload.pageSize)
+}
+
+fetchServerPage(serverPage(), serverSize())
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Pagination</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'Pagination'}
+      :description=${'Navigate large lists with totals, ellipsis pagers, optional page-size select, and bindable currentPage / pageSize. Compose simple pagers, full toolbars, or table footers.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Total'} :type=${'number'} bind-value=${playTotal} />
+          <Field :label=${'Current page'} :type=${'number'} bind-value=${playPage} />
+          <Field :label=${'Page size'} :type=${'number'} bind-value=${playSize} />
+          <Field :label=${'Pager count'} :type=${'number'} bind-value=${playPagerCount} />
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Show total'} bind-checked=${playShowTotal} />
+            <Switch :label=${'Background'} bind-checked=${playBackground} />
+            <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
+            <Switch :label=${'Hide on single page'} bind-checked=${playHideSingle} />
+            <Switch :label=${'Page sizes'} bind-checked=${playShowSizes} />
+          </Stack>
+          <Text :tone=${'muted'}>${() => 'Last change: ' + playEvent()}</Text>
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <Pagination
+              :total=${playTotal}
+              bind-currentPage=${playPage}
+              bind-pageSize=${playSize}
+              :pagerCount=${playPagerCount}
+              :background=${playBackground}
+              :disabled=${playDisabled}
+              :hideOnSinglePage=${playHideSingle}
+              :showTotal=${playShowTotal}
+              :pageSizes=${() => (playShowSizes() ? [10, 20, 50, 100] : null)}
+              on-change=${onPlayChange}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'pagination-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Bind currentPage to a pulse. Prev/next and page buttons update the model and emit change.'}
+      :code=${basic}
+      :filename=${'pagination-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Pagination :total=${120} bind-currentPage=${basicPage} :pageSize=${10} />
+    </Demo>
+
+    <DocsSection :id=${'models'} :title=${'Models'}>
+      <Demo
+        :id=${'simple'}
+        :title=${'Simple pager'}
+        :lead=${'Hide the range label with showTotal=false for a minimal pager.'}
+        :code=${simple}
+        :filename=${'pagination-simple.jcr'}
+        :layout=${'stack'}
+      >
+        <Pagination
+          :total=${60}
+          bind-currentPage=${simplePage}
+          :pageSize=${10}
+          :showTotal=${false}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'with-total'}
+        :title=${'With total range'}
+        :lead=${'showTotal (default) renders the “start–end of total” summary.'}
+        :code=${withTotal}
+        :filename=${'pagination-with-total.jcr'}
+        :layout=${'stack'}
+      >
+        <Pagination
+          :total=${96}
+          bind-currentPage=${totalPage}
+          :pageSize=${12}
+          :showTotal=${true}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'background'}
+        :title=${'Background'}
+        :lead=${'background paints pager buttons on surface-2 for denser toolbars.'}
+        :code=${background}
+        :filename=${'pagination-background.jcr'}
+        :layout=${'stack'}
+      >
+        <Pagination
+          :total=${80}
+          bind-currentPage=${bgPage}
+          :pageSize=${10}
+          :background=${true}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'full'}
+        :title=${'Full toolbar'}
+        :lead=${'Combine total, page sizes, and background for admin list footers.'}
+        :code=${full}
+        :filename=${'pagination-full.jcr'}
+        :layout=${'stack'}
+      >
+        <Pagination
+          :total=${320}
+          bind-currentPage=${fullPage}
+          bind-pageSize=${fullSize}
+          :pageSizes=${[10, 20, 50, 100]}
+          :background=${true}
+          :showTotal=${true}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'few-pages'}
+        :title=${'Few pages'}
+        :lead=${'Small totals render every page button without ellipsis.'}
+        :code=${fewPages}
+        :filename=${'pagination-few.jcr'}
+        :layout=${'stack'}
+      >
+        <Pagination
+          :total=${36}
+          bind-currentPage=${fewPage}
+          :pageSize=${12}
+          :background=${true}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'options'} :title=${'Options'}>
+      <Demo
+        :id=${'many-pages'}
+        :title=${'Many pages'}
+        :lead=${'Large totals collapse into an ellipsis pager. pagerCount controls how many numbered buttons stay visible.'}
+        :code=${manyPages}
+        :filename=${'pagination-many.jcr'}
+        :layout=${'stack'}
+      >
+        <Pagination
+          :total=${1000}
+          bind-currentPage=${manyPage}
+          :pageSize=${10}
+          :pagerCount=${7}
+          :background=${true}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'page-sizes'}
+        :title=${'Page sizes'}
+        :lead=${'Pass pageSizes to show a per-page select. Bind pageSize when the consumer should own the value.'}
+        :code=${pageSizes}
+        :filename=${'pagination-sizes.jcr'}
+        :layout=${'stack'}
+      >
+        <Pagination
+          :total=${240}
+          bind-currentPage=${sizesPage}
+          bind-pageSize=${sizesSize}
+          :pageSizes=${[10, 20, 50, 100]}
+          :background=${true}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'compact'}
+        :title=${'Compact pager'}
+        :lead=${'Use an odd pagerCount like 5 for tighter chrome on small screens.'}
+        :code=${compact}
+        :filename=${'pagination-compact.jcr'}
+        :layout=${'stack'}
+      >
+        <Pagination
+          :total=${500}
+          bind-currentPage=${compactPage}
+          :pageSize=${20}
+          :pagerCount=${5}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'disabled'}
+        :title=${'Disabled'}
+        :code=${disabled}
+        :filename=${'pagination-disabled.jcr'}
+        :layout=${'stack'}
+      >
+        <Pagination
+          :total=${120}
+          :currentPage=${3}
+          :pageSize=${10}
+          :disabled=${true}
+          :background=${true}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'hide-single'}
+        :title=${'Hide on single page'}
+        :lead=${'hideOnSinglePage removes the control when total fits in one page.'}
+        :code=${hideSingle}
+        :filename=${'pagination-hide-single.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'md'}>
+          <Text>Hidden when only one page (8 items / 10)</Text>
+          <Pagination
+            :total=${8}
+            bind-currentPage=${hidePage}
+            :pageSize=${10}
+            :hideOnSinglePage=${true}
+            :background=${true}
+          />
+          <Text>Visible with more items</Text>
+          <Pagination
+            :total=${48}
+            :currentPage=${1}
+            :pageSize=${10}
+            :hideOnSinglePage=${true}
+            :background=${true}
+          />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'table-footer'}
+        :title=${'Table footer'}
+        :lead=${'Slice table rows from currentPage and pageSize for a classic data grid footer.'}
+        :code=${tableFooter}
+        :filename=${'pagination-table.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'md'}>
+          <Table :columns=${tableColumns} :data=${() => tableVisibleRows()} :border=${true} />
+          <Pagination
+            :total=${tableRows.length}
+            bind-currentPage=${tablePage}
+            bind-pageSize=${tableSize}
+            :pageSizes=${[3, 5, 10]}
+            :background=${true}
+          />
+        </Stack>
+      </Demo>
+
+      <Demo
+        :id=${'server-side'}
+        :title=${'Server-side'}
+        :lead=${'Keep only the current page in memory. Fetch on change, bind total from the API, and disable the pager while the request is in flight.'}
+        :code=${serverSide}
+        :filename=${'pagination-server.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'md'}>
+          <Stack :direction=${'row'} :gap=${'sm'} :align=${'center'}>
+            #if serverLoading()
+              <Spinner :size=${'sm'} />
+            #end
+            <Text :tone=${'muted'} aria-live=${'polite'}>${() => serverStatus()}</Text>
+          </Stack>
+          <Table :columns=${serverColumns} :data=${serverRows} :border=${true} />
+          <Pagination
+            :total=${serverTotal}
+            bind-currentPage=${serverPage}
+            bind-pageSize=${serverSize}
+            :pageSizes=${[5, 10, 20]}
+            :background=${true}
+            :disabled=${serverLoading}
+            on-change=${onServerChange}
+          />
+        </Stack>
+      </Demo>
+
+      <Demo
+        :id=${'controlled'}
+        :title=${'Controlled jumps'}
+        :lead=${'Drive currentPage from outside buttons and listen to change for analytics or sync.'}
+        :code=${controlled}
+        :filename=${'pagination-controlled.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'md'}>
+          <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+            <Button :size=${'sm'} on-press=${() => jump(1)}>First</Button>
+            <Button :size=${'sm'} on-press=${() => jump(5)}>Page 5</Button>
+            <Button :size=${'sm'} on-press=${() => jump(12)}>Last</Button>
+          </Stack>
+          <Pagination
+            :total=${120}
+            bind-currentPage=${controlledPage}
+            bind-pageSize=${controlledSize}
+            :background=${true}
+            on-change=${onControlledChange}
+          />
+          <Text :tone=${'muted'}>${() => 'Last change: ' + controlledLast()}</Text>
+        </Stack>
+      </Demo>
+
+      <Demo
+        :id=${'card-toolbar'}
+        :title=${'Inside Card'}
+        :lead=${'Place pagination in a card footer for release lists and inboxes.'}
+        :code=${cardToolbar}
+        :filename=${'pagination-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Releases'} :subtitle=${'Paginated activity'}>
+          <Stack :gap=${'md'}>
+            <Text :tone=${'muted'}>Showing a page of release notes in the card body.</Text>
+            <Pagination
+              :total=${48}
+              bind-currentPage=${cardPage}
+              :pageSize=${8}
+              :background=${true}
+              :showTotal=${true}
+            />
+          </Stack>
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

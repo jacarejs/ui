@@ -1,0 +1,335 @@
+import { pulse } from '@jacare/core'
+import Badge from '@jacare/ui/components/Badge.jcr'
+import Card from '@jacare/ui/components/Card.jcr'
+import Descriptions from '@jacare/ui/components/Descriptions.jcr'
+import DescriptionsItem from '@jacare/ui/components/DescriptionsItem.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Link from '@jacare/ui/components/Link.jcr'
+import Select from '@jacare/ui/components/Select.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Tag from '@jacare/ui/components/Tag.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  bordered,
+  cardWrapped,
+  columns,
+  invoice,
+  playgroundCode as buildPlaygroundCode,
+  profile,
+  richContent,
+  sizes,
+  spans,
+  untitled,
+  vertical,
+} from '../../examples/descriptions.js'
+
+const contract = getContract('Descriptions')
+const navLinks = previousNext('/components/descriptions')
+
+const columnOptions = [
+  { value: '1', label: '1' },
+  { value: '2', label: '2' },
+  { value: '3', label: '3' },
+  { value: '4', label: '4' },
+]
+const directionOptions = [
+  { value: 'horizontal', label: 'Horizontal' },
+  { value: 'vertical', label: 'Vertical' },
+]
+const sizeOptions = [
+  { value: 'sm', label: 'Small' },
+  { value: 'md', label: 'Medium' },
+  { value: 'lg', label: 'Large' },
+]
+
+const playTitle = pulse('Project details')
+const playColumn = pulse('2')
+const playDirection = pulse('horizontal')
+const playSize = pulse('md')
+const playBorder = pulse(true)
+
+const a11y = [
+  'Use labels that explain values without relying on position',
+  'Keep related fields together and use spans for long content',
+  'Choose a column count that remains readable at the available width',
+  'Prefer vertical direction when labels need more room on narrow layouts',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    title: playTitle(),
+    column: Number(playColumn()) || 2,
+    direction: playDirection(),
+    size: playSize(),
+    border: playBorder(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Descriptions</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'Descriptions'}
+      :description=${'Labeled key-value summaries with configurable columns, direction, borders, sizes, and item spans. Compose Tag, Badge, and Link inside items for richer detail views.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Title'} bind-value=${playTitle} />
+          <Select :label=${'Columns'} :options=${columnOptions} bind-value=${playColumn} />
+          <Select :label=${'Direction'} :options=${directionOptions} bind-value=${playDirection} />
+          <Select :label=${'Size'} :options=${sizeOptions} bind-value=${playSize} />
+          <Switch :label=${'Border'} bind-checked=${playBorder} />
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <Descriptions
+              :title=${playTitle}
+              :column=${() => Number(playColumn()) || 2}
+              :direction=${playDirection}
+              :size=${playSize}
+              :border=${playBorder}
+            >
+              <DescriptionsItem :label=${'Owner'}>Jacare UI</DescriptionsItem>
+              <DescriptionsItem :label=${'Status'}>Stable</DescriptionsItem>
+              <DescriptionsItem :label=${'Package'} :span=${2}>@jacare/ui</DescriptionsItem>
+            </Descriptions>
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'descriptions-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :code=${basic}
+      :filename=${'descriptions-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Descriptions :title=${'Project details'} :column=${2}>
+        <DescriptionsItem :label=${'Owner'}>Jacare UI</DescriptionsItem>
+        <DescriptionsItem :label=${'Status'}>Stable</DescriptionsItem>
+        <DescriptionsItem :label=${'Package'} :span=${2}>@jacare/ui</DescriptionsItem>
+      </Descriptions>
+    </Demo>
+
+    <DocsSection :id=${'layout'} :title=${'Layout'}>
+      <Demo
+        :id=${'bordered'}
+        :title=${'Bordered'}
+        :code=${bordered}
+        :filename=${'descriptions-bordered.jcr'}
+        :layout=${'stack'}
+      >
+        <Descriptions :title=${'Release'} :column=${2} :border=${true}>
+          <DescriptionsItem :label=${'Owner'}>Jacare UI</DescriptionsItem>
+          <DescriptionsItem :label=${'Status'}>Stable</DescriptionsItem>
+          <DescriptionsItem :label=${'Package'} :span=${2}>@jacare/ui</DescriptionsItem>
+        </Descriptions>
+      </Demo>
+
+      <Demo
+        :id=${'vertical'}
+        :title=${'Vertical labels'}
+        :code=${vertical}
+        :filename=${'descriptions-vertical.jcr'}
+        :layout=${'stack'}
+      >
+        <Descriptions :title=${'Deployment'} :column=${2} :direction=${'vertical'} :border=${true}>
+          <DescriptionsItem :label=${'Owner'}>Jacare UI</DescriptionsItem>
+          <DescriptionsItem :label=${'Status'}>Stable</DescriptionsItem>
+          <DescriptionsItem :label=${'Package'} :span=${2}>@jacare/ui</DescriptionsItem>
+        </Descriptions>
+      </Demo>
+
+      <Demo
+        :id=${'columns'}
+        :title=${'Column counts'}
+        :lead=${'Use one column for profiles and denser grids for dashboards.'}
+        :code=${columns}
+        :filename=${'descriptions-columns.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'lg'}>
+          <Descriptions :title=${'One column'} :column=${1} :border=${true}>
+            <DescriptionsItem :label=${'Name'}>Ada Lovelace</DescriptionsItem>
+            <DescriptionsItem :label=${'Role'}>Administrator</DescriptionsItem>
+          </Descriptions>
+          <Descriptions :title=${'Four columns'} :column=${4} :border=${true}>
+            <DescriptionsItem :label=${'Team'}>Design</DescriptionsItem>
+            <DescriptionsItem :label=${'Seats'}>12</DescriptionsItem>
+            <DescriptionsItem :label=${'Plan'}>Pro</DescriptionsItem>
+            <DescriptionsItem :label=${'Region'}>EU</DescriptionsItem>
+          </Descriptions>
+        </Stack>
+      </Demo>
+
+      <Demo
+        :id=${'spans'}
+        :title=${'Column spans'}
+        :code=${spans}
+        :filename=${'descriptions-spans.jcr'}
+        :layout=${'stack'}
+      >
+        <Descriptions :title=${'Account'} :column=${3} :border=${true}>
+          <DescriptionsItem :label=${'Name'}>Ada Lovelace</DescriptionsItem>
+          <DescriptionsItem :label=${'Role'}>Administrator</DescriptionsItem>
+          <DescriptionsItem :label=${'Region'}>Europe</DescriptionsItem>
+          <DescriptionsItem :label=${'Notes'} :span=${3}>Maintains the design system release process.</DescriptionsItem>
+        </Descriptions>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'sizes'} :title=${'Sizes'}>
+      <Demo
+        :id=${'all-sizes'}
+        :title=${'Density scale'}
+        :code=${sizes}
+        :filename=${'descriptions-sizes.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'lg'}>
+          <Descriptions :title=${'Compact'} :column=${2} :size=${'sm'} :border=${true}>
+            <DescriptionsItem :label=${'Owner'}>Jacare UI</DescriptionsItem>
+            <DescriptionsItem :label=${'Status'}>Stable</DescriptionsItem>
+          </Descriptions>
+          <Descriptions :title=${'Default'} :column=${2} :size=${'md'} :border=${true}>
+            <DescriptionsItem :label=${'Owner'}>Jacare UI</DescriptionsItem>
+            <DescriptionsItem :label=${'Status'}>Stable</DescriptionsItem>
+          </Descriptions>
+          <Descriptions :title=${'Comfortable'} :column=${2} :size=${'lg'} :border=${true}>
+            <DescriptionsItem :label=${'Owner'}>Jacare UI</DescriptionsItem>
+            <DescriptionsItem :label=${'Status'}>Stable</DescriptionsItem>
+          </Descriptions>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'content'} :title=${'Rich content'}>
+      <Demo
+        :id=${'rich'}
+        :title=${'Tags, badges, and links'}
+        :lead=${'Compose interactive or status content inside DescriptionsItem.'}
+        :code=${richContent}
+        :filename=${'descriptions-rich.jcr'}
+        :layout=${'stack'}
+      >
+        <Descriptions :title=${'Shipment'} :column=${3} :border=${true}>
+          <DescriptionsItem :label=${'Order'}>
+            <Link href=${'#order-4821'}>#4821</Link>
+          </DescriptionsItem>
+          <DescriptionsItem :label=${'Status'}>
+            <Badge :tone=${'success'}>In transit</Badge>
+          </DescriptionsItem>
+          <DescriptionsItem :label=${'Carrier'}>North Parcel</DescriptionsItem>
+          <DescriptionsItem :label=${'Tags'} :span=${3}>
+            <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+              <Tag :type=${'info'}>Priority</Tag>
+              <Tag :type=${'success'}>Insured</Tag>
+              <Tag :type=${'warning'}>Signature</Tag>
+            </Stack>
+          </DescriptionsItem>
+        </Descriptions>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'invoice'}
+        :title=${'Invoice summary'}
+        :code=${invoice}
+        :filename=${'descriptions-invoice.jcr'}
+        :layout=${'stack'}
+      >
+        <Descriptions :title=${'Invoice INV-2048'} :column=${2} :border=${true} :size=${'sm'}>
+          <DescriptionsItem :label=${'Bill to'}>River Studio LLC</DescriptionsItem>
+          <DescriptionsItem :label=${'Issued'}>2026-07-12</DescriptionsItem>
+          <DescriptionsItem :label=${'Due'}>2026-08-12</DescriptionsItem>
+          <DescriptionsItem :label=${'Currency'}>USD</DescriptionsItem>
+          <DescriptionsItem :label=${'Subtotal'}>$1,240.00</DescriptionsItem>
+          <DescriptionsItem :label=${'Tax'}>$99.20</DescriptionsItem>
+          <DescriptionsItem :label=${'Total'} :span=${2}>$1,339.20</DescriptionsItem>
+        </Descriptions>
+      </Demo>
+
+      <Demo
+        :id=${'profile'}
+        :title=${'Vertical profile'}
+        :code=${profile}
+        :filename=${'descriptions-profile.jcr'}
+        :layout=${'stack'}
+      >
+        <Descriptions :title=${'Member profile'} :column=${1} :direction=${'vertical'}>
+          <DescriptionsItem :label=${'Full name'}>Ana Costa</DescriptionsItem>
+          <DescriptionsItem :label=${'Email'}>ana.costa@example.com</DescriptionsItem>
+          <DescriptionsItem :label=${'Timezone'}>America/Sao_Paulo</DescriptionsItem>
+          <DescriptionsItem :label=${'Bio'}>Product designer focused on form density and calm admin surfaces.</DescriptionsItem>
+        </Descriptions>
+      </Demo>
+
+      <Demo
+        :id=${'untitled'}
+        :title=${'Without title'}
+        :lead=${'Omit title when the surrounding section already provides context.'}
+        :code=${untitled}
+        :filename=${'descriptions-untitled.jcr'}
+        :layout=${'stack'}
+      >
+        <Descriptions :column=${3} :border=${true}>
+          <DescriptionsItem :label=${'CPU'}>42%</DescriptionsItem>
+          <DescriptionsItem :label=${'Memory'}>6.1 GB</DescriptionsItem>
+          <DescriptionsItem :label=${'Disk'}>71%</DescriptionsItem>
+        </Descriptions>
+      </Demo>
+
+      <Demo
+        :id=${'card'}
+        :title=${'Inside a card'}
+        :code=${cardWrapped}
+        :filename=${'descriptions-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Workspace'} :subtitle=${'Billing summary'} :shadow=${'hover'}>
+          <Descriptions :column=${2} :size=${'sm'}>
+            <DescriptionsItem :label=${'Plan'}>
+              <Tag :type=${'primary'}>Business</Tag>
+            </DescriptionsItem>
+            <DescriptionsItem :label=${'Renewal'}>2026-09-01</DescriptionsItem>
+            <DescriptionsItem :label=${'Seats'}>28 / 40</DescriptionsItem>
+            <DescriptionsItem :label=${'Owner'}>ops@jacare.dev</DescriptionsItem>
+          </Descriptions>
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

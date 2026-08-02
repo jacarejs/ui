@@ -1,0 +1,91 @@
+import Container from '@jacare/ui/components/Container.jcr'
+import Header from '@jacare/ui/components/Header.jcr'
+import Aside from '@jacare/ui/components/Aside.jcr'
+import Main from '@jacare/ui/components/Main.jcr'
+import Footer from '@jacare/ui/components/Footer.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { directions, shell, splitWorkspace, stacked } from '../../examples/container.js'
+
+const contract = getContract('Container')
+const navLinks = previousNext('/components/container')
+const a11y = [
+  'Container controls visual flow without changing document semantics',
+  'Keep source order aligned with the expected reading and focus order',
+  'Use Header, Aside, Main, and Footer for the corresponding landmarks',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Container</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Layout'}
+      :title=${'Container'}
+      :description=${'Full-size flex shell that stacks sections vertically by default and switches to row layout with direction="horizontal".'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'shell'} :title=${'Application shell'} :lead=${'Nest a horizontal Container between Header and Footer to create the common sidebar shell.'} :code=${shell} :filename=${'container-shell.jcr'}>
+      <div style="height:280px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container>
+          <Header>Analytics workspace</Header>
+          <Container :direction=${'horizontal'}>
+            <Aside :width=${'180px'}>Navigation</Aside>
+            <Main :padding=${'1.25rem'}>Dashboard content</Main>
+          </Container>
+          <Footer :height=${'44px'}>Last synced moments ago</Footer>
+        </Container>
+      </div>
+    </Demo>
+    <Demo :id=${'directions'} :title=${'Nested directions'} :lead=${'Containers can mix horizontal and vertical flow while each Main region absorbs available space.'} :code=${directions} :filename=${'container-directions.jcr'}>
+      <div style="height:220px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container :direction=${'horizontal'}>
+          <Main :padding=${'1rem'}>Primary workspace</Main>
+          <Container>
+            <Main :padding=${'1rem'}>Inspector</Main>
+            <Main :padding=${'1rem'}>Activity</Main>
+          </Container>
+        </Container>
+      </div>
+    </Demo>
+    <Demo :id=${'split-workspace'} :title=${'Three-region workspace'} :lead=${'A horizontal Container can place flexible Main content between two fixed side regions.'} :code=${splitWorkspace} :filename=${'container-split-workspace.jcr'}>
+      <div style="height:220px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container :direction=${'horizontal'}>
+          <Aside :width=${'160px'}>Files</Aside>
+          <Main :padding=${'1rem'}>Editor</Main>
+          <Aside :width=${'200px'}>Inspector</Aside>
+        </Container>
+      </div>
+    </Demo>
+    <Demo :id=${'stacked'} :title=${'Stacked regions'} :lead=${'The default vertical direction distributes a fixed header above flexible content regions.'} :code=${stacked} :filename=${'container-stacked.jcr'}>
+      <div style="height:220px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container>
+          <Header :height=${'44px'}>Report</Header>
+          <Main :padding=${'1rem'}>Summary</Main>
+          <Main :padding=${'1rem'}>Details</Main>
+        </Container>
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

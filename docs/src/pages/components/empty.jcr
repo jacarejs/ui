@@ -1,0 +1,313 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Card from '@jacare/ui/components/Card.jcr'
+import Empty from '@jacare/ui/components/Empty.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Select from '@jacare/ui/components/Select.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  action,
+  basic,
+  custom_content,
+  custom_image,
+  errorExample,
+  image_size,
+  inCard,
+  inboxExample,
+  inPanel,
+  playgroundCode as buildPlaygroundCode,
+  searchExample,
+  types,
+} from '../../examples/empty.js'
+
+const contract = getContract('Empty')
+const navLinks = previousNext('/components/empty')
+
+const emptyImage =
+  'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 120 80%27%3E%3Crect width=%27120%27 height=%2780%27 rx=%2712%27 fill=%27%23dcefe8%27/%3E%3Cpath d=%27M35 52h50l-8-24H43z%27 fill=%27%23235548%27/%3E%3Ccircle cx=%2788%27 cy=%2730%27 r=%2710%27 fill=%27%2378b99f%27/%3E%3C/svg%3E'
+
+const typeOptions = [
+  { value: 'default', label: 'Default' },
+  { value: 'search', label: 'Search' },
+  { value: 'inbox', label: 'Inbox' },
+  { value: 'error', label: 'Error' },
+  { value: 'success', label: 'Success' },
+]
+
+const playTitle = pulse('No projects yet')
+const playDescription = pulse('Create a project to start shipping components.')
+const playType = pulse('default')
+const playSize = pulse('120')
+const playAction = pulse(true)
+
+const a11y = [
+  'Explain what is empty and whether the user can change it',
+  'Use title for the headline and description for recovery guidance',
+  'Provide one clear recovery action when appropriate',
+  'Decorative images should not repeat the description to assistive technology',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    title: playTitle(),
+    description: playDescription(),
+    type: playType(),
+    imageSize: Number(playSize()) || 120,
+    showAction: playAction(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Empty</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'Empty'}
+      :description=${'Calm empty states with typed illustrations, title, description, and recovery actions. Use inside lists, cards, tables, and search results.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Title'} bind-value=${playTitle} />
+          <Field :label=${'Description'} bind-value=${playDescription} />
+          <Select :label=${'Type'} :options=${typeOptions} bind-value=${playType} />
+          <Field :label=${'Image size'} :type=${'number'} bind-value=${playSize} />
+          <Switch :label=${'Show action'} bind-checked=${playAction} />
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <Empty
+              :title=${playTitle}
+              :description=${playDescription}
+              :type=${playType}
+              :imageSize=${() => Number(playSize()) || 120}
+            >
+              #if playAction()
+                <Button>Create project</Button>
+              #end
+            </Empty>
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'empty-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :code=${basic}
+      :filename=${'empty-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Empty
+        :title=${'No projects yet'}
+        :description=${'Create a project to start shipping components.'}
+      />
+    </Demo>
+
+    <DocsSection :id=${'types'} :title=${'Types'}>
+      <Demo
+        :id=${'all-types'}
+        :title=${'Illustration types'}
+        :lead=${'type swaps the glyph and accent: default, search, inbox, error, success.'}
+        :code=${types}
+        :filename=${'empty-types.jcr'}
+        :layout=${'stack'}
+      >
+        <div class="docs-card-grid">
+          <Empty :type=${'default'} :title=${'No data'} :description=${'Nothing to show'} :imageSize=${88} />
+          <Empty :type=${'search'} :title=${'No matches'} :description=${'Try another query'} :imageSize=${88} />
+          <Empty :type=${'inbox'} :title=${'Inbox clear'} :description=${'You are all caught up'} :imageSize=${88} />
+          <Empty :type=${'error'} :title=${'Unavailable'} :description=${'Could not load this list'} :imageSize=${88} />
+          <Empty :type=${'success'} :title=${'All done'} :description=${'Every task is complete'} :imageSize=${88} />
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'search'}
+        :title=${'Search empty'}
+        :code=${searchExample}
+        :filename=${'empty-search.jcr'}
+        :layout=${'stack'}
+      >
+        <Empty
+          :type=${'search'}
+          :title=${'No results for “aurora”'}
+          :description=${'Check spelling or broaden the filters.'}
+        >
+          <Button :variant=${'secondary'}>Clear search</Button>
+        </Empty>
+      </Demo>
+
+      <Demo
+        :id=${'inbox'}
+        :title=${'Inbox zero'}
+        :code=${inboxExample}
+        :filename=${'empty-inbox.jcr'}
+        :layout=${'stack'}
+      >
+        <Empty
+          :type=${'inbox'}
+          :title=${'Inbox zero'}
+          :description=${'New messages and mentions will land here.'}
+        >
+          <Button :variant=${'secondary'}>Compose</Button>
+        </Empty>
+      </Demo>
+
+      <Demo
+        :id=${'error'}
+        :title=${'Load error'}
+        :code=${errorExample}
+        :filename=${'empty-error.jcr'}
+        :layout=${'stack'}
+      >
+        <Empty
+          :type=${'error'}
+          :title=${'Could not load projects'}
+          :description=${'Check your connection, then try again.'}
+        >
+          <Stack :direction=${'row'} :gap=${'sm'}>
+            <Button :variant=${'secondary'}>Back</Button>
+            <Button>Retry</Button>
+          </Stack>
+        </Empty>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'actions'} :title=${'Actions'}>
+      <Demo
+        :id=${'action'}
+        :title=${'Primary action'}
+        :code=${action}
+        :filename=${'empty-action.jcr'}
+        :layout=${'stack'}
+      >
+        <Empty
+          :title=${'No projects yet'}
+          :description=${'Create a project to start shipping components.'}
+        >
+          <Button>Create project</Button>
+        </Empty>
+      </Demo>
+
+      <Demo
+        :id=${'custom-content'}
+        :title=${'Multiple actions'}
+        :code=${custom_content}
+        :filename=${'empty-custom-content.jcr'}
+        :layout=${'stack'}
+      >
+        <Empty
+          :type=${'search'}
+          :title=${'No search results'}
+          :description=${'We could not find anything for that filter set.'}
+        >
+          <Stack :direction=${'row'} :gap=${'sm'}>
+            <Button :variant=${'secondary'}>Clear filters</Button>
+            <Button>New search</Button>
+          </Stack>
+        </Empty>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'media'} :title=${'Media'}>
+      <Demo
+        :id=${'custom-image'}
+        :title=${'Custom image'}
+        :code=${custom_image}
+        :filename=${'empty-custom-image.jcr'}
+        :layout=${'stack'}
+      >
+        <Empty
+          :title=${'Nothing archived'}
+          :description=${'Finished work will appear here.'}
+          :image=${emptyImage}
+          :imageSize=${96}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'image-size'}
+        :title=${'Image sizes'}
+        :code=${image_size}
+        :filename=${'empty-image-size.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :direction=${'row'} :gap=${'xl'} :wrap=${true}>
+          <Empty :title=${'Compact'} :description=${'Small illustration'} :imageSize=${64} />
+          <Empty :title=${'Default'} :description=${'Standard illustration'} :imageSize=${120} />
+          <Empty :title=${'Prominent'} :description=${'Large illustration'} :imageSize=${160} />
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'in-card'}
+        :title=${'Inside a card'}
+        :code=${inCard}
+        :filename=${'empty-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Recent deploys'} :shadow=${'hover'}>
+          <Empty
+            :type=${'inbox'}
+            :title=${'No deploys yet'}
+            :description=${'Ship a release to see activity here.'}
+            :imageSize=${88}
+          >
+            <Button :size=${'sm'}>Deploy now</Button>
+          </Empty>
+        </Card>
+      </Demo>
+
+      <Demo
+        :id=${'in-panel'}
+        :title=${'Inside a panel'}
+        :lead=${'Drop Empty into any bordered region when a list or table has no rows.'}
+        :code=${inPanel}
+        :filename=${'empty-panel.jcr'}
+        :layout=${'stack'}
+      >
+        <section class="docs-panel">
+          <Empty
+            :title=${'No rows'}
+            :description=${'Import a CSV or add the first record.'}
+            :imageSize=${88}
+          >
+            <Button :size=${'sm'}>Import CSV</Button>
+          </Empty>
+        </section>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

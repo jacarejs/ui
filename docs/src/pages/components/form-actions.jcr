@@ -1,0 +1,73 @@
+import { pulse } from '@jacare/core'
+import FormActions from '@jacare/ui/components/FormActions.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, between, loading } from '../../examples/form-actions.js'
+
+const contract = getContract('FormActions')
+const navLinks = previousNext('/components/form-actions')
+const busy = pulse(false)
+const lastAction = pulse('—')
+const a11y = [
+  'Submit uses type="submit" so it works inside a native form',
+  'loading sets aria-busy on the primary button and disables siblings',
+  'Sticky mode keeps actions reachable on long forms with safe-area padding',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>FormActions</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Form'}
+      :title=${'FormActions'}
+      :description=${'Sticky Cancel / Save / Submit bar aligned to Form, with loading and optional custom actions.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'form-actions-basic.jcr'} :layout=${'stack'}>
+      <FormActions
+        :sticky=${false}
+        on-cancel=${() => lastAction.set('cancel')}
+        on-save=${() => lastAction.set('save')}
+        on-submit=${() => lastAction.set('submit')}
+      />
+      <Text :tone=${'muted'}>Last action:${' '}${lastAction}</Text>
+    </Demo>
+
+    <Demo :id=${'loading'} :title=${'Loading'} :code=${loading} :filename=${'form-actions-loading.jcr'}>
+      <FormActions
+        :sticky=${false}
+        :loading=${busy}
+        :submitLabel=${'Publish'}
+        on-submit=${() => busy.set(true)}
+      >
+        <Button :variant=${'outline'} on-press=${() => busy.set(false)}>Reset</Button>
+      </FormActions>
+    </Demo>
+
+    <Demo :id=${'between'} :title=${'Between alignment'} :code=${between} :filename=${'form-actions-between.jcr'}>
+      <FormActions
+        :align=${'between'}
+        :sticky=${false}
+        :saveLabel=${'Save draft'}
+        :submitLabel=${'Continue'}
+      />
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

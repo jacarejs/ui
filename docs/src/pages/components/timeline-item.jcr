@@ -1,0 +1,62 @@
+import Timeline from '@jacare/ui/components/Timeline.jcr'
+import TimelineItem from '@jacare/ui/components/TimelineItem.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { aliases, placement, timestamps, tones } from '../../examples/timeline-item.js'
+
+const contract = getContract('TimelineItem')
+const navLinks = previousNext('/components/timeline-item')
+const a11y = [
+  'Place TimelineItem entries in chronological order inside Timeline',
+  'Use text in addition to tone to communicate status',
+  'Keep timestamps readable and consistent across the sequence',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>TimelineItem</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'TimelineItem'}
+      :description=${'TimelineItem is an event used inside Timeline. timestamp and placement position time metadata, while type or tone and hollow style the event node.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'timestamps'} :title=${'Timestamps'} :lead=${'timestamp adds time metadata to each event in the parent sequence.'} :code=${timestamps} :filename=${'timeline-item-timestamps.jcr'}>
+       <Timeline>
+        <TimelineItem :timestamp=${'09:00'}>Design tokens updated</TimelineItem>
+        <TimelineItem :timestamp=${'12:00'} :type=${'success'}>Docs published</TimelineItem>
+       </Timeline>
+    </Demo>
+    <Demo :id=${'tones'} :title=${'Semantic tones'} :lead=${'type supplies a semantic node color; tone can override it directly.'} :code=${tones} :filename=${'timeline-item-tones.jcr'}>
+      <Timeline><TimelineItem :type=${'primary'}>Build started</TimelineItem><TimelineItem :tone=${'warning'}>Checks need attention</TimelineItem><TimelineItem :type=${'danger'}>Deployment stopped</TimelineItem></Timeline>
+    </Demo>
+    <Demo :id=${'placement'} :title=${'Placement and hollow nodes'} :lead=${'placement moves timestamp above or below content; hollow changes the node treatment.'} :code=${placement} :filename=${'timeline-item-placement.jcr'}>
+      <Timeline><TimelineItem :timestamp=${'Yesterday'} :placement=${'top'} :hollow=${true}>Release candidate created</TimelineItem><TimelineItem :timestamp=${'Today'} :placement=${'bottom'} :type=${'success'}>Release published</TimelineItem></Timeline>
+    </Demo>
+    <Demo :id=${'aliases'} :title=${'Tone aliases'} :lead=${'warn maps to warning and error maps to danger for concise status integration.'} :code=${aliases} :filename=${'timeline-item-aliases.jcr'}>
+      <Timeline><TimelineItem :timestamp=${'Review'} :type=${'warn'}>Approval is still required</TimelineItem><TimelineItem :timestamp=${'Deploy'} :tone=${'error'}>Rollback completed</TimelineItem></Timeline>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

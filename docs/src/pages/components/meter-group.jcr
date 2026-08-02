@@ -1,0 +1,131 @@
+import MeterGroup from '@jacare/ui/components/MeterGroup.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, colors, icons, normalized, vertical } from '../../examples/meter-group.js'
+
+const contract = getContract('MeterGroup')
+const navLinks = previousNext('/components/meter-group')
+
+const basicValue = [
+  { label: 'Storage', value: 35 },
+  { label: 'Apps', value: 25 },
+  { label: 'Media', value: 40 },
+]
+
+const colorValue = [
+  { label: 'Completed', value: 52, color: 'var(--j-primary)' },
+  { label: 'In progress', value: 28, color: '#d97706' },
+  { label: 'Blocked', value: 20, color: '#b91c1c' },
+]
+
+const iconValue = [
+  { label: 'Email', value: 30, icon: '✉️' },
+  { label: 'Chat', value: 45, icon: '💬' },
+  { label: 'Phone', value: 25, icon: '📞' },
+]
+
+const verticalValue = [
+  { label: 'North', value: 30, color: '#0891b2' },
+  { label: 'South', value: 45, color: '#059669' },
+  { label: 'East', value: 25, color: '#7c3aed' },
+]
+
+const normalizedValue = [
+  { label: 'A', value: 60 },
+  { label: 'B', value: 80 },
+  { label: 'C', value: 40 },
+]
+
+const a11y = [
+  'Track exposes role=meter with aria-valuemin, aria-valuemax, and aria-valuenow',
+  'Each segment repeats meter semantics with its own label',
+  'Legend text duplicates segment labels for scanning without color alone',
+  'Values normalize against max so totals above the ceiling still fit the bar',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>MeterGroup</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Feedback'}
+      :title=${'MeterGroup'}
+      :description=${'Segmented meter bar with legend, optional colors and icons, horizontal or vertical layout, and values normalized against a configurable max.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic segments'}
+      :code=${basic}
+      :filename=${'meter-group-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <MeterGroup :value=${basicValue} />
+    </Demo>
+
+    <Demo
+      :id=${'colors'}
+      :title=${'Custom colors'}
+      :code=${colors}
+      :filename=${'meter-group-colors.jcr'}
+      :layout=${'stack'}
+    >
+      <MeterGroup :value=${colorValue} />
+    </Demo>
+
+    <Demo
+      :id=${'icons'}
+      :title=${'Legend icons'}
+      :code=${icons}
+      :filename=${'meter-group-icons.jcr'}
+      :layout=${'stack'}
+    >
+      <MeterGroup :value=${iconValue} />
+    </Demo>
+
+    <Demo
+      :id=${'vertical'}
+      :title=${'Vertical orientation'}
+      :code=${vertical}
+      :filename=${'meter-group-vertical.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :direction=${'row'} :gap=${'xl'} :wrap=${true}>
+        <MeterGroup :value=${verticalValue} :orientation=${'vertical'} />
+        <MeterGroup :value=${verticalValue} :orientation=${'vertical'} :labelOrientation=${'vertical'} />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'normalized'}
+      :title=${'Normalized total'}
+      :code=${normalized}
+      :filename=${'meter-group-normalized.jcr'}
+      :layout=${'stack'}
+    >
+      <MeterGroup :value=${normalizedValue} :max=${100} />
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

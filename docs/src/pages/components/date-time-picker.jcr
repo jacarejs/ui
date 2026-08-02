@@ -12,7 +12,7 @@ import CodeBlock from '../../ui/CodeBlock.jcr'
 import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, bounds, playgroundCode as buildPlaygroundCode } from '../../examples/date-time-picker.js'
+import { basic, bounds, playgroundCode as buildPlaygroundCode, required, states } from '../../examples/date-time-picker.js'
 
 const contract = getContract('DateTimePicker')
 const navLinks = previousNext('/components/date-time-picker')
@@ -27,6 +27,9 @@ const playDisabled = pulse(false)
 const playError = pulse('')
 const basicValue = pulse('2026-07-28T14:30')
 const boundsValue = pulse('2026-07-15T10:00')
+const requiredValue = pulse('')
+const invalidValue = pulse('')
+const lockedValue = pulse('2026-07-28T14:30')
 
 const a11yItems = [
   'DatePicker and TimePicker keep their own keyboard and ARIA contracts',
@@ -57,7 +60,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Pickers'}
       :title=${'DateTimePicker'}
       :description=${'Composes DatePicker and TimePicker into one control that binds a single ISO pulse (YYYY-MM-DDTHH:mm, or with seconds when TimePicker emits them).'}
       :status=${'stable'}
@@ -103,6 +106,28 @@ export <view>
       :filename=${'date-time-picker-basic.jcr'}
     >
       <DateTimePicker :label=${'Schedule'} bind-value=${basicValue} />
+    </Demo>
+
+    <Demo
+      :id=${'required'}
+      :title=${'Required scheduling'}
+      :lead=${'Required marks the combined field while hint provides persistent guidance.'}
+      :code=${required}
+      :filename=${'date-time-picker-required.jcr'}
+    >
+      <DateTimePicker :label=${'Starts at'} :required=${true} :hint=${'Date and time are required'} bind-value=${requiredValue} />
+    </Demo>
+
+    <Demo
+      :id=${'states'}
+      :title=${'Error and disabled'}
+      :code=${states}
+      :filename=${'date-time-picker-states.jcr'}
+    >
+      <Stack :gap=${'md'}>
+        <DateTimePicker :label=${'Schedule'} :clearable=${false} :error=${'Choose an available time'} bind-value=${invalidValue} />
+        <DateTimePicker :label=${'Published at'} :disabled=${true} bind-value=${lockedValue} />
+      </Stack>
     </Demo>
 
     <Demo

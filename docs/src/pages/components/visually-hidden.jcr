@@ -1,0 +1,71 @@
+import VisuallyHidden from '@jacare/ui/components/VisuallyHidden.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { context, extendedLabel, iconControl, status } from '../../examples/visually-hidden.js'
+
+const contract = getContract('VisuallyHidden')
+const navLinks = previousNext('/components/visually-hidden')
+const a11y = [
+  'Hidden text remains in the accessibility tree and reading order',
+  'Use concise wording that completes the visible label naturally',
+  'Do not place focusable controls inside VisuallyHidden',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>VisuallyHidden</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Primitives'}
+      :title=${'VisuallyHidden'}
+      :description=${'Screen-reader-only inline text for completing labels, naming icon controls, and adding nonvisual context.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'extended-label'} :title=${'Extended label'} :lead=${'Append context for assistive technology without lengthening the visible button.'} :code=${extendedLabel} :filename=${'visually-hidden-label.jcr'}>
+      <button type="button">
+        Search
+        <VisuallyHidden> the documentation catalog</VisuallyHidden>
+      </button>
+    </Demo>
+    <Demo :id=${'icon-control'} :title=${'Icon control name'} :lead=${'Pair decorative glyphs with hidden text so the button has an accessible name.'} :code=${iconControl} :filename=${'visually-hidden-icon.jcr'}>
+      <button type="button">
+        <span aria-hidden="true">×</span>
+        <VisuallyHidden>Close dialog</VisuallyHidden>
+      </button>
+    </Demo>
+    <Demo :id=${'context'} :title=${'Additional context'} :lead=${'Hidden copy can add timing or status detail to visible text.'} :code=${context} :filename=${'visually-hidden-context.jcr'}>
+      <p>
+        4 new notifications
+        <VisuallyHidden>, updated just now</VisuallyHidden>
+      </p>
+    </Demo>
+    <Demo :id=${'status'} :title=${'Nonvisual status'} :lead=${'Explain a decorative status glyph in text so its meaning does not depend on shape or color.'} :code=${status} :filename=${'visually-hidden-status.jcr'}>
+      <p>
+        Build complete
+        <VisuallyHidden>. Status: successful.</VisuallyHidden>
+        <span aria-hidden="true"> ✓</span>
+      </p>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

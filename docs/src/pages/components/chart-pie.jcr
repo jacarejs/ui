@@ -1,0 +1,234 @@
+import { pulse } from '@jacare/core'
+import Card from '@jacare/ui/components/Card.jcr'
+import ChartPie from '@jacare/ui/components/ChartPie.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  caption as captionExample,
+  colors as colorsExample,
+  inCard,
+  noLabels,
+  noLegend,
+  playgroundCode as buildPlaygroundCode,
+  sized,
+  titleExample,
+} from '../../examples/chart-pie.js'
+
+const contract = getContract('ChartPie')
+const navLinks = previousNext('/components/chart-pie')
+
+const playTitle = pulse('Pie')
+const playCaption = pulse('Playground preview')
+const playShowLabels = pulse(true)
+const playShowLegend = pulse(true)
+const playCustomColors = pulse(false)
+
+const data = [
+  { label: 'Direct', value: 44 },
+  { label: 'Organic', value: 28 },
+  { label: 'Referral', value: 18 },
+  { label: 'Social', value: 10 },
+]
+
+const compactData = [
+  { label: 'Direct', value: 44 },
+  { label: 'Organic', value: 28 },
+  { label: 'Referral', value: 18 },
+  { label: 'Social', value: 10 },
+]
+
+const customColors = ['#be185d', '#0f766e', '#1f6feb', '#c47a00']
+
+const a11y = [
+  'SVG root uses role="img" with an aria-label from title',
+  'Each slice exposes a native title tooltip with label and value',
+  'Pair with a legend or nearby text when color alone encodes meaning',
+  'Keep slice count low enough that labels stay readable',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    title: playTitle(),
+    caption: playCaption(),
+    showLabels: playShowLabels(),
+    showLegend: playShowLegend(),
+    customColors: playCustomColors(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ChartPie</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Charts'}
+      :title=${'ChartPie'}
+      :description=${'Slice proportions for share-of-total views with optional labels, custom colors, and legend.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Title'} bind-value=${playTitle} />
+          <Field :label=${'Caption'} bind-value=${playCaption} />
+          <Switch :label=${'Show labels'} bind-checked=${playShowLabels} />
+          <Switch :label=${'Show legend'} bind-checked=${playShowLegend} />
+          <Switch :label=${'Custom colors'} bind-checked=${playCustomColors} />
+          <Text :tone=${'muted'}>Toggle options to preview pie chart chrome.</Text>
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <ChartPie
+              :data=${data}
+              :title=${playTitle}
+              :caption=${playCaption}
+              :showLabels=${playShowLabels}
+              :showLegend=${playShowLegend}
+              :colors=${() => (playCustomColors() ? customColors : null)}
+              :width=${480}
+              :height=${280}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'chart-pie-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Pass an array of { label, value }. Optional title, caption, width, and height frame the plot.'}
+      :code=${basic}
+      :filename=${'chart-pie-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <ChartPie
+        :data=${data}
+        :title=${'Pie'}
+        :caption=${'Traffic share by channel'}
+        :width=${480}
+        :height=${280}
+      />
+    </Demo>
+
+    <DocsSection :id=${'options'} :title=${'Options'}>
+      <Demo
+        :id=${'title'}
+        :title=${'Title'}
+        :lead=${'title sets the chart heading and SVG aria-label.'}
+        :code=${titleExample}
+        :filename=${'chart-pie-title.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartPie :data=${data} :title=${'Traffic sources'} />
+      </Demo>
+
+      <Demo
+        :id=${'caption'}
+        :title=${'Caption'}
+        :lead=${'caption adds supporting context below the title.'}
+        :code=${captionExample}
+        :filename=${'chart-pie-caption.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartPie :data=${data} :title=${'Pie'} :caption=${'Last 30 days — web analytics'} />
+      </Demo>
+
+      <Demo
+        :id=${'sized'}
+        :title=${'Custom size'}
+        :lead=${'width and height control the SVG viewBox and frame.'}
+        :code=${sized}
+        :filename=${'chart-pie-sized.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartPie
+          :data=${compactData}
+          :title=${'Compact pie'}
+          :width=${280}
+          :height=${200}
+          :showLegend=${false}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'colors'}
+        :title=${'Custom colors'}
+        :lead=${'colors overrides the default palette in slice order.'}
+        :code=${colorsExample}
+        :filename=${'chart-pie-colors.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartPie :data=${data} :title=${'Custom palette'} :colors=${customColors} />
+      </Demo>
+
+      <Demo
+        :id=${'no-labels'}
+        :title=${'Hide labels'}
+        :lead=${'showLabels=false keeps the plot clean when the legend carries meaning.'}
+        :code=${noLabels}
+        :filename=${'chart-pie-no-labels.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartPie :data=${data} :title=${'Legend only'} :showLabels=${false} />
+      </Demo>
+
+      <Demo
+        :id=${'no-legend'}
+        :title=${'Hide legend'}
+        :lead=${'showLegend=false for compact dashboard tiles.'}
+        :code=${noLegend}
+        :filename=${'chart-pie-no-legend.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartPie
+          :data=${data}
+          :title=${'Compact tile'}
+          :caption=${'Legend hidden for dense dashboards'}
+          :showLegend=${false}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'in-card'}
+        :title=${'Inside Card'}
+        :lead=${'Compose ChartPie in a Card for dashboard KPI panels.'}
+        :code=${inCard}
+        :filename=${'chart-pie-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Acquisition'} :subtitle=${'Channel mix'}>
+          <ChartPie :data=${data} :showLegend=${true} :height=${240} />
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

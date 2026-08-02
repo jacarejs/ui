@@ -1,0 +1,72 @@
+import { pulse } from '@jacare/core'
+import MessageBoxDemo from '@jacare/ui/components/MessageBox.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import { MessageBox } from '@jacare/ui/feedback'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { component, custom_actions, input, services, types, single_action } from '../../examples/message-box.js'
+
+const contract = getContract('MessageBox')
+const navLinks = previousNext('/components/message-box')
+const basicOpen = pulse(false)
+const archiveOpen = pulse(false)
+const inputOpen = pulse(false)
+const name = pulse('')
+const typeOpen = pulse(false)
+const selectedType = pulse('primary')
+const noticeOpen = pulse(false)
+const typeOptions = ['primary', 'success', 'warning', 'info', 'error']
+const a11y = [
+  'Use a direct title and explain the consequence before destructive actions',
+  'Focus is trapped in the modal and Escape cancels the current decision',
+  'Use prompt only when a short text response is required to continue',
+]
+
+function confirmDelete() {
+  MessageBox.confirm('This cannot be undone.', 'Delete project', { type: 'error' }).catch(() => {})
+}
+
+function buttonVariant(type) {
+  if (type === 'warning') return 'warn'
+  if (type === 'error') return 'danger'
+  return type
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb"><a jacare-go="/components" href="/components">Components</a><span aria-hidden="true">/</span><span>MessageBox</span></nav>
+    <DocsHero :kicker=${'Overlay'} :title=${'MessageBox'} :description=${'Controlled decision dialog plus alert, confirm, and prompt services for imperative workflows.'} :status=${'stable'} />
+    <Demo :id=${'component'} :title=${'Controlled component'} :code=${component} :filename=${'message-box-component.jcr'} :layout=${'stack'}><Button on-press=${() => basicOpen.set(true)}>Open message box</Button><MessageBoxDemo bind-open=${basicOpen} :title=${'Publish release?'} :message=${'This action updates production.'} /></Demo>
+    <Demo :id=${'actions'} :title=${'Custom actions'} :code=${custom_actions} :filename=${'message-box-actions.jcr'} :layout=${'stack'}><Button on-press=${() => archiveOpen.set(true)}>Archive</Button><MessageBoxDemo bind-open=${archiveOpen} :title=${'Archive project'} :type=${'warning'} :confirmButtonText=${'Archive'} :cancelButtonText=${'Keep project'} /></Demo>
+    <Demo :id=${'input'} :title=${'Input mode'} :code=${input} :filename=${'message-box-input.jcr'} :layout=${'stack'}><Button on-press=${() => inputOpen.set(true)}>Rename</Button><MessageBoxDemo bind-open=${inputOpen} bind-inputValue=${name} :showInput=${true} :title=${'Rename project'} :inputPlaceholder=${'Project name'} /></Demo>
+    <Demo :id=${'services'} :title=${'Alert, confirm, and prompt'} :code=${services} :filename=${'message-box-services.jcr'} :layout=${'stack'}>
+      <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+        <Button on-press=${() => MessageBox.alert('Everything is ready.', 'Status')}>Alert</Button>
+        <Button :variant=${'danger'} on-press=${confirmDelete}>Confirm</Button>
+        <Button :variant=${'secondary'} on-press=${() => MessageBox.prompt('Enter a name.', 'New project').catch(() => {})}>Prompt</Button>
+      </Stack>
+    </Demo>
+    <Demo :id=${'types'} :title=${'All semantic types'} :code=${types} :filename=${'message-box-types.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        #for typeOptions as option
+          <Button
+            :variant=${buttonVariant(option)}
+            on-press=${() => { selectedType.set(option); typeOpen.set(true) }}
+          >${option}</Button>
+        #end
+      </Stack>
+      <MessageBoxDemo bind-open=${typeOpen} :type=${selectedType} :title=${'Semantic dialog'} :message=${'The selected type changes the accent.'} />
+    </Demo>
+    <Demo :id=${'single-action'} :title=${'Without cancel button'} :code=${single_action} :filename=${'message-box-single-action.jcr'} :layout=${'stack'}><Button on-press=${() => noticeOpen.set(true)}>Open notice</Button><MessageBoxDemo bind-open=${noticeOpen} :title=${'Terms updated'} :message=${'Review the latest policy.'} :showCancelButton=${false} :confirmButtonText=${'Got it'} /></Demo>
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}><AccessibilityChecklist :items=${a11y} /></DocsSection>
+    <DocsSection :id=${'api'} :title=${'API'}><PropsTable :contract=${contract} /></DocsSection>
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

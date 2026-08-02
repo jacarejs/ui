@@ -1,0 +1,161 @@
+import Card from '@jacare/ui/components/Card.jcr'
+import ChartCandlestick from '@jacare/ui/components/ChartCandlestick.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  inCard,
+  sized,
+  volatile,
+  weekly,
+} from '../../examples/chart-candlestick.js'
+
+const contract = getContract('ChartCandlestick')
+const navLinks = previousNext('/components/chart-candlestick')
+
+const data = [
+  { label: 'Mon', open: 120, high: 132, low: 118, close: 128 },
+  { label: 'Tue', open: 128, high: 136, low: 122, close: 124 },
+  { label: 'Wed', open: 124, high: 130, low: 116, close: 118 },
+  { label: 'Thu', open: 118, high: 140, low: 117, close: 136 },
+  { label: 'Fri', open: 136, high: 142, low: 130, close: 134 },
+]
+
+const weeklyData = [
+  { label: 'W1', open: 98, high: 104, low: 94, close: 102 },
+  { label: 'W2', open: 102, high: 110, low: 99, close: 108 },
+  { label: 'W3', open: 108, high: 112, low: 101, close: 103 },
+  { label: 'W4', open: 103, high: 118, low: 100, close: 116 },
+]
+
+const volatileData = [
+  { label: 'Mon', open: 210, high: 228, low: 198, close: 204 },
+  { label: 'Tue', open: 204, high: 218, low: 186, close: 192 },
+  { label: 'Wed', open: 192, high: 240, low: 188, close: 236 },
+  { label: 'Thu', open: 236, high: 244, low: 214, close: 220 },
+  { label: 'Fri', open: 220, high: 226, low: 202, close: 208 },
+]
+
+const compactData = [
+  { label: 'Mon', open: 120, high: 132, low: 118, close: 128 },
+  { label: 'Tue', open: 128, high: 136, low: 122, close: 124 },
+  { label: 'Wed', open: 124, high: 130, low: 116, close: 118 },
+]
+
+const a11y = [
+  'SVG root uses role="img" with an aria-label from title',
+  'Each candle exposes O/H/L/C values in a title tooltip',
+  'Green/red encoding needs a caption for color-blind readers',
+  'Use caption to explain that close ≥ open renders green',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ChartCandlestick</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Charts'}
+      :title=${'ChartCandlestick'}
+      :description=${'OHLC financial candles for open, high, low, and close over time.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Pass an array of { label, open, high, low, close }. Optional title, caption, width, and height frame the plot.'}
+      :code=${basic}
+      :filename=${'chart-candlestick-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <ChartCandlestick
+        :data=${data}
+        :title=${'Candlestick'}
+        :caption=${'Daily OHLC'}
+        :width=${520}
+        :height=${280}
+      />
+    </Demo>
+
+    <DocsSection :id=${'data'} :title=${'Data shapes'}>
+      <Demo
+        :id=${'weekly'}
+        :title=${'Weekly close'}
+        :lead=${'Fewer candles suit compact tickers and summary views.'}
+        :code=${weekly}
+        :filename=${'chart-candlestick-weekly.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartCandlestick :data=${weeklyData} :title=${'Weekly close'} :caption=${'Four-week trend'} />
+      </Demo>
+
+      <Demo
+        :id=${'volatile'}
+        :title=${'Volatile week'}
+        :lead=${'Wide wicks and gaps show intraday range clearly.'}
+        :code=${volatile}
+        :filename=${'chart-candlestick-volatile.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartCandlestick
+          :data=${volatileData}
+          :title=${'Volatile week'}
+          :caption=${'Green = close ≥ open, red = close < open'}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'options'} :title=${'Options'}>
+      <Demo
+        :id=${'sized'}
+        :title=${'Custom size'}
+        :lead=${'width and height control the SVG viewBox and frame.'}
+        :code=${sized}
+        :filename=${'chart-candlestick-sized.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartCandlestick
+          :data=${compactData}
+          :title=${'Compact size'}
+          :width=${360}
+          :height=${200}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'in-card'}
+        :title=${'Inside Card'}
+        :lead=${'Compose ChartCandlestick in a Card for ticker panels.'}
+        :code=${inCard}
+        :filename=${'chart-candlestick-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Ticker'} :subtitle=${'Last five sessions'}>
+          <ChartCandlestick :data=${data} :height=${240} />
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

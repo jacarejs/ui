@@ -1,0 +1,169 @@
+import { pulse } from '@jacare/core'
+import YearPicker from '@jacare/ui/components/YearPicker.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  bounds,
+  disabledExample,
+  hintAndError,
+  inlineExample,
+  reactive,
+} from '../../examples/year-picker.js'
+
+const contract = getContract('YearPicker')
+const navLinks = previousNext('/components/year-picker')
+
+const year = pulse(2026)
+const inlineYear = pulse(2026)
+const bounded = pulse(2026)
+const hinted = pulse(null)
+const invalid = pulse(null)
+const locked = pulse(2024)
+const shared = pulse(2026)
+
+const a11y = [
+  'Default mode uses a labeled trigger with aria-haspopup for the dropdown picker',
+  'Year grid is a listbox; decade navigation buttons are labeled',
+  'Selecting a year closes the picker; Clear empties the numeric value',
+  'error uses role="alert"; hint appears under the control when there is no error',
+  'disabled dims the control and blocks opening, navigation, and selection',
+]
+
+function selectedLabel(value) {
+  return value == null || value === '' ? '—' : String(value)
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>YearPicker</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Pickers'}
+      :title=${'YearPicker'}
+      :description=${'Pick a year from a dropdown field, or show the decade grid inline for filters and side panels.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Picker'}
+      :lead=${'Default mode — open the field to choose a year from the decade grid.'}
+      :code=${basic}
+      :filename=${'year-picker-basic.jcr'}
+    >
+      <div style="width:min(20rem,100%)">
+        <YearPicker :label=${'Fiscal year'} bind-value=${year} />
+      </div>
+    </Demo>
+
+    <Demo
+      :id=${'inline'}
+      :title=${'Inline panel'}
+      :lead=${'Pass inline to keep the decade grid always visible.'}
+      :code=${inlineExample}
+      :filename=${'year-picker-inline.jcr'}
+    >
+      <div style="width:min(20rem,100%)">
+        <YearPicker :label=${'Inline panel'} :inline=${true} bind-value=${inlineYear} />
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'bounds'} :title=${'Min and max'}>
+      <Demo
+        :id=${'bounds-demo'}
+        :title=${'Bounded years'}
+        :lead=${'Disable years outside a numeric range.'}
+        :code=${bounds}
+        :filename=${'year-picker-bounds.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="width:min(20rem,100%)">
+          <YearPicker
+            :label=${'Report year'}
+            :min=${2020}
+            :max=${2028}
+            :hint=${'Only 2020–2028 are selectable'}
+            bind-value=${bounded}
+          />
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'states'} :title=${'States'}>
+      <Demo
+        :id=${'hint-error'}
+        :title=${'Hint and error'}
+        :code=${hintAndError}
+        :filename=${'year-picker-hint-error.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="width:min(20rem,100%)">
+          <Stack :gap=${'lg'}>
+            <YearPicker
+              :label=${'Archive year'}
+              :placeholder=${'Choose a year'}
+              :hint=${'Used for annual reports'}
+              bind-value=${hinted}
+            />
+            <YearPicker
+              :label=${'Required year'}
+              :error=${'Pick a year to continue'}
+              bind-value=${invalid}
+            />
+          </Stack>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'disabled'}
+        :title=${'Disabled'}
+        :code=${disabledExample}
+        :filename=${'year-picker-disabled.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="width:min(20rem,100%)">
+          <YearPicker
+            :label=${'Closed year'}
+            :disabled=${true}
+            :hint=${'Locked after books were closed'}
+            bind-value=${locked}
+          />
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'reactive'} :title=${'Reactive value'}>
+      <Demo :id=${'reactive-demo'} :title=${'Bound pulse'} :code=${reactive} :filename=${'year-picker-reactive.jcr'} :layout=${'stack'}>
+        <div style="width:min(20rem,100%)">
+          <Stack :gap=${'sm'}>
+            <YearPicker :label=${'Selected year'} bind-value=${shared} />
+            <Text :tone=${'muted'}>Value: ${() => selectedLabel(shared)}</Text>
+          </Stack>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

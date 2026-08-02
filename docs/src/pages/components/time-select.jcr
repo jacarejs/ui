@@ -9,9 +9,10 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/time-select.js'
+import { basic, clearable, intervals, placeholder, playgroundCode as buildPlaygroundCode, states } from '../../examples/time-select.js'
 
 const contract = getContract('TimeSelect')
 const navLinks = previousNext('/components/time-select')
@@ -24,6 +25,19 @@ const playStep = pulse('00:30')
 const playClearable = pulse(true)
 const playDisabled = pulse(false)
 const basicValue = pulse('09:30')
+const quarterValue = pulse('08:15')
+const hourlyValue = pulse('10:00')
+const placeholderValue = pulse('')
+const clearValue = pulse('13:30')
+const errorValue = pulse('')
+const disabledValue = pulse('16:00')
+const a11y = [
+  'The trigger announces that it opens a listbox and keeps the current time visible',
+  'Time choices use option roles and the active option has a distinct visual state',
+  'disabled removes the trigger from keyboard focus and prevents opening',
+  'error is announced with role="alert" and uses a non-color border cue',
+  'Use a clear placeholder that explains the empty value when clearable is enabled',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -46,7 +60,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Pickers'}
       :title=${'TimeSelect'}
       :description=${'Dropdown of discrete time slots between start and end, stepped by an HH:mm interval. Bind value as a string pulse.'}
       :status=${'stable'}
@@ -91,6 +105,32 @@ export <view>
         bind-value=${basicValue}
       />
     </Demo>
+
+    <Demo :id=${'intervals'} :title=${'Ranges and intervals'} :code=${intervals} :filename=${'time-select-intervals.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <TimeSelect :label=${'Quarter-hour slots'} :start=${'08:00'} :end=${'10:00'} :step=${'00:15'} bind-value=${quarterValue} />
+        <TimeSelect :label=${'Hourly slots'} :start=${'09:00'} :end=${'17:00'} :step=${'01:00'} bind-value=${hourlyValue} />
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'placeholder'} :title=${'Placeholder without clear'} :code=${placeholder} :filename=${'time-select-placeholder.jcr'}>
+      <TimeSelect :label=${'Delivery window'} :placeholder=${'Choose a delivery time'} :clearable=${false} bind-value=${placeholderValue} />
+    </Demo>
+
+    <Demo :id=${'clearable'} :title=${'Clearable selection'} :code=${clearable} :filename=${'time-select-clearable.jcr'}>
+      <TimeSelect :label=${'Optional break'} :clearable=${true} :hint=${'Choose the placeholder option to clear'} bind-value=${clearValue} />
+    </Demo>
+
+    <Demo :id=${'states'} :title=${'Error and disabled states'} :code=${states} :filename=${'time-select-states.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <TimeSelect :label=${'Interview'} :error=${'Select an interview time'} bind-value=${errorValue} />
+        <TimeSelect :label=${'Confirmed time'} :disabled=${true} bind-value=${disabledValue} />
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

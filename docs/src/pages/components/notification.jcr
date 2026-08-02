@@ -1,0 +1,64 @@
+import { pulse } from '@jacare/core'
+import NotificationDemo from '@jacare/ui/components/Notification.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import { Notification } from '@jacare/ui/feedback'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, types, close, service, positions, sticky } from '../../examples/notification.js'
+
+const contract = getContract('Notification')
+const navLinks = previousNext('/components/notification')
+const visible = pulse(true)
+const a11y = [
+  'Use a short title and put the actionable detail in the message',
+  'Errors use an alert role while routine updates use status',
+  'Keep the close control available for notifications with long duration',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb"><a jacare-go="/components" href="/components">Components</a><span aria-hidden="true">/</span><span>Notification</span></nav>
+    <DocsHero :kicker=${'Feedback'} :title=${'Notification'} :description=${'Rich inline notification preview and global Notification service with semantic types and corner positions.'} :status=${'stable'} />
+    <Demo :id=${'basic'} :title=${'Basic notification'} :code=${basic} :filename=${'notification-basic.jcr'} :layout=${'stack'}><NotificationDemo :title=${'Release published'} :message=${'Version 1.4 is now available.'} /></Demo>
+    <Demo :id=${'types'} :title=${'Semantic types'} :code=${types} :filename=${'notification-types.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <NotificationDemo :type=${'primary'} :title=${'Primary'} :message=${'A primary update.'} />
+        <NotificationDemo :type=${'success'} :title=${'Complete'} :message=${'All checks passed.'} />
+        <NotificationDemo :type=${'warning'} :title=${'Attention'} :message=${'Two checks need review.'} />
+        <NotificationDemo :type=${'info'} :title=${'Information'} :message=${'A new version is available.'} />
+        <NotificationDemo :type=${'error'} :title=${'Failed'} :message=${'Deployment failed.'} />
+      </Stack>
+    </Demo>
+    <Demo :id=${'close'} :title=${'Close event'} :code=${close} :filename=${'notification-close.jcr'} :layout=${'stack'}>
+      #if visible()
+        <NotificationDemo :title=${'Sync active'} :message=${'Close when acknowledged.'} on-close=${() => visible.set(false)} />
+      #else
+        <Button :variant=${'secondary'} on-press=${() => visible.set(true)}>Restore</Button>
+      #end
+    </Demo>
+    <Demo :id=${'service'} :title=${'Imperative Notification'} :code=${service} :filename=${'notification-service.jcr'} :layout=${'stack'}><Button on-press=${() => Notification.success({ title: 'Deployment complete', message: 'Production is healthy.', position: 'bottom-right' })}>Show notification</Button></Demo>
+    <Demo :id=${'positions'} :title=${'Four service positions'} :code=${positions} :filename=${'notification-positions.jcr'} :layout=${'stack'}>
+      <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+        #for ['top-left', 'top-right', 'bottom-left', 'bottom-right'] as position
+          <Button on-press=${() => Notification({ title: position, message: 'Corner placement', position })}>${position}</Button>
+        #end
+      </Stack>
+    </Demo>
+    <Demo :id=${'sticky'} :title=${'Sticky, hidden close, and closeAll'} :code=${sticky} :filename=${'notification-sticky.jcr'} :layout=${'stack'}>
+      <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+        <Button on-press=${() => Notification.warning({ title: 'Sticky notice', message: 'Use Close all to dismiss.', duration: 0, showClose: false })}>Show sticky</Button>
+        <Button on-press=${Notification.closeAll}>Close all</Button>
+      </Stack>
+    </Demo>
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}><AccessibilityChecklist :items=${a11y} /></DocsSection>
+    <DocsSection :id=${'api'} :title=${'API'}><PropsTable :contract=${contract} /></DocsSection>
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

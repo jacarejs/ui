@@ -14,6 +14,7 @@ import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
 import {
   basic,
+  contextual,
   playgroundCode as buildPlaygroundCode,
   sizes,
   withButton,
@@ -109,6 +110,13 @@ export <view>
         </Stack>
       </Demo>
     </DocsSection>
+
+    <Demo :id=${'contextual'} :title=${'Contextual loading label'} :lead=${'Name the pending region specifically instead of repeating a generic loading label.'} :code=${contextual} :filename=${'spinner-contextual.jcr'}>
+      <Stack :direction=${'row'} :align=${'center'} :gap=${'sm'}>
+        <Spinner :size=${'sm'} :label=${'Loading account activity'} />
+        <span>Loading account activity…</span>
+      </Stack>
+    </Demo>
 
     <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
       <AccessibilityChecklist :items=${a11y} />

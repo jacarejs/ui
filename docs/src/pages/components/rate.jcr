@@ -2,6 +2,7 @@ import { pulse } from '@jacare/core'
 import Field from '@jacare/ui/components/Field.jcr'
 import Switch from '@jacare/ui/components/Switch.jcr'
 import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
 import Rate from '@jacare/ui/components/Rate.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
@@ -9,9 +10,18 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/rate.js'
+import {
+  basic,
+  behavior,
+  characters,
+  customMax,
+  half,
+  playgroundCode as buildPlaygroundCode,
+  text,
+} from '../../examples/rate.js'
 
 const contract = getContract('Rate')
 const navLinks = previousNext('/components/rate')
@@ -23,6 +33,24 @@ const playClearable = pulse(true)
 const playShowText = pulse(false)
 const playDisabled = pulse(false)
 const basicValue = pulse(3)
+const halfValue = pulse(3.5)
+const maxValue = pulse(7)
+const numericValue = pulse(4)
+const descriptiveValue = pulse(5)
+const fixedValue = pulse(3)
+const disabledValue = pulse(4)
+const heartValue = pulse(4)
+const circleValue = pulse(2.5)
+const diamondValue = pulse(3)
+const faceValue = pulse(5)
+const ratingTexts = ['Poor', 'Fair', 'Good', 'Very good', 'Excellent']
+const a11y = [
+  'Stars are exposed as a labeled rating group rather than decorative glyphs alone',
+  'Each hit target names the exact rating it selects, including half values',
+  'Filled icons are hidden from assistive technology to avoid duplicate output',
+  'disabled removes every rating button from interaction',
+  'showText provides visible confirmation; use descriptive texts when meaning matters',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -44,9 +72,9 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Selection'}
       :title=${'Rate'}
-      :description=${'Star rating input with optional half stars, a clear-on-repeat click, and a readable text label.'}
+      :description=${'Rating input with customizable characters, optional half values, clear-on-repeat click, and a readable text label.'}
       :status=${'stable'}
     />
 
@@ -81,6 +109,60 @@ export <view>
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'rate-basic.jcr'}>
       <Rate bind-value=${basicValue} />
     </Demo>
+
+    <Demo :id=${'half'} :title=${'Half ratings'} :code=${half} :filename=${'rate-half.jcr'}>
+      <Rate :allowHalf=${true} bind-value=${halfValue} />
+    </Demo>
+
+    <Demo :id=${'custom-max'} :title=${'Custom maximum'} :code=${customMax} :filename=${'rate-custom-max.jcr'}>
+      <Rate :max=${10} bind-value=${maxValue} />
+    </Demo>
+
+    <Demo :id=${'text'} :title=${'Rating text'} :code=${text} :filename=${'rate-text.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <Rate :showText=${true} bind-value=${numericValue} />
+        <Rate :showText=${true} :texts=${ratingTexts} bind-value=${descriptiveValue} />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'characters'}
+      :title=${'Custom characters'}
+      :lead=${'Swap the default ★ with character — hearts, circles, diamonds, or any single glyph.'}
+      :code=${characters}
+      :filename=${'rate-characters.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'lg'}>
+        <Stack :gap=${'sm'}>
+          <Text :tone=${'muted'}>Hearts</Text>
+          <Rate :character=${'♥'} bind-value=${heartValue} />
+        </Stack>
+        <Stack :gap=${'sm'}>
+          <Text :tone=${'muted'}>Circles (half)</Text>
+          <Rate :character=${'●'} :allowHalf=${true} bind-value=${circleValue} />
+        </Stack>
+        <Stack :gap=${'sm'}>
+          <Text :tone=${'muted'}>Diamonds</Text>
+          <Rate :character=${'◆'} :showText=${true} bind-value=${diamondValue} />
+        </Stack>
+        <Stack :gap=${'sm'}>
+          <Text :tone=${'muted'}>Faces</Text>
+          <Rate :character=${'☺'} :max=${5} bind-value=${faceValue} />
+        </Stack>
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'behavior'} :title=${'Fixed and disabled ratings'} :code=${behavior} :filename=${'rate-behavior.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <Rate :clearable=${false} :showText=${true} bind-value=${fixedValue} />
+        <Rate :disabled=${true} :showText=${true} bind-value=${disabledValue} />
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

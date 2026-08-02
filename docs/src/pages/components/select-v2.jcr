@@ -2,6 +2,8 @@ import { pulse } from '@jacare/core'
 import Field from '@jacare/ui/components/Field.jcr'
 import Switch from '@jacare/ui/components/Switch.jcr'
 import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import Segmented from '@jacare/ui/components/Segmented.jcr'
 import SelectV2 from '@jacare/ui/components/SelectV2.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
@@ -9,9 +11,19 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/select-v2.js'
+import {
+  basic,
+  compact,
+  debounceExample,
+  loadingExample,
+  objectOptions,
+  playgroundCode as buildPlaygroundCode,
+  serverSide,
+  states,
+} from '../../examples/select-v2.js'
 
 const contract = getContract('SelectV2')
 const navLinks = previousNext('/components/select-v2')
@@ -21,11 +33,93 @@ const bigOptions = Array.from({ length: 200 }, (_, i) => ({
   label: `Option ${i + 1}`,
 }))
 
+const loadingOptions = Array.from({ length: 40 }, (_, i) => ({
+  value: `user-${i + 1}`,
+  label: `User ${i + 1}`,
+}))
+
+const debounceOptions = [
+  { value: 0, label: '0ms' },
+  { value: 150, label: '150ms' },
+  { value: 250, label: '250ms' },
+  { value: 500, label: '500ms' },
+  { value: 800, label: '800ms' },
+]
+
+const serverDebounceOptions = [
+  { value: 0, label: '0ms' },
+  { value: 150, label: '150ms' },
+  { value: 300, label: '300ms' },
+  { value: 500, label: '500ms' },
+  { value: 800, label: '800ms' },
+]
+
+const CITY_DB = [
+  { value: 'sao-paulo', label: 'São Paulo' },
+  { value: 'rio', label: 'Rio de Janeiro' },
+  { value: 'lisbon', label: 'Lisbon' },
+  { value: 'porto', label: 'Porto' },
+  { value: 'madrid', label: 'Madrid' },
+  { value: 'barcelona', label: 'Barcelona' },
+  { value: 'buenos-aires', label: 'Buenos Aires' },
+  { value: 'santiago', label: 'Santiago' },
+  { value: 'mexico-city', label: 'Mexico City' },
+  { value: 'bogota', label: 'Bogotá' },
+]
+
 const playLabel = pulse('Large list')
 const playValue = pulse('')
 const playSearchable = pulse(true)
 const playDisabled = pulse(false)
 const basicValue = pulse('')
+const planValue = pulse('pro')
+const countryValue = pulse('')
+const invalidValue = pulse('')
+const lockedValue = pulse('pro')
+const loadingValue = pulse('')
+const debounceValue = pulse('')
+const debounceMs = pulse(250)
+const serverValue = pulse('')
+const serverLoading = pulse(false)
+const serverResults = pulse([])
+const serverStatus = pulse('Idle — open or type to query the API')
+const serverDebounce = pulse(300)
+
+const planOptions = [
+  { value: 'free', label: 'Free' },
+  { value: 'pro', label: 'Pro', tag: 'Popular' },
+  { value: 'team', label: 'Team', tag: 'New' },
+]
+
+let serverRequestId = 0
+
+async function fetchCities(query) {
+  await new Promise((resolve) => window.setTimeout(resolve, 700))
+  const q = String(query || '').trim().toLowerCase()
+  if (!q) return CITY_DB.slice(0, 6)
+  return CITY_DB.filter((city) => city.label.toLowerCase().includes(q))
+}
+
+async function searchCities(query) {
+  const id = ++serverRequestId
+  serverLoading.set(true)
+  serverResults.set([])
+  const q = String(query || '').trim()
+  serverStatus.set(q ? `Requesting /cities?q=${q}…` : 'Requesting /cities…')
+  const matches = await fetchCities(q)
+  if (id !== serverRequestId) return
+  serverResults.set(matches)
+  serverLoading.set(false)
+  serverStatus.set(`API returned ${matches.length} city(ies)${q ? ` for "${q}"` : ''}`)
+}
+
+const a11yItems = [
+  'The trigger identifies the popup as a listbox',
+  'Visible virtual rows retain option and aria-selected semantics',
+  'The search field receives focus when the panel opens and Escape closes it',
+  'loading sets aria-busy and swaps the list for a Searching… state',
+  'Disabled prevents opening; validation errors are announced with role="alert"',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -45,9 +139,9 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Selection'}
       :title=${'SelectV2'}
-      :description=${'Virtualized select for long option lists. Pass options, bind-value, and keep searchable on for fast filtering.'}
+      :description=${'Virtualized select for long option lists — local filter, remote search with debounce, and a loading state while results resolve.'}
       :status=${'stable'}
     />
 
@@ -79,6 +173,87 @@ export <view>
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'select-v2-basic.jcr'}>
       <SelectV2 :label=${'Large list'} :options=${bigOptions} :searchable=${true} bind-value=${basicValue} />
     </Demo>
+
+    <Demo :id=${'objects'} :title=${'Object options and tags'} :code=${objectOptions} :filename=${'select-v2-objects.jcr'}>
+      <SelectV2 :label=${'Plan'} :options=${planOptions} bind-value=${planValue} />
+    </Demo>
+
+    <Demo :id=${'sizing'} :title=${'Compact viewport'} :lead=${'Tune height and itemSize together while preserving virtualization.'} :code=${compact} :filename=${'select-v2-compact.jcr'}>
+      <SelectV2 :label=${'Country'} :options=${['Brazil', 'Canada', 'Germany', 'Japan', 'Portugal']} :searchable=${false} :height=${144} :itemSize=${36} bind-value=${countryValue} />
+    </Demo>
+
+    <Demo
+      :id=${'loading'}
+      :title=${'Loading'}
+      :lead=${'Set loading while options are fetched — the panel shows Searching… and the trigger spinner.'}
+      :code=${loadingExample}
+      :filename=${'select-v2-loading.jcr'}
+    >
+      <SelectV2
+        :label=${'Assignee'}
+        :options=${loadingOptions}
+        :loading=${true}
+        :hint=${'loading replaces the list with a Searching… state'}
+        bind-value=${loadingValue}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'debounce'}
+      :title=${'Debounced local filter'}
+      :lead=${'debounce delays applying the search query to the virtualized list.'}
+      :code=${debounceExample}
+      :filename=${'select-v2-debounce.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <Segmented bind-value=${debounceMs} :options=${debounceOptions} :block=${true} />
+        <SelectV2
+          :label=${'Local filter'}
+          :options=${bigOptions}
+          :debounce=${debounceMs}
+          :hint=${'Local filtering waits for debounce before applying the query'}
+          bind-value=${debounceValue}
+        />
+        <Text :tone=${'muted'}>Active debounce: ${debounceMs}ms</Text>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'server-side'}
+      :title=${'Server-side search'}
+      :lead=${'remote skips client filtering and emits search after debounce — bind options from your API.'}
+      :code=${serverSide}
+      :filename=${'select-v2-server.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <Segmented bind-value=${serverDebounce} :options=${serverDebounceOptions} :block=${true} />
+        <SelectV2
+          :label=${'City'}
+          :options=${serverResults}
+          :remote=${true}
+          :loading=${serverLoading}
+          :debounce=${serverDebounce}
+          :searchPlaceholder=${'Search cities…'}
+          :hint=${'remote skips local filter and emits search after debounce'}
+          bind-value=${serverValue}
+          on-search=${searchCities}
+        />
+        <Text :tone=${'muted'}>Active debounce: ${serverDebounce}ms · ${serverStatus}</Text>
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'states'} :title=${'Error, hint, and disabled'} :code=${states} :filename=${'select-v2-states.jcr'}>
+      <Stack :gap=${'md'}>
+        <SelectV2 :label=${'Plan'} :options=${planOptions} :placeholder=${'Choose a plan'} :searchPlaceholder=${'Filter plans'} :error=${'A plan is required'} bind-value=${invalidValue} />
+        <SelectV2 :label=${'Locked plan'} :options=${planOptions} :disabled=${true} :hint=${'Managed by your organization'} bind-value=${lockedValue} />
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11yItems} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

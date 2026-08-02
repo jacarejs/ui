@@ -1,0 +1,70 @@
+import { pulse } from '@jacare/core'
+import ThemeToggle from '@jacare/ui/components/ThemeToggle.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, change, fallbackLabels, labels } from '../../examples/theme-toggle.js'
+
+const contract = getContract('ThemeToggle')
+const navLinks = previousNext('/components/theme-toggle')
+const a11y = [
+  'The control exposes a Theme group and pressed state for each mode',
+  'Keep custom labels short but unambiguous',
+  'Do not communicate the active theme by color alone',
+]
+
+const customLabels = {
+  light: 'Day',
+  dark: 'Night',
+  system: 'Device',
+}
+const partialLabels = {
+  system: 'Automatic',
+}
+const changeStatus = pulse('No theme selected')
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ThemeToggle</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Primitives'}
+      :title=${'ThemeToggle'}
+      :description=${'Three-way light, dark, and system theme control with persistent selection and a change event.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Theme modes'} :lead=${'Selecting a mode updates document theme tokens and marks that button pressed.'} :code=${basic} :filename=${'theme-toggle-basic.jcr'}>
+      <ThemeToggle />
+    </Demo>
+    <Demo :id=${'labels'} :title=${'Custom labels'} :lead=${'Provide labels for light, dark, and system without changing the mode values emitted by change.'} :code=${labels} :filename=${'theme-toggle-labels.jcr'}>
+      <ThemeToggle :labels=${customLabels} />
+    </Demo>
+    <Demo :id=${'change'} :title=${'Change event'} :lead=${'change emits light, dark, or system after the document theme is applied.'} :code=${change} :filename=${'theme-toggle-change.jcr'} :layout=${'stack'}>
+      <ThemeToggle on-change=${(mode) => changeStatus.set('Selected: ' + mode)} />
+      <p aria-live="polite">${changeStatus}</p>
+    </Demo>
+    <Demo :id=${'fallback-labels'} :title=${'Partial labels'} :lead=${'Omitted label keys keep their built-in text while supplied keys are replaced.'} :code=${fallbackLabels} :filename=${'theme-toggle-fallback-labels.jcr'}>
+      <ThemeToggle :labels=${partialLabels} />
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

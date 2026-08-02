@@ -1,0 +1,76 @@
+import { pulse } from '@jacare/core'
+import Form from '@jacare/ui/components/Form.jcr'
+import FormSection from '@jacare/ui/components/FormSection.jcr'
+import FormActions from '@jacare/ui/components/FormActions.jcr'
+import Input from '@jacare/ui/components/Input.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, collapsible, composed } from '../../examples/form-section.js'
+
+const contract = getContract('FormSection')
+const navLinks = previousNext('/components/form-section')
+const name = pulse('')
+const email = pulse('')
+const open = pulse(true)
+const company = pulse('')
+const title = pulse('')
+const notes = pulse('')
+const a11y = [
+  'Section uses a fieldset with legend for the group title',
+  'Collapsible mode exposes aria-expanded on the toggle',
+  'Description stays associated under the legend for context',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>FormSection</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Form'}
+      :title=${'FormSection'}
+      :description=${'Groups fields with a title and description in an accessible fieldset — compose with Form and FormActions.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'form-section-basic.jcr'}>
+      <FormSection :title=${'Profile'} :description=${'How teammates will recognize you.'}>
+        <Input :label=${'Display name'} bind-value=${name} />
+        <Input :label=${'Email'} :type=${'email'} bind-value=${email} />
+      </FormSection>
+    </Demo>
+
+    <Demo :id=${'collapsible'} :title=${'Collapsible'} :code=${collapsible} :filename=${'form-section-collapsible.jcr'}>
+      <FormSection
+        :title=${'Billing details'}
+        :description=${'Optional for free plans'}
+        :collapsible=${true}
+        bind-open=${open}
+      >
+        <Input :label=${'Company'} bind-value=${company} />
+      </FormSection>
+    </Demo>
+
+    <Demo :id=${'composed'} :title=${'With Form and FormActions'} :code=${composed} :filename=${'form-section-composed.jcr'}>
+      <Form>
+        <FormSection :title=${'Request'} :description=${'Tell us what you need.'}>
+          <Input :label=${'Title'} bind-value=${title} />
+          <Input :label=${'Notes'} bind-value=${notes} />
+        </FormSection>
+        <FormActions :sticky=${false} />
+      </Form>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

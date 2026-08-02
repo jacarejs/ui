@@ -88,7 +88,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Selection'}
       :title=${'Select'}
       :description=${'Searchable single or multi-select dropdown. Bind value to a pulse, pass string or tagged options, and surface validation beside the control.'}
       :status=${'stable'}

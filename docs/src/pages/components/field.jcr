@@ -75,7 +75,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Form'}
       :title=${'Field'}
       :description=${'Labeled text input with hint and error copy. Bind value to a pulse, choose an input type, and surface validation beside the control.'}
       :status=${'stable'}

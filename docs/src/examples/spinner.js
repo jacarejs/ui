@@ -26,6 +26,16 @@ export <view>
   </Stack>
 </view>`
 
+export const contextual = `import Spinner from '@jacare/ui/Spinner'
+import Stack from '@jacare/ui/Stack'
+
+export <view>
+  <Stack :direction=\${'row'} :align=\${'center'} :gap=\${'sm'}>
+    <Spinner :size=\${'sm'} :label=\${'Loading account activity'} />
+    <span>Loading account activity…</span>
+  </Stack>
+</view>`
+
 function quote(value) {
   return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 }

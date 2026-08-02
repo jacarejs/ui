@@ -1,0 +1,56 @@
+import Skeleton from '@jacare/ui/components/Skeleton.jcr'
+import SkeletonItem from '@jacare/ui/components/SkeletonItem.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { text, mediaCard, profile } from '../../examples/skeleton-item.js'
+
+const contract = getContract('SkeletonItem')
+const navLinks = previousNext('/components/skeleton-item')
+const a11y = [
+  'Use SkeletonItem inside Skeleton so loading and animation behavior stay grouped',
+  'Choose shapes that approximate the final content without conveying false meaning',
+  'Skeleton items are decorative and hidden from assistive technology',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>SkeletonItem</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'SkeletonItem'}
+      :description=${'SkeletonItem is a decorative placeholder shape used inside Skeleton. variant supports text, circle, rect, image, and button silhouettes.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'text'} :title=${'Text rows'} :lead=${'text items create line-shaped placeholders inside an animated Skeleton.'} :code=${text} :filename=${'skeleton-item-text.jcr'}>
+      <Skeleton :animated=${true}><div style="display:grid;gap:0.6rem"><SkeletonItem :variant=${'text'} /><SkeletonItem :variant=${'text'} /><SkeletonItem :variant=${'text'} /></div></Skeleton>
+    </Demo>
+    <Demo :id=${'media-card'} :title=${'Media card'} :lead=${'Combine image, text, and button variants to mirror a card layout.'} :code=${mediaCard} :filename=${'skeleton-item-card.jcr'}>
+      <Skeleton :animated=${true}><div style="display:grid;gap:0.75rem"><SkeletonItem :variant=${'image'} /><SkeletonItem :variant=${'text'} /><SkeletonItem :variant=${'button'} /></div></Skeleton>
+    </Demo>
+    <Demo :id=${'profile'} :title=${'Profile layout'} :lead=${'circle and rect variants represent avatar and content regions.'} :code=${profile} :filename=${'skeleton-item-profile.jcr'}>
+      <Skeleton><div style="display:flex;align-items:center;gap:0.75rem"><SkeletonItem :variant=${'circle'} /><div style="display:grid;gap:0.5rem;flex:1"><SkeletonItem :variant=${'text'} /><SkeletonItem :variant=${'rect'} /></div></div></Skeleton>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -1,0 +1,147 @@
+import { pulse } from '@jacare/core'
+import Input from '@jacare/ui/components/Input.jcr'
+import QrCode from '@jacare/ui/components/QrCode.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  colors,
+  downloadable,
+  levels,
+  reactive,
+  sizes,
+} from '../../examples/qr-code.js'
+
+const contract = getContract('QrCode')
+const navLinks = previousNext('/components/qr-code')
+const liveValue = pulse('https://jacarejs.github.io/ui/')
+const docsUrl = 'https://jacarejs.github.io/ui/'
+const levelUrl = 'https://jacarejs.github.io/ui/components/qr-code'
+
+const a11y = [
+  'Canvas exposes role="img" with an aria-label derived from alt, label, or value',
+  'Download control is a real button when downloadable is enabled',
+  'error uses role="alert"; hint appears under the code when there is no error',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>QrCode</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'QrCode'}
+      :description=${'Generate a crisp QR code from text or URLs — tune size, error correction, colors, and optional PNG download.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Pass any string value — URLs, plain text, or short payloads.'}
+      :code=${basic}
+      :filename=${'qr-code-basic.jcr'}
+    >
+      <QrCode
+        :label=${'Docs site'}
+        :value=${docsUrl}
+        :hint=${'Scan to open the Jacaré UI docs'}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'sizes'}
+      :title=${'Sizes'}
+      :lead=${'size sets the rendered square in pixels (minimum 64).'}
+      :code=${sizes}
+      :filename=${'qr-code-sizes.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+        <QrCode :label=${'Compact'} :size=${96} :value=${'jacare'} />
+        <QrCode :label=${'Default'} :size=${160} :value=${'jacare'} />
+        <QrCode :label=${'Large'} :size=${220} :value=${'jacare'} />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'levels'}
+      :title=${'Error correction'}
+      :lead=${'level L/M/Q/H trades density for resilience when the code is partially covered.'}
+      :code=${levels}
+      :filename=${'qr-code-levels.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+        <QrCode :label=${'Level L'} :level=${'L'} :value=${levelUrl} />
+        <QrCode :label=${'Level M'} :level=${'M'} :value=${levelUrl} />
+        <QrCode :label=${'Level Q'} :level=${'Q'} :value=${levelUrl} />
+        <QrCode :label=${'Level H'} :level=${'H'} :value=${levelUrl} />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'colors'}
+      :title=${'Colors'}
+      :lead=${'Tint modules with darkColor and lightColor while keeping contrast scannable.'}
+      :code=${colors}
+      :filename=${'qr-code-colors.jcr'}
+    >
+      <QrCode
+        :label=${'Brand colors'}
+        :value=${docsUrl}
+        :darkColor=${'#c45c26'}
+        :lightColor=${'#fff7f0'}
+        :hint=${'darkColor and lightColor tint the modules'}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'downloadable'}
+      :title=${'Download PNG'}
+      :lead=${'downloadable adds a button that saves the current canvas as qrcode.png.'}
+      :code=${downloadable}
+      :filename=${'qr-code-download.jcr'}
+    >
+      <QrCode
+        :label=${'Share link'}
+        :value=${docsUrl}
+        :downloadable=${true}
+        :downloadLabel=${'Save PNG'}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'reactive'}
+      :title=${'Live value'}
+      :lead=${'Bind value to an Input — the code regenerates as the payload changes.'}
+      :code=${reactive}
+      :filename=${'qr-code-reactive.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <Input :label=${'Payload'} bind-value=${liveValue} />
+        <QrCode
+          :label=${'Live preview'}
+          :value=${liveValue}
+          :downloadable=${true}
+          :hint=${'Edit the field to regenerate the code'}
+        />
+      </Stack>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

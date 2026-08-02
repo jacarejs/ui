@@ -1,0 +1,252 @@
+import { pulse } from '@jacare/core'
+import Card from '@jacare/ui/components/Card.jcr'
+import ChartDonut from '@jacare/ui/components/ChartDonut.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  caption as captionExample,
+  centerLabel as centerLabelExample,
+  colors as colorsExample,
+  inCard,
+  innerRatio as innerRatioExample,
+  noLegend,
+  playgroundCode as buildPlaygroundCode,
+  sized,
+  titleExample,
+} from '../../examples/chart-donut.js'
+
+const contract = getContract('ChartDonut')
+const navLinks = previousNext('/components/chart-donut')
+
+const playTitle = pulse('Donut')
+const playCaption = pulse('Playground preview')
+const playCenterLabel = pulse('')
+const playShowLegend = pulse(true)
+const playCustomColors = pulse(false)
+
+const data = [
+  { label: 'Direct', value: 44 },
+  { label: 'Organic', value: 28 },
+  { label: 'Referral', value: 18 },
+  { label: 'Social', value: 10 },
+]
+
+const compactData = [
+  { label: 'Direct', value: 44 },
+  { label: 'Organic', value: 28 },
+  { label: 'Referral', value: 18 },
+  { label: 'Social', value: 10 },
+]
+
+const customColors = ['#be185d', '#0f766e', '#1f6feb', '#c47a00']
+
+const a11y = [
+  'SVG root uses role="img" with an aria-label from title',
+  'Each segment exposes a native title tooltip with label and value',
+  'Do not rely on color alone — keep labels, center text, or legend visible',
+  'centerLabel should summarize the metric for screen reader context nearby',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    title: playTitle(),
+    caption: playCaption(),
+    centerLabel: playCenterLabel(),
+    showLegend: playShowLegend(),
+    customColors: playCustomColors(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ChartDonut</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Charts'}
+      :title=${'ChartDonut'}
+      :description=${'Ring proportions with center label space, inner ratio control, custom colors, and legend.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Field :label=${'Title'} bind-value=${playTitle} />
+          <Field :label=${'Caption'} bind-value=${playCaption} />
+          <Field :label=${'Center label'} bind-value=${playCenterLabel} />
+          <Switch :label=${'Show legend'} bind-checked=${playShowLegend} />
+          <Switch :label=${'Custom colors'} bind-checked=${playCustomColors} />
+          <Text :tone=${'muted'}>Toggle options to preview donut chart chrome.</Text>
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <ChartDonut
+              :data=${data}
+              :title=${playTitle}
+              :caption=${playCaption}
+              :centerLabel=${playCenterLabel}
+              :showLegend=${playShowLegend}
+              :colors=${() => (playCustomColors() ? customColors : null)}
+              :width=${480}
+              :height=${280}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'chart-donut-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Pass an array of { label, value }. Optional title, caption, width, and height frame the plot.'}
+      :code=${basic}
+      :filename=${'chart-donut-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <ChartDonut
+        :data=${data}
+        :title=${'Donut'}
+        :caption=${'Traffic share by channel'}
+        :width=${480}
+        :height=${280}
+      />
+    </Demo>
+
+    <DocsSection :id=${'options'} :title=${'Options'}>
+      <Demo
+        :id=${'title'}
+        :title=${'Title'}
+        :lead=${'title sets the chart heading and SVG aria-label.'}
+        :code=${titleExample}
+        :filename=${'chart-donut-title.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartDonut :data=${data} :title=${'Traffic sources'} />
+      </Demo>
+
+      <Demo
+        :id=${'caption'}
+        :title=${'Caption'}
+        :lead=${'caption adds supporting context below the title.'}
+        :code=${captionExample}
+        :filename=${'chart-donut-caption.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartDonut :data=${data} :title=${'Donut'} :caption=${'Last 30 days — web analytics'} />
+      </Demo>
+
+      <Demo
+        :id=${'sized'}
+        :title=${'Custom size'}
+        :lead=${'width and height control the SVG viewBox and frame.'}
+        :code=${sized}
+        :filename=${'chart-donut-sized.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartDonut
+          :data=${compactData}
+          :title=${'Compact ring'}
+          :width=${280}
+          :height=${200}
+          :showLegend=${false}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'colors'}
+        :title=${'Custom colors'}
+        :lead=${'colors overrides the default palette in segment order.'}
+        :code=${colorsExample}
+        :filename=${'chart-donut-colors.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartDonut :data=${data} :title=${'Custom palette'} :colors=${customColors} />
+      </Demo>
+
+      <Demo
+        :id=${'inner-ratio'}
+        :title=${'Inner ratio'}
+        :lead=${'innerRatio controls ring thickness — higher values produce a thinner ring.'}
+        :code=${innerRatioExample}
+        :filename=${'chart-donut-inner-ratio.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartDonut
+          :data=${data}
+          :title=${'Thin ring'}
+          :innerRatio=${0.72}
+          :centerLabel=${'100%'}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'center-label'}
+        :title=${'Center label'}
+        :lead=${'centerLabel renders a summary metric inside the ring.'}
+        :code=${centerLabelExample}
+        :filename=${'chart-donut-center-label.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartDonut :data=${data} :title=${'Total visits'} :centerLabel=${'12.4k'} :showLegend=${false} />
+      </Demo>
+
+      <Demo
+        :id=${'no-legend'}
+        :title=${'Hide legend'}
+        :lead=${'showLegend=false for compact dashboard tiles.'}
+        :code=${noLegend}
+        :filename=${'chart-donut-no-legend.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartDonut
+          :data=${data}
+          :title=${'Compact tile'}
+          :caption=${'Legend hidden for dense dashboards'}
+          :centerLabel=${'44%'}
+          :showLegend=${false}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'in-card'}
+        :title=${'Inside Card'}
+        :lead=${'Compose ChartDonut in a Card for dashboard KPI panels.'}
+        :code=${inCard}
+        :filename=${'chart-donut-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Acquisition'} :subtitle=${'Channel mix'}>
+          <ChartDonut :data=${data} :centerLabel=${'12.4k'} :showLegend=${true} :height=${240} />
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

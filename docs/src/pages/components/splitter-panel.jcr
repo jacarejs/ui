@@ -1,0 +1,61 @@
+import Splitter from '@jacare/ui/components/Splitter.jcr'
+import SplitterPanel from '@jacare/ui/components/SplitterPanel.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { sizedPanels, constrained, fixedPanel } from '../../examples/splitter-panel.js'
+
+const contract = getContract('SplitterPanel')
+const navLinks = previousNext('/components/splitter-panel')
+const a11y = [
+  'Keep SplitterPanel order aligned with the document reading order',
+  'Use min and max constraints to keep panel content usable while resizing',
+  'Do not make essential content reachable only through precise pointer resizing',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>SplitterPanel</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Layout'}
+      :title=${'SplitterPanel'}
+      :description=${'SplitterPanel is a resizable region used inside Splitter. size sets its basis, min and max constrain it, and resizable controls its separator handle.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'sized-panels'} :title=${'Sized panels'} :lead=${'size sets the initial basis; an omitted size lets a panel fill remaining space.'} :code=${sizedPanels} :filename=${'splitter-panel-size.jcr'}>
+      <div style="height:180px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Splitter>
+          <SplitterPanel :size=${'40%'}><div style="padding:0.75rem">Navigation</div></SplitterPanel>
+          <SplitterPanel><div style="padding:0.75rem">Content</div></SplitterPanel>
+        </Splitter>
+      </div>
+    </Demo>
+    <Demo :id=${'constrained'} :title=${'Size constraints'} :lead=${'min and max limit how far a resizable panel can move.'} :code=${constrained} :filename=${'splitter-panel-constraints.jcr'}>
+      <div style="height:180px;border:1px solid var(--j-border);overflow:hidden"><Splitter><SplitterPanel :size=${'35%'} :min=${'160px'} :max=${'60%'}><div style="padding:0.75rem">Files</div></SplitterPanel><SplitterPanel><div style="padding:0.75rem">Editor</div></SplitterPanel></Splitter></div>
+    </Demo>
+    <Demo :id=${'fixed-panel'} :title=${'Fixed panel'} :lead=${'resizable=false removes a panel handle while preserving its configured size.'} :code=${fixedPanel} :filename=${'splitter-panel-fixed.jcr'}>
+      <div style="height:180px;border:1px solid var(--j-border);overflow:hidden"><Splitter :layout=${'vertical'}><SplitterPanel :size=${'70%'}><div style="padding:0.75rem">Preview</div></SplitterPanel><SplitterPanel :size=${'30%'} :resizable=${false}><div style="padding:0.75rem">Console</div></SplitterPanel></Splitter></div>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

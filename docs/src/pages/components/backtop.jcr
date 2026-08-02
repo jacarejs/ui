@@ -1,0 +1,96 @@
+import Backtop from '@jacare/ui/components/Backtop.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, position, target, immediate } from '../../examples/backtop.js'
+
+const contract = getContract('Backtop')
+const navLinks = previousNext('/components/backtop')
+
+const a11y = [
+  'The control is a real button named Back to top',
+  'Visibility is based on scroll position rather than hover',
+  'Do not cover persistent actions when choosing right and bottom offsets',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Backtop</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Navigation'}
+      :title=${'Backtop'}
+      :description=${'Floating control that appears after a scroll threshold and smoothly returns the window or a selected container to the top.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Window threshold'}
+      :lead=${'visibilityHeight controls when the fixed button appears. Scroll this docs page past 200px to reveal it at the default inset.'}
+      :code=${basic}
+      :filename=${'backtop-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <p class="docs-demo-lead" style="margin:0">Scroll the page beyond 200px — the control appears at right 40 / bottom 40.</p>
+    </Demo>
+
+    <Demo
+      :id=${'position'}
+      :title=${'Custom position'}
+      :lead=${'right and bottom position the fixed control in pixels. Only one always-on demo is mounted so controls do not stack.'}
+      :code=${position}
+      :filename=${'backtop-position.jcr'}
+      :layout=${'stack'}
+    >
+      <p class="docs-demo-lead" style="margin:0">Always-visible sample at right 24 / bottom 112.</p>
+      <Backtop :visibilityHeight=${0} :right=${24} :bottom=${112} />
+    </Demo>
+
+    <Demo
+      :id=${'target'}
+      :title=${'Scrollable target'}
+      :lead=${'scrollTarget accepts a selector for an independently scrolling container. The button stays fixed to the viewport.'}
+      :code=${target}
+      :filename=${'backtop-target.jcr'}
+      :layout=${'stack'}
+    >
+      <div class="backtop-demo-target" style="height:160px;overflow:auto;border:1px solid var(--j-border);padding:0.75rem">
+        <div style="height:420px">Scroll this panel — the control appears at right 104 / bottom 40 so it stays clear of the always-on sample.</div>
+        <Backtop :visibilityHeight=${80} :right=${104} :bottom=${40} :scrollTarget=${'.backtop-demo-target'} />
+      </div>
+    </Demo>
+
+    <Demo
+      :id=${'immediate'}
+      :title=${'Click handler'}
+      :lead=${'Listen for click when the action needs instrumentation. Same zero-threshold placement as the position demo — reuse that live control.'}
+      :code=${immediate}
+      :filename=${'backtop-immediate.jcr'}
+      :layout=${'stack'}
+    >
+      <p class="docs-demo-lead" style="margin:0">Use on-click on Backtop. The live always-on control above already uses visibilityHeight 0.</p>
+    </Demo>
+
+    <Backtop :visibilityHeight=${200} :right=${40} :bottom=${40} />
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

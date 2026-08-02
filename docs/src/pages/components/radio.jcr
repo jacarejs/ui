@@ -2,15 +2,17 @@ import { pulse } from '@jacare/core'
 import Switch from '@jacare/ui/components/Switch.jcr'
 import Stack from '@jacare/ui/components/Stack.jcr'
 import Radio from '@jacare/ui/components/Radio.jcr'
+import RadioGroup from '@jacare/ui/components/RadioGroup.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
 import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/radio.js'
+import { basic, cards, disabledOption, group, playgroundCode as buildPlaygroundCode, states } from '../../examples/radio.js'
 
 const contract = getContract('Radio')
 const navLinks = previousNext('/components/radio')
@@ -18,6 +20,27 @@ const navLinks = previousNext('/components/radio')
 const playValue = pulse('pro')
 const playDisabled = pulse(false)
 const basicValue = pulse('pro')
+const groupValue = pulse('email')
+const cardValue = pulse('pro')
+const shippingValue = pulse('standard')
+const statesValue = pulse('enabled')
+const channels = ['Email', 'SMS', 'Push']
+const plans = [
+  { value: 'free', label: 'Free', description: 'For personal projects' },
+  { value: 'pro', label: 'Pro', description: 'For growing products' },
+  { value: 'team', label: 'Team', description: 'For collaborating teams' },
+]
+const shipping = [
+  { value: 'standard', label: 'Standard shipping' },
+  { value: 'express', label: 'Express shipping', disabled: true },
+]
+const a11y = [
+  'Each Radio wraps a native radio input and its visible label in one clickable label',
+  'Radios in one choice set share both modelValue and name',
+  'RadioGroup renders a fieldset and legend for a programmatic group label',
+  'Keyboard focus is visible on the custom control while native radio navigation remains available',
+  'Disabled options remain readable but cannot update the shared model',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -35,7 +58,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Selection'}
       :title=${'Radio'}
       :description=${'Single radio option. Share bind-modelValue across radios with the same name and different :value props.'}
       :status=${'stable'}
@@ -69,6 +92,29 @@ export <view>
         <Radio :label=${'Team'} :value=${'team'} :name=${'plan'} bind-modelValue=${basicValue} />
       </Stack>
     </Demo>
+
+    <Demo :id=${'group'} :title=${'RadioGroup'} :lead=${'Use RadioGroup for a labeled set generated from options.'} :code=${group} :filename=${'radio-group.jcr'}>
+      <RadioGroup :label=${'Notification channel'} :options=${channels} bind-value=${groupValue} />
+    </Demo>
+
+    <Demo :id=${'cards'} :title=${'Card layout'} :code=${cards} :filename=${'radio-cards.jcr'}>
+      <RadioGroup :label=${'Plan'} :layout=${'cards'} :options=${plans} bind-value=${cardValue} />
+    </Demo>
+
+    <Demo :id=${'disabled-option'} :title=${'Disabled option'} :code=${disabledOption} :filename=${'radio-disabled-option.jcr'}>
+      <RadioGroup :label=${'Shipping'} :options=${shipping} bind-value=${shippingValue} />
+    </Demo>
+
+    <Demo :id=${'states'} :title=${'Individual disabled state'} :code=${states} :filename=${'radio-states.jcr'}>
+      <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+        <Radio :label=${'Enabled'} :value=${'enabled'} :name=${'state'} bind-modelValue=${statesValue} />
+        <Radio :label=${'Unavailable'} :value=${'unavailable'} :name=${'state'} :disabled=${true} bind-modelValue=${statesValue} />
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

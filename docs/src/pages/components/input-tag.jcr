@@ -9,9 +9,10 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/input-tag.js'
+import { basic, clearable, delimiter, limit, playgroundCode as buildPlaygroundCode, states } from '../../examples/input-tag.js'
 
 const contract = getContract('InputTag')
 const navLinks = previousNext('/components/input-tag')
@@ -23,6 +24,20 @@ const playMax = pulse('')
 const playClearable = pulse(true)
 const playDisabled = pulse(false)
 const basicValue = pulse(['vue', 'react'])
+const delimiterValue = pulse(['design'])
+const limitValue = pulse(['frontend', 'accessibility'])
+const clearValue = pulse(['vue', 'jacare'])
+const fixedValue = pulse(['core', 'ui'])
+const requiredValue = pulse([])
+const errorValue = pulse(['draft'])
+const disabledValue = pulse(['locked', 'archived'])
+const a11y = [
+  'Every tag remove button includes the tag text in its accessible name',
+  'Backspace removes the last tag only when the text field is empty',
+  'The configured delimiter and blur both commit non-empty, unique tags',
+  'required is visible in the label and error text is announced with role="alert"',
+  'At the max limit the entry field is disabled while existing tags remain removable',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -44,7 +59,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Inputs'}
       :title=${'InputTag'}
       :description=${'Free-form tag entry with delimiter commit, duplicate guarding, and a max tag limit.'}
       :status=${'stable'}
@@ -81,6 +96,33 @@ export <view>
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'input-tag-basic.jcr'}>
       <InputTag :label=${'Frameworks'} :placeholder=${'Add a framework'} bind-value=${basicValue} />
     </Demo>
+
+    <Demo :id=${'delimiter'} :title=${'Custom delimiter'} :code=${delimiter} :filename=${'input-tag-delimiter.jcr'}>
+      <InputTag :label=${'Skills'} :delimiter=${','} :hint=${'Press comma to add each skill'} bind-value=${delimiterValue} />
+    </Demo>
+
+    <Demo :id=${'limit'} :title=${'Tag limit'} :code=${limit} :filename=${'input-tag-limit.jcr'}>
+      <InputTag :label=${'Topics'} :max=${3} :placeholder=${'Add one more topic'} :hint=${'Maximum of three topics'} bind-value=${limitValue} />
+    </Demo>
+
+    <Demo :id=${'clearable'} :title=${'Clear behavior'} :code=${clearable} :filename=${'input-tag-clearable.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <InputTag :label=${'Clearable'} :clearable=${true} bind-value=${clearValue} />
+        <InputTag :label=${'No clear-all action'} :clearable=${false} bind-value=${fixedValue} />
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'states'} :title=${'Validation and disabled states'} :code=${states} :filename=${'input-tag-states.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <InputTag :label=${'Required labels'} :required=${true} :hint=${'Add at least one label'} bind-value=${requiredValue} />
+        <InputTag :label=${'Release labels'} :error=${'Draft is not allowed here'} bind-value=${errorValue} />
+        <InputTag :label=${'Read-only labels'} :disabled=${true} bind-value=${disabledValue} />
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

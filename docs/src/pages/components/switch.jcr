@@ -58,7 +58,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Selection'}
       :title=${'Switch'}
       :description=${'Toggle for on/off settings. Prefer Switch over Checkbox when the change applies immediately. Bind checked to a pulse and provide a clear label.'}
       :status=${'stable'}

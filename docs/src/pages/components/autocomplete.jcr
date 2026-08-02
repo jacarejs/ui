@@ -2,6 +2,8 @@ import { pulse } from '@jacare/core'
 import Field from '@jacare/ui/components/Field.jcr'
 import Switch from '@jacare/ui/components/Switch.jcr'
 import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import Segmented from '@jacare/ui/components/Segmented.jcr'
 import Autocomplete from '@jacare/ui/components/Autocomplete.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
@@ -9,21 +11,127 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/autocomplete.js'
+import {
+  asyncLoading,
+  basic,
+  objectSuggestions,
+  playgroundCode as buildPlaygroundCode,
+  serverSide,
+  states,
+} from '../../examples/autocomplete.js'
 
 const contract = getContract('Autocomplete')
 const navLinks = previousNext('/components/autocomplete')
 
 const suggestions = ['Apple', 'Apricot', 'Banana', 'Blueberry', 'Cherry', { value: 'dragon', label: 'Dragonfruit' }]
 
+const loadingDebounceOptions = [
+  { value: 0, label: '0ms' },
+  { value: 150, label: '150ms' },
+  { value: 250, label: '250ms' },
+  { value: 500, label: '500ms' },
+  { value: 800, label: '800ms' },
+]
+
+const serverDebounceOptions = [
+  { value: 0, label: '0ms' },
+  { value: 150, label: '150ms' },
+  { value: 300, label: '300ms' },
+  { value: 500, label: '500ms' },
+  { value: 800, label: '800ms' },
+]
+
 const playLabel = pulse('Fruit')
 const playPlaceholder = pulse('Search fruit')
 const playValue = pulse('')
 const playClearable = pulse(true)
 const playDisabled = pulse(false)
+const playDebounce = pulse(150)
 const basicValue = pulse('')
+const objectValue = pulse('')
+const invalidValue = pulse('')
+const lockedValue = pulse('Banana')
+
+const asyncValue = pulse('')
+const asyncLoadingState = pulse(false)
+const asyncResults = pulse([])
+const asyncDebounce = pulse(250)
+
+const serverValue = pulse('')
+const serverLoading = pulse(false)
+const serverResults = pulse([])
+const serverStatus = pulse('Idle — type to query the API')
+const serverDebounce = pulse(300)
+
+const fruitCatalog = ['Apple', 'Apricot', 'Banana', 'Blueberry', 'Cherry', 'Dragonfruit', 'Grape', 'Mango']
+let asyncRequestId = 0
+
+function searchFruitsAsync(query) {
+  const id = ++asyncRequestId
+  asyncLoadingState.set(true)
+  asyncResults.set([])
+  window.setTimeout(() => {
+    if (id !== asyncRequestId) return
+    const q = String(query || '').trim().toLowerCase()
+    asyncResults.set(!q ? fruitCatalog.slice() : fruitCatalog.filter((item) => item.toLowerCase().includes(q)))
+    asyncLoadingState.set(false)
+  }, 550)
+}
+
+const cityDb = [
+  { value: 'sao-paulo', label: 'São Paulo' },
+  { value: 'rio', label: 'Rio de Janeiro' },
+  { value: 'lisbon', label: 'Lisbon' },
+  { value: 'porto', label: 'Porto' },
+  { value: 'madrid', label: 'Madrid' },
+  { value: 'barcelona', label: 'Barcelona' },
+  { value: 'buenos-aires', label: 'Buenos Aires' },
+  { value: 'santiago', label: 'Santiago' },
+]
+let serverRequestId = 0
+
+async function fetchCities(query) {
+  await new Promise((resolve) => window.setTimeout(resolve, 700))
+  const q = String(query || '').trim().toLowerCase()
+  if (!q) return []
+  return cityDb.filter((city) => city.label.toLowerCase().includes(q))
+}
+
+async function searchCitiesServer(query) {
+  const id = ++serverRequestId
+  const q = String(query || '').trim()
+  if (!q) {
+    serverResults.set([])
+    serverLoading.set(false)
+    serverStatus.set('Idle — type to query the API')
+    return
+  }
+  serverLoading.set(true)
+  serverResults.set([])
+  serverStatus.set(`Requesting /cities?q=${q}…`)
+  const matches = await fetchCities(q)
+  if (id !== serverRequestId) return
+  serverResults.set(matches)
+  serverLoading.set(false)
+  serverStatus.set(`API returned ${matches.length} city(ies) for "${q}"`)
+}
+
+const airportSuggestions = [
+  { value: 'gru', label: 'Guarulhos' },
+  { value: 'gig', label: 'Rio de Janeiro' },
+  { value: 'lis', label: 'Lisbon' },
+]
+
+const a11yItems = [
+  'The text field exposes combobox and list autocomplete semantics',
+  'Suggestions use listbox and option roles',
+  'aria-busy reflects the loading state while a remote search is in flight',
+  'Escape closes the suggestion panel and clear has an accessible label',
+  'Errors are announced with role="alert"; disabled fields remain non-interactive',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -32,7 +140,20 @@ function playgroundCode() {
     value: playValue(),
     clearable: playClearable(),
     disabled: playDisabled(),
+    debounce: Number(playDebounce()) || 0,
   })
+}
+
+function playDebounceMs() {
+  return Number(playDebounce()) || 0
+}
+
+function asyncDebounceMs() {
+  return Number(asyncDebounce()) || 0
+}
+
+function serverDebounceMs() {
+  return Number(serverDebounce()) || 0
 }
 
 export <view>
@@ -44,9 +165,9 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Inputs'}
       :title=${'Autocomplete'}
-      :description=${'Text input with a filtered suggestion list. Pass strings or {value, label} objects and bind the selected text to a pulse.'}
+      :description=${'Text input with a suggestion list. Filter locally, or set remote and handle on-search while driving loading and suggestions from the parent.'}
       :status=${'stable'}
     />
 
@@ -55,6 +176,10 @@ export <view>
         <div class="docs-alert-play__controls docs-panel">
           <Field :label=${'Label'} bind-value=${playLabel} />
           <Field :label=${'Placeholder'} bind-value=${playPlaceholder} />
+          <Stack :gap=${'sm'}>
+            <Text :tone=${'muted'} :size=${'sm'}>Debounce</Text>
+            <Segmented bind-value=${playDebounce} :options=${serverDebounceOptions} :block=${true} />
+          </Stack>
           <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
             <Switch :label=${'Clearable'} bind-checked=${playClearable} />
             <Switch :label=${'Disabled'} bind-checked=${playDisabled} />
@@ -69,6 +194,8 @@ export <view>
               :suggestions=${suggestions}
               :clearable=${playClearable}
               :disabled=${playDisabled}
+              :debounce=${() => playDebounceMs()}
+              :hint=${() => `Filtering waits ${playDebounceMs()}ms after typing`}
               bind-value=${playValue}
             />
           </div>
@@ -80,6 +207,57 @@ export <view>
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'autocomplete-basic.jcr'}>
       <Autocomplete :label=${'Fruit'} :suggestions=${suggestions} :placeholder=${'Search fruit'} bind-value=${basicValue} />
     </Demo>
+
+    <Demo :id=${'objects'} :title=${'Object suggestions'} :lead=${'Use value/label objects when display text differs from your source identifier.'} :code=${objectSuggestions} :filename=${'autocomplete-objects.jcr'}>
+      <Autocomplete :label=${'Airport'} :suggestions=${airportSuggestions} bind-value=${objectValue} />
+    </Demo>
+
+    <Demo :id=${'async-loading'} :title=${'Search with loading'} :lead=${'Pick a debounce, then type. search waits for the delay and shows loading while results resolve.'} :code=${asyncLoading} :filename=${'autocomplete-async-loading.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <Segmented bind-value=${asyncDebounce} :options=${loadingDebounceOptions} :block=${true} />
+        <Autocomplete
+          :label=${'Fruit'}
+          :placeholder=${'Type to search…'}
+          :suggestions=${asyncResults}
+          :remote=${true}
+          :loading=${asyncLoadingState}
+          :debounce=${() => asyncDebounceMs()}
+          :hint=${() => `search waits ${asyncDebounceMs()}ms, then shows loading`}
+          bind-value=${asyncValue}
+          on-search=${searchFruitsAsync}
+        />
+        <Text :tone=${'muted'}>Active debounce: ${asyncDebounce}ms</Text>
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'server-side'} :title=${'Server-side search'} :lead=${'Debounce controls how soon the API request starts after typing settles.'} :code=${serverSide} :filename=${'autocomplete-server-side.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <Segmented bind-value=${serverDebounce} :options=${serverDebounceOptions} :block=${true} />
+        <Autocomplete
+          :label=${'City'}
+          :placeholder=${'Search cities…'}
+          :suggestions=${serverResults}
+          :remote=${true}
+          :loading=${serverLoading}
+          :debounce=${() => serverDebounceMs()}
+          :hint=${() => `Server request starts after ${serverDebounceMs()}ms`}
+          bind-value=${serverValue}
+          on-search=${searchCitiesServer}
+        />
+        <Text :tone=${'muted'}>Active debounce: ${serverDebounce}ms · ${serverStatus}</Text>
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'states'} :title=${'Error and disabled'} :code=${states} :filename=${'autocomplete-states.jcr'}>
+      <Stack :gap=${'md'}>
+        <Autocomplete :label=${'Fruit'} :suggestions=${suggestions} :error=${'Choose a listed fruit'} bind-value=${invalidValue} />
+        <Autocomplete :label=${'Locked fruit'} :suggestions=${suggestions} :disabled=${true} bind-value=${lockedValue} />
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11yItems} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

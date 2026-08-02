@@ -1,0 +1,88 @@
+import Affix from '@jacare/ui/components/Affix.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, offset, bottom, stacking } from '../../examples/affix.js'
+
+const contract = getContract('Affix')
+const navLinks = previousNext('/components/affix')
+
+const a11y = [
+  'Affix does not change the semantic role of its content',
+  'Ensure sticky content does not cover focused elements or headings',
+  'Reserve enough space at high zoom and on narrow screens',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Affix</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Layout'}
+      :title=${'Affix'}
+      :description=${'Sticky wrapper for keeping controls visible at a top or bottom offset with an explicit stacking level.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Top affix'}
+      :lead=${'The default top position sticks at the viewport edge.'}
+      :code=${basic}
+      :filename=${'affix-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <div style="min-height:12rem"><Affix><Button :size=${'sm'}>Sticky action</Button></Affix><p>Scroll the page to see the action remain available.</p></div>
+    </Demo>
+    <Demo
+      :id=${'offset'}
+      :title=${'Header offset'}
+      :lead=${'offset leaves room for persistent headers or safe areas.'}
+      :code=${offset}
+      :filename=${'affix-offset.jcr'}
+      :layout=${'stack'}
+    >
+      <div style="min-height:12rem"><Affix :offset=${72}><Button :variant=${'secondary'}>Below header</Button></Affix></div>
+    </Demo>
+    <Demo
+      :id=${'bottom'}
+      :title=${'Bottom position'}
+      :lead=${'Use bottom for persistent contextual actions and zIndex to define stacking.'}
+      :code=${bottom}
+      :filename=${'affix-bottom.jcr'}
+      :layout=${'stack'}
+    >
+      <div style="min-height:12rem;display:flex;flex-direction:column"><div style="flex:1">Scrollable content</div><Affix :position=${'bottom'} :offset=${16} :zIndex=${120}><Button>Continue</Button></Affix></div>
+    </Demo>
+    <Demo
+      :id=${'stacking'}
+      :title=${'Stacking level'}
+      :lead=${'Raise zIndex when an affixed control must remain above nearby surfaces.'}
+      :code=${stacking}
+      :filename=${'affix-stacking.jcr'}
+      :layout=${'stack'}
+    >
+      <div style="min-height:12rem"><Affix :offset=${24} :zIndex=${200}><Button :variant=${'secondary'}>Sticky above content</Button></Affix></div>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

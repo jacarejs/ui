@@ -1,0 +1,103 @@
+import Image from '@jacare/ui/components/Image.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, fits, lazy, preview, fallback } from '../../examples/image.js'
+
+const contract = getContract('Image')
+const navLinks = previousNext('/components/image')
+const demoSrc = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 320 160%27%3E%3Crect width=%27320%27 height=%27160%27 rx=%2716%27 fill=%27%23dcefe8%27/%3E%3Ccircle cx=%2790%27 cy=%2770%27 r=%2732%27 fill=%27%2378b99f%27/%3E%3Cpath d=%27M0 150l95-70 55 38 62-55 108 87z%27 fill=%27%23235548%27/%3E%3C/svg%3E'
+const a11y = [
+  'Provide meaningful alt text for informative images',
+  'Use an empty alt value for decorative images',
+  'Fallback content should communicate the failed image purpose',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Image</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'Image'}
+      :description=${'Responsive image with object-fit, native lazy loading, preview mode, and a fallback slot.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :code=${basic}
+      :filename=${'image-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Image :src=${demoSrc} :alt=${'Abstract green landscape'} />
+    </Demo>
+
+    <Demo
+      :id=${'fits'}
+      :title=${'Object fit'}
+      :code=${fits}
+      :filename=${'image-fits.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+        <Image :src=${demoSrc} :alt=${'Cover fit'} :fit=${'cover'} />
+        <Image :src=${demoSrc} :alt=${'Contain fit'} :fit=${'contain'} />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'lazy'}
+      :title=${'Lazy loading'}
+      :code=${lazy}
+      :filename=${'image-lazy.jcr'}
+      :layout=${'stack'}
+    >
+      <Image :src=${demoSrc} :alt=${'Lazy-loaded landscape'} :lazy=${true} />
+    </Demo>
+
+    <Demo
+      :id=${'preview'}
+      :title=${'Preview'}
+      :code=${preview}
+      :filename=${'image-preview.jcr'}
+      :layout=${'stack'}
+    >
+      <Image :src=${demoSrc} :alt=${'Previewable landscape'} :preview=${true} />
+    </Demo>
+
+    <Demo
+      :id=${'fallback'}
+      :title=${'Error fallback'}
+      :lead=${'The default slot replaces a source that emits an error.'}
+      :code=${fallback}
+      :filename=${'image-fallback.jcr'}
+      :layout=${'stack'}
+    >
+      <Image :src=${'data:image/png;base64,broken'} :alt=${'Unavailable release artwork'}>
+        Release artwork could not be loaded
+      </Image>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

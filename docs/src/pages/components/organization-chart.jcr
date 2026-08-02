@@ -1,0 +1,367 @@
+import { pulse } from '@jacare/core'
+import Card from '@jacare/ui/components/Card.jcr'
+import OrganizationChart from '@jacare/ui/components/OrganizationChart.jcr'
+import Select from '@jacare/ui/components/Select.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  collapsed,
+  deep,
+  departments,
+  inCard,
+  labelsOnly,
+  playgroundCode as buildPlaygroundCode,
+  selection,
+  single,
+  staticTree,
+  wide,
+} from '../../examples/organization-chart.js'
+
+const contract = getContract('OrganizationChart')
+const navLinks = previousNext('/components/organization-chart')
+
+const selectionOptions = [
+  { value: '', label: 'None' },
+  { value: 'single', label: 'Single' },
+  { value: 'multiple', label: 'Multiple' },
+]
+
+const orgData = {
+  key: 'ceo',
+  label: 'Alex Morgan',
+  description: 'Chief Executive Officer',
+  children: [
+    {
+      key: 'ops',
+      label: 'Jordan Lee',
+      description: 'Operations',
+      children: [
+        { key: 'support', label: 'Support', description: 'Customer success' },
+        { key: 'logistics', label: 'Logistics', description: 'Fulfillment' },
+      ],
+    },
+    {
+      key: 'product',
+      label: 'Sam Rivera',
+      description: 'Product',
+      children: [
+        { key: 'design', label: 'Design', description: 'UX and brand' },
+        { key: 'engineering', label: 'Engineering', description: 'Platform' },
+      ],
+    },
+  ],
+}
+
+const deepData = {
+  key: 'ceo',
+  label: 'Alex Morgan',
+  description: 'CEO',
+  children: [
+    {
+      key: 'cto',
+      label: 'Riley Chen',
+      description: 'CTO',
+      children: [
+        {
+          key: 'platform',
+          label: 'Platform',
+          description: 'Core services',
+          children: [
+            { key: 'api', label: 'API', description: 'Public APIs' },
+            { key: 'data', label: 'Data', description: 'Warehousing' },
+          ],
+        },
+        {
+          key: 'apps',
+          label: 'Applications',
+          description: 'Product UI',
+          children: [
+            { key: 'web', label: 'Web', description: 'Docs and app' },
+            { key: 'mobile', label: 'Mobile', description: 'iOS / Android' },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
+const wideData = {
+  key: 'pm',
+  label: 'Sam Rivera',
+  description: 'Product lead',
+  children: [
+    { key: 'research', label: 'Research', description: 'Discovery' },
+    { key: 'design', label: 'Design', description: 'UX' },
+    { key: 'frontend', label: 'Frontend', description: 'Web' },
+    { key: 'backend', label: 'Backend', description: 'Services' },
+    { key: 'qa', label: 'QA', description: 'Quality' },
+  ],
+}
+
+const labelsData = {
+  key: 'hq',
+  label: 'Headquarters',
+  children: [
+    { key: 'sales', label: 'Sales' },
+    { key: 'marketing', label: 'Marketing' },
+    { key: 'finance', label: 'Finance' },
+  ],
+}
+
+const singleData = {
+  key: 'ceo',
+  label: 'Alex Morgan',
+  description: 'CEO',
+  children: [
+    { key: 'ops', label: 'Operations', description: 'Jordan Lee' },
+    { key: 'product', label: 'Product', description: 'Sam Rivera' },
+    { key: 'finance', label: 'Finance', description: 'Casey Park' },
+  ],
+}
+
+const departmentsData = {
+  key: 'company',
+  label: 'Jacaré UI',
+  description: 'Product company',
+  children: [
+    {
+      key: 'design-system',
+      label: 'Design System',
+      description: 'Tokens and docs',
+      children: [
+        { key: 'tokens', label: 'Tokens', description: 'Color / space' },
+        { key: 'docs', label: 'Docs', description: 'Guides' },
+      ],
+    },
+    {
+      key: 'components',
+      label: 'Components',
+      description: 'UI kit',
+      children: [
+        { key: 'forms', label: 'Forms', description: 'Inputs' },
+        { key: 'display', label: 'Display', description: 'Tables' },
+      ],
+    },
+  ],
+}
+
+const cardData = {
+  key: 'ceo',
+  label: 'Alex Morgan',
+  description: 'CEO',
+  children: [
+    { key: 'ops', label: 'Operations', description: 'Jordan Lee' },
+    { key: 'product', label: 'Product', description: 'Sam Rivera' },
+  ],
+}
+
+const playCollapsible = pulse(true)
+const playSelectionMode = pulse('multiple')
+const playSelection = pulse(['product'])
+
+const selected = pulse(['product', 'design'])
+const singleSelected = pulse(['ops'])
+
+const a11y = [
+  'Keep node labels concise and unique within the chart',
+  'Use selection mode only when users need to act on nodes',
+  'Preserve hierarchy order so screen reader tree traversal stays logical',
+  'Descriptions are optional supporting text — put critical meaning in the label',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    collapsible: playCollapsible(),
+    selectionMode: playSelectionMode(),
+  })
+}
+
+function selectionLabel() {
+  const mode = playSelectionMode()
+  if (!mode) return 'Selection disabled'
+  const keys = playSelection()
+  return 'Selected: ' + (keys.length ? keys.join(', ') : 'none')
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>OrganizationChart</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'OrganizationChart'}
+      :description=${'Horizontal organization hierarchy with connector lines, collapsible branches, and optional single or multiple selection. Pass a rooted value tree with key, label, description, and children.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Select :label=${'Selection mode'} :options=${selectionOptions} bind-value=${playSelectionMode} />
+          <Switch :label=${'Collapsible'} bind-checked=${playCollapsible} />
+          <Text :tone=${'muted'}>${() => selectionLabel()}</Text>
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <OrganizationChart
+              :value=${orgData}
+              :collapsible=${playCollapsible}
+              :selectionMode=${playSelectionMode}
+              bind-selection=${playSelection}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'organization-chart-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Pass a root node with nested children. Labels and descriptions render on each card.'}
+      :code=${basic}
+      :filename=${'organization-chart-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <OrganizationChart :value=${orgData} />
+    </Demo>
+
+    <DocsSection :id=${'shapes'} :title=${'Tree shapes'}>
+      <Demo
+        :id=${'labels-only'}
+        :title=${'Labels only'}
+        :lead=${'Omit description for a compact department map.'}
+        :code=${labelsOnly}
+        :filename=${'organization-chart-labels.jcr'}
+        :layout=${'stack'}
+      >
+        <OrganizationChart :value=${labelsData} :collapsible=${false} />
+      </Demo>
+
+      <Demo
+        :id=${'deep'}
+        :title=${'Deep hierarchy'}
+        :lead=${'Four levels of nesting — collapse parents to focus the branch.'}
+        :code=${deep}
+        :filename=${'organization-chart-deep.jcr'}
+        :layout=${'stack'}
+      >
+        <OrganizationChart :value=${deepData} />
+      </Demo>
+
+      <Demo
+        :id=${'wide'}
+        :title=${'Wide team'}
+        :lead=${'Many siblings under one parent — the chart scrolls horizontally when needed.'}
+        :code=${wide}
+        :filename=${'organization-chart-wide.jcr'}
+        :layout=${'stack'}
+      >
+        <OrganizationChart :value=${wideData} :collapsible=${false} />
+      </Demo>
+
+      <Demo
+        :id=${'departments'}
+        :title=${'Product departments'}
+        :lead=${'Model product areas and squads as nested org nodes.'}
+        :code=${departments}
+        :filename=${'organization-chart-departments.jcr'}
+        :layout=${'stack'}
+      >
+        <OrganizationChart :value=${departmentsData} />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'options'} :title=${'Options'}>
+      <Demo
+        :id=${'selection'}
+        :title=${'Multiple selection'}
+        :lead=${"selectionMode='multiple' binds an array of node keys."}
+        :code=${selection}
+        :filename=${'organization-chart-selection.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'md'}>
+          <OrganizationChart :value=${orgData} :selectionMode=${'multiple'} bind-selection=${selected} />
+          <Text :tone=${'muted'}>${() => 'Selected: ' + (selected().join(', ') || 'none')}</Text>
+        </Stack>
+      </Demo>
+
+      <Demo
+        :id=${'single'}
+        :title=${'Single selection'}
+        :lead=${"selectionMode='single' keeps at most one key selected."}
+        :code=${single}
+        :filename=${'organization-chart-single.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'md'}>
+          <OrganizationChart :value=${singleData} :selectionMode=${'single'} bind-selection=${singleSelected} />
+          <Text :tone=${'muted'}>${() => 'Active: ' + (singleSelected()[0] || 'none')}</Text>
+        </Stack>
+      </Demo>
+
+      <Demo
+        :id=${'collapsed'}
+        :title=${'Collapsible branches'}
+        :lead=${'Toggle branch visibility with the inline expand control on parent nodes.'}
+        :code=${collapsed}
+        :filename=${'organization-chart-collapsed.jcr'}
+        :layout=${'stack'}
+      >
+        <OrganizationChart :value=${orgData} :collapsible=${true} />
+      </Demo>
+
+      <Demo
+        :id=${'static-tree'}
+        :title=${'Always expanded'}
+        :lead=${'Set collapsible to false to hide expand controls and keep every level open.'}
+        :code=${staticTree}
+        :filename=${'organization-chart-static.jcr'}
+        :layout=${'stack'}
+      >
+        <OrganizationChart :value=${cardData} :collapsible=${false} />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'in-card'}
+        :title=${'Inside Card'}
+        :lead=${'Nest the chart in Card for leadership snapshots and settings pages.'}
+        :code=${inCard}
+        :filename=${'organization-chart-in-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Leadership'} :subtitle=${'Current org snapshot'}>
+          <OrganizationChart :value=${cardData} :collapsible=${false} />
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

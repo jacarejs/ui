@@ -15,6 +15,7 @@ import { previousNext } from '../../nav-data.js'
 import {
   basic,
   bounds,
+  fixedMonth,
   manualApply,
   playgroundCode as buildPlaygroundCode,
   rangeExample,
@@ -33,6 +34,7 @@ const playDisabled = pulse(false)
 const playRange = pulse(false)
 const playAutoApply = pulse(true)
 const playClearable = pulse(true)
+const playNavigable = pulse(true)
 const playMin = pulse('')
 const playMax = pulse('')
 const playValue = pulse('')
@@ -41,6 +43,7 @@ const basicValue = pulse('')
 const rangeValue = pulse([])
 const boundsValue = pulse('')
 const manualApplyValue = pulse([])
+const fixedMonthValue = pulse('2026-07-15')
 const statesRequiredValue = pulse('')
 const statesErrorValue = pulse('')
 const statesDisabledValue = pulse('')
@@ -50,6 +53,7 @@ const a11y = [
   'Typed input uses a masked MM/DD/YYYY value and keeps an ISO value in data-iso',
   'required sets aria-required; error sets aria-invalid and role="alert" copy',
   'Escape and outside pointer dismiss the panel; disabled blocks opening and typing',
+  'navigable=false shows month and year as text and keeps the panel on that month',
 ]
 
 function currentPlayValue() {
@@ -71,6 +75,7 @@ function playgroundCode() {
     placeholder: playPlaceholder(),
     range: playRange(),
     autoApply: playAutoApply(),
+    navigable: playNavigable(),
     min: playMin(),
     max: playMax(),
     required: playRequired(),
@@ -88,7 +93,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Pickers'}
       :title=${'DatePicker'}
       :description=${'Typed or calendar date input with optional range, bounds, and clear. Bind value to a pulse as an ISO string or a two-date array.'}
       :status=${'stable'}
@@ -110,6 +115,7 @@ export <view>
             <Switch :label=${'Range'} bind-checked=${playRange} />
             <Switch :label=${'Auto apply'} bind-checked=${playAutoApply} />
             <Switch :label=${'Clearable'} bind-checked=${playClearable} />
+            <Switch :label=${'Navigable'} bind-checked=${playNavigable} />
           </Stack>
         </div>
 
@@ -122,6 +128,7 @@ export <view>
               :range=${playRange}
               :autoApply=${playAutoApply}
               :clearable=${playClearable}
+              :navigable=${playNavigable}
               :min=${playMin}
               :max=${playMax}
               :required=${playRequired}
@@ -155,6 +162,21 @@ export <view>
       <Demo :id=${'bounds-demo'} :title=${'Bounded appointment'} :code=${bounds} :filename=${'date-picker-bounds.jcr'} :layout=${'rail'}>
         <div style="width:min(20rem,100%)">
           <DatePicker :label=${'Appointment'} :min=${'2026-01-01'} :max=${'2026-12-31'} bind-value=${boundsValue} />
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'fixed-month'} :title=${'Fixed month and year'}>
+      <p class="docs-lead">Set <code>navigable</code>${' '}to <code>false</code>${' '}to show month and year as text without month or year controls.</p>
+      <Demo :id=${'fixed-month-demo'} :title=${'July day'} :code=${fixedMonth} :filename=${'date-picker-fixed-month.jcr'} :layout=${'stack'}>
+        <div style="width:min(20rem,100%)">
+          <DatePicker
+            :label=${'July day'}
+            :navigable=${false}
+            :min=${'2026-07-01'}
+            :max=${'2026-07-31'}
+            bind-value=${fixedMonthValue}
+          />
         </div>
       </Demo>
     </DocsSection>

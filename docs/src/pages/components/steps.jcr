@@ -1,0 +1,56 @@
+import { pulse } from '@jacare/core'
+import Steps from '@jacare/ui/components/Steps.jcr'
+import Step from '@jacare/ui/components/Step.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, controlled, vertical, statuses, simple, centered, error_finish } from '../../examples/steps.js'
+
+const contract = getContract('Steps')
+const navLinks = previousNext('/components/steps')
+const active = pulse(0)
+const a11y = [
+  'Use concise titles that explain each stage',
+  'Pair status colors and icons with readable labels',
+  'Keep the current step synchronized with the completed workflow state',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb"><a jacare-go="/components" href="/components">Components</a><span aria-hidden="true">/</span><span>Steps</span></nav>
+    <DocsHero :kicker=${'Navigation'} :title=${'Steps'} :description=${'Progress sequence for multi-stage workflows with horizontal, vertical, centered, simple, and custom status modes.'} :status=${'stable'} />
+
+    <Demo :id=${'basic'} :title=${'Basic sequence'} :code=${basic} :filename=${'steps-basic.jcr'} :layout=${'stack'}>
+      <Steps :active=${1}><Step :title=${'Account'} :description=${'Create your profile'} /><Step :title=${'Plan'} :description=${'Choose a plan'} /><Step :title=${'Finish'} :description=${'Invite your team'} /></Steps>
+    </Demo>
+    <Demo :id=${'controlled'} :title=${'Controlled progress'} :code=${controlled} :filename=${'steps-controlled.jcr'} :layout=${'stack'}>
+      <Steps bind-active=${active}><Step :title=${'Draft'} /><Step :title=${'Review'} /><Step :title=${'Publish'} /></Steps>
+      <Button on-press=${() => active.set(Math.min(active() + 1, 2))}>Next step</Button>
+    </Demo>
+    <Demo :id=${'vertical'} :title=${'Vertical'} :code=${vertical} :filename=${'steps-vertical.jcr'} :layout=${'stack'}>
+      <Steps :active=${1} :direction=${'vertical'}><Step :title=${'Order received'} :description=${'09:20'} /><Step :title=${'Preparing'} :description=${'In progress'} /><Step :title=${'Delivered'} /></Steps>
+    </Demo>
+    <Demo :id=${'statuses'} :title=${'Custom statuses'} :code=${statuses} :filename=${'steps-statuses.jcr'} :layout=${'stack'}>
+      <Steps :active=${2} :finishStatus=${'success'} :processStatus=${'error'}><Step :title=${'Upload'} /><Step :title=${'Validate'} /><Step :title=${'Deploy'} /></Steps>
+    </Demo>
+    <Demo :id=${'simple'} :title=${'Simple and centered'} :code=${simple} :filename=${'steps-simple.jcr'} :layout=${'stack'}>
+      <Steps :active=${1} :simple=${true} :alignCenter=${true}><Step :title=${'Details'} /><Step :title=${'Payment'} /><Step :title=${'Done'} /></Steps>
+    </Demo>
+    <Demo :id=${'centered'} :title=${'Centered descriptions and icons'} :code=${centered} :filename=${'steps-centered.jcr'} :layout=${'stack'}>
+      <Steps :active=${1} :direction=${'horizontal'} :alignCenter=${true}><Step :title=${'Account'} :description=${'Complete'} :icon=${'✓'} /><Step :title=${'Profile'} :description=${'In progress'} :icon=${'2'} /><Step :title=${'Launch'} :description=${'Waiting'} :icon=${'★'} /></Steps>
+    </Demo>
+    <Demo :id=${'error-finish'} :title=${'Error finish and success process'} :code=${error_finish} :filename=${'steps-error-finish.jcr'} :layout=${'stack'}>
+      <Steps :active=${2} :finishStatus=${'error'} :processStatus=${'success'}><Step :title=${'Upload'} /><Step :title=${'Scan'} /><Step :title=${'Resolved'} /></Steps>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}><AccessibilityChecklist :items=${a11y} /></DocsSection>
+    <DocsSection :id=${'api'} :title=${'API'}><PropsTable :contract=${contract} /></DocsSection>
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -1,0 +1,154 @@
+import { pulse } from '@jacare/core'
+import MonthPicker from '@jacare/ui/components/MonthPicker.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  bounds,
+  disabledExample,
+  hintAndError,
+  inlineExample,
+  reactive,
+} from '../../examples/month-picker.js'
+
+const contract = getContract('MonthPicker')
+const navLinks = previousNext('/components/month-picker')
+
+const month = pulse('2026-08')
+const inlineMonth = pulse('2026-03')
+const bounded = pulse('2026-06')
+const hinted = pulse('')
+const invalid = pulse('')
+const locked = pulse('2025-12')
+const shared = pulse('2026-08')
+
+const a11y = [
+  'Default mode uses a labeled trigger with aria-haspopup for the dropdown picker',
+  'Month grid is a listbox; year navigation buttons are labeled',
+  'Selecting a month closes the picker; Clear empties the YYYY-MM value',
+  'error uses role="alert"; hint appears under the control when there is no error',
+  'disabled dims the control and blocks opening, navigation, and selection',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>MonthPicker</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Pickers'}
+      :title=${'MonthPicker'}
+      :description=${'Pick a YYYY-MM competence from a dropdown field, or show the month grid inline without a full calendar.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Picker'}
+      :lead=${'Default mode — open the field to choose month and year. Value stays ISO YYYY-MM.'}
+      :code=${basic}
+      :filename=${'month-picker-basic.jcr'}
+    >
+      <MonthPicker :label=${'Competence'} bind-value=${month} />
+    </Demo>
+
+    <Demo
+      :id=${'inline'}
+      :title=${'Inline panel'}
+      :lead=${'Pass inline to keep the month grid always visible — useful in filters and side panels.'}
+      :code=${inlineExample}
+      :filename=${'month-picker-inline.jcr'}
+    >
+      <MonthPicker
+        :label=${'Inline panel'}
+        :inline=${true}
+        bind-value=${inlineMonth}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'bounds'}
+      :title=${'Min and max'}
+      :lead=${'Disable months outside a YYYY-MM range.'}
+      :code=${bounds}
+      :filename=${'month-picker-bounds.jcr'}
+    >
+      <MonthPicker
+        :label=${'Reporting window'}
+        :min=${'2026-03'}
+        :max=${'2026-09'}
+        :hint=${'Only Mar–Sep 2026 are selectable'}
+        bind-value=${bounded}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'hint-error'}
+      :title=${'Hint and error'}
+      :lead=${'placeholder customizes the empty trigger; error replaces hint and marks the field invalid.'}
+      :code=${hintAndError}
+      :filename=${'month-picker-states.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'lg'}>
+        <MonthPicker
+          :label=${'Billing month'}
+          :placeholder=${'Choose competence'}
+          :hint=${'Used for invoices and closings'}
+          bind-value=${hinted}
+        />
+        <MonthPicker
+          :label=${'Required competence'}
+          :error=${'Pick a month to continue'}
+          bind-value=${invalid}
+        />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'disabled'}
+      :title=${'Disabled'}
+      :lead=${'Freeze a closed period — the trigger and grid stay non-interactive.'}
+      :code=${disabledExample}
+      :filename=${'month-picker-disabled.jcr'}
+    >
+      <MonthPicker
+        :label=${'Closed period'}
+        :disabled=${true}
+        :hint=${'Locked after the books were closed'}
+        bind-value=${locked}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'reactive'}
+      :title=${'Shared value'}
+      :lead=${'Picker and inline panel can bind the same pulse — handy when previewing the selected competence.'}
+      :code=${reactive}
+      :filename=${'month-picker-reactive.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <MonthPicker :label=${'Filter month'} bind-value=${shared} />
+        <MonthPicker :label=${'Same value (inline)'} :inline=${true} :clearable=${false} bind-value=${shared} />
+        <Text :tone=${'muted'}>
+          ${() => `ISO value: ${shared() || '(empty)'}`}
+        </Text>
+      </Stack>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

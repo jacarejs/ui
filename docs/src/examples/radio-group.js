@@ -64,6 +64,25 @@ export <view>
   </Stack>
 </view>`
 
+export const optionDisabled = `import { pulse } from '@jacare/core'
+import RadioGroup from '@jacare/ui/RadioGroup'
+
+const region = pulse('americas')
+
+export <view>
+  <RadioGroup
+    :label=\${'Deployment region'}
+    :hint=\${'Unavailable regions remain visible'}
+    :name=\${'deployment-region'}
+    :options=\${[
+      { value: 'americas', label: 'Americas' },
+      { value: 'europe', label: 'Europe' },
+      { value: 'asia', label: 'Asia Pacific', disabled: true },
+    ]}
+    bind-value=\${region}
+  />
+</view>`
+
 function quote(value) {
   return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 }

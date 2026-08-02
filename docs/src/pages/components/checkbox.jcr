@@ -59,7 +59,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Selection'}
       :title=${'Checkbox'}
       :description=${'Boolean choice for forms and filters. Bind checked to a pulse, supply a label prop or slot text, and disable when the field should not change.'}
       :status=${'stable'}

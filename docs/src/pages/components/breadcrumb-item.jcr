@@ -1,0 +1,68 @@
+import Breadcrumb from '@jacare/ui/components/Breadcrumb.jcr'
+import BreadcrumbItem from '@jacare/ui/components/BreadcrumbItem.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { links, currentPage, customSeparator } from '../../examples/breadcrumb-item.js'
+
+const contract = getContract('BreadcrumbItem')
+const navLinks = previousNext('/components/breadcrumb-item')
+const a11y = [
+  'Place BreadcrumbItem elements in hierarchical order inside Breadcrumb',
+  'Use href only for navigable ancestors and omit it for the current page',
+  'Keep item labels concise and meaningful outside surrounding content',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>BreadcrumbItem</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Navigation'}
+      :title=${'BreadcrumbItem'}
+      :description=${'BreadcrumbItem represents one level used inside Breadcrumb. Add href for an ancestor link or omit it to render the current page as text.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'links'} :title=${'Ancestor links'} :lead=${'href turns an item into a link while preserving Breadcrumb list semantics.'} :code=${links} :filename=${'breadcrumb-item-links.jcr'}>
+      <Breadcrumb>
+        <BreadcrumbItem :href=${'#home'}>Home</BreadcrumbItem>
+        <BreadcrumbItem :href=${'#components'}>Components</BreadcrumbItem>
+        <BreadcrumbItem>Breadcrumb</BreadcrumbItem>
+      </Breadcrumb>
+    </Demo>
+    <Demo :id=${'current-page'} :title=${'Current page'} :lead=${'Omit href on the final item so the current location is not an unnecessary link.'} :code=${currentPage} :filename=${'breadcrumb-item-current-page.jcr'}>
+      <Breadcrumb>
+        <BreadcrumbItem :href=${'/'}>Home</BreadcrumbItem>
+        <BreadcrumbItem :href=${'/components'}>Components</BreadcrumbItem>
+        <BreadcrumbItem>BreadcrumbItem</BreadcrumbItem>
+      </Breadcrumb>
+    </Demo>
+    <Demo :id=${'custom-separator'} :title=${'Custom separator'} :lead=${'Items inherit the visual separator configured by their Breadcrumb parent.'} :code=${customSeparator} :filename=${'breadcrumb-item-custom-separator.jcr'}>
+      <Breadcrumb :separator=${'›'}>
+        <BreadcrumbItem :href=${'/docs'}>Docs</BreadcrumbItem>
+        <BreadcrumbItem :href=${'/docs/navigation'}>Navigation</BreadcrumbItem>
+        <BreadcrumbItem>Breadcrumb</BreadcrumbItem>
+      </Breadcrumb>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -1,0 +1,65 @@
+import Collapse from '@jacare/ui/components/Collapse.jcr'
+import CollapseItem from '@jacare/ui/components/CollapseItem.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { namedPanels, accordion, disabled } from '../../examples/collapse-item.js'
+
+const contract = getContract('CollapseItem')
+const navLinks = previousNext('/components/collapse-item')
+const a11y = [
+  'Give every item a unique name within its Collapse parent',
+  'Use short title text that describes the hidden panel content',
+  'Disabled headers remain visible but cannot be focused or toggled',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>CollapseItem</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'CollapseItem'}
+      :description=${'CollapseItem defines a disclosure panel used inside Collapse. name identifies its model value, title labels the header, and disabled prevents toggling.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'named-panels'} :title=${'Named panels'} :lead=${'The required name prop connects each item to the Collapse value.'} :code=${namedPanels} :filename=${'collapse-item-names.jcr'}>
+       <Collapse :value=${['overview']}>
+        <CollapseItem :name=${'overview'} :title=${'Overview'}>Generated docs pages can stay intentionally short.</CollapseItem>
+        <CollapseItem :name=${'api'} :title=${'API'}>Use the contract table below for the full surface area.</CollapseItem>
+       </Collapse>
+    </Demo>
+    <Demo :id=${'accordion'} :title=${'Accordion'} :lead=${'In accordion mode, selecting an item closes the previously open sibling.'} :code=${accordion} :filename=${'collapse-item-accordion.jcr'}>
+      <Collapse :value=${'billing'} :accordion=${true}>
+        <CollapseItem :name=${'billing'} :title=${'Billing'}>Manage invoices and payment methods.</CollapseItem>
+        <CollapseItem :name=${'security'} :title=${'Security'}>Review sessions and access keys.</CollapseItem>
+      </Collapse>
+    </Demo>
+    <Demo :id=${'disabled'} :title=${'Disabled item'} :lead=${'disabled keeps an unavailable panel in context without allowing interaction.'} :code=${disabled} :filename=${'collapse-item-disabled.jcr'}>
+      <Collapse :value=${['available']}>
+        <CollapseItem :name=${'available'} :title=${'Available'}>This panel can be toggled.</CollapseItem>
+        <CollapseItem :name=${'locked'} :title=${'Locked'} :disabled=${true}>Complete setup to unlock.</CollapseItem>
+      </Collapse>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

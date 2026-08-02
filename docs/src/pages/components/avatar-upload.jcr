@@ -1,0 +1,133 @@
+import { pulse } from '@jacare/core'
+import AvatarUpload from '@jacare/ui/components/AvatarUpload.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { acceptOnly, basic, events, prefills, sampleAvatar, sizes, states, withInitials } from '../../examples/avatar-upload.js'
+
+const contract = getContract('AvatarUpload')
+const navLinks = previousNext('/components/avatar-upload')
+
+const photo = pulse('')
+const sizeSmall = pulse('')
+const sizeMedium = pulse('')
+const sizeLarge = pulse('')
+const savedPhoto = pulse(sampleAvatar)
+const pngOnly = pulse('')
+const invalidPhoto = pulse('')
+const lockedPhoto = pulse(sampleAvatar)
+const eventPhoto = pulse('')
+const eventStatus = pulse('Waiting for upload')
+const initialsPhoto = pulse('')
+const initialsName = pulse('Maria Silva')
+
+const a11y = [
+  'Preview button opens the file picker with an accessible label',
+  'When name is set and no photo exists, the preview shows first and last-name initials',
+  'Remove clears the current photo and restores initials when name is present',
+  'Errors are announced with role="alert"; disabled controls stay non-interactive',
+]
+
+function onPhotoChange(next) {
+  eventStatus.set(next ? `Uploaded (${Math.round(next.length / 1024)} KB data URL)` : 'Cleared')
+}
+
+function onPhotoClear() {
+  eventStatus.set('Clear event fired')
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>AvatarUpload</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Upload'}
+      :title=${'AvatarUpload'}
+      :description=${'Profile image upload with circular center crop to a PNG data URL. Pass name to show first and last-name initials until a photo replaces them.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'avatar-upload-basic.jcr'}>
+      <AvatarUpload :label=${'Profile photo'} bind-value=${photo} :hint=${'PNG or JPG'} />
+    </Demo>
+
+    <Demo :id=${'initials'} :title=${'Initials then photo'} :lead=${'name shows initials from the first and last name. Upload replaces them with a cropped image; Remove brings the initials back.'} :code=${withInitials} :filename=${'avatar-upload-initials.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <Field :label=${'Full name'} :hint=${'Try another first and last name'} bind-value=${initialsName} />
+        <AvatarUpload
+          :label=${'Profile photo'}
+          :name=${initialsName}
+          :hint=${'Shows initials first; upload replaces them with a photo. Remove restores initials.'}
+          bind-value=${initialsPhoto}
+        />
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'sizes'} :title=${'Sizes'} :lead=${'size sets the preview diameter in pixels (minimum 48).'} :code=${sizes} :filename=${'avatar-upload-sizes.jcr'} :layout=${'stack'}>
+      <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+        <AvatarUpload :label=${'Small'} :name=${'Ana Costa'} :size=${64} bind-value=${sizeSmall} />
+        <AvatarUpload :label=${'Default'} :name=${'João Pedro'} :size=${96} bind-value=${sizeMedium} />
+        <AvatarUpload :label=${'Large'} :name=${'Lia Nunes'} :size=${128} bind-value=${sizeLarge} />
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'prefilled'} :title=${'Prefilled value'} :lead=${'Bind an existing data URL to show Replace and Remove right away.'} :code=${prefills} :filename=${'avatar-upload-prefilled.jcr'}>
+      <AvatarUpload
+        :label=${'Saved avatar'}
+        :hint=${'Replace or remove the current photo'}
+        bind-value=${savedPhoto}
+      />
+    </Demo>
+
+    <Demo :id=${'accept'} :title=${'Accept filter'} :lead=${'Narrow the file picker with the accept attribute.'} :code=${acceptOnly} :filename=${'avatar-upload-accept.jcr'}>
+      <AvatarUpload
+        :label=${'PNG only'}
+        :accept=${'image/png'}
+        :hint=${'File picker accepts PNG images'}
+        bind-value=${pngOnly}
+      />
+    </Demo>
+
+    <Demo :id=${'events'} :title=${'Change and clear'} :lead=${'Listen for change (PNG data URL) and clear when the avatar is removed.'} :code=${events} :filename=${'avatar-upload-events.jcr'} :layout=${'stack'}>
+      <AvatarUpload
+        :label=${'Team avatar'}
+        :hint=${'Emits change with a PNG data URL; clear when removed'}
+        bind-value=${eventPhoto}
+        on-change=${onPhotoChange}
+        on-clear=${onPhotoClear}
+      />
+      <Text :tone=${'muted'}>${eventStatus}</Text>
+    </Demo>
+
+    <Demo :id=${'states'} :title=${'Error and disabled'} :code=${states} :filename=${'avatar-upload-states.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'lg'}>
+        <AvatarUpload
+          :label=${'Required photo'}
+          :error=${'Upload a profile photo to continue'}
+          bind-value=${invalidPhoto}
+        />
+        <AvatarUpload
+          :label=${'Locked photo'}
+          :disabled=${true}
+          :hint=${'Editing is disabled for this account'}
+          bind-value=${lockedPhoto}
+        />
+      </Stack>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

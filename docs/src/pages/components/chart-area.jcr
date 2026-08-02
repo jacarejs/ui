@@ -1,0 +1,250 @@
+import { pulse } from '@jacare/core'
+import Card from '@jacare/ui/components/Card.jcr'
+import ChartArea from '@jacare/ui/components/ChartArea.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  colors as colorsExample,
+  inCard,
+  noLegend,
+  playgroundCode as buildPlaygroundCode,
+  single,
+  sized,
+  stacked as stackedExample,
+} from '../../examples/chart-area.js'
+
+const contract = getContract('ChartArea')
+const navLinks = previousNext('/components/chart-area')
+
+const playShowLegend = pulse(true)
+const playStacked = pulse(false)
+const playCustomColors = pulse(false)
+
+const data = {
+  categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  series: [
+    { name: 'Revenue', data: [42, 48, 51, 58, 62, 70] },
+    { name: 'Cost', data: [28, 30, 33, 36, 38, 41] },
+  ],
+}
+
+const singleData = [
+  { label: 'Mon', value: 12 },
+  { label: 'Tue', value: 18 },
+  { label: 'Wed', value: 15 },
+  { label: 'Thu', value: 22 },
+  { label: 'Fri', value: 19 },
+]
+
+const colorsData = {
+  categories: ['Q1', 'Q2', 'Q3', 'Q4'],
+  series: [
+    { name: 'Product', data: [40, 52, 61, 74] },
+    { name: 'Services', data: [22, 28, 35, 41] },
+  ],
+}
+
+const stackedData = {
+  categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  series: [
+    { name: 'Direct', data: [18, 22, 24, 28, 30, 34] },
+    { name: 'Organic', data: [14, 16, 18, 20, 22, 24] },
+    { name: 'Referral', data: [8, 9, 10, 12, 13, 15] },
+  ],
+}
+
+const npsData = {
+  categories: ['Jan', 'Feb', 'Mar', 'Apr'],
+  series: [{ name: 'NPS', data: [32, 38, 41, 45] }],
+}
+
+const compactData = {
+  categories: ['A', 'B', 'C', 'D', 'E'],
+  series: [{ name: 'Score', data: [8, 12, 10, 16, 14] }],
+}
+
+const customColors = ['#be185d', '#0f766e']
+
+const a11y = [
+  'SVG root uses role="img" with an aria-label from title',
+  'Prefer a clear title that states the metric and period',
+  'Use the legend to identify series when color is not enough',
+  'Keep series count low enough that fills remain distinguishable',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    showLegend: playShowLegend(),
+    stacked: playStacked(),
+    customColors: playCustomColors(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ChartArea</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Charts'}
+      :title=${'ChartArea'}
+      :description=${'Filled trend series with shared cartesian axes, optional stacking, custom colors, and legend.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Switch :label=${'Show legend'} bind-checked=${playShowLegend} />
+          <Switch :label=${'Stacked'} bind-checked=${playStacked} />
+          <Switch :label=${'Custom colors'} bind-checked=${playCustomColors} />
+          <Text :tone=${'muted'}>Toggle options to preview area chart chrome.</Text>
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <ChartArea
+              :data=${() => (playStacked() ? stackedData : data)}
+              :title=${'Area'}
+              :caption=${'Playground preview'}
+              :showLegend=${playShowLegend}
+              :stacked=${playStacked}
+              :colors=${() => (playCustomColors() ? customColors : null)}
+              :width=${480}
+              :height=${280}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'chart-area-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Pass categories + series. Optional title, caption, width, and height frame the plot.'}
+      :code=${basic}
+      :filename=${'chart-area-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <ChartArea
+        :data=${data}
+        :title=${'Area'}
+        :caption=${'Multi-series volume'}
+        :width=${480}
+        :height=${280}
+      />
+    </Demo>
+
+    <DocsSection :id=${'data'} :title=${'Data shapes'}>
+      <Demo
+        :id=${'single'}
+        :title=${'Single series array'}
+        :lead=${'Pass an array of { label, value } for a quick one-series chart.'}
+        :code=${single}
+        :filename=${'chart-area-single.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartArea :data=${singleData} :title=${'Daily signups'} :showLegend=${false} />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'options'} :title=${'Options'}>
+      <Demo
+        :id=${'colors'}
+        :title=${'Custom colors'}
+        :lead=${'colors overrides the default palette in series order.'}
+        :code=${colorsExample}
+        :filename=${'chart-area-colors.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartArea
+          :data=${colorsData}
+          :title=${'Custom palette'}
+          :colors=${['#be185d', '#1f6feb']}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'stacked'}
+        :title=${'Stacked'}
+        :lead=${'stacked layers series on a shared baseline for part-to-whole volume.'}
+        :code=${stackedExample}
+        :filename=${'chart-area-stacked.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartArea :data=${stackedData} :title=${'Stacked channels'} :stacked=${true} />
+      </Demo>
+
+      <Demo
+        :id=${'no-legend'}
+        :title=${'Hide legend'}
+        :lead=${'showLegend=false for compact dashboard tiles.'}
+        :code=${noLegend}
+        :filename=${'chart-area-no-legend.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartArea
+          :data=${npsData}
+          :title=${'Compact'}
+          :caption=${'Legend hidden for dense dashboards'}
+          :showLegend=${false}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'sized'}
+        :title=${'Custom size'}
+        :lead=${'width and height control the SVG viewBox and frame.'}
+        :code=${sized}
+        :filename=${'chart-area-sized.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartArea
+          :data=${compactData}
+          :title=${'Compact size'}
+          :width=${320}
+          :height=${200}
+          :showLegend=${false}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'in-card'}
+        :title=${'Inside Card'}
+        :lead=${'Compose ChartArea in a Card for dashboard KPI panels.'}
+        :code=${inCard}
+        :filename=${'chart-area-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Finance'} :subtitle=${'Monthly volume'}>
+          <ChartArea :data=${data} :showLegend=${true} :height=${240} />
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

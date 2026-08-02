@@ -1,0 +1,53 @@
+import { pulse } from '@jacare/core'
+import Watermark from '@jacare/ui/components/Watermark.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, multiline, layout, appearance, image, playgroundCode as buildPlaygroundCode } from '../../examples/watermark.js'
+
+const contract = getContract('Watermark')
+const navLinks = previousNext('/components/watermark')
+const playContent = pulse('CONFIDENTIAL')
+const playRotate = pulse(-22)
+const playGapX = pulse(80)
+const playGapY = pulse(72)
+const playColor = pulse('rgba(5, 150, 105, 0.18)')
+const playFontSize = pulse(16)
+const logo = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="40"%3E%3Crect width="80" height="40" rx="8" fill="%23059669"/%3E%3Ctext x="40" y="25" text-anchor="middle" fill="white" font-size="14"%3EJUI%3C/text%3E%3C/svg%3E'
+const a11y = [
+  'The watermark layer is hidden from assistive technology',
+  'Keep content contrast readable beneath repeated marks',
+  'Treat watermarks as deterrents rather than access-control or security boundaries',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({ content: playContent(), rotate: playRotate(), gap: [playGapX(), playGapY()], fontColor: playColor(), fontSize: playFontSize() })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb"><a jacare-go="/components" href="/components">Components</a><span aria-hidden="true">/</span><span>Watermark</span></nav>
+    <DocsHero :kicker=${'Feedback'} :title=${'Watermark'} :description=${'Repeated text or image marking over content with multiline labels, rotation, spacing, offsets, sizing, and color controls.'} :status=${'stable'} />
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel"><Field :label=${'Content'} bind-value=${playContent} /><Field :label=${'Rotation'} :type=${'number'} bind-value=${playRotate} /><Field :label=${'Horizontal gap'} :type=${'number'} bind-value=${playGapX} /><Field :label=${'Vertical gap'} :type=${'number'} bind-value=${playGapY} /><Field :label=${'Font color'} bind-value=${playColor} /><Field :label=${'Font size'} :type=${'number'} bind-value=${playFontSize} /></div>
+        <div class="docs-alert-play__preview"><div class="docs-panel"><Watermark :content=${playContent} :rotate=${playRotate} :gap=${() => [playGapX(), playGapY()]} :fontColor=${playColor} :fontSize=${playFontSize}><div style="min-height:12rem;padding:1rem">Document preview</div></Watermark></div><CodeBlock :code=${() => playgroundCode()} :filename=${'watermark-playground.jcr'} :language=${'jacare'} /></div>
+      </div>
+    </DocsSection>
+    <Demo :id=${'basic'} :title=${'Text watermark'} :code=${basic} :filename=${'watermark-basic.jcr'} :layout=${'stack'}><Watermark :content=${'Jacaré UI'}><div style="min-height:12rem;padding:1rem">Protected workspace content</div></Watermark></Demo>
+    <Demo :id=${'multiline'} :title=${'Multiple lines'} :code=${multiline} :filename=${'watermark-multiline.jcr'} :layout=${'stack'}><Watermark :content=${['CONFIDENTIAL', 'Internal only']} :fontSize=${14}><div style="min-height:12rem;padding:1rem">Quarterly report</div></Watermark></Demo>
+    <Demo :id=${'layout'} :title=${'Rotation, gap, and offset'} :code=${layout} :filename=${'watermark-layout.jcr'} :layout=${'stack'}><Watermark :content=${'Draft'} :rotate=${-12} :gap=${[48, 56]} :offset=${[16, 20]}><div style="min-height:12rem;padding:1rem">Document preview</div></Watermark></Demo>
+    <Demo :id=${'appearance'} :title=${'Custom appearance'} :code=${appearance} :filename=${'watermark-appearance.jcr'} :layout=${'stack'}><Watermark :content=${'Preview'} :fontColor=${'rgba(14, 116, 144, 0.22)'} :fontSize=${20} :width=${150} :height=${72}><div style="min-height:12rem;padding:1rem">Custom watermark appearance</div></Watermark></Demo>
+    <Demo :id=${'image'} :title=${'Image watermark and z-index'} :code=${image} :filename=${'watermark-image.jcr'} :layout=${'stack'}><Watermark :image=${logo} :width=${80} :height=${40} :gap=${[64, 64]} :rotate=${0} :zIndex=${12}><div style="min-height:12rem;padding:1rem">Image watermark</div></Watermark></Demo>
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}><AccessibilityChecklist :items=${a11y} /></DocsSection>
+    <DocsSection :id=${'api'} :title=${'API'}><PropsTable :contract=${contract} /></DocsSection>
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

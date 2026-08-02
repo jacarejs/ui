@@ -60,6 +60,21 @@ export <view>
   </Stack>
 </view>`
 
+export const fixedMonth = `import { pulse } from '@jacare/core'
+import DatePicker from '@jacare/ui/DatePicker'
+
+const value = pulse('2026-07-15')
+
+export <view>
+  <DatePicker
+    :label=\${'July day'}
+    :navigable=\${false}
+    :min=\${'2026-07-01'}
+    :max=\${'2026-07-31'}
+    bind-value=\${value}
+  />
+</view>`
+
 function quote(value) {
   return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 }
@@ -78,6 +93,7 @@ export function playgroundCode(state) {
   if (state.placeholder) lines.push(`    :placeholder=\${'${quote(state.placeholder)}'}`)
   if (state.range) lines.push('    :range=\${true}')
   if (state.range && !state.autoApply) lines.push('    :autoApply=\${false}')
+  if (state.navigable === false) lines.push('    :navigable=\${false}')
   if (state.min) lines.push(`    :min=\${'${quote(state.min)}'}`)
   if (state.max) lines.push(`    :max=\${'${quote(state.max)}'}`)
   if (state.required) lines.push('    :required=\${true}')

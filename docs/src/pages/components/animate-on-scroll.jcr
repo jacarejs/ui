@@ -1,0 +1,307 @@
+import { pulse } from '@jacare/core'
+import AnimateOnScroll from '@jacare/ui/components/AnimateOnScroll.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import Card from '@jacare/ui/components/Card.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  customClass,
+  disabled,
+  once,
+  repeat,
+  rootMargin,
+  staggered,
+  threshold,
+  variants,
+  viewport,
+} from '../../examples/animate-on-scroll.js'
+
+const contract = getContract('AnimateOnScroll')
+const navLinks = previousNext('/components/animate-on-scroll')
+const variantsLive = pulse(true)
+
+function replayVariants() {
+  variantsLive.set(false)
+  queueMicrotask(() => variantsLive.set(true))
+}
+
+const a11y = [
+  'Content stays in the document and remains readable when motion is reduced',
+  'Do not hide essential information behind scroll-only animation',
+  'Pair motion with static layout so meaning is clear without animation',
+  'Use disabled or variant="none" when the block should appear immediately',
+]
+
+const panelCue =
+  'position:sticky;top:0;z-index:1;padding:0.65rem 1rem;background:var(--j-surface);border-bottom:1px solid var(--j-border);color:var(--j-muted);font-size:0.875rem'
+const panelShell =
+  'height:280px;overflow-y:scroll;border:1px solid var(--j-border);border-radius:var(--j-radius)'
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>AnimateOnScroll</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Utility'}
+      :title=${'AnimateOnScroll'}
+      :description=${'Reveal content when it enters a scroll container. Uses IntersectionObserver with scroll-parent detection, variants, threshold, rootMargin, and once mode.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Scroll reveal'}
+      :lead=${'Scroll inside the bordered panel (not only the page). The sticky cue stays put while cards fade up as they enter.'}
+      :code=${basic}
+      :filename=${'animate-on-scroll-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <div style=${panelShell}>
+        <div style=${panelCue}>↓ Scroll inside this panel</div>
+        <div style="padding:1rem;display:grid;gap:1rem">
+          <Card><div style="padding:1rem">Always visible — keep scrolling ↓</div></Card>
+          <div style="height:7rem" aria-hidden="true"></div>
+          <AnimateOnScroll :once=${false} :rootMargin=${'0px'}>
+            <Card><div style="padding:1rem">First block fades up</div></Card>
+          </AnimateOnScroll>
+          <div style="height:5rem" aria-hidden="true"></div>
+          <AnimateOnScroll :once=${false} :rootMargin=${'0px'}>
+            <Card><div style="padding:1rem">Second block fades up</div></Card>
+          </AnimateOnScroll>
+          <div style="height:5rem" aria-hidden="true"></div>
+          <AnimateOnScroll :once=${false} :rootMargin=${'0px'}>
+            <Card><div style="padding:1rem">Third block fades up</div></Card>
+          </AnimateOnScroll>
+          <div style="height:6rem" aria-hidden="true"></div>
+        </div>
+      </div>
+    </Demo>
+
+    <Demo
+      :id=${'variants'}
+      :title=${'Variants'}
+      :lead=${'Built-in motions: fade, fade-up, fade-down, fade-left, fade-right, zoom, or none. Replay remounts the grid so you can watch them again.'}
+      :code=${variants}
+      :filename=${'animate-on-scroll-variants.jcr'}
+      :layout=${'stack'}
+    >
+      <div style="display:grid;gap:0.75rem">
+        <div>
+          <Button :variant=${'secondary'} :size=${'sm'} on-press=${replayVariants}>Replay variants</Button>
+        </div>
+        #if variantsLive()
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:0.75rem">
+            <AnimateOnScroll :variant=${'fade'} :root=${'viewport'} :rootMargin=${'0px'} :once=${false}>
+              <Card><div style="padding:1rem">fade</div></Card>
+            </AnimateOnScroll>
+            <AnimateOnScroll :variant=${'fade-up'} :root=${'viewport'} :rootMargin=${'0px'} :once=${false}>
+              <Card><div style="padding:1rem">fade-up</div></Card>
+            </AnimateOnScroll>
+            <AnimateOnScroll :variant=${'fade-down'} :root=${'viewport'} :rootMargin=${'0px'} :once=${false}>
+              <Card><div style="padding:1rem">fade-down</div></Card>
+            </AnimateOnScroll>
+            <AnimateOnScroll :variant=${'fade-left'} :root=${'viewport'} :rootMargin=${'0px'} :once=${false}>
+              <Card><div style="padding:1rem">fade-left</div></Card>
+            </AnimateOnScroll>
+            <AnimateOnScroll :variant=${'fade-right'} :root=${'viewport'} :rootMargin=${'0px'} :once=${false}>
+              <Card><div style="padding:1rem">fade-right</div></Card>
+            </AnimateOnScroll>
+            <AnimateOnScroll :variant=${'zoom'} :root=${'viewport'} :rootMargin=${'0px'} :once=${false}>
+              <Card><div style="padding:1rem">zoom</div></Card>
+            </AnimateOnScroll>
+          </div>
+        #end
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'staggered'}
+        :title=${'Mixed list'}
+        :lead=${'Combine variants in a feature list. Scroll the panel to reveal each row.'}
+        :code=${staggered}
+        :filename=${'animate-on-scroll-staggered.jcr'}
+        :layout=${'stack'}
+      >
+        <div style=${panelShell}>
+          <div style=${panelCue}>↓ Feature list with mixed variants</div>
+          <div style="padding:1rem;display:grid;gap:0.75rem">
+            <div style="height:6rem" aria-hidden="true"></div>
+            <AnimateOnScroll :variant=${'fade-up'} :once=${false} :rootMargin=${'0px'}>
+              <Card><div style="padding:1rem">1 · Dashboard overview</div></Card>
+            </AnimateOnScroll>
+            <AnimateOnScroll :variant=${'fade-left'} :once=${false} :rootMargin=${'0px'}>
+              <Card><div style="padding:1rem">2 · Team activity</div></Card>
+            </AnimateOnScroll>
+            <AnimateOnScroll :variant=${'fade-right'} :once=${false} :rootMargin=${'0px'}>
+              <Card><div style="padding:1rem">3 · Billing settings</div></Card>
+            </AnimateOnScroll>
+            <AnimateOnScroll :variant=${'zoom'} :once=${false} :rootMargin=${'0px'}>
+              <Card><div style="padding:1rem">4 · Launch checklist</div></Card>
+            </AnimateOnScroll>
+            <div style="height:6rem" aria-hidden="true"></div>
+          </div>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'threshold'}
+        :title=${'Threshold'}
+        :lead=${'Higher threshold waits until more of the element is visible before entering.'}
+        :code=${threshold}
+        :filename=${'animate-on-scroll-threshold.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="height:260px;overflow-y:scroll;border:1px solid var(--j-border);border-radius:var(--j-radius)">
+          <div style=${panelCue}>↓ Compare thresholds</div>
+          <div style="padding:1rem;display:grid;gap:1rem">
+            <div style="height:8rem" aria-hidden="true"></div>
+            <AnimateOnScroll :threshold=${0.5} :once=${false} :rootMargin=${'0px'}>
+              <Card><div style="padding:1rem">threshold 0.5 — waits for half visibility</div></Card>
+            </AnimateOnScroll>
+            <div style="height:4rem" aria-hidden="true"></div>
+            <AnimateOnScroll :threshold=${0.05} :once=${false} :rootMargin=${'0px'}>
+              <Card><div style="padding:1rem">threshold 0.05 — triggers early</div></Card>
+            </AnimateOnScroll>
+            <div style="height:8rem" aria-hidden="true"></div>
+          </div>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'once'}
+        :title=${'Once'}
+        :lead=${'Default once=true plays the enter motion a single time, then keeps the content visible.'}
+        :code=${once}
+        :filename=${'animate-on-scroll-once.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="height:240px;overflow-y:scroll;border:1px solid var(--j-border);border-radius:var(--j-radius)">
+          <div style=${panelCue}>↓ once=true plays only the first time</div>
+          <div style="padding:1rem">
+            <div style="height:8rem" aria-hidden="true"></div>
+            <AnimateOnScroll :once=${true} :rootMargin=${'0px'}>
+              <Card><div style="padding:1rem">Plays once, then stays visible</div></Card>
+            </AnimateOnScroll>
+            <div style="height:12rem" aria-hidden="true"></div>
+          </div>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'repeat'}
+        :title=${'Repeat on re-entry'}
+        :lead=${'Set once to false to replay when the element leaves and re-enters the scroll root.'}
+        :code=${repeat}
+        :filename=${'animate-on-scroll-repeat.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="height:240px;overflow-y:scroll;border:1px solid var(--j-border);border-radius:var(--j-radius)">
+          <div style=${panelCue}>↓ Scroll away and back to replay</div>
+          <div style="padding:1rem">
+            <div style="height:8rem" aria-hidden="true"></div>
+            <AnimateOnScroll :once=${false} :leaveClass=${'jui-aos--out'} :rootMargin=${'0px'}>
+              <Card><div style="padding:1rem">Scroll away and back — animation repeats</div></Card>
+            </AnimateOnScroll>
+            <div style="height:12rem" aria-hidden="true"></div>
+          </div>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'root-margin'}
+        :title=${'Root margin'}
+        :lead=${'rootMargin expands or shrinks the observer root, same syntax as CSS margin.'}
+        :code=${rootMargin}
+        :filename=${'animate-on-scroll-root-margin.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="height:240px;overflow-y:scroll;border:1px solid var(--j-border);border-radius:var(--j-radius)">
+          <div style=${panelCue}>↓ rootMargin expands the trigger box</div>
+          <div style="padding:1rem">
+            <div style="height:8rem" aria-hidden="true"></div>
+            <AnimateOnScroll :rootMargin=${'80px 0px'} :once=${false}>
+              <Card><div style="padding:1rem">Triggers earlier with rootMargin 80px</div></Card>
+            </AnimateOnScroll>
+            <div style="height:12rem" aria-hidden="true"></div>
+          </div>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'viewport'}
+        :title=${'Viewport root'}
+        :lead=${'root="viewport" ignores nested overflow parents and observes the browser viewport instead.'}
+        :code=${viewport}
+        :filename=${'animate-on-scroll-viewport.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="display:grid;gap:1rem">
+          <p style="margin:0;color:var(--j-muted);font-size:0.9rem">Scroll the docs page — this block uses the viewport as the observer root.</p>
+          <AnimateOnScroll :root=${'viewport'} :rootMargin=${'0px'} :once=${false}>
+            <Card><div style="padding:1rem">Reveals when this block enters the viewport</div></Card>
+          </AnimateOnScroll>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'custom-class'}
+        :title=${'Custom classes'}
+        :lead=${'Override enterClass / leaveClass when you need project-specific motion tokens.'}
+        :code=${customClass}
+        :filename=${'animate-on-scroll-custom-class.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="height:240px;overflow-y:scroll;border:1px solid var(--j-border);border-radius:var(--j-radius)">
+          <div style=${panelCue}>↓ Custom enter / leave classes</div>
+          <div style="padding:1rem">
+            <div style="height:8rem" aria-hidden="true"></div>
+            <AnimateOnScroll :enterClass=${'jui-aos--in'} :leaveClass=${'jui-aos--out'} :once=${false} :rootMargin=${'0px'}>
+              <Card><div style="padding:1rem">Custom enterClass / leaveClass</div></Card>
+            </AnimateOnScroll>
+            <div style="height:12rem" aria-hidden="true"></div>
+          </div>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'disabled'}
+        :title=${'Disabled and none'}
+        :lead=${'Skip observation and show content immediately with disabled or variant="none".'}
+        :code=${disabled}
+        :filename=${'animate-on-scroll-disabled.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="display:grid;gap:0.75rem">
+          <AnimateOnScroll :disabled=${true}>
+            <Card><div style="padding:1rem">disabled — visible immediately</div></Card>
+          </AnimateOnScroll>
+          <AnimateOnScroll :variant=${'none'}>
+            <Card><div style="padding:1rem">variant="none" — no motion</div></Card>
+          </AnimateOnScroll>
+        </div>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

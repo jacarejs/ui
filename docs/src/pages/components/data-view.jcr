@@ -1,0 +1,114 @@
+import { pulse } from '@jacare/core'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import InputNumber from '@jacare/ui/components/InputNumber.jcr'
+import DataView from '@jacare/ui/components/DataView.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, empty, grid, paginated, playgroundCode as buildPlaygroundCode } from '../../examples/data-view.js'
+
+const contract = getContract('DataView')
+const navLinks = previousNext('/components/data-view')
+
+const demoImage =
+  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 320 160%22%3E%3Crect width=%22320%22 height=%22160%22 rx=%2216%22 fill=%22%23dcefe8%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23235548%22 font-size=%2224%22 font-family=%22Arial%22%3EJacare UI%3C/text%3E%3C/svg%3E'
+
+const data = [
+  { key: '1', title: 'Design tokens', description: 'Color, spacing, and typography primitives.', meta: 'Docs', image: demoImage },
+  { key: '2', title: 'Components', description: 'Accessible building blocks for product teams.', meta: 'UI', image: demoImage },
+  { key: '3', title: 'Theme scope', description: 'Scoped light or dark islands inside one page.', meta: 'Theme', image: demoImage },
+  { key: '4', title: 'Validation', description: 'Composable rules for forms and inputs.', meta: 'Forms', image: demoImage },
+  { key: '5', title: 'Feedback', description: 'Messages, dialogs, and notifications.', meta: 'UX', image: demoImage },
+]
+
+const gridData = [
+  { key: '1', title: 'Card layout', description: 'Grid cards for dense catalogs.', image: demoImage },
+  { key: '2', title: 'List layout', description: 'Switch back to list for scanning.', image: demoImage },
+  { key: '3', title: 'Responsive', description: 'Cards reflow on narrow viewports.', image: demoImage },
+]
+
+const playLayout = pulse('list')
+const playRows = pulse(0)
+const playPage = pulse(1)
+const gridLayout = pulse('grid')
+const page = pulse(1)
+
+const a11yItems = [
+  'Layout toggle buttons expose aria-pressed state',
+  'Cards use headings and supporting text instead of color alone',
+  'Pagination reuses accessible page controls when rows are limited',
+  'Empty states include readable description text',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    layout: playLayout(),
+    rows: playRows(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>DataView</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'DataView'}
+      :description=${'Render item collections as list or grid cards with optional pagination.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <InputNumber :label=${'Rows per page (0 = all)'} bind-value=${playRows} :min=${0} :max=${10} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <DataView :data=${data} bind-layout=${playLayout} :rows=${() => playRows()} bind-page=${playPage} />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'data-view-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic list'} :code=${basic} :filename=${'data-view-basic.jcr'}>
+      <DataView :data=${data.slice(0, 3)} />
+    </Demo>
+
+    <Demo :id=${'grid'} :title=${'Grid layout'} :lead=${'Switch between list and grid with the built-in layout controls.'} :code=${grid} :filename=${'data-view-grid.jcr'}>
+      <DataView :data=${gridData} bind-layout=${gridLayout} />
+    </Demo>
+
+    <Demo :id=${'paginated'} :title=${'Pagination'} :lead=${'Set rows to a positive number to paginate through the collection.'} :code=${paginated} :filename=${'data-view-paginated.jcr'}>
+      <DataView :data=${data} :rows=${2} bind-page=${page} />
+    </Demo>
+
+    <Demo :id=${'empty'} :title=${'Empty state'} :code=${empty} :filename=${'data-view-empty.jcr'}>
+      <DataView :data=${[]} :emptyText=${'No releases yet'} />
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11yItems} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -1,0 +1,91 @@
+import { pulse } from '@jacare/core'
+import Tabs from '@jacare/ui/components/Tabs.jcr'
+import TabPane from '@jacare/ui/components/TabPane.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, cards, border_card, positions, disabled, all_positions, click_event, playgroundCode as buildPlaygroundCode } from '../../examples/tabs.js'
+
+const contract = getContract('Tabs')
+const navLinks = previousNext('/components/tabs')
+const active = pulse('overview')
+const playActive = pulse('overview')
+const playType = pulse('')
+const playPosition = pulse('top')
+const playStretch = pulse(false)
+const clicked = pulse('None')
+const typeOptions = ['', 'card', 'border-card']
+const positionOptions = ['top', 'right', 'bottom', 'left']
+const a11y = [
+  'Give every pane a short, unique label',
+  'Keep disabled tabs unavailable to both pointer and keyboard activation',
+  'Preserve a logical reading order when moving tabs to a side',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({ value: playActive(), type: playType(), tabPosition: playPosition(), stretch: playStretch() })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb"><a jacare-go="/components" href="/components">Components</a><span aria-hidden="true">/</span><span>Tabs</span></nav>
+    <DocsHero :kicker=${'Navigation'} :title=${'Tabs'} :description=${'Switch related panels with controlled selection, card styles, flexible positions, stretching, and disabled panes.'} :status=${'stable'} />
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <p class="docs-lead">Type</p>
+          <div class="docs-hero-actions">
+            #for typeOptions as option
+              <Button :size=${'sm'} :variant=${() => playType() === option ? 'primary' : 'secondary'} on-press=${() => playType.set(option)}>${() => option || 'default'}</Button>
+            #end
+          </div>
+          <p class="docs-lead">Position</p>
+          <div class="docs-hero-actions">
+            #for positionOptions as option
+              <Button :size=${'sm'} :variant=${() => playPosition() === option ? 'primary' : 'secondary'} on-press=${() => playPosition.set(option)}>${option}</Button>
+            #end
+          </div>
+          <Switch :label=${'Stretch'} bind-checked=${playStretch} />
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel"><Tabs bind-value=${playActive} :type=${playType} :tabPosition=${playPosition} :stretch=${playStretch}><TabPane :name=${'overview'} :label=${'Overview'}>Project summary</TabPane><TabPane :name=${'activity'} :label=${'Activity'}>Recent changes</TabPane><TabPane :name=${'locked'} :label=${'Locked'} :disabled=${true}>Unavailable</TabPane></Tabs></div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'tabs-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+    <Demo :id=${'basic'} :title=${'Controlled tabs'} :code=${basic} :filename=${'tabs-basic.jcr'} :layout=${'stack'}>
+      <Tabs bind-value=${active}><TabPane :name=${'overview'} :label=${'Overview'}>Project summary</TabPane><TabPane :name=${'activity'} :label=${'Activity'}>Recent changes</TabPane></Tabs>
+    </Demo>
+    <Demo :id=${'cards'} :title=${'Card tabs'} :code=${cards} :filename=${'tabs-cards.jcr'} :layout=${'stack'}>
+      <Tabs :value=${'team'} :type=${'card'}><TabPane :name=${'team'} :label=${'Team'}>12 collaborators</TabPane><TabPane :name=${'billing'} :label=${'Billing'}>Pro plan</TabPane></Tabs>
+    </Demo>
+    <Demo :id=${'border-card'} :title=${'Border card'} :code=${border_card} :filename=${'tabs-border-card.jcr'} :layout=${'stack'}>
+      <Tabs :value=${'details'} :type=${'border-card'}><TabPane :name=${'details'} :label=${'Details'}>Release 1.4</TabPane><TabPane :name=${'checks'} :label=${'Checks'}>All checks passed</TabPane></Tabs>
+    </Demo>
+    <Demo :id=${'positions'} :title=${'Side position'} :code=${positions} :filename=${'tabs-positions.jcr'} :layout=${'stack'}>
+      <Tabs :value=${'general'} :tabPosition=${'left'}><TabPane :name=${'general'} :label=${'General'}>Workspace settings</TabPane><TabPane :name=${'members'} :label=${'Members'}>Manage access</TabPane></Tabs>
+    </Demo>
+    <Demo :id=${'disabled'} :title=${'Stretched and disabled'} :code=${disabled} :filename=${'tabs-disabled.jcr'} :layout=${'stack'}>
+      <Tabs :value=${'available'} :stretch=${true}><TabPane :name=${'available'} :label=${'Available'}>Ready to use</TabPane><TabPane :name=${'locked'} :label=${'Locked'} :disabled=${true}>Upgrade required</TabPane></Tabs>
+    </Demo>
+    <Demo :id=${'all-positions'} :title=${'All four positions'} :code=${all_positions} :filename=${'tabs-all-positions.jcr'} :layout=${'stack'}>
+      #for positionOptions as position
+        <Tabs :value=${'one'} :tabPosition=${position}><TabPane :name=${'one'} :label=${'One'}>${position} tabs</TabPane><TabPane :name=${'two'} :label=${'Two'}>Second pane</TabPane></Tabs>
+      #end
+    </Demo>
+    <Demo :id=${'tab-click'} :title=${'Tab click event'} :code=${click_event} :filename=${'tabs-tab-click.jcr'} :layout=${'stack'}>
+      <Tabs :value=${'one'} on-tabClick=${(name) => clicked.set(name)}><TabPane :name=${'one'} :label=${'One'}>First pane</TabPane><TabPane :name=${'locked'} :label=${'Locked'} :disabled=${true}>Unavailable</TabPane></Tabs><p>Clicked: ${clicked}</p>
+    </Demo>
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}><AccessibilityChecklist :items=${a11y} /></DocsSection>
+    <DocsSection :id=${'api'} :title=${'API'}><PropsTable :contract=${contract} /></DocsSection>
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

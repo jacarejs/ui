@@ -8,9 +8,10 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/color-picker-panel.js'
+import { alpha, basic, disabled, playgroundCode as buildPlaygroundCode, presets, swatchOnly } from '../../examples/color-picker-panel.js'
 
 const contract = getContract('ColorPickerPanel')
 const navLinks = previousNext('/components/color-picker-panel')
@@ -22,6 +23,17 @@ const playShowInput = pulse(true)
 const playDisabled = pulse(false)
 const playPresets = pulse(true)
 const basicValue = pulse('#189030')
+const presetsValue = pulse('#2563eb')
+const swatchValue = pulse('#7c3aed')
+const alphaValue = pulse('#db2777')
+const disabledValue = pulse('#ea580c')
+const a11y = [
+  'The native color input is named Color and the text field is named Hex color',
+  'Preset buttons expose their hex value as the accessible name',
+  'The active preset has a focus-style ring in addition to its color',
+  'disabled prevents native color, text, and preset interactions',
+  'Do not rely on the swatch alone; keep showInput enabled when users need the exact value',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -41,7 +53,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Pickers'}
       :title=${'ColorPickerPanel'}
       :description=${'Inline color panel with a native swatch, optional hex input, and preset chips. Bind value to a hex string pulse.'}
       :status=${'stable'}
@@ -74,6 +86,26 @@ export <view>
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'color-picker-panel-basic.jcr'}>
       <ColorPickerPanel bind-value=${basicValue} />
     </Demo>
+
+    <Demo :id=${'presets'} :title=${'Custom presets'} :code=${presets} :filename=${'color-picker-panel-presets.jcr'}>
+      <ColorPickerPanel :presets=${brandPresets} bind-value=${presetsValue} />
+    </Demo>
+
+    <Demo :id=${'swatch-only'} :title=${'Without hex input'} :lead=${'Hide the text field for a compact swatch-and-presets surface.'} :code=${swatchOnly} :filename=${'color-picker-panel-swatch-only.jcr'}>
+      <ColorPickerPanel :showInput=${false} bind-value=${swatchValue} />
+    </Demo>
+
+    <Demo :id=${'alpha'} :title=${'Alpha reservation'} :lead=${'showAlpha currently communicates that alpha editing is reserved for a future release.'} :code=${alpha} :filename=${'color-picker-panel-alpha.jcr'}>
+      <ColorPickerPanel :showAlpha=${true} bind-value=${alphaValue} />
+    </Demo>
+
+    <Demo :id=${'disabled'} :title=${'Disabled'} :code=${disabled} :filename=${'color-picker-panel-disabled.jcr'}>
+      <ColorPickerPanel :disabled=${true} bind-value=${disabledValue} />
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

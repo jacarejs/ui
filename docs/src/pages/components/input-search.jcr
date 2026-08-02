@@ -1,0 +1,72 @@
+import { pulse } from '@jacare/core'
+import InputSearch from '@jacare/ui/components/InputSearch.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, states, withButton } from '../../examples/input-search.js'
+
+const contract = getContract('InputSearch')
+const navLinks = previousNext('/components/input-search')
+const basicValue = pulse('')
+const buttonValue = pulse('')
+const lastSearch = pulse('')
+const hintedValue = pulse('')
+const errorValue = pulse('@@@')
+const lockedValue = pulse('archived')
+const a11y = [
+  'Root uses role="search" and submits on Enter',
+  'Clear button has an explicit aria-label',
+  'Debounced search emits after typing settles; Enter or the button searches immediately',
+  'error marks the field invalid and announces with role="alert"',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>InputSearch</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Inputs'}
+      :title=${'InputSearch'}
+      :description=${'Search field with debounce, clear, and optional submit button — the filter bar pattern.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'input-search-basic.jcr'}>
+      <InputSearch :label=${'Find teammates'} :placeholder=${'Name or email'} bind-value=${basicValue} />
+    </Demo>
+
+    <Demo :id=${'with-button'} :title=${'Submit button'} :code=${withButton} :filename=${'input-search-button.jcr'} :layout=${'stack'}>
+      <InputSearch
+        :label=${'Catalog'}
+        :showButton=${true}
+        :buttonLabel=${'Filter'}
+        :debounce=${200}
+        bind-value=${buttonValue}
+        on-search=${(next) => lastSearch.set(next)}
+      />
+      <Text :tone=${'muted'}>Last search:${' '}${lastSearch}</Text>
+    </Demo>
+
+    <Demo :id=${'states'} :title=${'Hint, error, disabled'} :code=${states} :filename=${'input-search-states.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <InputSearch :label=${'Hinted'} :hint=${'Press Enter to search immediately'} bind-value=${hintedValue} />
+        <InputSearch :label=${'Invalid'} :error=${'Query is too short'} bind-value=${errorValue} />
+        <InputSearch :label=${'Disabled'} :disabled=${true} bind-value=${lockedValue} />
+      </Stack>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

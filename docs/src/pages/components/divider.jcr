@@ -18,6 +18,7 @@ import {
   basic,
   labeled,
   playgroundCode as buildPlaygroundCode,
+  sections,
   vertical,
 } from '../../examples/divider.js'
 
@@ -121,6 +122,17 @@ export <view>
         </Stack>
       </Demo>
     </DocsSection>
+
+    <Demo :id=${'sections'} :title=${'Section transition'} :lead=${'A descriptive label can introduce the next group in a dense settings surface.'} :code=${sections} :filename=${'divider-sections.jcr'}>
+      <div style="width:min(24rem,100%)">
+        <Stack :gap=${'sm'}>
+          <Text :weight=${'bold'}>Profile</Text>
+          <Text>Personal and contact information</Text>
+          <Divider :label=${'Preferences'} />
+          <Text>Language, timezone, and notifications</Text>
+        </Stack>
+      </div>
+    </Demo>
 
     <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
       <AccessibilityChecklist :items=${a11y} />

@@ -1,8 +1,14 @@
 import { pulse } from '@jacare/core'
+import Avatar from '@jacare/ui/components/Avatar.jcr'
+import Badge from '@jacare/ui/components/Badge.jcr'
 import Button from '@jacare/ui/components/Button.jcr'
 import Card from '@jacare/ui/components/Card.jcr'
 import Field from '@jacare/ui/components/Field.jcr'
+import Image from '@jacare/ui/components/Image.jcr'
+import Select from '@jacare/ui/components/Select.jcr'
 import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Tag from '@jacare/ui/components/Tag.jcr'
 import Text from '@jacare/ui/components/Text.jcr'
 import DocsHero from '../../ui/DocsHero.jcr'
 import Demo from '../../ui/Demo.jcr'
@@ -15,31 +21,74 @@ import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
 import {
   basic,
+  bodyImage,
   composition,
+  headerFooter,
+  mediaExample,
+  mediaGrid,
   paddings,
   playgroundCode as buildPlaygroundCode,
+  shadows,
+  statusCards,
   titled,
+  toneCovers,
+  tones,
 } from '../../examples/card.js'
 
 const contract = getContract('Card')
 const navLinks = previousNext('/components/card')
 
+const cover =
+  'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 640 360%27%3E%3Cdefs%3E%3ClinearGradient id=%27g%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop stop-color=%27%23dcefe8%27/%3E%3Cstop offset=%271%27 stop-color=%27%2378b99f%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%27640%27 height=%27360%27 fill=%27url(%23g)%27/%3E%3Ccircle cx=%27180%27 cy=%27120%27 r=%2760%27 fill=%27%23f4f7f2%27 opacity=%27.7%27/%3E%3Cpath d=%27M0 280l140-90 110 70 120-100 270 120v80H0z%27 fill=%27%23235548%27/%3E%3C/svg%3E'
+const forest =
+  'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 640 360%27%3E%3Crect width=%27640%27 height=%27360%27 fill=%27%23dcefe8%27/%3E%3Cpath d=%27M80 300 180 120 280 300Z%27 fill=%27%23235548%27/%3E%3Cpath d=%27M220 300 340 90 460 300Z%27 fill=%27%23366b56%27/%3E%3Cpath d=%27M400 300 520 140 620 300Z%27 fill=%27%23235548%27/%3E%3C/svg%3E'
+const lake =
+  'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 640 360%27%3E%3Crect width=%27640%27 height=%27360%27 fill=%27%23c9e4f5%27/%3E%3Cellipse cx=%27320%27 cy=%27240%27 rx=%27240%27 ry=%2760%27 fill=%27%234a8fb5%27/%3E%3Ccircle cx=%27500%27 cy=%2790%27 r=%2736%27 fill=%27%23f7e7a1%27/%3E%3C/svg%3E'
+const dusk =
+  'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 640 360%27%3E%3Cdefs%3E%3ClinearGradient id=%27d%27 x1=%270%27 y1=%270%27 x2=%270%27 y2=%271%27%3E%3Cstop stop-color=%27%23f2c6a0%27/%3E%3Cstop offset=%271%27 stop-color=%27%23784a3a%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%27640%27 height=%27360%27 fill=%27url(%23d)%27/%3E%3Ccircle cx=%27480%27 cy=%27100%27 r=%2748%27 fill=%27%23ffe0a8%27/%3E%3C/svg%3E'
+const art =
+  'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 480 240%27%3E%3Crect width=%27480%27 height=%27240%27 rx=%2720%27 fill=%27%23e8f3ee%27/%3E%3Ccircle cx=%27140%27 cy=%27100%27 r=%2744%27 fill=%27%2378b99f%27/%3E%3Cpath d=%27M40 200l90-70 50 36 70-58 90 72 100-40v60H40z%27 fill=%27%23235548%27/%3E%3C/svg%3E'
+const greenCover =
+  'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 640 360%27%3E%3Crect width=%27640%27 height=%27360%27 fill=%27%23cfe8d8%27/%3E%3Cpath d=%27M0 260c80-40 160-40 240 0s160 40 240 0 160-40 160 0v100H0z%27 fill=%27%23235548%27/%3E%3C/svg%3E'
+const amberCover =
+  'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 640 360%27%3E%3Cdefs%3E%3ClinearGradient id=%27a%27 x1=%270%27 y1=%270%27 x2=%270%27 y2=%271%27%3E%3Cstop stop-color=%27%23ffe0a8%27/%3E%3Cstop offset=%271%27 stop-color=%27%23c47a00%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%27640%27 height=%27360%27 fill=%27url(%23a)%27/%3E%3C/svg%3E'
+const roseCover =
+  'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 640 360%27%3E%3Cdefs%3E%3ClinearGradient id=%27r%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop stop-color=%27%23f3c1c1%27/%3E%3Cstop offset=%271%27 stop-color=%27%239b2c2c%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%27640%27 height=%27360%27 fill=%27url(%23r)%27/%3E%3Cpath d=%27M80 220c40-60 120-60 160 0s120 60 200 0 120-60 120 0v140H80z%27 fill=%27%23601a1a%27 opacity=%27.55%27/%3E%3C/svg%3E'
+
+const paddingOptions = [
+  { value: 'sm', label: 'Small' },
+  { value: 'md', label: 'Medium' },
+  { value: 'lg', label: 'Large' },
+]
+const shadowOptions = [
+  { value: 'always', label: 'Always' },
+  { value: 'hover', label: 'Hover' },
+  { value: 'never', label: 'Never' },
+]
+const toneOptions = [
+  { value: 'default', label: 'Default' },
+  { value: 'primary', label: 'Primary' },
+  { value: 'success', label: 'Success' },
+  { value: 'warn', label: 'Warn' },
+  { value: 'danger', label: 'Danger' },
+  { value: 'info', label: 'Info' },
+]
+
 const playTitle = pulse('Project')
 const playSubtitle = pulse('Jacaré UI kit')
 const playBody = pulse('Group related content with a clear header.')
 const playPadding = pulse('md')
-const paddingOptions = ['sm', 'md', 'lg']
+const playShadow = pulse('always')
+const playTone = pulse('default')
+const playShowMedia = pulse(false)
 
 const a11y = [
   'Card is a section surface — put headings inside when needed',
   'title renders as an h3 for local structure',
+  'coverAlt should describe informative covers; leave empty when decorative',
   'Keep interactive controls labeled inside the body',
   'Do not nest interactive cards without clear labels',
 ]
-
-function setPadding(next) {
-  playPadding.set(next)
-}
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -47,6 +96,10 @@ function playgroundCode() {
     subtitle: playSubtitle(),
     body: playBody(),
     padding: playPadding(),
+    shadow: playShadow(),
+    tone: playTone(),
+    cover: playShowMedia() ? cover : '',
+    coverAlt: 'Coastal trail cover',
   })
 }
 
@@ -61,7 +114,7 @@ export <view>
     <DocsHero
       :kicker=${'Data display'}
       :title=${'Card'}
-      :description=${'Elevated content surface for grouping related UI. Use title and subtitle for headers, padding for density, and compose body content with Text, Stack, and actions.'}
+      :description=${'Elevated content surface for grouping related UI. Use tone for status colors, shadow for elevation, cover for edge-to-edge images, and compose body content with Text, tags, and actions.'}
       :status=${'stable'}
     />
 
@@ -71,19 +124,10 @@ export <view>
           <Field :label=${'Title'} bind-value=${playTitle} />
           <Field :label=${'Subtitle'} bind-value=${playSubtitle} />
           <Field :label=${'Body'} bind-value=${playBody} />
-
-          <div class="docs-alert-play__group">
-            <span class="docs-alert-play__label">Padding</span>
-            <div class="docs-hero-actions">
-              #for paddingOptions as option
-                <Button
-                  :size=${'sm'}
-                  :variant=${() => (playPadding() === option ? 'primary' : 'secondary')}
-                  on-press=${() => setPadding(option)}
-                >${option}</Button>
-              #end
-            </div>
-          </div>
+          <Select :label=${'Padding'} :options=${paddingOptions} bind-value=${playPadding} />
+          <Select :label=${'Shadow'} :options=${shadowOptions} bind-value=${playShadow} />
+          <Select :label=${'Tone'} :options=${toneOptions} bind-value=${playTone} />
+          <Switch :label=${'Show cover'} bind-checked=${playShowMedia} />
         </div>
 
         <div class="docs-alert-play__preview">
@@ -92,6 +136,10 @@ export <view>
               :title=${playTitle}
               :subtitle=${playSubtitle}
               :padding=${playPadding}
+              :shadow=${playShadow}
+              :tone=${playTone}
+              :cover=${() => (playShowMedia() ? cover : '')}
+              :coverAlt=${'Coastal trail cover'}
             >
               <Text>${playBody}</Text>
             </Card>
@@ -115,6 +163,81 @@ export <view>
       </Demo>
     </DocsSection>
 
+    <DocsSection :id=${'tones'} :title=${'Tones'}>
+      <Demo
+        :id=${'all-tones'}
+        :title=${'Color accents'}
+        :lead=${'tone tints the surface for status and brand cards.'}
+        :code=${tones}
+        :filename=${'card-tones.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+          <Card :title=${'Default'} :tone=${'default'}>
+            <Text :tone=${'muted'}>Neutral surface</Text>
+          </Card>
+          <Card :title=${'Primary'} :tone=${'primary'}>
+            <Text :tone=${'muted'}>Brand accent</Text>
+          </Card>
+          <Card :title=${'Success'} :tone=${'success'}>
+            <Text :tone=${'muted'}>Healthy status</Text>
+          </Card>
+          <Card :title=${'Warn'} :tone=${'warn'}>
+            <Text :tone=${'muted'}>Needs attention</Text>
+          </Card>
+          <Card :title=${'Danger'} :tone=${'danger'}>
+            <Text :tone=${'muted'}>Blocking issue</Text>
+          </Card>
+          <Card :title=${'Info'} :tone=${'info'}>
+            <Text :tone=${'muted'}>Helpful note</Text>
+          </Card>
+        </Stack>
+      </Demo>
+
+      <Demo
+        :id=${'status'}
+        :title=${'Status cards'}
+        :code=${statusCards}
+        :filename=${'card-status.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+          <Card :title=${'Build passed'} :subtitle=${'main · 2m ago'} :tone=${'success'}>
+            <Text :tone=${'muted'}>All checks are green.</Text>
+          </Card>
+          <Card :title=${'Review needed'} :subtitle=${'PR #482'} :tone=${'warn'}>
+            <Text :tone=${'muted'}>Two reviewers still pending.</Text>
+          </Card>
+          <Card :title=${'Deploy failed'} :subtitle=${'staging'} :tone=${'danger'}>
+            <Text :tone=${'muted'}>Rollback is available.</Text>
+          </Card>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'shadow'} :title=${'Shadow'}>
+      <Demo
+        :id=${'all-shadows'}
+        :title=${'Elevation modes'}
+        :lead=${'always, hover, or never.'}
+        :code=${shadows}
+        :filename=${'card-shadows.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
+          <Card :title=${'Always'} :shadow=${'always'}>
+            <Text :tone=${'muted'}>Default elevated surface</Text>
+          </Card>
+          <Card :title=${'Hover'} :shadow=${'hover'}>
+            <Text :tone=${'muted'}>Shadow appears on hover</Text>
+          </Card>
+          <Card :title=${'Never'} :shadow=${'never'}>
+            <Text :tone=${'muted'}>Flat bordered panel</Text>
+          </Card>
+        </Stack>
+      </Demo>
+    </DocsSection>
+
     <DocsSection :id=${'padding'} :title=${'Padding'}>
       <Demo :id=${'all-paddings'} :title=${'Density scale'} :code=${paddings} :filename=${'card-paddings.jcr'}>
         <Stack :direction=${'row'} :gap=${'md'} :wrap=${true}>
@@ -128,6 +251,157 @@ export <view>
             <Text :size=${'sm'}>Roomy padding</Text>
           </Card>
         </Stack>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'media'} :title=${'Media'}>
+      <Demo
+        :id=${'media-cover'}
+        :title=${'Edge-to-edge cover'}
+        :lead=${'Pass cover and coverAlt for a flush image above the title.'}
+        :code=${mediaExample}
+        :filename=${'card-media.jcr'}
+        :layout=${'stack'}
+      >
+        <Card
+          :title=${'Coastal trail'}
+          :subtitle=${'Weekend guide'}
+          :cover=${cover}
+          :coverAlt=${'Misty coastal trail'}
+          :shadow=${'hover'}
+        >
+          <Text :tone=${'muted'}>A soft morning walk along the cliffs with quiet overlooks.</Text>
+          <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+            <Tag :type=${'success'}>Outdoors</Tag>
+            <Tag :type=${'info'}>2h</Tag>
+          </Stack>
+          <Button :size=${'sm'}>Open guide</Button>
+        </Card>
+      </Demo>
+
+      <Demo
+        :id=${'media-grid'}
+        :title=${'Image gallery cards'}
+        :lead=${'Mix covers, tags, and hover shadow for browse grids.'}
+        :code=${mediaGrid}
+        :filename=${'card-media-grid.jcr'}
+        :layout=${'stack'}
+      >
+        <div class="docs-card-grid">
+          <Card
+            :title=${'Forest cabin'}
+            :padding=${'sm'}
+            :shadow=${'hover'}
+            :cover=${forest}
+            :coverAlt=${'Pine forest cabin'}
+          >
+            <Tag :type=${'success'}>Available</Tag>
+            <Text :tone=${'muted'} :size=${'sm'}>Quiet stay among the pines.</Text>
+          </Card>
+          <Card
+            :title=${'Lake house'}
+            :padding=${'sm'}
+            :shadow=${'hover'}
+            :cover=${lake}
+            :coverAlt=${'Calm lake house'}
+          >
+            <Tag :type=${'warning'}>2 left</Tag>
+            <Text :tone=${'muted'} :size=${'sm'}>Sunset decks over still water.</Text>
+          </Card>
+          <Card
+            :title=${'Dusk loft'}
+            :padding=${'sm'}
+            :shadow=${'hover'}
+            :cover=${dusk}
+            :coverAlt=${'Warm dusk loft'}
+          >
+            <Tag :type=${'danger'}>Sold out</Tag>
+            <Text :tone=${'muted'} :size=${'sm'}>Warm loft with city glow.</Text>
+          </Card>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'tone-covers'}
+        :title=${'Tone plus cover'}
+        :lead=${'Combine tinted surfaces with photographic covers.'}
+        :code=${toneCovers}
+        :filename=${'card-tone-covers.jcr'}
+        :layout=${'stack'}
+      >
+        <div class="docs-card-grid">
+          <Card
+            :title=${'Harvest'}
+            :tone=${'success'}
+            :cover=${greenCover}
+            :coverAlt=${'Green fields'}
+            :shadow=${'never'}
+          >
+            <Text :tone=${'muted'}>Season looks healthy.</Text>
+          </Card>
+          <Card
+            :title=${'Watchlist'}
+            :tone=${'warn'}
+            :cover=${amberCover}
+            :coverAlt=${'Warm dusk'}
+            :shadow=${'never'}
+          >
+            <Text :tone=${'muted'}>Two plots need water.</Text>
+          </Card>
+          <Card
+            :title=${'Alert'}
+            :tone=${'danger'}
+            :cover=${roseCover}
+            :coverAlt=${'Storm sky'}
+            :shadow=${'never'}
+          >
+            <Text :tone=${'muted'}>Storm path nearby.</Text>
+          </Card>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'body-image'}
+        :title=${'Inset image'}
+        :lead=${'Keep Image in the body when the media should stay padded.'}
+        :code=${bodyImage}
+        :filename=${'card-body-image.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Inset media'} :subtitle=${'Image inside the body'}>
+          <Image :src=${art} :alt=${'Soft landscape artwork'} />
+          <Text :tone=${'muted'}>Keep the media padded when the card should feel like an article block.</Text>
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'profile'} :title=${'Profile card'}>
+      <Demo
+        :id=${'header-footer'}
+        :title=${'Avatar and actions'}
+        :code=${headerFooter}
+        :filename=${'card-profile.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :shadow=${'hover'}>
+          <Stack :gap=${'md'}>
+            <Stack :direction=${'row'} :gap=${'sm'} :align=${'center'} :justify=${'between'}>
+              <Stack :direction=${'row'} :gap=${'sm'} :align=${'center'}>
+                <Avatar :name=${'Ana Costa'} :size=${'sm'} />
+                <Stack :gap=${'sm'}>
+                  <Text>Ana Costa</Text>
+                  <Text :tone=${'muted'} :size=${'sm'}>Product design</Text>
+                </Stack>
+              </Stack>
+              <Badge :text=${'Online'} :tone=${'success'} :soft=${true} :dot=${true} />
+            </Stack>
+            <Text :tone=${'muted'}>Shared a new moodboard for the summer release.</Text>
+            <Stack :direction=${'row'} :gap=${'sm'}>
+              <Button :size=${'sm'} :variant=${'secondary'}>Dismiss</Button>
+              <Button :size=${'sm'}>Open</Button>
+            </Stack>
+          </Stack>
+        </Card>
       </Demo>
     </DocsSection>
 

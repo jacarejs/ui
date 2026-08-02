@@ -1,0 +1,63 @@
+import Tour from '@jacare/ui/components/Tour.jcr'
+import TourStep from '@jacare/ui/components/TourStep.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { copy, optionalCopy, targeted, sequence } from '../../examples/tour-step.js'
+
+const contract = getContract('TourStep')
+const navLinks = previousNext('/components/tour-step')
+const a11y = [
+  'Use selectors that resolve to stable, focusable page targets',
+  'Keep titles concise and descriptions focused on one action',
+  'Order TourStep elements to match the intended task flow',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>TourStep</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Navigation'}
+      :title=${'TourStep'}
+      :description=${'TourStep registers one guided step inside Tour. selector points to its target, while title and description provide the popover content.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'copy'} :title=${'Step copy'} :lead=${'title and description provide concise guidance for each registered step.'} :code=${copy} :filename=${'tour-step-copy.jcr'}>
+       <Tour :open=${true}>
+        <TourStep :title=${'Welcome'} :description=${'This starts the guided flow.'} />
+        <TourStep :title=${'Next step'} :description=${'Keep each step focused on one action.'} />
+       </Tour>
+    </Demo>
+    <Demo :id=${'targeted'} :title=${'Target selector'} :lead=${'selector attaches the current step to a matching element on the page.'} :code=${targeted} :filename=${'tour-step-target.jcr'}>
+      <div><Button id="create-project">Create project</Button><Tour :open=${true}><TourStep :selector=${'#create-project'} :title=${'Create a project'} :description=${'Start by naming your workspace.'} /></Tour></div>
+    </Demo>
+    <Demo :id=${'sequence'} :title=${'Step sequence'} :lead=${'Tour presents child TourStep registrations in their document order.'} :code=${sequence} :filename=${'tour-step-sequence.jcr'}>
+      <Tour :open=${true}><TourStep :selector=${'#navigation'} :title=${'Navigation'} :description=${'Move between project areas.'} /><TourStep :selector=${'#content'} :title=${'Content'} :description=${'Review the selected resource.'} /><TourStep :selector=${'#actions'} :title=${'Actions'} :description=${'Save or publish your changes.'} /></Tour>
+    </Demo>
+    <Demo :id=${'optional-copy'} :title=${'Optional copy'} :lead=${'title and description are independent, so a step can use only the copy it needs.'} :code=${optionalCopy} :filename=${'tour-step-optional-copy.jcr'}>
+      <Tour :open=${true}><TourStep :title=${'Keyboard shortcuts'} /><TourStep :description=${'You can omit the title when the instruction stands on its own.'} /></Tour>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

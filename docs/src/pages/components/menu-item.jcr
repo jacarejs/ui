@@ -1,0 +1,63 @@
+import Menu from '@jacare/ui/components/Menu.jcr'
+import MenuItem from '@jacare/ui/components/MenuItem.jcr'
+import SubMenu from '@jacare/ui/components/SubMenu.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { activeItem, links, disabled } from '../../examples/menu-item.js'
+
+const contract = getContract('MenuItem')
+const navLinks = previousNext('/components/menu-item')
+const a11y = [
+  'Give every MenuItem a unique index within its Menu',
+  'Use href for navigation destinations and omit it for command-style selection',
+  'Disabled items are removed from keyboard interaction and expose their state',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>MenuItem</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Navigation'}
+      :title=${'MenuItem'}
+      :description=${'MenuItem is a selectable destination used inside Menu or SubMenu. index controls active state, href renders a link, and disabled prevents selection.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'active-item'} :title=${'Active item'} :lead=${'Menu compares defaultActive with each required index to mark the current item.'} :code=${activeItem} :filename=${'menu-item-active.jcr'}>
+       <Menu :defaultActive=${'home'}>
+        <MenuItem :index=${'home'}>Home</MenuItem>
+        <SubMenu :index=${'guides'} :title=${'Guides'}>
+          <MenuItem :index=${'install'}>Install</MenuItem>
+          <MenuItem :index=${'theme'}>Theme</MenuItem>
+        </SubMenu>
+       </Menu>
+    </Demo>
+    <Demo :id=${'links'} :title=${'Navigation links'} :lead=${'href renders semantic links while Menu still manages active selection.'} :code=${links} :filename=${'menu-item-links.jcr'}>
+      <Menu :defaultActive=${'docs'}><MenuItem :index=${'home'} :href=${'/'}>Home</MenuItem><MenuItem :index=${'docs'} :href=${'/components'}>Components</MenuItem></Menu>
+    </Demo>
+    <Demo :id=${'disabled'} :title=${'Disabled item'} :lead=${'disabled preserves an unavailable destination without allowing selection.'} :code=${disabled} :filename=${'menu-item-disabled.jcr'}>
+      <Menu :mode=${'horizontal'} :defaultActive=${'overview'}><MenuItem :index=${'overview'}>Overview</MenuItem><MenuItem :index=${'reports'}>Reports</MenuItem><MenuItem :index=${'admin'} :disabled=${true}>Admin</MenuItem></Menu>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

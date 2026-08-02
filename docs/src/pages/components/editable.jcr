@@ -1,0 +1,144 @@
+import { pulse } from '@jacare/core'
+import Editable from '@jacare/ui/components/Editable.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  disabledExample,
+  eventsExample,
+  placeholderExample,
+  requiredExample,
+  tableRow,
+} from '../../examples/editable.js'
+
+const contract = getContract('Editable')
+const navLinks = previousNext('/components/editable')
+
+const basicValue = pulse('Canopy tokens')
+const emptyValue = pulse('')
+const requiredValue = pulse('Heber')
+const disabledValue = pulse('Read-only field')
+const sku = pulse('SKU-1042')
+const label = pulse('Forest green')
+const notes = pulse('')
+const eventValue = pulse('Editable title')
+const eventLog = pulse('Idle')
+
+const a11y = [
+  'The trigger is a focusable button until editing starts',
+  'Enter commits the draft; Escape cancels and restores the previous value',
+  'Blur also commits so pointer and keyboard flows stay consistent',
+  'required is forwarded to the native input while editing',
+  'disabled keeps the trigger non-interactive and visually muted',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Editable</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Inputs'}
+      :title=${'Editable'}
+      :description=${'Inline text that becomes an input on click — tables, settings, and dense lists. Enter saves, Escape cancels.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Click the text to edit. Blur or Enter commits; Escape cancels.'}
+      :code=${basic}
+      :filename=${'editable-basic.jcr'}
+    >
+      <Editable bind-value=${basicValue} :placeholder=${'Product name'} />
+    </Demo>
+
+    <Demo
+      :id=${'placeholder'}
+      :title=${'Empty placeholder'}
+      :lead=${'When the value is empty, the placeholder is shown until the first commit.'}
+      :code=${placeholderExample}
+      :filename=${'editable-placeholder.jcr'}
+    >
+      <Editable :placeholder=${'Click to name this row'} bind-value=${emptyValue} />
+    </Demo>
+
+    <Demo
+      :id=${'required'}
+      :title=${'Required'}
+      :lead=${'required is applied to the input while editing.'}
+      :code=${requiredExample}
+      :filename=${'editable-required.jcr'}
+    >
+      <Editable :placeholder=${'Owner'} :required=${true} bind-value=${requiredValue} />
+    </Demo>
+
+    <Demo
+      :id=${'disabled'}
+      :title=${'Disabled'}
+      :code=${disabledExample}
+      :filename=${'editable-disabled.jcr'}
+    >
+      <Editable :disabled=${true} :placeholder=${'Cannot edit'} bind-value=${disabledValue} />
+    </Demo>
+
+    <Demo
+      :id=${'table'}
+      :title=${'Settings row'}
+      :lead=${'Pair with muted labels for compact key/value editing.'}
+      :code=${tableRow}
+      :filename=${'editable-table.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'sm'}>
+        <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+          <Text :tone=${'muted'}>SKU</Text>
+          <Editable :placeholder=${'SKU'} bind-value=${sku} />
+        </Stack>
+        <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+          <Text :tone=${'muted'}>Label</Text>
+          <Editable :placeholder=${'Label'} bind-value=${label} />
+        </Stack>
+        <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+          <Text :tone=${'muted'}>Notes</Text>
+          <Editable :placeholder=${'Add a note'} bind-value=${notes} />
+        </Stack>
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'events'}
+      :title=${'Events'}
+      :lead=${'start, change, and cancel fire around the edit lifecycle.'}
+      :code=${eventsExample}
+      :filename=${'editable-events.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'sm'}>
+        <Editable
+          :placeholder=${'Title'}
+          bind-value=${eventValue}
+          on-start=${() => eventLog.set('Editing…')}
+          on-change=${(next) => eventLog.set(`Saved: ${next}`)}
+          on-cancel=${() => eventLog.set('Cancelled')}
+        />
+        <Text :tone=${'muted'}>${eventLog}</Text>
+      </Stack>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

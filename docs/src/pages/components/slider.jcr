@@ -9,9 +9,10 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, rangeExample, tooltipExample, playgroundCode as buildPlaygroundCode } from '../../examples/slider.js'
+import { basic, rangeExample, tooltipExample, verticalDisabled, playgroundCode as buildPlaygroundCode } from '../../examples/slider.js'
 
 const contract = getContract('Slider')
 const navLinks = previousNext('/components/slider')
@@ -29,6 +30,13 @@ const playDisabled = pulse(false)
 const basicValue = pulse(40)
 const rangeValue = pulse([25, 70])
 const tooltipValue = pulse(55)
+const verticalValue = pulse(60)
+
+const a11y = [
+  'Each thumb exposes slider semantics and current value',
+  'Arrow keys adjust by step and Home or End move to bounds',
+  'Disabled sliders leave values visible without accepting input',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -54,7 +62,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Selection'}
       :title=${'Slider'}
       :description=${'Single or range value slider with pointer and touch drag, optional tooltips, and independent demo state on this page.'}
       :status=${'stable'}
@@ -115,6 +123,17 @@ export <view>
     <Demo :id=${'tooltip'} :title=${'Tooltip'} :code=${tooltipExample} :filename=${'slider-tooltip.jcr'}>
       <Slider :min=${0} :max=${100} :showTooltip=${true} bind-value=${tooltipValue} />
     </Demo>
+
+    <Demo :id=${'vertical-disabled'} :title=${'Vertical and disabled'} :code=${verticalDisabled} :filename=${'slider-vertical-disabled.jcr'}>
+      <Stack :direction=${'row'} :gap=${'lg'}>
+        <div style="height:180px"><Slider :vertical=${true} :step=${10} :showTooltip=${true} bind-value=${verticalValue} /></div>
+        <div style="height:180px"><Slider :vertical=${true} :disabled=${true} :value=${35} /></div>
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

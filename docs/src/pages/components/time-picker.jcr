@@ -9,9 +9,10 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/time-picker.js'
+import { arrowControl, basic, placeholder, playgroundCode as buildPlaygroundCode, seconds, states } from '../../examples/time-picker.js'
 
 const contract = getContract('TimePicker')
 const navLinks = previousNext('/components/time-picker')
@@ -22,6 +23,18 @@ const playClearable = pulse(true)
 const playArrowControl = pulse(false)
 const playDisabled = pulse(false)
 const basicValue = pulse('09:30')
+const secondsValue = pulse('09:30:45')
+const arrowValue = pulse('14:20')
+const placeholderValue = pulse('')
+const errorValue = pulse('')
+const disabledValue = pulse('18:30')
+const a11y = [
+  'The trigger announces a dialog popup and displays the selected time as text',
+  'Hour, minute, and second selectors retain native keyboard focus behavior',
+  'Arrow controls have explicit Increase and Decrease names for each time unit',
+  'Clear and Now are real buttons; disabling the picker prevents opening its panel',
+  'error is announced with role="alert" and highlighted on both label and trigger',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -42,7 +55,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Pickers'}
       :title=${'TimePicker'}
       :description=${'Hour and minute picker that binds an HH:mm (or HH:mm:ss) string pulse, with optional arrow steppers.'}
       :status=${'stable'}
@@ -77,6 +90,29 @@ export <view>
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'time-picker-basic.jcr'}>
       <TimePicker :label=${'Start time'} bind-value=${basicValue} />
     </Demo>
+
+    <Demo :id=${'seconds'} :title=${'Seconds'} :lead=${'Bind an HH:mm:ss value to render the seconds control.'} :code=${seconds} :filename=${'time-picker-seconds.jcr'}>
+      <TimePicker :label=${'Precise start'} :hint=${'A value with three segments enables seconds'} bind-value=${secondsValue} />
+    </Demo>
+
+    <Demo :id=${'arrow-control'} :title=${'Arrow controls'} :code=${arrowControl} :filename=${'time-picker-arrow-control.jcr'}>
+      <TimePicker :label=${'Reminder time'} :arrowControl=${true} bind-value=${arrowValue} />
+    </Demo>
+
+    <Demo :id=${'placeholder'} :title=${'Placeholder without clear'} :code=${placeholder} :filename=${'time-picker-placeholder.jcr'}>
+      <TimePicker :label=${'Optional time'} :placeholder=${'No time selected'} :clearable=${false} bind-value=${placeholderValue} />
+    </Demo>
+
+    <Demo :id=${'states'} :title=${'Error and disabled states'} :code=${states} :filename=${'time-picker-states.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <TimePicker :label=${'Closing time'} :error=${'Closing time is required'} bind-value=${errorValue} />
+        <TimePicker :label=${'Scheduled time'} :disabled=${true} bind-value=${disabledValue} />
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

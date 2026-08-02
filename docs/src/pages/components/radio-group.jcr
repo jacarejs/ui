@@ -15,6 +15,7 @@ import { previousNext } from '../../nav-data.js'
 import {
   basic,
   cards,
+  optionDisabled,
   playgroundCode as buildPlaygroundCode,
   states,
 } from '../../examples/radio-group.js'
@@ -40,6 +41,7 @@ const cardsValue = pulse('pro')
 const statesRequiredValue = pulse('')
 const statesErrorValue = pulse('')
 const statesDisabledValue = pulse('pro')
+const regionValue = pulse('americas')
 
 const a11y = [
   'Fieldset + legend provide the group name for assistive technologies',
@@ -68,7 +70,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Selection'}
       :title=${'RadioGroup'}
       :description=${'Single-choice group with list or card layouts. Bind value to a pulse and pass string or described options.'}
       :status=${'stable'}
@@ -124,6 +126,20 @@ export <view>
         </Stack>
       </Demo>
     </DocsSection>
+
+    <Demo :id=${'option-disabled'} :title=${'Disabled option'} :lead=${'Disable one unavailable choice without locking the whole group.'} :code=${optionDisabled} :filename=${'radio-group-option-disabled.jcr'} :layout=${'stack'}>
+      <RadioGroup
+        :label=${'Deployment region'}
+        :hint=${'Unavailable regions remain visible'}
+        :name=${'deployment-region'}
+        :options=${[
+          { value: 'americas', label: 'Americas' },
+          { value: 'europe', label: 'Europe' },
+          { value: 'asia', label: 'Asia Pacific', disabled: true },
+        ]}
+        bind-value=${regionValue}
+      />
+    </Demo>
 
     <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
       <AccessibilityChecklist :items=${a11y} />

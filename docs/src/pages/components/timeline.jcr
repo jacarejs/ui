@@ -1,0 +1,326 @@
+import { pulse } from '@jacare/core'
+import Card from '@jacare/ui/components/Card.jcr'
+import Select from '@jacare/ui/components/Select.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Tag from '@jacare/ui/components/Tag.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import Timeline from '@jacare/ui/components/Timeline.jcr'
+import TimelineItem from '@jacare/ui/components/TimelineItem.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  dashed,
+  gaps,
+  hollow,
+  inCard,
+  placement,
+  playgroundCode as buildPlaygroundCode,
+  release,
+  reverse,
+  rich,
+  spacious,
+  types,
+} from '../../examples/timeline.js'
+
+const contract = getContract('Timeline')
+const navLinks = previousNext('/components/timeline')
+
+const playReverse = pulse(false)
+const playLine = pulse('solid')
+const playGap = pulse('lg')
+
+const lineOptions = [
+  { value: 'solid', label: 'Solid' },
+  { value: 'dashed', label: 'Dashed' },
+]
+
+const gapOptions = [
+  { value: 'sm', label: 'Small' },
+  { value: 'md', label: 'Medium' },
+  { value: 'lg', label: 'Large' },
+]
+
+const a11y = [
+  'Timeline uses a semantic list and each event remains readable without the connector',
+  'Do not rely on node tone alone to communicate status — keep the event text clear',
+  'Write timestamps in an unambiguous, localized format',
+  'Hollow and filled nodes are decorative; meaning lives in the content',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    reverse: playReverse(),
+    line: playLine(),
+    gap: playGap(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Timeline</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :description=${'Chronological event list with a visible rail (solid or dashed), tunable spacing, reversible order, semantic node tones, and rich TimelineItem content.'}
+      :title=${'Timeline'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Switch :label=${'Reverse order'} bind-checked=${playReverse} />
+          <Select :label=${'Line'} :options=${lineOptions} bind-value=${playLine} />
+          <Select :label=${'Gap'} :options=${gapOptions} bind-value=${playGap} />
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <Timeline :reverse=${playReverse} :line=${playLine} :gap=${playGap}>
+              <TimelineItem :timestamp=${'09:30'}>Draft created</TimelineItem>
+              <TimelineItem :timestamp=${'10:15'} :type=${'success'}>Review approved</TimelineItem>
+              <TimelineItem :timestamp=${'11:00'} :type=${'info'}>Release scheduled</TimelineItem>
+            </Timeline>
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'timeline-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Nodes connect with a solid rail between events.'}
+      :code=${basic}
+      :filename=${'timeline-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Timeline>
+        <TimelineItem :timestamp=${'09:30'}>Draft created</TimelineItem>
+        <TimelineItem :timestamp=${'10:15'} :type=${'success'}>Review approved</TimelineItem>
+        <TimelineItem :timestamp=${'11:00'} :type=${'info'}>Release scheduled</TimelineItem>
+      </Timeline>
+    </Demo>
+
+    <Demo
+      :id=${'dashed'}
+      :title=${'Dashed line'}
+      :lead=${'line dashed draws a dashed connector — useful for planned or in-progress tracks.'}
+      :code=${dashed}
+      :filename=${'timeline-dashed.jcr'}
+      :layout=${'stack'}
+    >
+      <Timeline :line=${'dashed'}>
+        <TimelineItem :timestamp=${'09:30'}>Draft created</TimelineItem>
+        <TimelineItem :timestamp=${'10:15'} :type=${'success'}>Review approved</TimelineItem>
+        <TimelineItem :timestamp=${'11:00'} :type=${'info'} :hollow=${true}>Waiting to ship</TimelineItem>
+      </Timeline>
+    </Demo>
+
+    <Demo
+      :id=${'spacious'}
+      :title=${'Spacious gap'}
+      :lead=${'gap lg opens vertical room so the rail and rich copy can breathe.'}
+      :code=${spacious}
+      :filename=${'timeline-spacious.jcr'}
+      :layout=${'stack'}
+    >
+      <Timeline :gap=${'lg'} :line=${'dashed'}>
+        <TimelineItem :timestamp=${'Morning'}>Kickoff and scope lock</TimelineItem>
+        <TimelineItem :timestamp=${'Afternoon'} :type=${'info'}>Design review with product</TimelineItem>
+        <TimelineItem :timestamp=${'Evening'} :type=${'success'}>Build tagged for staging</TimelineItem>
+      </Timeline>
+    </Demo>
+
+    <Demo
+      :id=${'gaps'}
+      :title=${'Gap sizes'}
+      :lead=${'Compare sm, md, and lg spacing on the same three-step story.'}
+      :code=${gaps}
+      :filename=${'timeline-gaps.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :direction=${'row'} :gap=${'xl'} :wrap=${true}>
+        <Stack :gap=${'sm'}>
+          <Text :weight=${'bold'}>gap sm</Text>
+          <Timeline :gap=${'sm'}>
+            <TimelineItem :timestamp=${'A'}>Compact</TimelineItem>
+            <TimelineItem :timestamp=${'B'} :type=${'info'}>Steps</TimelineItem>
+            <TimelineItem :timestamp=${'C'} :type=${'success'}>Closer</TimelineItem>
+          </Timeline>
+        </Stack>
+        <Stack :gap=${'sm'}>
+          <Text :weight=${'bold'}>gap md</Text>
+          <Timeline :gap=${'md'}>
+            <TimelineItem :timestamp=${'A'}>Default</TimelineItem>
+            <TimelineItem :timestamp=${'B'} :type=${'info'}>Breathing</TimelineItem>
+            <TimelineItem :timestamp=${'C'} :type=${'success'}>Room</TimelineItem>
+          </Timeline>
+        </Stack>
+        <Stack :gap=${'sm'}>
+          <Text :weight=${'bold'}>gap lg</Text>
+          <Timeline :gap=${'lg'}>
+            <TimelineItem :timestamp=${'A'}>Spacious</TimelineItem>
+            <TimelineItem :timestamp=${'B'} :type=${'info'}>Story</TimelineItem>
+            <TimelineItem :timestamp=${'C'} :type=${'success'}>Timeline</TimelineItem>
+          </Timeline>
+        </Stack>
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'types'} :title=${'Types and options'}>
+      <Demo
+        :id=${'semantic-types'}
+        :title=${'Semantic types'}
+        :lead=${'Use type (or tone) for primary, success, info, warning, and danger nodes.'}
+        :code=${types}
+        :filename=${'timeline-types.jcr'}
+        :layout=${'stack'}
+      >
+        <Timeline>
+          <TimelineItem :timestamp=${'Default'} :type=${'primary'}>Primary / default node</TimelineItem>
+          <TimelineItem :timestamp=${'Success'} :type=${'success'}>Checks passed</TimelineItem>
+          <TimelineItem :timestamp=${'Info'} :type=${'info'}>Waiting on review</TimelineItem>
+          <TimelineItem :timestamp=${'Warning'} :type=${'warning'}>Needs attention</TimelineItem>
+          <TimelineItem :timestamp=${'Danger'} :type=${'danger'}>Deployment blocked</TimelineItem>
+        </Timeline>
+      </Demo>
+
+      <Demo
+        :id=${'hollow'}
+        :title=${'Hollow nodes'}
+        :lead=${'hollow draws an outlined marker — useful for pending or secondary steps.'}
+        :code=${hollow}
+        :filename=${'timeline-hollow.jcr'}
+        :layout=${'stack'}
+      >
+        <Timeline>
+          <TimelineItem :timestamp=${'Queued'} :hollow=${true}>Waiting for a runner</TimelineItem>
+          <TimelineItem :timestamp=${'Running'} :type=${'primary'} :hollow=${true}>Building packages</TimelineItem>
+          <TimelineItem :timestamp=${'Done'} :type=${'success'}>Artifacts published</TimelineItem>
+        </Timeline>
+      </Demo>
+
+      <Demo
+        :id=${'placement'}
+        :title=${'Timestamp placement'}
+        :lead=${'placement top puts the timestamp above the event; bottom is the default.'}
+        :code=${placement}
+        :filename=${'timeline-placement.jcr'}
+        :layout=${'stack'}
+      >
+        <Timeline>
+          <TimelineItem :timestamp=${'Queued'} :placement=${'top'} :hollow=${true}>Waiting for a runner</TimelineItem>
+          <TimelineItem :timestamp=${'Running'} :placement=${'top'} :type=${'primary'}>Building packages</TimelineItem>
+          <TimelineItem :timestamp=${'Failed'} :placement=${'top'} :type=${'danger'}>Tests need attention</TimelineItem>
+        </Timeline>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'order'} :title=${'Order'}>
+      <Demo
+        :id=${'reverse'}
+        :title=${'Reverse order'}
+        :lead=${'reverse shows the latest registered item first without reordering your slot children.'}
+        :code=${reverse}
+        :filename=${'timeline-reverse.jcr'}
+        :layout=${'stack'}
+      >
+        <Timeline :reverse=${true}>
+          <TimelineItem :timestamp=${'Monday'}>Issue opened</TimelineItem>
+          <TimelineItem :timestamp=${'Tuesday'} :type=${'warning'}>Changes requested</TimelineItem>
+          <TimelineItem :timestamp=${'Wednesday'} :type=${'success'}>Issue resolved</TimelineItem>
+        </Timeline>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'composition'} :title=${'Composition'}>
+      <Demo
+        :id=${'rich'}
+        :title=${'Rich content'}
+        :lead=${'Put title, description, and tags inside TimelineItem for activity feeds.'}
+        :code=${rich}
+        :filename=${'timeline-rich.jcr'}
+        :layout=${'stack'}
+      >
+        <Timeline>
+          <TimelineItem :timestamp=${'09:12'} :type=${'info'}>
+            <Stack :gap=${'sm'}>
+              <Text :weight=${'bold'}>Pull request opened</Text>
+              <Text :tone=${'muted'} :size=${'sm'}>ada opened #482 against main.</Text>
+              <Tag :text=${'review'} :type=${'info'} :size=${'sm'} />
+            </Stack>
+          </TimelineItem>
+          <TimelineItem :timestamp=${'09:40'} :type=${'success'}>
+            <Stack :gap=${'sm'}>
+              <Text :weight=${'bold'}>Checks green</Text>
+              <Text :tone=${'muted'} :size=${'sm'}>lint, unit, and visual tests passed.</Text>
+              <Tag :text=${'ci'} :type=${'success'} :size=${'sm'} />
+            </Stack>
+          </TimelineItem>
+          <TimelineItem :timestamp=${'10:05'} :type=${'warning'}>
+            <Stack :gap=${'sm'}>
+              <Text :weight=${'bold'}>Changes requested</Text>
+              <Text :tone=${'muted'} :size=${'sm'}>Tighten the empty-state copy before merge.</Text>
+              <Tag :text=${'design'} :type=${'warning'} :size=${'sm'} />
+            </Stack>
+          </TimelineItem>
+        </Timeline>
+      </Demo>
+
+      <Demo
+        :id=${'release'}
+        :title=${'Release history'}
+        :lead=${'Combine precise timestamps, readable status text, and node treatments for ops history.'}
+        :code=${release}
+        :filename=${'timeline-release.jcr'}
+        :layout=${'stack'}
+      >
+        <Timeline>
+          <TimelineItem :timestamp=${'Aug 1, 09:00'} :type=${'success'}>Version 2.4 deployed</TimelineItem>
+          <TimelineItem :timestamp=${'Aug 1, 09:12'} :type=${'info'}>Health checks passed</TimelineItem>
+          <TimelineItem :timestamp=${'Aug 1, 09:30'} :hollow=${true}>Release notes published</TimelineItem>
+        </Timeline>
+      </Demo>
+
+      <Demo
+        :id=${'in-card'}
+        :title=${'Inside Card'}
+        :lead=${'Nest a timeline in Card for shipment, onboarding, or audit panels.'}
+        :code=${inCard}
+        :filename=${'timeline-in-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Shipment'} :subtitle=${'Order #1842'}>
+          <Timeline>
+            <TimelineItem :timestamp=${'Yesterday'} :type=${'success'}>Order confirmed</TimelineItem>
+            <TimelineItem :timestamp=${'Today, 08:10'} :type=${'info'}>Picked up by carrier</TimelineItem>
+            <TimelineItem :timestamp=${'Today, 14:40'} :hollow=${true}>Out for delivery</TimelineItem>
+          </Timeline>
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

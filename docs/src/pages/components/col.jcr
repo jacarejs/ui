@@ -1,0 +1,94 @@
+import Row from '@jacare/ui/components/Row.jcr'
+import Col from '@jacare/ui/components/Col.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, offset, responsive, mixed } from '../../examples/col.js'
+
+const contract = getContract('Col')
+const navLinks = previousNext('/components/col')
+
+const a11y = [
+  'Grid sizing does not alter DOM or reading order',
+  'Responsive spans should not reorder content visually',
+  'Check text reflow and touch targets at every supported breakpoint',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Col</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Layout'}
+      :title=${'Col'}
+      :description=${'Responsive cell in the 24-column grid with base span, offset, and xs through xl breakpoint overrides.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'24-column spans'}
+      :lead=${'Sibling spans add up to 24 for a complete row.'}
+      :code=${basic}
+      :filename=${'col-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Row :gutter=${16}><Col :span=${8}><div class="docs-panel">8</div></Col><Col :span=${8}><div class="docs-panel">8</div></Col><Col :span=${8}><div class="docs-panel">8</div></Col></Row>
+    </Demo>
+    <Demo
+      :id=${'offset'}
+      :title=${'Offset columns'}
+      :lead=${'offset adds empty grid columns before a cell.'}
+      :code=${offset}
+      :filename=${'col-offset.jcr'}
+      :layout=${'stack'}
+    >
+      <Row :gutter=${16}><Col :span=${8} :offset=${4}><div class="docs-panel">8 with offset 4</div></Col><Col :span=${8}><div class="docs-panel">8</div></Col></Row>
+    </Demo>
+    <Demo
+      :id=${'responsive'}
+      :title=${'Responsive spans'}
+      :lead=${'xs, sm, md, lg, and xl override the base span at matching breakpoints.'}
+      :code=${responsive}
+      :filename=${'col-responsive.jcr'}
+      :layout=${'stack'}
+    >
+      <Row :gutter=${16}>
+        <Col :span=${6} :xs=${24} :sm=${12} :md=${8} :lg=${6} :xl=${4}><div class="docs-panel">Responsive A</div></Col>
+        <Col :span=${18} :xs=${24} :sm=${12} :md=${16} :lg=${18} :xl=${20}><div class="docs-panel">Responsive B</div></Col>
+      </Row>
+    </Demo>
+    <Demo
+      :id=${'mixed'}
+      :title=${'Mobile-first columns'}
+      :lead=${'Start with full-width columns and split them from the sm breakpoint.'}
+      :code=${mixed}
+      :filename=${'col-mixed.jcr'}
+      :layout=${'stack'}
+    >
+      <Row :gutter=${'1rem'}>
+        <Col :span=${24} :sm=${8}><div class="docs-panel">Navigation</div></Col>
+        <Col :span=${24} :sm=${16}><div class="docs-panel">Content</div></Col>
+      </Row>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

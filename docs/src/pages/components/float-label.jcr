@@ -1,0 +1,103 @@
+import { pulse } from '@jacare/core'
+import FloatLabel from '@jacare/ui/components/FloatLabel.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  fluidExample,
+  invalidExample,
+  textareaExample,
+  variants,
+} from '../../examples/float-label.js'
+
+const contract = getContract('FloatLabel')
+const navLinks = previousNext('/components/float-label')
+
+const basicValue = pulse('')
+const overValue = pulse('')
+const inValue = pulse('')
+const onValue = pulse('')
+const invalidOver = pulse('')
+const invalidIn = pulse('')
+const invalidOn = pulse('')
+const fluidValue = pulse('')
+const bioValue = pulse('')
+
+const a11y = [
+  'FloatLabel itself adds no roles — associate label and control with inputId / id',
+  'invalid tints the floating label and control border for validation feedback',
+  'The floating label is pointer-events none so clicks focus the control',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>FloatLabel</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Form'}
+      :title=${'FloatLabel'}
+      :description=${'Floating label wrapper — the label sits in the field and lifts on focus or value.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :lead=${'Wrap an input and pass label (and matching inputId) — the label floats when the field is focused or filled.'} :code=${basic} :filename=${'float-label-basic.jcr'}>
+      <FloatLabel :label=${'Username'} :inputId=${'username'}>
+        <input id="username" autocomplete="off" bind-value=${basicValue} />
+      </FloatLabel>
+    </Demo>
+
+    <Demo :id=${'variants'} :title=${'Variants'} :lead=${'variant accepts over (default), in, and on for label placement.'} :code=${variants} :filename=${'float-label-variants.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'lg'} :direction=${'row'}>
+        <FloatLabel :label=${'Over Label'} :inputId=${'over_label'} :variant=${'over'}>
+          <input id="over_label" autocomplete="off" bind-value=${overValue} />
+        </FloatLabel>
+        <FloatLabel :label=${'In Label'} :inputId=${'in_label'} :variant=${'in'}>
+          <input id="in_label" autocomplete="off" bind-value=${inValue} />
+        </FloatLabel>
+        <FloatLabel :label=${'On Label'} :inputId=${'on_label'} :variant=${'on'}>
+          <input id="on_label" autocomplete="off" bind-value=${onValue} />
+        </FloatLabel>
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'invalid'} :title=${'Invalid'} :lead=${'When the control is invalid, the floating label is highlighted too.'} :code=${invalidExample} :filename=${'float-label-invalid.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'lg'} :direction=${'row'}>
+        <FloatLabel :label=${'Username'} :inputId=${'invalid_over'} :invalid=${true}>
+          <input id="invalid_over" autocomplete="off" aria-invalid="true" bind-value=${invalidOver} />
+        </FloatLabel>
+        <FloatLabel :label=${'Username'} :inputId=${'invalid_in'} :variant=${'in'} :invalid=${true}>
+          <input id="invalid_in" autocomplete="off" aria-invalid="true" bind-value=${invalidIn} />
+        </FloatLabel>
+        <FloatLabel :label=${'Username'} :inputId=${'invalid_on'} :variant=${'on'} :invalid=${true}>
+          <input id="invalid_on" autocomplete="off" aria-invalid="true" bind-value=${invalidOn} />
+        </FloatLabel>
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'fluid'} :title=${'Fluid'} :lead=${'fluid stretches the wrapper to the container width.'} :code=${fluidExample} :filename=${'float-label-fluid.jcr'}>
+      <FloatLabel :label=${'Email'} :inputId=${'email_fluid'} :fluid=${true}>
+        <input id="email_fluid" type="email" autocomplete="email" bind-value=${fluidValue} />
+      </FloatLabel>
+    </Demo>
+
+    <Demo :id=${'textarea'} :title=${'Textarea'} :lead=${'Works with textarea — the resting label stays at the top line.'} :code=${textareaExample} :filename=${'float-label-textarea.jcr'}>
+      <FloatLabel :label=${'Bio'} :inputId=${'bio'} :variant=${'in'} :fluid=${true}>
+        <textarea id="bio" rows="4" bind-value=${bioValue}></textarea>
+      </FloatLabel>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

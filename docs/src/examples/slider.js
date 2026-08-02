@@ -25,6 +25,19 @@ export <view>
   <Slider :min=\${0} :max=\${100} :showTooltip=\${true} bind-value=\${value} />
 </view>`
 
+export const verticalDisabled = `import { pulse } from '@jacare/core'
+import Slider from '@jacare/ui/Slider'
+import Stack from '@jacare/ui/Stack'
+
+const value = pulse(60)
+
+export <view>
+  <Stack :direction=\${'row'} :gap=\${'lg'}>
+    <div style="height:180px"><Slider :vertical=\${true} :step=\${10} :showTooltip=\${true} bind-value=\${value} /></div>
+    <div style="height:180px"><Slider :vertical=\${true} :disabled=\${true} :value=\${35} /></div>
+  </Stack>
+</view>`
+
 export function playgroundCode(state) {
   const initial = state.range
     ? `[${Number(state.lo) || 0}, ${Number(state.hi) || 100}]`

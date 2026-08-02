@@ -1,0 +1,245 @@
+import { pulse } from '@jacare/core'
+import SpeedDial from '@jacare/ui/components/SpeedDial.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  circle,
+  circleItems,
+  delayExample,
+  linear,
+  maskExample,
+  quarterCircle,
+  sampleItems,
+  semiCircle,
+  tooltipExample,
+} from '../../examples/speed-dial.js'
+
+const contract = getContract('SpeedDial')
+const navLinks = previousNext('/components/speed-dial')
+
+const basicOpen = pulse(false)
+const upOpen = pulse(false)
+const downOpen = pulse(false)
+const leftOpen = pulse(false)
+const rightOpen = pulse(false)
+const circleOpen = pulse(false)
+const semiUpOpen = pulse(false)
+const semiDownOpen = pulse(false)
+const semiLeftOpen = pulse(false)
+const semiRightOpen = pulse(false)
+const quarterUpLeftOpen = pulse(false)
+const quarterUpRightOpen = pulse(false)
+const quarterDownLeftOpen = pulse(false)
+const quarterDownRightOpen = pulse(false)
+const delayOpen = pulse(false)
+const tooltipOpen = pulse(false)
+const maskOpen = pulse(false)
+
+const a11y = [
+  'Trigger button exposes aria-haspopup, aria-expanded, and aria-controls for the menu',
+  'Popup list uses menu / menuitem roles with accessible labels',
+  'Arrow keys open and move focus; Escape closes and returns focus to the trigger',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>SpeedDial</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Actions'}
+      :title=${'SpeedDial'}
+      :description=${'Floating action button with a popup menu — linear, circle, semi-circle, and quarter-circle layouts.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :lead=${'Pass an items model and bind visible to open or close the dial.'} :code=${basic} :filename=${'speed-dial-basic.jcr'} :layout=${'stack'}>
+      <div class="docs-speed-dial-stage docs-speed-dial-stage--tall">
+        <div class="docs-speed-dial-anchor docs-speed-dial-anchor--bottom-center">
+          <SpeedDial :items=${sampleItems} bind-visible=${basicOpen} />
+        </div>
+      </div>
+    </Demo>
+
+    <Demo :id=${'linear'} :title=${'Linear'} :lead=${'type defaults to linear. direction accepts up, down, left, and right — anchor the dial so the fan has room.'} :code=${linear} :filename=${'speed-dial-linear.jcr'} :layout=${'stack'}>
+      <div class="docs-speed-dial-stage docs-speed-dial-stage--board">
+        <div class="docs-speed-dial-anchor docs-speed-dial-anchor--bottom-center">
+          <SpeedDial :items=${sampleItems} :direction=${'up'} bind-visible=${upOpen} />
+        </div>
+        <div class="docs-speed-dial-anchor docs-speed-dial-anchor--top-center">
+          <SpeedDial :items=${sampleItems} :direction=${'down'} bind-visible=${downOpen} />
+        </div>
+        <div class="docs-speed-dial-anchor docs-speed-dial-anchor--middle-right">
+          <SpeedDial :items=${sampleItems} :direction=${'left'} bind-visible=${leftOpen} />
+        </div>
+        <div class="docs-speed-dial-anchor docs-speed-dial-anchor--middle-left">
+          <SpeedDial :items=${sampleItems} :direction=${'right'} bind-visible=${rightOpen} />
+        </div>
+      </div>
+    </Demo>
+
+    <Demo :id=${'circle'} :title=${'Circle'} :lead=${'type="circle" places items around the trigger. radius sets the orbit in pixels.'} :code=${circle} :filename=${'speed-dial-circle.jcr'} :layout=${'stack'}>
+      <div class="docs-speed-dial-stage docs-speed-dial-stage--circle">
+        <div class="docs-speed-dial-anchor docs-speed-dial-anchor--center">
+          <SpeedDial :items=${circleItems} :type=${'circle'} :radius=${80} bind-visible=${circleOpen} />
+        </div>
+      </div>
+    </Demo>
+
+    <Demo :id=${'semi-circle'} :title=${'Semi circle'} :lead=${'type="semi-circle" fans items in a half-circle based on direction.'} :code=${semiCircle} :filename=${'speed-dial-semi.jcr'} :layout=${'stack'}>
+      <div class="docs-speed-dial-stage docs-speed-dial-stage--board">
+        <div class="docs-speed-dial-anchor docs-speed-dial-anchor--bottom-center">
+          <SpeedDial :items=${sampleItems} :type=${'semi-circle'} :direction=${'up'} :radius=${80} bind-visible=${semiUpOpen} />
+        </div>
+        <div class="docs-speed-dial-anchor docs-speed-dial-anchor--top-center">
+          <SpeedDial :items=${sampleItems} :type=${'semi-circle'} :direction=${'down'} :radius=${80} bind-visible=${semiDownOpen} />
+        </div>
+        <div class="docs-speed-dial-anchor docs-speed-dial-anchor--middle-right">
+          <SpeedDial :items=${sampleItems} :type=${'semi-circle'} :direction=${'left'} :radius=${80} bind-visible=${semiLeftOpen} />
+        </div>
+        <div class="docs-speed-dial-anchor docs-speed-dial-anchor--middle-left">
+          <SpeedDial :items=${sampleItems} :type=${'semi-circle'} :direction=${'right'} :radius=${80} bind-visible=${semiRightOpen} />
+        </div>
+      </div>
+    </Demo>
+
+    <Demo :id=${'quarter-circle'} :title=${'Quarter circle'} :lead=${'type="quarter-circle" anchors items to a corner via direction (up-left, up-right, down-left, down-right).'} :code=${quarterCircle} :filename=${'speed-dial-quarter.jcr'} :layout=${'stack'}>
+      <div class="docs-speed-dial-stage docs-speed-dial-stage--board">
+        <div class="docs-speed-dial-anchor docs-speed-dial-anchor--bottom-right">
+          <SpeedDial :items=${sampleItems} :type=${'quarter-circle'} :direction=${'up-left'} :radius=${80} bind-visible=${quarterUpLeftOpen} />
+        </div>
+        <div class="docs-speed-dial-anchor docs-speed-dial-anchor--bottom-left">
+          <SpeedDial :items=${sampleItems} :type=${'quarter-circle'} :direction=${'up-right'} :radius=${80} bind-visible=${quarterUpRightOpen} />
+        </div>
+        <div class="docs-speed-dial-anchor docs-speed-dial-anchor--top-right">
+          <SpeedDial :items=${sampleItems} :type=${'quarter-circle'} :direction=${'down-left'} :radius=${80} bind-visible=${quarterDownLeftOpen} />
+        </div>
+        <div class="docs-speed-dial-anchor docs-speed-dial-anchor--top-left">
+          <SpeedDial :items=${sampleItems} :type=${'quarter-circle'} :direction=${'down-right'} :radius=${80} bind-visible=${quarterDownRightOpen} />
+        </div>
+      </div>
+    </Demo>
+
+    <Demo :id=${'delay'} :title=${'Transition delay'} :lead=${'transitionDelay staggers each action item in milliseconds.'} :code=${delayExample} :filename=${'speed-dial-delay.jcr'} :layout=${'stack'}>
+      <div class="docs-speed-dial-stage docs-speed-dial-stage--tall">
+        <div class="docs-speed-dial-anchor docs-speed-dial-anchor--bottom-center">
+          <SpeedDial :items=${sampleItems} :transitionDelay=${80} bind-visible=${delayOpen} />
+        </div>
+      </div>
+    </Demo>
+
+    <Demo :id=${'tooltip'} :title=${'Tooltip'} :lead=${'tooltip shows each item label via the native title attribute.'} :code=${tooltipExample} :filename=${'speed-dial-tooltip.jcr'} :layout=${'stack'}>
+      <div class="docs-speed-dial-stage docs-speed-dial-stage--tall">
+        <div class="docs-speed-dial-anchor docs-speed-dial-anchor--bottom-center">
+          <SpeedDial :items=${sampleItems} :tooltip=${true} :direction=${'up'} bind-visible=${tooltipOpen} />
+        </div>
+      </div>
+    </Demo>
+
+    <Demo :id=${'mask'} :title=${'Mask'} :lead=${'mask adds a dimmed layer behind the open dial.'} :code=${maskExample} :filename=${'speed-dial-mask.jcr'} :layout=${'stack'}>
+      <div class="docs-speed-dial-stage docs-speed-dial-stage--tall">
+        <div class="docs-speed-dial-anchor docs-speed-dial-anchor--bottom-center">
+          <SpeedDial :items=${sampleItems} :mask=${true} :direction=${'up'} bind-visible=${maskOpen} />
+        </div>
+      </div>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>
+
+export <style>
+.docs-demo-live-inner > .docs-speed-dial-stage {
+  display: block;
+  width: 100%;
+}
+
+.docs-speed-dial-stage {
+  position: relative;
+  width: 100%;
+  min-height: 12rem;
+  padding: 1.5rem;
+  overflow: visible;
+  border-radius: var(--j-radius-sm, 8px);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--j-mint, #d8f3dc) 35%, transparent), transparent),
+    var(--j-surface-2, var(--j-surface));
+}
+
+.docs-speed-dial-stage--tall {
+  min-height: 20rem;
+}
+
+.docs-speed-dial-stage--circle {
+  min-height: 22rem;
+}
+
+.docs-speed-dial-stage--board {
+  min-height: 24rem;
+}
+
+.docs-speed-dial-anchor {
+  position: absolute;
+}
+
+.docs-speed-dial-anchor--center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.docs-speed-dial-anchor--bottom-center {
+  bottom: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.docs-speed-dial-anchor--top-center {
+  top: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.docs-speed-dial-anchor--middle-left {
+  top: 50%;
+  left: 1.25rem;
+  transform: translateY(-50%);
+}
+
+.docs-speed-dial-anchor--middle-right {
+  top: 50%;
+  right: 1.25rem;
+  transform: translateY(-50%);
+}
+
+.docs-speed-dial-anchor--bottom-left {
+  bottom: 1.25rem;
+  left: 1.25rem;
+}
+
+.docs-speed-dial-anchor--bottom-right {
+  bottom: 1.25rem;
+  right: 1.25rem;
+}
+
+.docs-speed-dial-anchor--top-left {
+  top: 1.25rem;
+  left: 1.25rem;
+}
+
+.docs-speed-dial-anchor--top-right {
+  top: 1.25rem;
+  right: 1.25rem;
+}
+</style>

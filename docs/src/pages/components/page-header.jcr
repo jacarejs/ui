@@ -1,0 +1,52 @@
+import { pulse } from '@jacare/core'
+import PageHeader from '@jacare/ui/components/PageHeader.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, body, without_icon, back_event, complete, text_only } from '../../examples/page-header.js'
+
+const contract = getContract('PageHeader')
+const navLinks = previousNext('/components/page-header')
+const destination = pulse('Current page')
+const a11y = [
+  'Use a specific back label that describes the destination',
+  'Keep one h1-level content heading for the current page',
+  'Handle back consistently with the surrounding navigation flow',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb"><a jacare-go="/components" href="/components">Components</a><span aria-hidden="true">/</span><span>PageHeader</span></nav>
+    <DocsHero :kicker=${'Navigation'} :title=${'PageHeader'} :description=${'Page heading with a back action, optional destination icon, title, and supporting content.'} :status=${'stable'} />
+
+    <Demo :id=${'basic'} :title=${'Basic header'} :code=${basic} :filename=${'page-header-basic.jcr'} :layout=${'stack'}>
+      <PageHeader :title=${'Projects'} :content=${'Release notes'} />
+    </Demo>
+    <Demo :id=${'body'} :title=${'Supporting content'} :code=${body} :filename=${'page-header-body.jcr'} :layout=${'stack'}>
+      <PageHeader :title=${'Dashboard'} :content=${'Account'}><p>Manage profile, security, and notification preferences.</p></PageHeader>
+    </Demo>
+    <Demo :id=${'without-icon'} :title=${'Without icon'} :code=${without_icon} :filename=${'page-header-without-icon.jcr'} :layout=${'stack'}>
+      <PageHeader :title=${'All projects'} :content=${'Archived'} :showIcon=${false} />
+    </Demo>
+    <Demo :id=${'back-event'} :title=${'Back event'} :code=${back_event} :filename=${'page-header-back-event.jcr'} :layout=${'stack'}>
+      <PageHeader :title=${'Back'} :content=${destination} on-back=${() => destination.set('Projects')} />
+    </Demo>
+    <Demo :id=${'complete'} :title=${'Complete page header'} :lead=${'Title, current-page content, icon, back event, and rich body descriptions together.'} :code=${complete} :filename=${'page-header-complete.jcr'} :layout=${'stack'}>
+      <PageHeader :title=${'Projects'} :content=${'Release 2.0'} :showIcon=${true} on-back=${() => destination.set('Projects')}>
+        <div><p>Review the release summary before publishing.</p><dl><dt>Owner</dt><dd>Platform team</dd><dt>Status</dt><dd>Ready for review</dd></dl></div>
+      </PageHeader>
+    </Demo>
+    <Demo :id=${'text-only'} :title=${'Text-only back action'} :code=${text_only} :filename=${'page-header-text-only.jcr'} :layout=${'stack'}>
+      <PageHeader :title=${'Settings'} :showIcon=${false}><p>Choose a section from the navigation.</p></PageHeader>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}><AccessibilityChecklist :items=${a11y} /></DocsSection>
+    <DocsSection :id=${'api'} :title=${'API'}><PropsTable :contract=${contract} /></DocsSection>
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

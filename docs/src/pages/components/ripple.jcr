@@ -1,0 +1,201 @@
+import Button from '@jacare/ui/components/Button.jcr'
+import Card from '@jacare/ui/components/Card.jcr'
+import Ripple from '@jacare/ui/components/Ripple.jcr'
+import Space from '@jacare/ui/components/Space.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { block, button, card, centered, color, disabled, surface, tile } from '../../examples/ripple.js'
+
+const contract = getContract('Ripple')
+const navLinks = previousNext('/components/ripple')
+const a11y = [
+  'Ripple ink is aria-hidden and does not replace button labels',
+  'Keep the wrapped control keyboard focusable and visibly focused',
+  'Disable ripple when the wrapped surface is disabled or non-interactive',
+  'Respect prefers-reduced-motion by skipping visible ink animation',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Ripple</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Utility'}
+      :title=${'Ripple'}
+      :description=${'Wrap buttons, cards, or custom surfaces to show a pointer-origin ripple on press with optional color, centered mode, and disabled state.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'button'}
+      :title=${'Button press'}
+      :lead=${'Wrap any pressable control. Ink expands from the pointer and clips to the ripple host.'}
+      :code=${button}
+      :filename=${'ripple-button.jcr'}
+      :layout=${'stack'}
+    >
+      <Space :wrap=${true}>
+        <Ripple>
+          <Button>Primary press</Button>
+        </Ripple>
+        <Ripple>
+          <Button :variant=${'secondary'}>Secondary</Button>
+        </Ripple>
+        <Ripple>
+          <Button :variant=${'ghost'}>Ghost</Button>
+        </Ripple>
+      </Space>
+    </Demo>
+
+    <Demo
+      :id=${'surface'}
+      :title=${'Custom surface'}
+      :lead=${'Use on plain surfaces when you want press ripple feedback without a Button.'}
+      :code=${surface}
+      :filename=${'ripple-surface.jcr'}
+      :layout=${'stack'}
+    >
+      <Ripple>
+        <div style="padding:1.5rem;border:1px solid var(--j-border);border-radius:var(--j-radius);background:var(--j-surface-2);cursor:pointer;user-select:none;min-width:16rem">
+          Custom surface with ripple feedback
+        </div>
+      </Ripple>
+    </Demo>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'color'}
+        :title=${'Custom ink color'}
+        :lead=${'Pass color to override currentColor — useful on primary fills or tinted chips.'}
+        :code=${color}
+        :filename=${'ripple-color.jcr'}
+        :layout=${'stack'}
+      >
+        <Space :wrap=${true}>
+          <Ripple :color=${'rgba(255,255,255,0.55)'}>
+            <Button>Light ink</Button>
+          </Ripple>
+          <Ripple :color=${'color-mix(in srgb, var(--j-primary) 45%, transparent)'}>
+            <Button :variant=${'secondary'}>Brand ink</Button>
+          </Ripple>
+          <Ripple :color=${'rgba(0,0,0,0.2)'}>
+            <Button :variant=${'ghost'}>Dark ink</Button>
+          </Ripple>
+        </Space>
+      </Demo>
+
+      <Demo
+        :id=${'centered'}
+        :title=${'Centered ripple'}
+        :lead=${'centered expands from the middle of the host instead of the pointer — good for icon buttons and tiles.'}
+        :code=${centered}
+        :filename=${'ripple-centered.jcr'}
+        :layout=${'stack'}
+      >
+        <Ripple :centered=${true}>
+          <Button :variant=${'secondary'}>Centered ripple</Button>
+        </Ripple>
+      </Demo>
+
+      <Demo
+        :id=${'tile'}
+        :title=${'Action tiles'}
+        :lead=${'Grid of tappable surfaces with a shared brand-colored ink.'}
+        :code=${tile}
+        :filename=${'ripple-tile.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));gap:0.75rem;width:min(28rem,100%)">
+          <Ripple :color=${'color-mix(in srgb, var(--j-primary) 35%, transparent)'}>
+            <div style="padding:1.15rem;border-radius:var(--j-radius);border:1px solid var(--j-border);background:var(--j-surface);cursor:pointer;user-select:none;display:grid;gap:0.25rem">
+              <Text :weight=${'bold'}>Inbox</Text>
+              <Text :tone=${'muted'}>12 new</Text>
+            </div>
+          </Ripple>
+          <Ripple :color=${'color-mix(in srgb, var(--j-primary) 35%, transparent)'}>
+            <div style="padding:1.15rem;border-radius:var(--j-radius);border:1px solid var(--j-border);background:var(--j-surface);cursor:pointer;user-select:none;display:grid;gap:0.25rem">
+              <Text :weight=${'bold'}>Tasks</Text>
+              <Text :tone=${'muted'}>4 due</Text>
+            </div>
+          </Ripple>
+          <Ripple :color=${'color-mix(in srgb, var(--j-primary) 35%, transparent)'}>
+            <div style="padding:1.15rem;border-radius:var(--j-radius);border:1px solid var(--j-border);background:var(--j-surface);cursor:pointer;user-select:none;display:grid;gap:0.25rem">
+              <Text :weight=${'bold'}>Team</Text>
+              <Text :tone=${'muted'}>Online</Text>
+            </div>
+          </Ripple>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'block'}
+        :title=${'Full-width CTA'}
+        :lead=${'Stretch the host and use a light ink on a filled banner.'}
+        :code=${block}
+        :filename=${'ripple-block.jcr'}
+        :layout=${'stack'}
+      >
+        <div style="width:100%;max-width:28rem;border-radius:var(--j-radius)">
+          <Ripple :block=${true} :color=${'rgba(255,255,255,0.35)'}>
+            <div style="padding:1.25rem 1.35rem;border-radius:var(--j-radius);background:var(--j-primary);color:#fff;cursor:pointer;user-select:none;display:flex;justify-content:space-between;align-items:center;gap:1rem">
+              <div style="display:grid;gap:0.15rem">
+                <Text :weight=${'bold'}>Start onboarding</Text>
+                <span style="opacity:0.85;font-size:0.9rem">Press for a full-width ripple</span>
+              </div>
+              <span aria-hidden="true">→</span>
+            </div>
+          </Ripple>
+        </div>
+      </Demo>
+
+      <Demo
+        :id=${'card'}
+        :title=${'Card surface'}
+        :lead=${'Wrap Card for list rows and selectable panels.'}
+        :code=${card}
+        :filename=${'ripple-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Ripple>
+          <Card>
+            <div style="padding:1.25rem;min-width:14rem">Tap anywhere on this card</div>
+          </Card>
+        </Ripple>
+      </Demo>
+
+      <Demo
+        :id=${'disabled'}
+        :title=${'Disabled'}
+        :lead=${'disabled skips pointer handling so no ink is spawned.'}
+        :code=${disabled}
+        :filename=${'ripple-disabled.jcr'}
+        :layout=${'stack'}
+      >
+        <Ripple :disabled=${true}>
+          <Button>Ripple disabled</Button>
+        </Ripple>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

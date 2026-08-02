@@ -1,0 +1,184 @@
+import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
+import Field from '@jacare/ui/components/Field.jcr'
+import Modal from '@jacare/ui/components/Modal.jcr'
+import ModalFooter from '@jacare/ui/components/ModalFooter.jcr'
+import Space from '@jacare/ui/components/Space.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, form, locked, sheet, sizes } from '../../examples/modal.js'
+
+const contract = getContract('Modal')
+const navLinks = previousNext('/components/modal')
+const basicOpen = pulse(false)
+const sheetOpen = pulse(false)
+const formOpen = pulse(false)
+const lockedOpen = pulse(false)
+const smOpen = pulse(false)
+const mdOpen = pulse(false)
+const lgOpen = pulse(false)
+const fullOpen = pulse(false)
+const profileName = pulse('Alex Rivera')
+const profileEmail = pulse('alex@example.com')
+
+const a11y = [
+  'Uses role=dialog, aria-modal, and labelled title when provided',
+  'Focus is trapped while open and restored to the trigger on close',
+  'Escape and backdrop dismiss can be disabled for blocking flows',
+  'Mobile sheet exposes a large close control and swipe-down grabber',
+  'Body scroll locks while the modal is open by default',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Modal</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Overlay'}
+      :title=${'Modal'}
+      :description=${'Complete focus-trapped modal with title, description, ModalFooter actions, scroll lock, configurable dismiss, and a mobile bottom sheet with swipe-to-close.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Controlled open state with title, description, body content, and ModalFooter actions.'}
+      :code=${basic}
+      :filename=${'modal-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Button on-press=${() => basicOpen.set(true)}>Open modal</Button>
+      <Modal
+        bind-open=${basicOpen}
+        :title=${'Invite teammate'}
+        :description=${'Send an invite link with project access.'}
+      >
+        <p>They will receive an email with a one-time join link.</p>
+        <ModalFooter>
+          <Space>
+            <Button :variant=${'secondary'} on-press=${() => basicOpen.set(false)}>Cancel</Button>
+            <Button on-press=${() => basicOpen.set(false)}>Send invite</Button>
+          </Space>
+        </ModalFooter>
+      </Modal>
+    </Demo>
+
+    <Demo
+      :id=${'sheet'}
+      :title=${'Mobile bottom sheet'}
+      :lead=${'Force placement=bottom for a sheet on every viewport. On touch, drag the grabber down to dismiss.'}
+      :code=${sheet}
+      :filename=${'modal-sheet.jcr'}
+      :layout=${'stack'}
+    >
+      <Button on-press=${() => sheetOpen.set(true)}>Open bottom sheet</Button>
+      <Modal
+        bind-open=${sheetOpen}
+        :title=${'Filters'}
+        :description=${'Drag the handle down to dismiss on touch devices.'}
+        :placement=${'bottom'}
+      >
+        <p>Bottom placement is ideal for mobile actions and short forms.</p>
+        <ModalFooter>
+          <Space>
+            <Button :variant=${'secondary'} on-press=${() => sheetOpen.set(false)}>Reset</Button>
+            <Button on-press=${() => sheetOpen.set(false)}>Apply</Button>
+          </Space>
+        </ModalFooter>
+      </Modal>
+    </Demo>
+
+    <Demo
+      :id=${'sizes'}
+      :title=${'Sizes'}
+      :lead=${'sm, md, lg, and full. On narrow viewports, non-full modals become bottom sheets automatically when placement is auto.'}
+      :code=${sizes}
+      :filename=${'modal-sizes.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+        <Button on-press=${() => smOpen.set(true)}>Small</Button>
+        <Button on-press=${() => mdOpen.set(true)}>Medium</Button>
+        <Button on-press=${() => lgOpen.set(true)}>Large</Button>
+        <Button on-press=${() => fullOpen.set(true)}>Full</Button>
+      </Stack>
+      <Modal bind-open=${smOpen} :title=${'Small'} :size=${'sm'}><p>Focused prompt.</p></Modal>
+      <Modal bind-open=${mdOpen} :title=${'Medium'} :size=${'md'}><p>Default width.</p></Modal>
+      <Modal bind-open=${lgOpen} :title=${'Large'} :size=${'lg'}><p>Roomier review surface.</p></Modal>
+      <Modal bind-open=${fullOpen} :title=${'Full screen'} :size=${'full'}><p>Use for dense editors on any viewport.</p></Modal>
+    </Demo>
+
+    <Demo
+      :id=${'form'}
+      :title=${'Form inside modal'}
+      :lead=${'Compose Field and Stack in the body; keep primary actions in ModalFooter.'}
+      :code=${form}
+      :filename=${'modal-form.jcr'}
+      :layout=${'stack'}
+    >
+      <Button on-press=${() => formOpen.set(true)}>Edit profile</Button>
+      <Modal
+        bind-open=${formOpen}
+        :title=${'Edit profile'}
+        :description=${'Changes save to your workspace profile.'}
+        :size=${'sm'}
+      >
+        <Stack :gap=${'md'}>
+          <Field :label=${'Name'} bind-value=${profileName} />
+          <Field :label=${'Email'} bind-value=${profileEmail} />
+        </Stack>
+        <ModalFooter>
+          <Space>
+            <Button :variant=${'secondary'} on-press=${() => formOpen.set(false)}>Cancel</Button>
+            <Button on-press=${() => formOpen.set(false)}>Save</Button>
+          </Space>
+        </ModalFooter>
+      </Modal>
+    </Demo>
+
+    <Demo
+      :id=${'locked'}
+      :title=${'Blocking dismiss'}
+      :lead=${'Disable backdrop click, Escape, and the close button for irreversible or in-progress flows.'}
+      :code=${locked}
+      :filename=${'modal-locked.jcr'}
+      :layout=${'stack'}
+    >
+      <Button on-press=${() => lockedOpen.set(true)}>Open locked modal</Button>
+      <Modal
+        bind-open=${lockedOpen}
+        :title=${'Processing payment'}
+        :closeOnClickModal=${false}
+        :closeOnEsc=${false}
+        :showClose=${false}
+      >
+        <p>Backdrop and Escape are disabled until the primary action finishes.</p>
+        <ModalFooter>
+          <Button on-press=${() => lockedOpen.set(false)}>Done</Button>
+        </ModalFooter>
+      </Modal>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

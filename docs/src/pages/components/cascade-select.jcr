@@ -1,0 +1,160 @@
+import { pulse } from '@jacare/core'
+import CascadeSelect from '@jacare/ui/components/CascadeSelect.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  countries,
+  fluidExample,
+  loadingExample,
+  sizes,
+  states,
+} from '../../examples/cascade-select.js'
+
+const contract = getContract('CascadeSelect')
+const navLinks = previousNext('/components/cascade-select')
+
+const basicValue = pulse(null)
+const loadingValue = pulse(null)
+const smallValue = pulse(null)
+const mediumValue = pulse(null)
+const largeValue = pulse(null)
+const fluidValue = pulse(null)
+const invalidValue = pulse(null)
+const lockedValue = pulse('B-SP')
+
+const a11y = [
+  'Trigger exposes dialog popup semantics and aria-expanded',
+  'Cascade columns use listbox and option roles with selected state',
+  'Model binds the leaf optionValue (city code), not the full path array',
+  'Clear control has an accessible label; Escape closes the panel',
+  'loading sets aria-busy and keeps the control non-interactive',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>CascadeSelect</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Selection'}
+      :title=${'CascadeSelect'}
+      :description=${'Nested select that maps optionLabel / optionValue / optionGroupChildren trees and binds the leaf value (city code), not a path array. Prefer Cascader when you need filterable search, any-level select, or multiple paths.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :lead=${'The model is the leaf optionValue. Groups use optionGroupLabel and optionGroupChildren (states → cities).'} :code=${basic} :filename=${'cascade-select-basic.jcr'}>
+      <CascadeSelect
+        :label=${'City'}
+        :placeholder=${'Select a City'}
+        :options=${countries}
+        :optionLabel=${'cname'}
+        :optionValue=${'code'}
+        :optionGroupLabel=${'name'}
+        :optionGroupChildren=${['states', 'cities']}
+        bind-value=${basicValue}
+      />
+    </Demo>
+
+    <Demo :id=${'loading'} :title=${'Loading state'} :lead=${'Use loading while remote option trees are fetched.'} :code=${loadingExample} :filename=${'cascade-select-loading.jcr'}>
+      <CascadeSelect
+        :label=${'City'}
+        :placeholder=${'Select a City'}
+        :options=${[]}
+        :loading=${true}
+        bind-value=${loadingValue}
+      />
+    </Demo>
+
+    <Demo :id=${'sizes'} :title=${'Sizes'} :lead=${'size accepts sm, md (default), and lg.'} :code=${sizes} :filename=${'cascade-select-sizes.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <CascadeSelect
+          :label=${'Small'}
+          :size=${'sm'}
+          :placeholder=${'Select a City'}
+          :options=${countries}
+          :optionLabel=${'cname'}
+          :optionValue=${'code'}
+          :optionGroupLabel=${'name'}
+          :optionGroupChildren=${['states', 'cities']}
+          bind-value=${smallValue}
+        />
+        <CascadeSelect
+          :label=${'Normal'}
+          :placeholder=${'Select a City'}
+          :options=${countries}
+          :optionLabel=${'cname'}
+          :optionValue=${'code'}
+          :optionGroupLabel=${'name'}
+          :optionGroupChildren=${['states', 'cities']}
+          bind-value=${mediumValue}
+        />
+        <CascadeSelect
+          :label=${'Large'}
+          :size=${'lg'}
+          :placeholder=${'Select a City'}
+          :options=${countries}
+          :optionLabel=${'cname'}
+          :optionValue=${'code'}
+          :optionGroupLabel=${'name'}
+          :optionGroupChildren=${['states', 'cities']}
+          bind-value=${largeValue}
+        />
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'fluid'} :title=${'Fluid'} :lead=${'fluid makes the control span the full container width.'} :code=${fluidExample} :filename=${'cascade-select-fluid.jcr'}>
+      <CascadeSelect
+        :label=${'City'}
+        :fluid=${true}
+        :placeholder=${'Select a City'}
+        :options=${countries}
+        :optionLabel=${'cname'}
+        :optionValue=${'code'}
+        :optionGroupLabel=${'name'}
+        :optionGroupChildren=${['states', 'cities']}
+        bind-value=${fluidValue}
+      />
+    </Demo>
+
+    <Demo :id=${'states'} :title=${'Invalid and disabled'} :code=${states} :filename=${'cascade-select-states.jcr'} :layout=${'stack'}>
+      <Stack :gap=${'md'}>
+        <CascadeSelect
+          :label=${'Required city'}
+          :placeholder=${'Select a City'}
+          :options=${countries}
+          :optionLabel=${'cname'}
+          :optionValue=${'code'}
+          :optionGroupLabel=${'name'}
+          :optionGroupChildren=${['states', 'cities']}
+          :error=${'Choose a city to continue'}
+          bind-value=${invalidValue}
+        />
+        <CascadeSelect
+          :label=${'Locked city'}
+          :placeholder=${'Select a City'}
+          :options=${countries}
+          :optionLabel=${'cname'}
+          :optionValue=${'code'}
+          :optionGroupLabel=${'name'}
+          :optionGroupChildren=${['states', 'cities']}
+          :disabled=${true}
+          bind-value=${lockedValue}
+        />
+      </Stack>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

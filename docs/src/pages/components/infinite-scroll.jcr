@@ -1,0 +1,109 @@
+import { pulse } from '@jacare/core'
+import InfiniteScroll from '@jacare/ui/components/InfiniteScroll.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, distance, disabled, loadCount } from '../../examples/infinite-scroll.js'
+
+const contract = getContract('InfiniteScroll')
+const navLinks = previousNext('/components/infinite-scroll')
+const loads = pulse(0)
+const loadingDisabled = pulse(false)
+
+const a11y = [
+  'Announce appended results and loading state in nearby live text',
+  'Keep keyboard focus stable when new content is inserted',
+  'Offer pagination or a load-more fallback for very long feeds',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>InfiniteScroll</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'InfiniteScroll'}
+      :description=${'Scrollable load boundary that emits near the end, with configurable prefetch distance and a disabled loading guard.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Load at the end'}
+      :lead=${'load emits when the remaining scroll distance reaches zero. Set height so the region can scroll.'}
+      :code=${basic}
+      :filename=${'infinite-scroll-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <div style="border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <InfiniteScroll :height=${'180px'} on-load=${() => loads.set(loads() + 1)}>
+          <div style="height:460px;padding:1rem">Scroll to the bottom to request more items.</div>
+        </InfiniteScroll>
+      </div>
+    </Demo>
+    <Demo
+      :id=${'distance'}
+      :title=${'Prefetch distance'}
+      :lead=${'distance emits before the user reaches the exact end of the container.'}
+      :code=${distance}
+      :filename=${'infinite-scroll-distance.jcr'}
+      :layout=${'stack'}
+    >
+      <div style="border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <InfiniteScroll :distance=${80} :height=${'180px'} on-load=${() => loads.set(loads() + 1)}>
+          <div style="height:460px;padding:1rem">Loading starts with 80px remaining.</div>
+        </InfiniteScroll>
+      </div>
+    </Demo>
+    <Demo
+      :id=${'disabled'}
+      :title=${'Loading guard'}
+      :lead=${'Set disabled while a request is in flight or when there are no more results.'}
+      :code=${disabled}
+      :filename=${'infinite-scroll-disabled.jcr'}
+      :layout=${'stack'}
+    >
+      <Button :size=${'sm'} on-press=${() => loadingDisabled.set(!loadingDisabled())}>Toggle loading guard</Button>
+      <div style="border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <InfiniteScroll :disabled=${loadingDisabled} :distance=${40} :height=${'160px'} on-load=${() => loads.set(loads() + 1)}>
+          <div style="height:420px;padding:1rem">No load event fires while disabled.</div>
+        </InfiniteScroll>
+      </div>
+    </Demo>
+    <Demo
+      :id=${'load-count'}
+      :title=${'Announced load requests'}
+      :lead=${'Reflect load progress in a polite live region while appending results.'}
+      :code=${loadCount}
+      :filename=${'infinite-scroll-load-count.jcr'}
+      :layout=${'stack'}
+    >
+      <p aria-live="polite">Load requests: ${loads}</p>
+      <div style="border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <InfiniteScroll :distance=${48} :height=${'160px'} on-load=${() => loads.set(loads() + 1)}>
+          <div style="height:420px;padding:1rem">Scroll to request the next page.</div>
+        </InfiniteScroll>
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

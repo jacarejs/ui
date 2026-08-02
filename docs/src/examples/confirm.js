@@ -58,6 +58,25 @@ export <view>
   />
 </view>`
 
+export const labels = `import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/Button'
+import Confirm from '@jacare/ui/Confirm'
+
+const open = pulse(false)
+
+export <view>
+  <Button on-press=\${() => open.set(true)}>Publish changes</Button>
+  <Confirm
+    bind-open=\${open}
+    :title=\${'Publish changes?'}
+    :message=\${'The new version becomes visible immediately.'}
+    :confirmLabel=\${'Publish now'}
+    :cancelLabel=\${'Keep editing'}
+    on-confirm=\${() => open.set(false)}
+    on-cancel=\${() => open.set(false)}
+  />
+</view>`
+
 function quote(value) {
   return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 }

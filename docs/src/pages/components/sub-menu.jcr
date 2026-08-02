@@ -1,0 +1,63 @@
+import Menu from '@jacare/ui/components/Menu.jcr'
+import MenuItem from '@jacare/ui/components/MenuItem.jcr'
+import SubMenu from '@jacare/ui/components/SubMenu.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { titledGroup, nestedGroups, titleFallback } from '../../examples/sub-menu.js'
+
+const contract = getContract('SubMenu')
+const navLinks = previousNext('/components/sub-menu')
+const a11y = [
+  'Give each SubMenu a unique index within its Menu tree',
+  'Use a concise title that describes the grouped destinations',
+  'Keep nesting shallow enough to preserve clear keyboard and visual order',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>SubMenu</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Navigation'}
+      :title=${'SubMenu'}
+      :description=${'SubMenu is an expandable group used inside Menu or another SubMenu. index identifies the group and title labels its disclosure control.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'titled-group'} :title=${'Titled group'} :lead=${'title labels the disclosure while child MenuItem elements provide destinations.'} :code=${titledGroup} :filename=${'sub-menu-title.jcr'}>
+       <Menu :defaultActive=${'home'}>
+        <MenuItem :index=${'home'}>Home</MenuItem>
+        <SubMenu :index=${'guides'} :title=${'Guides'}>
+          <MenuItem :index=${'install'}>Install</MenuItem>
+          <MenuItem :index=${'theme'}>Theme</MenuItem>
+        </SubMenu>
+       </Menu>
+    </Demo>
+    <Demo :id=${'nested-groups'} :title=${'Nested groups'} :lead=${'SubMenu can contain another SubMenu when navigation has a true third level.'} :code=${nestedGroups} :filename=${'sub-menu-nested.jcr'}>
+      <Menu><SubMenu :index=${'products'} :title=${'Products'}><MenuItem :index=${'ui'}>UI library</MenuItem><SubMenu :index=${'tools'} :title=${'Tools'}><MenuItem :index=${'compiler'}>Compiler</MenuItem></SubMenu></SubMenu></Menu>
+    </Demo>
+    <Demo :id=${'title-fallback'} :title=${'Title fallback'} :lead=${'When title is omitted, the required index becomes the visible group label.'} :code=${titleFallback} :filename=${'sub-menu-fallback.jcr'}>
+      <Menu :defaultActive=${'profile'}><SubMenu :index=${'account'}><MenuItem :index=${'profile'}>Profile</MenuItem><MenuItem :index=${'security'}>Security</MenuItem></SubMenu></Menu>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

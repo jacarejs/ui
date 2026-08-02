@@ -1,0 +1,41 @@
+import Tooltip from '@jacare/ui/components/Tooltip.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, effects, placements, delays, disabled, placement_grid } from '../../examples/tooltip.js'
+
+const contract = getContract('Tooltip')
+const navLinks = previousNext('/components/tooltip')
+const a11y = [
+  'Use tooltips only for supplementary labels or short explanations',
+  'Do not hide required instructions exclusively behind hover',
+  'Keep delays short and ensure the trigger itself has an accessible name',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb"><a jacare-go="/components" href="/components">Components</a><span aria-hidden="true">/</span><span>Tooltip</span></nav>
+    <DocsHero :kicker=${'Feedback'} :title=${'Tooltip'} :description=${'Short contextual hint with dark or light appearance, twelve placements, configurable delays, and disabled state. On touch devices it opens on tap or focus instead of hover.'} :status=${'stable'} />
+    <Demo :id=${'basic'} :title=${'Basic tooltip'} :code=${basic} :filename=${'tooltip-basic.jcr'} :layout=${'stack'}><Tooltip :content=${'Save changes'}><Button>Save</Button></Tooltip></Demo>
+    <Demo :id=${'effects'} :title=${'Light appearance'} :code=${effects} :filename=${'tooltip-effects.jcr'} :layout=${'stack'}><Tooltip :content=${'Light tooltip'} :appearance=${'light'}><Button>Light</Button></Tooltip></Demo>
+    <Demo :id=${'placements'} :title=${'Placement'} :code=${placements} :filename=${'tooltip-placements.jcr'} :layout=${'stack'}><Tooltip :content=${'Shown on the right'} :placement=${'right'}><Button>Right</Button></Tooltip></Demo>
+    <Demo :id=${'delays'} :title=${'Show and hide delays'} :code=${delays} :filename=${'tooltip-delays.jcr'} :layout=${'stack'}><Tooltip :content=${'Appears after 400ms'} :showAfter=${400} :hideAfter=${100}><Button>Delayed</Button></Tooltip></Demo>
+    <Demo :id=${'disabled'} :title=${'Disabled'} :code=${disabled} :filename=${'tooltip-disabled.jcr'} :layout=${'stack'}><Tooltip :content=${'Hidden'} :disabled=${true}><Button>Disabled tooltip</Button></Tooltip></Demo>
+    <Demo :id=${'placement-grid'} :title=${'All major placements'} :code=${placement_grid} :filename=${'tooltip-placement-grid.jcr'} :layout=${'stack'}>
+      <div style="display:grid;grid-template-columns:repeat(3,auto);gap:3rem;justify-content:center;padding:4rem">
+        #for ['top-start', 'top', 'top-end', 'left-start', 'left', 'left-end', 'right-start', 'right', 'right-end', 'bottom-start', 'bottom', 'bottom-end'] as option
+          <Tooltip :content=${option} :placement=${option}><Button>${option}</Button></Tooltip>
+        #end
+      </div>
+    </Demo>
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}><AccessibilityChecklist :items=${a11y} /></DocsSection>
+    <DocsSection :id=${'api'} :title=${'API'}><PropsTable :contract=${contract} /></DocsSection>
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -1,0 +1,112 @@
+import { pulse } from '@jacare/core'
+import Compare from '@jacare/ui/components/Compare.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, labels, vertical, hover, bound } from '../../examples/compare.js'
+
+const contract = getContract('Compare')
+const navLinks = previousNext('/components/compare')
+const beforeSrc = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 640 400%27%3E%3Crect width=%27640%27 height=%27400%27 fill=%27%23dcefe8%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 fill=%27%23235548%27 font-size=%2748%27 font-family=%27Arial%27%3EBefore%3C/text%3E%3C/svg%3E'
+const afterSrc = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 640 400%27%3E%3Crect width=%27640%27 height=%27400%27 fill=%27%23d7e8ff%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 fill=%27%231d4f91%27 font-size=%2748%27 font-family=%27Arial%27%3EAfter%3C/text%3E%3C/svg%3E'
+const verticalBefore = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 400 640%27%3E%3Crect width=%27400%27 height=%27640%27 fill=%27%23dcefe8%27/%3E%3C/svg%3E'
+const verticalAfter = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 400 640%27%3E%3Crect width=%27400%27 height=%27640%27 fill=%27%23d7e8ff%27/%3E%3C/svg%3E'
+const position = pulse(62)
+const a11y = [
+  'Provide meaningful alt text for both before and after images',
+  'The hidden range input supports keyboard adjustment of the divider',
+  'Pair visual comparison with text labels when the difference is critical',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Compare</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'Compare'}
+      :description=${'Before and after image comparison with a draggable divider, optional hover mode, and keyboard support.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :code=${basic}
+      :filename=${'compare-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Compare :beforeSrc=${beforeSrc} :afterSrc=${afterSrc} />
+    </Demo>
+
+    <Demo
+      :id=${'labels'}
+      :title=${'Labels'}
+      :code=${labels}
+      :filename=${'compare-labels.jcr'}
+      :layout=${'stack'}
+    >
+      <Compare
+        :beforeSrc=${beforeSrc}
+        :afterSrc=${afterSrc}
+        :beforeLabel=${'Original'}
+        :afterLabel=${'Retouched'}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'vertical'}
+      :title=${'Vertical orientation'}
+      :code=${vertical}
+      :filename=${'compare-vertical.jcr'}
+      :layout=${'stack'}
+    >
+      <Compare
+        :beforeSrc=${verticalBefore}
+        :afterSrc=${verticalAfter}
+        :orientation=${'vertical'}
+        :value=${35}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'hover'}
+      :title=${'Slide on hover'}
+      :lead=${'Move the divider by hovering instead of dragging.'}
+      :code=${hover}
+      :filename=${'compare-hover.jcr'}
+      :layout=${'stack'}
+    >
+      <Compare :beforeSrc=${beforeSrc} :afterSrc=${afterSrc} :slideOnHover=${true} />
+    </Demo>
+
+    <Demo
+      :id=${'bound'}
+      :title=${'Bound value'}
+      :code=${bound}
+      :filename=${'compare-bound.jcr'}
+      :layout=${'stack'}
+    >
+      <Compare :beforeSrc=${beforeSrc} :afterSrc=${afterSrc} bind-value=${position} />
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

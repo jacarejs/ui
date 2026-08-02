@@ -1,0 +1,87 @@
+import Container from '@jacare/ui/components/Container.jcr'
+import Header from '@jacare/ui/components/Header.jcr'
+import Aside from '@jacare/ui/components/Aside.jcr'
+import Main from '@jacare/ui/components/Main.jcr'
+import Footer from '@jacare/ui/components/Footer.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { actions, heights, navigation, shell } from '../../examples/header.js'
+
+const contract = getContract('Header')
+const navLinks = previousNext('/components/header')
+const a11y = [
+  'Header renders a semantic header landmark',
+  'Keep headings and navigation inside it in a logical source order',
+  'Use one primary page header unless nested sections require their own',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Header</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Layout'}
+      :title=${'Header'}
+      :description=${'Semantic top-bar region with a configurable fixed height for page and application shells.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'shell'} :title=${'Shell header'} :lead=${'Header anchors the top of a vertical Container while the body uses horizontal flow.'} :code=${shell} :filename=${'header-shell.jcr'}>
+      <div style="height:260px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container>
+          <Header>Operations console</Header>
+          <Container :direction=${'horizontal'}>
+            <Aside :width=${'150px'}>Navigation</Aside>
+            <Main :padding=${'1rem'}>Service health</Main>
+          </Container>
+          <Footer :height=${'40px'}>All systems operational</Footer>
+        </Container>
+      </div>
+    </Demo>
+    <Demo :id=${'height'} :title=${'Custom height'} :lead=${'Set height with any CSS length when the default 60px bar is too tall.'} :code=${heights} :filename=${'header-height.jcr'}>
+      <div style="height:200px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container>
+          <Header :height=${'48px'}>Compact project header</Header>
+          <Main :padding=${'1rem'}>Project overview</Main>
+        </Container>
+      </div>
+    </Demo>
+    <Demo :id=${'navigation'} :title=${'Brand and navigation'} :lead=${'Header can align identity and a labeled primary navigation in one bar.'} :code=${navigation} :filename=${'header-navigation.jcr'}>
+      <div style="height:200px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container>
+          <Header><strong>Jacaré Cloud</strong><nav aria-label="Primary" style="margin-left:auto">Projects · Team · Settings</nav></Header>
+          <Main :padding=${'1rem'}>Workspace content</Main>
+        </Container>
+      </div>
+    </Demo>
+    <Demo :id=${'actions'} :title=${'Header action'} :lead=${'Use the flex alignment of Header to place a primary page action on the trailing edge.'} :code=${actions} :filename=${'header-actions.jcr'}>
+      <div style="height:200px;border:1px solid var(--j-border);border-radius:var(--j-radius);overflow:hidden">
+        <Container>
+          <Header :height=${'64px'}><strong>Draft article</strong><div style="margin-left:auto"><Button>Publish</Button></div></Header>
+          <Main :padding=${'1rem'}>Article editor</Main>
+        </Container>
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

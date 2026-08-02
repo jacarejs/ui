@@ -1,0 +1,80 @@
+import ThemeScope from '@jacare/ui/components/ThemeScope.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { dark, light, nested, system } from '../../examples/theme-scope.js'
+
+const contract = getContract('ThemeScope')
+const navLinks = previousNext('/components/theme-scope')
+const a11y = [
+  'Verify text, border, and focus contrast in every scoped mode',
+  'Use scoped themes for contained regions, not to encode meaning by color alone',
+  'System mode inherits the surrounding theme without adding a forced data attribute',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ThemeScope</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Primitives'}
+      :title=${'ThemeScope'}
+      :description=${'Local light or dark theme island for descendants, with system mode inheriting the surrounding theme.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'light'} :title=${'Light scope'} :code=${light} :filename=${'theme-scope-light.jcr'}>
+      <ThemeScope :mode=${'light'}>
+        <div style="padding:1rem">
+          <Button>Light island</Button>
+        </div>
+      </ThemeScope>
+    </Demo>
+    <Demo :id=${'dark'} :title=${'Dark scope'} :lead=${'mode="dark" writes data-j-theme="dark" on the local wrapper.'} :code=${dark} :filename=${'theme-scope-dark.jcr'}>
+      <ThemeScope :mode=${'dark'}>
+        <div style="padding:1rem">
+          <Button>Dark island</Button>
+        </div>
+      </ThemeScope>
+    </Demo>
+    <Demo :id=${'system'} :title=${'System inheritance'} :lead=${'The default system mode leaves the theme attribute unset so ancestor tokens continue through.'} :code=${system} :filename=${'theme-scope-system.jcr'}>
+      <ThemeScope :mode=${'system'}>
+        <div style="padding:1rem">
+          <Button :variant=${'secondary'}>Inherit system theme</Button>
+        </div>
+      </ThemeScope>
+    </Demo>
+    <Demo :id=${'nested'} :title=${'Nested scopes'} :lead=${'A descendant scope can override its nearest themed ancestor without changing the rest of the page.'} :code=${nested} :filename=${'theme-scope-nested.jcr'}>
+      <ThemeScope :mode=${'dark'}>
+        <div style="padding:1rem">
+          <Button>Dark parent</Button>
+          <ThemeScope :mode=${'light'}>
+            <div style="margin-top:1rem;padding:1rem">
+              <Button :variant=${'secondary'}>Light nested scope</Button>
+            </div>
+          </ThemeScope>
+        </div>
+      </ThemeScope>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

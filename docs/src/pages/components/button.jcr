@@ -1,6 +1,7 @@
 import { pulse } from '@jacare/core'
 import Button from '@jacare/ui/components/Button.jcr'
 import Field from '@jacare/ui/components/Field.jcr'
+import Icon from '@jacare/ui/components/Icon.jcr'
 import Stack from '@jacare/ui/components/Stack.jcr'
 import Switch from '@jacare/ui/components/Switch.jcr'
 import VisuallyHidden from '@jacare/ui/components/VisuallyHidden.jcr'
@@ -210,9 +211,7 @@ export <view>
                 :block=${playBlock}
                 on-press=${onPress}
               >
-                <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
+                <Icon :name=${'plus'} />
                 ${() => playLabel()}
               </Button>
             #elif playIconMode() === 'end'
@@ -227,9 +226,7 @@ export <view>
                 on-press=${onPress}
               >
                 ${() => playLabel()}
-                <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
+                <Icon :name=${'chevron-right'} />
               </Button>
             #elif playIconMode() === 'only'
               <Button
@@ -243,10 +240,7 @@ export <view>
                 :iconOnly=${true}
                 on-press=${onPress}
               >
-                <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="m20 20-3.5-3.5" />
-                </svg>
+                <Icon :name=${'search'} />
                 <VisuallyHidden>${() => playLabel() || 'Search'}</VisuallyHidden>
               </Button>
             #elif playIconMode() === 'menu'
@@ -261,9 +255,7 @@ export <view>
                 :iconOnly=${true}
                 on-press=${toggleMenu}
               >
-                <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M4 7h16M4 12h16M4 17h16" />
-                </svg>
+                <Icon :name=${'menu'} />
                 <VisuallyHidden>Open menu</VisuallyHidden>
               </Button>
             #else
@@ -358,34 +350,25 @@ export <view>
       <Demo
         :id=${'icons-overview'}
         :title=${'Left, right, icon-only, and menu'}
-        :lead=${'Place an SVG with class jui-btn__icon before or after the label. Use iconOnly with VisuallyHidden for accessible icon buttons.'}
+        :lead=${'Use Icon before or after the label. For icon-only buttons, set iconOnly and wrap the label with VisuallyHidden.'}
         :code=${icons}
         :filename=${'button-icons.jcr'}
       >
         <div class="docs-demo-row">
           <Button>
-            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
+            <Icon :name=${'plus'} />
             Add item
           </Button>
           <Button :variant=${'secondary'}>
             Continue
-            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
+            <Icon :name=${'chevron-right'} />
           </Button>
           <Button :iconOnly=${true} :shape=${'circle'} :variant=${'outline'}>
-            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
+            <Icon :name=${'search'} />
             <VisuallyHidden>Search</VisuallyHidden>
           </Button>
           <Button :iconOnly=${true} :variant=${'ghost'} on-press=${toggleMenu}>
-            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M4 7h16M4 12h16M4 17h16" />
-            </svg>
+            <Icon :name=${'menu'} />
             <VisuallyHidden>Open menu</VisuallyHidden>
           </Button>
         </div>
@@ -393,9 +376,7 @@ export <view>
 
       <Demo :id=${'icon-start'} :title=${'Icon on the left'} :code=${iconStart} :filename=${'button-icon-start.jcr'}>
         <Button>
-          <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 5v14M5 12h14" />
-          </svg>
+          <Icon :name=${'plus'} />
           Add item
         </Button>
       </Demo>
@@ -403,31 +384,22 @@ export <view>
       <Demo :id=${'icon-end'} :title=${'Icon on the right'} :code=${iconEnd} :filename=${'button-icon-end.jcr'}>
         <Button :variant=${'secondary'}>
           Continue
-          <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
+          <Icon :name=${'chevron-right'} />
         </Button>
       </Demo>
 
       <Demo :id=${'icon-only'} :title=${'Icon only'} :code=${iconOnly} :filename=${'button-icon-only.jcr'}>
         <Stack :direction=${'row'} :gap=${'md'} :align=${'center'} :wrap=${true}>
           <Button :iconOnly=${true} :shape=${'circle'} :variant=${'outline'}>
-            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
+            <Icon :name=${'search'} />
             <VisuallyHidden>Search</VisuallyHidden>
           </Button>
           <Button :iconOnly=${true} :variant=${'secondary'}>
-            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
+            <Icon :name=${'plus'} />
             <VisuallyHidden>Add</VisuallyHidden>
           </Button>
           <Button :iconOnly=${true} :variant=${'danger'} :shape=${'rounded'}>
-            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M6 6l12 12M18 6 6 18" />
-            </svg>
+            <Icon :name=${'close'} />
             <VisuallyHidden>Close</VisuallyHidden>
           </Button>
         </Stack>
@@ -442,19 +414,13 @@ export <view>
       >
         <Stack :direction=${'row'} :gap=${'md'} :align=${'center'}>
           <Button :iconOnly=${true} :variant=${'ghost'} on-press=${toggleMenu}>
-            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M4 7h16M4 12h16M4 17h16" />
-            </svg>
+            <Icon :name=${'menu'} />
             <VisuallyHidden>Open menu</VisuallyHidden>
           </Button>
           <Button :variant=${'secondary'}>
-            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M4 7h16M4 12h16M4 17h16" />
-            </svg>
+            <Icon :name=${'menu'} />
             Menu
-            <svg class="jui-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="m6 9 6 6 6-6" />
-            </svg>
+            <Icon :name=${'chevron-down'} />
           </Button>
           <span class="docs-demo-lead">Menu ${() => (menuOpen() ? 'open' : 'closed')}</span>
         </Stack>

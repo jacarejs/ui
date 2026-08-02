@@ -1,4 +1,6 @@
 import { pulse } from '@jacare/core'
+import { createForm } from '@jacare/ui'
+import Button from '@jacare/ui/components/Button.jcr'
 import Field from '@jacare/ui/components/Field.jcr'
 import Switch from '@jacare/ui/components/Switch.jcr'
 import Stack from '@jacare/ui/components/Stack.jcr'
@@ -11,9 +13,16 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/form.js'
+import {
+  basic,
+  customValidator,
+  leftLabels,
+  playgroundCode as buildPlaygroundCode,
+  validation,
+} from '../../examples/form.js'
 
 const contract = getContract('Form')
 const navLinks = previousNext('/components/form')
@@ -21,10 +30,64 @@ const navLinks = previousNext('/components/form')
 const playLabelPosition = pulse('top')
 const playDisabled = pulse(false)
 const playGap = pulse('md')
-const playName = pulse('')
-const playEmail = pulse('')
-const basicName = pulse('')
-const basicEmail = pulse('')
+
+const playForm = createForm({
+  model: {
+    name: pulse(''),
+    email: pulse(''),
+  },
+  rules: {
+    name: [{ required: true, message: 'Name is required', trigger: 'blur' }],
+    email: [
+      { required: true, message: 'Email is required', trigger: 'blur' },
+      { type: 'email', message: 'Enter a valid email', trigger: ['blur', 'change'] },
+    ],
+  },
+})
+
+const demoForm = createForm({
+  model: {
+    name: pulse(''),
+    email: pulse(''),
+  },
+  rules: {
+    name: [
+      { required: true, message: 'Name is required', trigger: 'blur' },
+      { min: 2, message: 'Use at least 2 characters', trigger: 'change' },
+    ],
+    email: [
+      { required: true, message: 'Email is required', trigger: 'blur' },
+      { type: 'email', message: 'Enter a valid email', trigger: ['blur', 'change'] },
+    ],
+  },
+})
+
+const matchForm = createForm({
+  model: {
+    password: pulse(''),
+    confirm: pulse(''),
+  },
+  rules: {
+    password: [{ required: true, min: 6, message: 'Min 6 characters' }],
+    confirm: [
+      { required: true, message: 'Confirm your password' },
+      {
+        validator: (rule, value, callback) => {
+          if (value !== matchForm.model.password()) callback(new Error('Passwords must match'))
+          else callback()
+        },
+        trigger: 'blur',
+      },
+    ],
+  },
+})
+
+const a11y = [
+  'Failed fields expose aria-invalid on focusable controls',
+  'Error text uses role=alert for assistive technology',
+  'Required markers are visual; pair with real validation rules',
+  'validate() can scroll to the first invalid field',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -32,6 +95,22 @@ function playgroundCode() {
     disabled: playDisabled(),
     gap: playGap(),
   })
+}
+
+async function submitDemo() {
+  try {
+    await demoForm.validate()
+  } catch {
+    return
+  }
+}
+
+async function submitPlay() {
+  try {
+    await playForm.validate()
+  } catch {
+    return
+  }
 }
 
 export <view>
@@ -43,9 +122,9 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Form'}
       :title=${'Form'}
-      :description=${'Layout wrapper for form fields. Disables descendant controls natively and switches FormItem label position.'}
+      :description=${'Layout wrapper plus a full validation API. Use createForm({ model, rules }) with FormItem prop keys, then call validate, validateField, resetFields, and clearValidate.'}
       :status=${'stable'}
     />
 
@@ -61,13 +140,22 @@ export <view>
 
         <div class="docs-alert-play__preview">
           <div class="docs-panel">
-            <Form :labelPosition=${playLabelPosition} :disabled=${playDisabled} :gap=${playGap}>
-              <FormItem :label=${'Name'} :required=${true}>
-                <Input bind-value=${playName} />
+            <Form
+              :form=${playForm}
+              :labelPosition=${playLabelPosition}
+              :disabled=${playDisabled}
+              :gap=${playGap}
+            >
+              <FormItem :prop=${'name'} :label=${'Name'} :required=${true}>
+                <Input bind-value=${playForm.model.name} />
               </FormItem>
-              <FormItem :label=${'Email'} :hint=${'We will never share your email'}>
-                <Input :type=${'email'} bind-value=${playEmail} />
+              <FormItem :prop=${'email'} :label=${'Email'} :required=${true}>
+                <Input :type=${'email'} bind-value=${playForm.model.email} />
               </FormItem>
+              <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+                <Button on-press=${submitPlay}>Validate</Button>
+                <Button :variant=${'secondary'} on-press=${() => playForm.resetFields()}>Reset</Button>
+              </Stack>
             </Form>
           </div>
           <CodeBlock :code=${() => playgroundCode()} :filename=${'form-playground.jcr'} :language=${'jacare'} />
@@ -75,18 +163,112 @@ export <view>
       </div>
     </DocsSection>
 
-    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'form-basic.jcr'} :layout=${'stack'}>
+    <Demo :id=${'basic'} :title=${'Basic layout'} :code=${basic} :filename=${'form-basic.jcr'} :layout=${'stack'}>
       <div style="width:min(28rem,100%)">
         <Form>
           <FormItem :label=${'Name'} :required=${true}>
-            <Input bind-value=${basicName} />
+            <Input />
           </FormItem>
           <FormItem :label=${'Email'} :hint=${'We will never share your email'}>
-            <Input :type=${'email'} bind-value=${basicEmail} />
+            <Input :type=${'email'} />
           </FormItem>
         </Form>
       </div>
     </Demo>
+
+    <Demo
+      :id=${'validation'}
+      :title=${'Validation'}
+      :lead=${'createForm owns model + rules. FormItem prop maps each control to a rule key. Blur/change validate automatically; submit calls form.validate().'}
+      :code=${validation}
+      :filename=${'form-validation.jcr'}
+      :layout=${'stack'}
+    >
+      <div style="width:min(28rem,100%)">
+        <Form :form=${demoForm}>
+          <FormItem :prop=${'name'} :label=${'Name'} :required=${true}>
+            <Input bind-value=${demoForm.model.name} />
+          </FormItem>
+          <FormItem :prop=${'email'} :label=${'Email'} :required=${true}>
+            <Input :type=${'email'} bind-value=${demoForm.model.email} />
+          </FormItem>
+          <Stack :direction=${'row'} :wrap=${true}>
+            <Button on-press=${submitDemo}>Submit</Button>
+            <Button :variant=${'secondary'} on-press=${() => demoForm.resetFields()}>Reset</Button>
+            <Button :variant=${'ghost'} on-press=${() => demoForm.clearValidate()}>Clear errors</Button>
+          </Stack>
+        </Form>
+      </div>
+    </Demo>
+
+    <Demo
+      :id=${'custom-validator'}
+      :title=${'Custom validator'}
+      :lead=${'Use validator(rule, value, callback) or an async function. Trigger defaults to blur and change.'}
+      :code=${customValidator}
+      :filename=${'form-custom-validator.jcr'}
+      :layout=${'stack'}
+    >
+      <div style="width:min(28rem,100%)">
+        <Form :form=${matchForm}>
+          <FormItem :prop=${'password'} :label=${'Password'} :required=${true}>
+            <Input :type=${'password'} bind-value=${matchForm.model.password} />
+          </FormItem>
+          <FormItem :prop=${'confirm'} :label=${'Confirm'} :required=${true}>
+            <Input :type=${'password'} bind-value=${matchForm.model.confirm} />
+          </FormItem>
+          <Button on-press=${() => matchForm.validate().catch(() => {})}>Validate</Button>
+        </Form>
+      </div>
+    </Demo>
+
+    <Demo
+      :id=${'left-labels'}
+      :title=${'Left-aligned labels'}
+      :lead=${'Use labelPosition left for compact desktop forms with short, predictable labels.'}
+      :code=${leftLabels}
+      :filename=${'form-left-labels.jcr'}
+      :layout=${'stack'}
+    >
+      <div style="width:min(32rem,100%)">
+        <Form :labelPosition=${'left'} :gap=${'lg'}>
+          <FormItem :label=${'First name'}><Input /></FormItem>
+          <FormItem :label=${'Role'}><Input /></FormItem>
+        </Form>
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'when-to-use'} :title=${'Field vs Input vs FormItem vs Form'}>
+      <p class="docs-lead">
+        Four pieces, four jobs — pick the smallest that fits.
+      </p>
+      <ul class="docs-checklist">
+        <li><code>Field</code>${' '}— one labeled <strong>native</strong>${' '}input (hint/error built in). Fastest for simple text.</li>
+        <li><code>Input</code>${' '}— richer text control. Pair with FormItem when you need label/error chrome.</li>
+        <li><code>FormItem</code>${' '}— label / required / hint / error wrapper. Set <code>prop</code>${' '}to join form rules.</li>
+        <li><code>Form</code>${' '}— layout + validation host. Pass <code>${':form=${createForm(...)}'}</code>${' '}or <code>model</code>${' '}+ <code>rules</code>.</li>
+      </ul>
+    </DocsSection>
+
+    <DocsSection :id=${'rules'} :title=${'Rule shape'}>
+      <p class="docs-lead">
+        Full rule reference, triggers, custom validators, and usage rules live on the
+        <a jacare-go="/validation" href="/validation">Validation</a>${' '}foundation page.
+      </p>
+      <ul class="docs-checklist">
+        <li><code>required</code>,${' '}<code>message</code>,${' '}<code>trigger</code>${' '}(<code>blur</code> | <code>change</code> | array)</li>
+        <li><code>type</code>: <code>string</code>,${' '}<code>number</code>,${' '}<code>boolean</code>,${' '}<code>array</code>,${' '}<code>email</code>,${' '}<code>url</code>,${' '}<code>integer</code></li>
+        <li><code>min</code>,${' '}<code>max</code>,${' '}<code>len</code>,${' '}<code>pattern</code></li>
+        <li><code>validator(rule, value, callback)</code>${' '}or async function</li>
+      </ul>
+      <p class="docs-lead">
+        API on the form controller: <code>validate</code>,${' '}<code>validateField</code>,${' '}<code>resetFields</code>,${' '}<code>clearValidate</code>,${' '}<code>scrollToField</code>,${' '}<code>setInitialValues</code>,${' '}<code>errors</code>.
+      </p>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

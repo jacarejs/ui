@@ -1,0 +1,135 @@
+import { pulse } from '@jacare/core'
+import SplitButton from '@jacare/ui/components/SplitButton.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  disabledExample,
+  icons,
+  nested,
+  nestedItems,
+  outlinedExample,
+  raisedExample,
+  roundedExample,
+  sampleItems,
+  severity,
+  sizes,
+  textExample,
+} from '../../examples/split-button.js'
+
+const contract = getContract('SplitButton')
+const navLinks = previousNext('/components/split-button')
+const lastAction = pulse('Waiting for an action')
+
+const flatItems = sampleItems
+const nestedModel = nestedItems
+
+const a11y = [
+  'Default action and menu buttons are separate native buttons with clear labels',
+  'Menu button exposes aria-haspopup, aria-expanded, and aria-controls',
+  'Overlay uses menu / menuitem roles; Escape closes and returns focus to the chevron',
+]
+
+function onSelect(item) {
+  lastAction.set(`Selected: ${item?.label || 'item'}`)
+}
+
+function onClick() {
+  lastAction.set('Default Save action')
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>SplitButton</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Actions'}
+      :title=${'SplitButton'}
+      :description=${'Default action plus an overflow menu of related commands.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'basic'} :title=${'Basic'} :lead=${'Pass label for the default action and items for the overlay menu.'} :code=${basic} :filename=${'split-button-basic.jcr'} :layout=${'stack'}>
+      <SplitButton :label=${'Save'} :items=${flatItems} on-click=${onClick} on-select=${onSelect} />
+      <Text :tone=${'muted'}>${lastAction}</Text>
+    </Demo>
+
+    <Demo :id=${'icons'} :title=${'Icons'} :lead=${'icon marks the default button; item.icon uses Jacaré Icon names.'} :code=${icons} :filename=${'split-button-icons.jcr'}>
+      <SplitButton :label=${'Save'} :icon=${'check'} :items=${flatItems} />
+    </Demo>
+
+    <Demo :id=${'nested'} :title=${'Nested'} :lead=${'Items may include a nested items array — rendered as grouped submenu rows.'} :code=${nested} :filename=${'split-button-nested.jcr'}>
+      <SplitButton :label=${'Save'} :items=${nestedModel} on-select=${onSelect} />
+    </Demo>
+
+    <Demo :id=${'severity'} :title=${'Severity'} :lead=${'severity maps to Button variants (primary, secondary, success, info, warn, danger).'} :code=${severity} :filename=${'split-button-severity.jcr'} :layout=${'stack'}>
+      <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+        <SplitButton :label=${'Primary'} :severity=${'primary'} :items=${flatItems} />
+        <SplitButton :label=${'Secondary'} :severity=${'secondary'} :items=${flatItems} />
+        <SplitButton :label=${'Success'} :severity=${'success'} :items=${flatItems} />
+        <SplitButton :label=${'Info'} :severity=${'info'} :items=${flatItems} />
+        <SplitButton :label=${'Warn'} :severity=${'warn'} :items=${flatItems} />
+        <SplitButton :label=${'Danger'} :severity=${'danger'} :items=${flatItems} />
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'disabled'} :title=${'Disabled'} :code=${disabledExample} :filename=${'split-button-disabled.jcr'}>
+      <SplitButton :label=${'Save'} :disabled=${true} :items=${flatItems} />
+    </Demo>
+
+    <Demo :id=${'raised'} :title=${'Raised'} :lead=${'raised adds elevation shadow to the joined control.'} :code=${raisedExample} :filename=${'split-button-raised.jcr'} :layout=${'stack'}>
+      <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+        <SplitButton :label=${'Primary'} :raised=${true} :items=${flatItems} />
+        <SplitButton :label=${'Success'} :severity=${'success'} :raised=${true} :items=${flatItems} />
+        <SplitButton :label=${'Danger'} :severity=${'danger'} :raised=${true} :items=${flatItems} />
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'rounded'} :title=${'Rounded'} :lead=${'rounded switches from pill ends to the standard radius.'} :code=${roundedExample} :filename=${'split-button-rounded.jcr'} :layout=${'stack'}>
+      <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+        <SplitButton :label=${'Primary'} :rounded=${true} :items=${flatItems} />
+        <SplitButton :label=${'Secondary'} :severity=${'secondary'} :rounded=${true} :items=${flatItems} />
+        <SplitButton :label=${'Info'} :severity=${'info'} :rounded=${true} :items=${flatItems} />
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'text'} :title=${'Text'} :lead=${'text renders a ghost / textual surface.'} :code=${textExample} :filename=${'split-button-text.jcr'} :layout=${'stack'}>
+      <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+        <SplitButton :label=${'Primary'} :text=${true} :items=${flatItems} />
+        <SplitButton :label=${'Success'} :severity=${'success'} :text=${true} :items=${flatItems} />
+        <SplitButton :label=${'Danger'} :severity=${'danger'} :text=${true} :items=${flatItems} />
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'outlined'} :title=${'Outlined'} :code=${outlinedExample} :filename=${'split-button-outlined.jcr'} :layout=${'stack'}>
+      <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+        <SplitButton :label=${'Primary'} :outlined=${true} :items=${flatItems} />
+        <SplitButton :label=${'Success'} :severity=${'success'} :outlined=${true} :items=${flatItems} />
+        <SplitButton :label=${'Danger'} :severity=${'danger'} :outlined=${true} :items=${flatItems} />
+      </Stack>
+    </Demo>
+
+    <Demo :id=${'sizes'} :title=${'Sizes'} :lead=${'size accepts sm, md (default), and lg.'} :code=${sizes} :filename=${'split-button-sizes.jcr'} :layout=${'stack'}>
+      <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+        <SplitButton :label=${'Small'} :size=${'sm'} :items=${flatItems} />
+        <SplitButton :label=${'Normal'} :items=${flatItems} />
+        <SplitButton :label=${'Large'} :size=${'lg'} :items=${flatItems} />
+      </Stack>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

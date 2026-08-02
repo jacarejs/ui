@@ -1,0 +1,154 @@
+import { pulse } from '@jacare/core'
+import DurationPicker from '@jacare/ui/components/DurationPicker.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  agenda,
+  basic,
+  disabledExample,
+  hintAndError,
+  hoursMinutes,
+  withDays,
+} from '../../examples/duration-picker.js'
+
+const contract = getContract('DurationPicker')
+const navLinks = previousNext('/components/duration-picker')
+
+const basicValue = pulse(150)
+const hoursValue = pulse(95)
+const daysValue = pulse(3900)
+const hintValue = pulse(45)
+const errorValue = pulse(0)
+const disabledValue = pulse(180)
+const prep = pulse(30)
+const talk = pulse(45)
+const qna = pulse(15)
+
+const a11y = [
+  'Each unit is a labeled InputNumber with min/max and step controls',
+  'The summary restates the composed duration for screen readers scanning nearby text',
+  'error uses role="alert"; hint is associated visually under the control',
+  'disabled dims the group and blocks every unit stepper',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>DurationPicker</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Pickers'}
+      :title=${'DurationPicker'}
+      :description=${'Duration as total minutes with hours/minutes (optional days) for agendas and SLAs. The bound value is always minutes.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Bind a minutes pulse. showDays adds a Days stepper for multi-day SLAs.'}
+      :code=${basic}
+      :filename=${'duration-picker-basic.jcr'}
+    >
+      <DurationPicker :label=${'SLA'} :showDays=${true} bind-value=${basicValue} />
+    </Demo>
+
+    <Demo
+      :id=${'hours-minutes'}
+      :title=${'Hours and minutes'}
+      :lead=${'Omit showDays for shorter durations — still stored as total minutes.'}
+      :code=${hoursMinutes}
+      :filename=${'duration-picker-hours.jcr'}
+    >
+      <DurationPicker
+        :label=${'Meeting length'}
+        :hint=${'Hours and minutes only — model is still total minutes'}
+        bind-value=${hoursValue}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'days'}
+      :title=${'With days'}
+      :lead=${'Large minute totals decompose into days, hours, and minutes in the summary.'}
+      :code=${withDays}
+      :filename=${'duration-picker-days.jcr'}
+    >
+      <DurationPicker
+        :label=${'Incident window'}
+        :showDays=${true}
+        :hint=${'2d 17h 0m from 3900 minutes'}
+        bind-value=${daysValue}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'hint-error'}
+      :title=${'Hint and error'}
+      :lead=${'hint guides setup; error replaces it and marks the group invalid.'}
+      :code=${hintAndError}
+      :filename=${'duration-picker-states.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <DurationPicker
+          :label=${'Retry delay'}
+          :hint=${'Used between automatic retries'}
+          bind-value=${hintValue}
+        />
+        <DurationPicker
+          :label=${'Required SLA'}
+          :error=${'Set a duration greater than zero'}
+          bind-value=${errorValue}
+        />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'disabled'}
+      :title=${'Disabled'}
+      :code=${disabledExample}
+      :filename=${'duration-picker-disabled.jcr'}
+    >
+      <DurationPicker
+        :label=${'Frozen SLA'}
+        :showDays=${true}
+        :disabled=${true}
+        :hint=${'Locked while the ticket is closed'}
+        bind-value=${disabledValue}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'agenda'}
+      :title=${'Agenda breakdown'}
+      :lead=${'Compose several pickers and derive a total from the same minute unit.'}
+      :code=${agenda}
+      :filename=${'duration-picker-agenda.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <DurationPicker :label=${'Prep'} bind-value=${prep} />
+        <DurationPicker :label=${'Talk'} bind-value=${talk} />
+        <DurationPicker :label=${'Q&A'} bind-value=${qna} />
+        <Text>
+          ${() => `Total session: ${prep() + talk() + qna()} minutes`}
+        </Text>
+      </Stack>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

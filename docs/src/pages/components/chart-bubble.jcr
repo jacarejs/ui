@@ -1,0 +1,270 @@
+import { pulse } from '@jacare/core'
+import Card from '@jacare/ui/components/Card.jcr'
+import ChartBubble from '@jacare/ui/components/ChartBubble.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  colors as colorsExample,
+  inCard,
+  noLegend,
+  playgroundCode as buildPlaygroundCode,
+  single,
+  sized,
+} from '../../examples/chart-bubble.js'
+
+const contract = getContract('ChartBubble')
+const navLinks = previousNext('/components/chart-bubble')
+
+const playShowLegend = pulse(true)
+const playCustomColors = pulse(false)
+
+const data = {
+  series: [
+    {
+      name: 'Team A',
+      data: [
+        { x: 12, y: 28, size: 10 },
+        { x: 22, y: 36, size: 16 },
+        { x: 34, y: 24, size: 12 },
+        { x: 48, y: 42, size: 20 },
+      ],
+    },
+    {
+      name: 'Team B',
+      data: [
+        { x: 18, y: 18, size: 8 },
+        { x: 30, y: 32, size: 14 },
+        { x: 40, y: 46, size: 22 },
+        { x: 52, y: 38, size: 18 },
+      ],
+    },
+  ],
+}
+
+const singleData = [
+  { x: 4, y: 12, size: 6 },
+  { x: 8, y: 18, size: 10 },
+  { x: 14, y: 16, size: 14 },
+  { x: 20, y: 24, size: 18 },
+  { x: 26, y: 22, size: 12 },
+]
+
+const colorsData = {
+  series: [
+    {
+      name: 'Alpha',
+      data: [
+        { x: 10, y: 20, size: 12 },
+        { x: 24, y: 34, size: 20 },
+        { x: 38, y: 28, size: 16 },
+      ],
+    },
+    {
+      name: 'Beta',
+      data: [
+        { x: 14, y: 16, size: 8 },
+        { x: 28, y: 30, size: 18 },
+        { x: 42, y: 40, size: 24 },
+      ],
+    },
+  ],
+}
+
+const compactData = {
+  series: [
+    {
+      name: 'Points',
+      data: [
+        { x: 2, y: 8, size: 6 },
+        { x: 6, y: 12, size: 10 },
+        { x: 10, y: 10, size: 14 },
+        { x: 14, y: 16, size: 8 },
+      ],
+    },
+  ],
+}
+
+const npsData = {
+  series: [
+    {
+      name: 'Regions',
+      data: [
+        { x: 12, y: 48, size: 14 },
+        { x: 28, y: 62, size: 22 },
+        { x: 44, y: 55, size: 18 },
+      ],
+    },
+  ],
+}
+
+const customColors = ['#be185d', '#0f766e']
+
+const a11y = [
+  'SVG root uses role="img" with an aria-label from title',
+  'Bubble size encodes magnitude — keep a caption that explains the size axis',
+  'Point titles expose x, y, and size on hover',
+  'Legend identifies series when color and size overlap',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    showLegend: playShowLegend(),
+    customColors: playCustomColors(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ChartBubble</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Charts'}
+      :title=${'ChartBubble'}
+      :description=${'Scatter points sized by a third numeric dimension with custom colors and optional legend.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Switch :label=${'Show legend'} bind-checked=${playShowLegend} />
+          <Switch :label=${'Custom colors'} bind-checked=${playCustomColors} />
+          <Text :tone=${'muted'}>Toggle options to preview bubble chart chrome.</Text>
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <ChartBubble
+              :data=${data}
+              :title=${'Bubble'}
+              :caption=${'Playground preview'}
+              :showLegend=${playShowLegend}
+              :colors=${() => (playCustomColors() ? customColors : null)}
+              :width=${480}
+              :height=${280}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'chart-bubble-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Pass series with { x, y, size } points. Optional title, caption, width, and height frame the plot.'}
+      :code=${basic}
+      :filename=${'chart-bubble-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <ChartBubble
+        :data=${data}
+        :title=${'Bubble'}
+        :caption=${'Size encodes volume'}
+        :width=${480}
+        :height=${280}
+      />
+    </Demo>
+
+    <DocsSection :id=${'data'} :title=${'Data shapes'}>
+      <Demo
+        :id=${'single'}
+        :title=${'Single series array'}
+        :lead=${'Pass a flat array of { x, y, size } for one cohort.'}
+        :code=${single}
+        :filename=${'chart-bubble-single.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartBubble :data=${singleData} :title=${'Market map'} :showLegend=${false} />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'options'} :title=${'Options'}>
+      <Demo
+        :id=${'colors'}
+        :title=${'Custom colors'}
+        :lead=${'colors overrides the default palette in series order.'}
+        :code=${colorsExample}
+        :filename=${'chart-bubble-colors.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartBubble
+          :data=${colorsData}
+          :title=${'Custom palette'}
+          :colors=${['#be185d', '#1f6feb']}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'no-legend'}
+        :title=${'Hide legend'}
+        :lead=${'showLegend=false for compact dashboard tiles.'}
+        :code=${noLegend}
+        :filename=${'chart-bubble-no-legend.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartBubble
+          :data=${npsData}
+          :title=${'Compact'}
+          :caption=${'Legend hidden for dense dashboards'}
+          :showLegend=${false}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'sized'}
+        :title=${'Custom size'}
+        :lead=${'width and height control the SVG viewBox and frame.'}
+        :code=${sized}
+        :filename=${'chart-bubble-sized.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartBubble
+          :data=${compactData}
+          :title=${'Compact size'}
+          :width=${320}
+          :height=${200}
+          :showLegend=${false}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'in-card'}
+        :title=${'Inside Card'}
+        :lead=${'Compose ChartBubble in a Card for portfolio panels.'}
+        :code=${inCard}
+        :filename=${'chart-bubble-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Portfolio'} :subtitle=${'Risk vs return by size'}>
+          <ChartBubble :data=${data} :showLegend=${true} :height=${240} />
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

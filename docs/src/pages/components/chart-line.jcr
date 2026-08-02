@@ -1,0 +1,289 @@
+import { pulse } from '@jacare/core'
+import Card from '@jacare/ui/components/Card.jcr'
+import ChartLine from '@jacare/ui/components/ChartLine.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  colors as colorsExample,
+  curved as curvedExample,
+  inCard,
+  noDots,
+  noLegend,
+  noTooltip as noTooltipExample,
+  playgroundCode as buildPlaygroundCode,
+  single,
+  sized,
+  tooltip as tooltipExample,
+} from '../../examples/chart-line.js'
+
+const contract = getContract('ChartLine')
+const navLinks = previousNext('/components/chart-line')
+
+const playShowLegend = pulse(true)
+const playShowDots = pulse(true)
+const playShowTooltip = pulse(true)
+const playCurved = pulse(false)
+const playCustomColors = pulse(false)
+
+const data = {
+  categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  series: [
+    { name: 'Revenue', data: [42, 48, 51, 58, 62, 70] },
+    { name: 'Cost', data: [28, 30, 33, 36, 38, 41] },
+  ],
+}
+
+const singleData = [
+  { label: 'Mon', value: 12 },
+  { label: 'Tue', value: 18 },
+  { label: 'Wed', value: 15 },
+  { label: 'Thu', value: 22 },
+  { label: 'Fri', value: 19 },
+]
+
+const colorsData = {
+  categories: ['Q1', 'Q2', 'Q3', 'Q4'],
+  series: [
+    { name: 'Product', data: [40, 52, 61, 74] },
+    { name: 'Services', data: [22, 28, 35, 41] },
+  ],
+}
+
+const visitorsData = {
+  categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  series: [{ name: 'Visitors', data: [120, 140, 132, 168, 190, 210] }],
+}
+
+const npsData = {
+  categories: ['Jan', 'Feb', 'Mar', 'Apr'],
+  series: [{ name: 'NPS', data: [32, 38, 41, 45] }],
+}
+
+const compactData = {
+  categories: ['A', 'B', 'C', 'D', 'E'],
+  series: [{ name: 'Score', data: [8, 12, 10, 16, 14] }],
+}
+
+const customColors = ['#be185d', '#0f766e']
+
+const a11y = [
+  'SVG root uses role="img" with an aria-label from title',
+  'Point titles expose series name and value on hover',
+  'Use the legend to identify series when color is not enough',
+  'Keep series count low enough that lines stay distinguishable',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    showLegend: playShowLegend(),
+    showDots: playShowDots(),
+    showTooltip: playShowTooltip(),
+    curved: playCurved(),
+    customColors: playCustomColors(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ChartLine</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Charts'}
+      :title=${'ChartLine'}
+      :description=${'Multi-series line trends with shared cartesian axes, dots, optional curves, custom colors, and legend.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Switch :label=${'Show legend'} bind-checked=${playShowLegend} />
+          <Switch :label=${'Show dots'} bind-checked=${playShowDots} />
+          <Switch :label=${'Point tooltips'} bind-checked=${playShowTooltip} />
+          <Switch :label=${'Curved'} bind-checked=${playCurved} />
+          <Switch :label=${'Custom colors'} bind-checked=${playCustomColors} />
+          <Text :tone=${'muted'}>Toggle options to preview line chart chrome.</Text>
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <ChartLine
+              :data=${data}
+              :title=${'Line'}
+              :caption=${'Playground preview'}
+              :showLegend=${playShowLegend}
+              :showDots=${playShowDots}
+              :showTooltip=${playShowTooltip}
+              :curved=${playCurved}
+              :colors=${() => (playCustomColors() ? customColors : null)}
+              :height=${280}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'chart-line-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Pass categories + series. Optional title, caption, width, and height frame the plot.'}
+      :code=${basic}
+      :filename=${'chart-line-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <ChartLine
+        :data=${data}
+        :title=${'Line'}
+        :caption=${'Multi-series trend'}
+        :width=${480}
+        :height=${280}
+      />
+    </Demo>
+
+    <DocsSection :id=${'data'} :title=${'Data shapes'}>
+      <Demo
+        :id=${'single'}
+        :title=${'Single series array'}
+        :lead=${'Pass an array of { label, value } for a quick one-series chart.'}
+        :code=${single}
+        :filename=${'chart-line-single.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartLine :data=${singleData} :title=${'Daily signups'} :showLegend=${false} />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'options'} :title=${'Options'}>
+      <Demo
+        :id=${'colors'}
+        :title=${'Custom colors'}
+        :lead=${'colors overrides the default palette in series order.'}
+        :code=${colorsExample}
+        :filename=${'chart-line-colors.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartLine
+          :data=${colorsData}
+          :title=${'Custom palette'}
+          :colors=${['#be185d', '#1f6feb']}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'no-dots'}
+        :title=${'Hide dots'}
+        :lead=${'showDots=false keeps a clean stroke for dense series.'}
+        :code=${noDots}
+        :filename=${'chart-line-no-dots.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartLine :data=${visitorsData} :title=${'Smooth read'} :showDots=${false} />
+      </Demo>
+
+      <Demo
+        :id=${'tooltip'}
+        :title=${'Point tooltips'}
+        :lead=${'showTooltip adds native titles on points (series · category: value). Works with or without visible dots.'}
+        :code=${tooltipExample}
+        :filename=${'chart-line-tooltip.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartLine :data=${data} :title=${'Point tooltips'} :showTooltip=${true} :showDots=${true} />
+      </Demo>
+
+      <Demo
+        :id=${'no-tooltip'}
+        :title=${'Disable tooltips'}
+        :lead=${'showTooltip=false removes point titles when you want a quieter chart.'}
+        :code=${noTooltipExample}
+        :filename=${'chart-line-no-tooltip.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartLine :data=${visitorsData} :title=${'No tooltips'} :showTooltip=${false} />
+      </Demo>
+
+      <Demo
+        :id=${'curved'}
+        :title=${'Curved'}
+        :lead=${'curved draws cubic smoothing between points.'}
+        :code=${curvedExample}
+        :filename=${'chart-line-curved.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartLine :data=${data} :title=${'Curved'} :curved=${true} />
+      </Demo>
+
+      <Demo
+        :id=${'no-legend'}
+        :title=${'Hide legend'}
+        :lead=${'showLegend=false for compact dashboard tiles.'}
+        :code=${noLegend}
+        :filename=${'chart-line-no-legend.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartLine
+          :data=${npsData}
+          :title=${'Compact'}
+          :caption=${'Legend hidden for dense dashboards'}
+          :showLegend=${false}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'sized'}
+        :title=${'Custom size'}
+        :lead=${'width and height control the SVG viewBox and frame.'}
+        :code=${sized}
+        :filename=${'chart-line-sized.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartLine
+          :data=${compactData}
+          :title=${'Compact size'}
+          :width=${320}
+          :height=${200}
+          :showLegend=${false}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'in-card'}
+        :title=${'Inside Card'}
+        :lead=${'Compose ChartLine in a Card for dashboard KPI panels.'}
+        :code=${inCard}
+        :filename=${'chart-line-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Finance'} :subtitle=${'Monthly trend'}>
+          <ChartLine :data=${data} :showLegend=${true} :height=${240} />
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

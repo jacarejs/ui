@@ -9,9 +9,10 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/mention.js'
+import { basic, customPrefix, playgroundCode as buildPlaygroundCode, prefilled, states } from '../../examples/mention.js'
 
 const contract = getContract('Mention')
 const navLinks = previousNext('/components/mention')
@@ -28,6 +29,19 @@ const playPlaceholder = pulse('Type @ to mention someone')
 const playValue = pulse('')
 const playDisabled = pulse(false)
 const basicValue = pulse('')
+const topicValue = pulse('')
+const replyValue = pulse('Thanks @Ada ')
+const invalidValue = pulse('')
+const lockedValue = pulse('Assigned to @Ada')
+
+const topicOptions = [{ value: 'urgent', label: 'urgent' }, { value: 'help', label: 'help' }]
+
+const a11yItems = [
+  'The native text field remains the primary keyboard target',
+  'Suggestions are exposed as a listbox with option buttons',
+  'Escape closes suggestions without clearing typed text',
+  'Errors use role="alert" and disabled prevents editing',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -47,7 +61,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Inputs'}
       :title=${'Mention'}
       :description=${'Text field that opens a filtered suggestion list when you type @. Bind the full string value and pass mention options.'}
       :status=${'stable'}
@@ -86,6 +100,25 @@ export <view>
         bind-value=${basicValue}
       />
     </Demo>
+
+    <Demo :id=${'prefix'} :title=${'Custom prefix'} :lead=${'Use prefix for topic, command, or entity suggestion flows.'} :code=${customPrefix} :filename=${'mention-prefix.jcr'}>
+      <Mention :label=${'Message'} :options=${topicOptions} :prefix=${'#'} :placeholder=${'Type # for topics'} bind-value=${topicValue} />
+    </Demo>
+
+    <Demo :id=${'prefilled'} :title=${'Prefilled message'} :code=${prefilled} :filename=${'mention-prefilled.jcr'}>
+      <Mention :label=${'Reply'} :options=${options} :hint=${'Type @ to add another teammate'} bind-value=${replyValue} />
+    </Demo>
+
+    <Demo :id=${'states'} :title=${'Error and disabled'} :code=${states} :filename=${'mention-states.jcr'}>
+      <Stack :gap=${'md'}>
+        <Mention :label=${'Reviewer'} :options=${options} :error=${'Mention at least one reviewer'} bind-value=${invalidValue} />
+        <Mention :label=${'Assignment'} :options=${options} :disabled=${true} bind-value=${lockedValue} />
+      </Stack>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11yItems} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

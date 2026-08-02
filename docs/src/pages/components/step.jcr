@@ -1,0 +1,41 @@
+import Steps from '@jacare/ui/components/Steps.jcr'
+import Step from '@jacare/ui/components/Step.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { composition, overrides, all_statuses, body_content } from '../../examples/step.js'
+
+const contract = getContract('Step')
+const navLinks = previousNext('/components/step')
+const a11y = [
+  'Always compose Step inside Steps so sequence context is preserved',
+  'Use descriptions to clarify state rather than repeating the title',
+  'Do not rely on a custom icon or color alone to communicate status',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb"><a jacare-go="/components" href="/components">Components</a><span aria-hidden="true">/</span><span>Step</span></nav>
+    <DocsHero :kicker=${'Navigation'} :title=${'Step'} :description=${'Child item for Steps with title, description, custom marker, body content, and optional status override.'} :status=${'stable'} />
+    <Demo :id=${'composition'} :title=${'Parent composition'} :code=${composition} :filename=${'step-composition.jcr'} :layout=${'stack'}>
+      <Steps :active=${1}><Step :title=${'Profile'} :description=${'Complete'} /><Step :title=${'Verification'} :description=${'In progress'} /><Step :title=${'Ready'} /></Steps>
+    </Demo>
+    <Demo :id=${'overrides'} :title=${'Status and icon overrides'} :code=${overrides} :filename=${'step-overrides.jcr'} :layout=${'stack'}>
+      <Steps><Step :title=${'Synced'} :status=${'success'} :icon=${'✓'} /><Step :title=${'Needs attention'} :status=${'error'} :icon=${'!'} /><Step :title=${'Queued'} :status=${'wait'} /></Steps>
+    </Demo>
+    <Demo :id=${'all-statuses'} :title=${'Every status override'} :code=${all_statuses} :filename=${'step-all-statuses.jcr'} :layout=${'stack'}>
+      <Steps><Step :title=${'Waiting'} :status=${'wait'} /><Step :title=${'Processing'} :status=${'process'} /><Step :title=${'Finished'} :status=${'finish'} /><Step :title=${'Successful'} :status=${'success'} /><Step :title=${'Failed'} :status=${'error'} /></Steps>
+    </Demo>
+    <Demo :id=${'body-content'} :title=${'Descriptions, icons, and body content'} :code=${body_content} :filename=${'step-body-content.jcr'} :layout=${'stack'}>
+      <Steps :active=${1} :direction=${'vertical'}><Step :title=${'Order'} :description=${'Received'} :icon=${'✓'}>Order #1048</Step><Step :title=${'Delivery'} :description=${'Today, 14:00'} :icon=${'🚚'}>Track the courier</Step></Steps>
+    </Demo>
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}><AccessibilityChecklist :items=${a11y} /></DocsSection>
+    <DocsSection :id=${'api'} :title=${'API'}><PropsTable :contract=${contract} /></DocsSection>
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

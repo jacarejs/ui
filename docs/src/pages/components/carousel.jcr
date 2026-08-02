@@ -1,0 +1,403 @@
+import { pulse } from '@jacare/core'
+import Card from '@jacare/ui/components/Card.jcr'
+import Carousel from '@jacare/ui/components/Carousel.jcr'
+import CarouselItem from '@jacare/ui/components/CarouselItem.jcr'
+import Select from '@jacare/ui/components/Select.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Tag from '@jacare/ui/components/Tag.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  arrowAlways,
+  arrowHover,
+  arrowNever,
+  autoplay,
+  basic,
+  cards,
+  heights,
+  indicatorsInside,
+  indicatorsNone,
+  initial,
+  minimal,
+  outside,
+  playgroundCode as buildPlaygroundCode,
+  quotes,
+} from '../../examples/carousel.js'
+
+const contract = getContract('Carousel')
+const navLinks = previousNext('/components/carousel')
+
+const arrowOptions = [
+  { value: 'hover', label: 'Hover' },
+  { value: 'always', label: 'Always' },
+  { value: 'never', label: 'Never' },
+]
+const indicatorOptions = [
+  { value: 'inside', label: 'Inside' },
+  { value: 'outside', label: 'Outside' },
+  { value: 'none', label: 'None' },
+]
+const heightOptions = [
+  { value: '160px', label: '160px' },
+  { value: '200px', label: '200px' },
+  { value: '260px', label: '260px' },
+]
+
+const playAutoplay = pulse(false)
+const playArrow = pulse('always')
+const playIndicators = pulse('inside')
+const playHeight = pulse('200px')
+
+const a11y = [
+  'Disable autoplay for content that requires reading or interaction',
+  'Arrow buttons and indicators expose accessible labels',
+  'Respect reduced-motion preferences and avoid rapid intervals',
+  'If you hide arrows and indicators, provide another navigation path',
+]
+
+function slideStyle(bg, color) {
+  const text = color || 'var(--j-forest)'
+  return (
+    'display:grid;place-items:center;height:100%;font-weight:800;background:' +
+    bg +
+    ';color:' +
+    text
+  )
+}
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    autoplay: playAutoplay(),
+    interval: 2500,
+    arrow: playArrow(),
+    indicatorPosition: playIndicators(),
+    height: playHeight(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Carousel</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'Carousel'}
+      :description=${'Slide container with CarouselItem children. Configure autoplay, arrow visibility, indicator placement, height, and initial index. Supports horizontal swipe.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Select :label=${'Arrow'} :options=${arrowOptions} bind-value=${playArrow} />
+          <Select :label=${'Indicators'} :options=${indicatorOptions} bind-value=${playIndicators} />
+          <Select :label=${'Height'} :options=${heightOptions} bind-value=${playHeight} />
+          <Switch :label=${'Autoplay'} bind-checked=${playAutoplay} />
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <Carousel
+              :autoplay=${playAutoplay}
+              :interval=${2500}
+              :arrow=${playArrow}
+              :indicatorPosition=${playIndicators}
+              :height=${playHeight}
+            >
+              <CarouselItem>
+                <div :style=${() => slideStyle('var(--j-mint)')}>Overview</div>
+              </CarouselItem>
+              <CarouselItem>
+                <div :style=${() => slideStyle('var(--j-surface-2)')}>Usage</div>
+              </CarouselItem>
+              <CarouselItem>
+                <div :style=${() => slideStyle('var(--j-leaf)', '#ffffff')}>Ship</div>
+              </CarouselItem>
+            </Carousel>
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'carousel-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Manual navigation with always-visible arrows. change emits the active zero-based index.'}
+      :code=${basic}
+      :filename=${'carousel-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Carousel :autoplay=${false} :arrow=${'always'}>
+        <CarouselItem><div :style=${() => slideStyle('var(--j-mint)')}>Overview</div></CarouselItem>
+        <CarouselItem><div :style=${() => slideStyle('var(--j-surface-2)')}>Usage</div></CarouselItem>
+        <CarouselItem><div :style=${() => slideStyle('var(--j-leaf)', '#ffffff')}>Ship</div></CarouselItem>
+      </Carousel>
+    </Demo>
+
+    <DocsSection :id=${'arrows'} :title=${'Arrow types'}>
+      <Demo
+        :id=${'arrow-always'}
+        :title=${'Always'}
+        :lead=${"arrow='always' keeps prev/next controls visible."}
+        :code=${arrowAlways}
+        :filename=${'carousel-arrow-always.jcr'}
+        :layout=${'stack'}
+      >
+        <Carousel :autoplay=${false} :arrow=${'always'} :height=${'180px'}>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-mint)')}>Always visible arrows</div></CarouselItem>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-surface-2)')}>Prev / Next stay on screen</div></CarouselItem>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-leaf)', '#ffffff')}>Good for touch and desktop</div></CarouselItem>
+        </Carousel>
+      </Demo>
+
+      <Demo
+        :id=${'arrow-hover'}
+        :title=${'Hover'}
+        :lead=${"arrow='hover' reveals controls on pointer hover (default)."}
+        :code=${arrowHover}
+        :filename=${'carousel-arrow-hover.jcr'}
+        :layout=${'stack'}
+      >
+        <Carousel :autoplay=${false} :arrow=${'hover'} :height=${'180px'}>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-mint)')}>Hover to reveal arrows</div></CarouselItem>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-surface-2)')}>Default arrow mode</div></CarouselItem>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-leaf)', '#ffffff')}>Keeps the slide clean</div></CarouselItem>
+        </Carousel>
+      </Demo>
+
+      <Demo
+        :id=${'arrow-never'}
+        :title=${'Never'}
+        :lead=${"arrow='never' hides arrows — rely on indicators or swipe."}
+        :code=${arrowNever}
+        :filename=${'carousel-arrow-never.jcr'}
+        :layout=${'stack'}
+      >
+        <Carousel :autoplay=${false} :arrow=${'never'} :height=${'180px'}>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-mint)')}>No arrows</div></CarouselItem>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-surface-2)')}>Use indicators or swipe</div></CarouselItem>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-leaf)', '#ffffff')}>Compact chrome</div></CarouselItem>
+        </Carousel>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'indicators'} :title=${'Indicator types'}>
+      <Demo
+        :id=${'indicators-inside'}
+        :title=${'Inside'}
+        :lead=${"indicatorPosition='inside' overlays dots on the slide (default)."}
+        :code=${indicatorsInside}
+        :filename=${'carousel-indicators-inside.jcr'}
+        :layout=${'stack'}
+      >
+        <Carousel :autoplay=${false} :indicatorPosition=${'inside'} :arrow=${'always'} :height=${'180px'}>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-mint)')}>Indicators inside</div></CarouselItem>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-surface-2)')}>Default placement</div></CarouselItem>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-leaf)', '#ffffff')}>Overlay on the slide</div></CarouselItem>
+        </Carousel>
+      </Demo>
+
+      <Demo
+        :id=${'outside'}
+        :title=${'Outside'}
+        :lead=${"indicatorPosition='outside' places dots below the track."}
+        :code=${outside}
+        :filename=${'carousel-outside.jcr'}
+        :layout=${'stack'}
+      >
+        <Carousel :autoplay=${false} :indicatorPosition=${'outside'} :arrow=${'always'} :height=${'180px'}>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-mint)')}>Indicators outside</div></CarouselItem>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-surface-2)')}>Dots sit below the track</div></CarouselItem>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-leaf)', '#ffffff')}>Useful with busy slides</div></CarouselItem>
+        </Carousel>
+      </Demo>
+
+      <Demo
+        :id=${'indicators-none'}
+        :title=${'None'}
+        :lead=${"indicatorPosition='none' hides dots entirely."}
+        :code=${indicatorsNone}
+        :filename=${'carousel-indicators-none.jcr'}
+        :layout=${'stack'}
+      >
+        <Carousel :autoplay=${false} :indicatorPosition=${'none'} :arrow=${'always'} :height=${'180px'}>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-mint)')}>No indicators</div></CarouselItem>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-surface-2)')}>Navigate with arrows</div></CarouselItem>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-leaf)', '#ffffff')}>Or swipe on touch</div></CarouselItem>
+        </Carousel>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'behavior'} :title=${'Behavior'}>
+      <Demo
+        :id=${'autoplay'}
+        :title=${'Autoplay'}
+        :lead=${'interval sets the delay between automatic advances.'}
+        :code=${autoplay}
+        :filename=${'carousel-autoplay.jcr'}
+        :layout=${'stack'}
+      >
+        <Carousel :autoplay=${true} :interval=${2000} :arrow=${'hover'}>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-mint)')}>Overview</div></CarouselItem>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-surface-2)')}>Usage</div></CarouselItem>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-leaf)', '#ffffff')}>Ship</div></CarouselItem>
+        </Carousel>
+      </Demo>
+
+      <Demo
+        :id=${'initial'}
+        :title=${'Initial slide'}
+        :lead=${'initialIndex selects the starting zero-based slide.'}
+        :code=${initial}
+        :filename=${'carousel-initial.jcr'}
+        :layout=${'stack'}
+      >
+        <Carousel :autoplay=${false} :initialIndex=${1} :arrow=${'always'}>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-mint)')}>Overview</div></CarouselItem>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-surface-2)')}>Usage</div></CarouselItem>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-leaf)', '#ffffff')}>Ship</div></CarouselItem>
+        </Carousel>
+      </Demo>
+
+      <Demo
+        :id=${'heights'}
+        :title=${'Heights'}
+        :lead=${'height accepts any CSS length for compact strips or taller feature bands.'}
+        :code=${heights}
+        :filename=${'carousel-heights.jcr'}
+        :layout=${'stack'}
+      >
+        <Stack :gap=${'lg'}>
+          <Text :weight=${'bold'}>Compact 140px</Text>
+          <Carousel :autoplay=${false} :arrow=${'always'} :height=${'140px'}>
+            <CarouselItem><div :style=${() => slideStyle('var(--j-mint)')}>Short</div></CarouselItem>
+            <CarouselItem><div :style=${() => slideStyle('var(--j-surface-2)')}>Hero strip</div></CarouselItem>
+          </Carousel>
+          <Text :weight=${'bold'}>Tall 260px</Text>
+          <Carousel :autoplay=${false} :arrow=${'always'} :height=${'260px'}>
+            <CarouselItem><div :style=${() => slideStyle('var(--j-mint)')}>Feature</div></CarouselItem>
+            <CarouselItem><div :style=${() => slideStyle('var(--j-leaf)', '#ffffff')}>Campaign</div></CarouselItem>
+          </Carousel>
+        </Stack>
+      </Demo>
+
+      <Demo
+        :id=${'minimal'}
+        :title=${'Content-only'}
+        :lead=${'Hide arrows and indicators only when another accessible navigation path exists.'}
+        :code=${minimal}
+        :filename=${'carousel-minimal.jcr'}
+        :layout=${'stack'}
+      >
+        <Carousel :autoplay=${false} :arrow=${'never'} :indicatorPosition=${'none'} :height=${'160px'}>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-mint)')}>Overview</div></CarouselItem>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-surface-2)')}>Usage</div></CarouselItem>
+          <CarouselItem><div :style=${() => slideStyle('var(--j-leaf)', '#ffffff')}>Ship</div></CarouselItem>
+        </Carousel>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'content'} :title=${'Content types'}>
+      <Demo
+        :id=${'cards'}
+        :title=${'Card slides'}
+        :lead=${'Compose Card, Tag, and Text inside CarouselItem for feature carousels.'}
+        :code=${cards}
+        :filename=${'carousel-cards.jcr'}
+        :layout=${'stack'}
+      >
+        <Carousel :autoplay=${false} :arrow=${'always'} :indicatorPosition=${'outside'} :height=${'220px'}>
+          <CarouselItem>
+            <div style="height:100%;padding:0.85rem;box-sizing:border-box">
+              <Card :title=${'Design tokens'} :subtitle=${'Theme'} :shadow=${'never'}>
+                <Stack :gap=${'sm'}>
+                  <Text :tone=${'muted'}>Color, spacing, and typography primitives.</Text>
+                  <Tag :text=${'stable'} :type=${'success'} :size=${'sm'} />
+                </Stack>
+              </Card>
+            </div>
+          </CarouselItem>
+          <CarouselItem>
+            <div style="height:100%;padding:0.85rem;box-sizing:border-box">
+              <Card :title=${'Forms'} :subtitle=${'Inputs'} :shadow=${'never'}>
+                <Stack :gap=${'sm'}>
+                  <Text :tone=${'muted'}>Validation helpers for settings screens.</Text>
+                  <Tag :text=${'forms'} :type=${'info'} :size=${'sm'} />
+                </Stack>
+              </Card>
+            </div>
+          </CarouselItem>
+          <CarouselItem>
+            <div style="height:100%;padding:0.85rem;box-sizing:border-box">
+              <Card :title=${'Feedback'} :subtitle=${'Alerts'} :shadow=${'never'}>
+                <Stack :gap=${'sm'}>
+                  <Text :tone=${'muted'}>Toasts, dialogs, and inline status.</Text>
+                  <Tag :text=${'ux'} :type=${'warning'} :size=${'sm'} />
+                </Stack>
+              </Card>
+            </div>
+          </CarouselItem>
+        </Carousel>
+      </Demo>
+
+      <Demo
+        :id=${'quotes'}
+        :title=${'Quote band'}
+        :lead=${'Autoplay with outside indicators works well for testimonials.'}
+        :code=${quotes}
+        :filename=${'carousel-quotes.jcr'}
+        :layout=${'stack'}
+      >
+        <Carousel :autoplay=${true} :interval=${4000} :arrow=${'hover'} :indicatorPosition=${'outside'} :height=${'200px'}>
+          <CarouselItem>
+            <div style="display:grid;place-items:center;height:100%;padding:1.25rem;box-sizing:border-box;background:color-mix(in srgb, var(--j-mint) 45%, var(--j-surface))">
+              <Stack :gap=${'sm'}>
+                <Text :weight=${'bold'}>“Tokens made our themes boring in the best way.”</Text>
+                <Text :tone=${'muted'} :size=${'sm'}>— Ada, Design Systems</Text>
+              </Stack>
+            </div>
+          </CarouselItem>
+          <CarouselItem>
+            <div style="display:grid;place-items:center;height:100%;padding:1.25rem;box-sizing:border-box;background:var(--j-surface-2)">
+              <Stack :gap=${'sm'}>
+                <Text :weight=${'bold'}>“Carousel swipe just worked on the tablet demos.”</Text>
+                <Text :tone=${'muted'} :size=${'sm'}>— Grace, Product</Text>
+              </Stack>
+            </div>
+          </CarouselItem>
+          <CarouselItem>
+            <div style="display:grid;place-items:center;height:100%;padding:1.25rem;box-sizing:border-box;background:color-mix(in srgb, var(--j-leaf) 18%, var(--j-surface))">
+              <Stack :gap=${'sm'}>
+                <Text :weight=${'bold'}>“We ship FAQ and feature strips with the same API.”</Text>
+                <Text :tone=${'muted'} :size=${'sm'}>— Lin, Frontend</Text>
+              </Stack>
+            </div>
+          </CarouselItem>
+        </Carousel>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

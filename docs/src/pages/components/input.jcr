@@ -1,4 +1,5 @@
 import { pulse } from '@jacare/core'
+import Button from '@jacare/ui/components/Button.jcr'
 import Field from '@jacare/ui/components/Field.jcr'
 import Switch from '@jacare/ui/components/Switch.jcr'
 import Stack from '@jacare/ui/components/Stack.jcr'
@@ -9,9 +10,18 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/input.js'
+import {
+  basic,
+  clearable,
+  maxLength,
+  playgroundCode as buildPlaygroundCode,
+  sizes,
+  states,
+  types,
+} from '../../examples/input.js'
 
 const contract = getContract('Input')
 const navLinks = previousNext('/components/input')
@@ -24,7 +34,41 @@ const playError = pulse('')
 const playRequired = pulse(false)
 const playDisabled = pulse(false)
 const playClearable = pulse(true)
+const playSize = pulse('md')
+const playType = pulse('text')
+
 const basicValue = pulse('')
+const clearValue = pulse('Clear me')
+const sizeSm = pulse('')
+const sizeMd = pulse('')
+const sizeLg = pulse('')
+const typeEmail = pulse('')
+const typePassword = pulse('')
+const typeUrl = pulse('')
+const statesRequired = pulse('')
+const statesError = pulse('')
+const statesHint = pulse('')
+const statesDisabled = pulse('Locked')
+const maxLengthValue = pulse('')
+
+const sizeOptions = ['sm', 'md', 'lg']
+const typeOptions = ['text', 'email', 'password', 'url', 'search', 'tel']
+
+const a11y = [
+  'Label text is associated with the native input through the wrapping label',
+  'required shows a visual asterisk and sets the native required attribute',
+  'error sets aria-invalid and surfaces validation copy under the field',
+  'Clear control is a button with aria-label=Clear',
+  'disabled dims the control and blocks typing',
+]
+
+function setSize(next) {
+  playSize.set(next)
+}
+
+function setType(next) {
+  playType.set(next)
+}
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -36,6 +80,8 @@ function playgroundCode() {
     required: playRequired(),
     disabled: playDisabled(),
     clearable: playClearable(),
+    size: playSize(),
+    type: playType(),
   })
 }
 
@@ -48,9 +94,9 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Inputs'}
       :title=${'Input'}
-      :description=${'Text field with prefix and suffix slots, a clear button, and size variants. A richer sibling to Field.'}
+      :description=${'Text field with sizes, input types, clearable control, validation states, maxLength, and prefix/suffix slots.'}
       :status=${'stable'}
     />
 
@@ -61,6 +107,33 @@ export <view>
           <Field :label=${'Placeholder'} bind-value=${playPlaceholder} />
           <Field :label=${'Hint'} bind-value=${playHint} />
           <Field :label=${'Error'} :hint=${'Leave empty for a valid field'} bind-value=${playError} />
+
+          <div>
+            <span class="docs-alert-play__label">Size</span>
+            <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+              #each sizeOptions as option
+                <Button
+                  :variant=${() => (playSize() === option ? 'primary' : 'secondary')}
+                  :size=${'sm'}
+                  on-press=${() => setSize(option)}
+                >${option}</Button>
+              #end
+            </Stack>
+          </div>
+
+          <div>
+            <span class="docs-alert-play__label">Type</span>
+            <Stack :direction=${'row'} :gap=${'sm'} :wrap=${true}>
+              #each typeOptions as option
+                <Button
+                  :variant=${() => (playType() === option ? 'primary' : 'secondary')}
+                  :size=${'sm'}
+                  on-press=${() => setType(option)}
+                >${option}</Button>
+              #end
+            </Stack>
+          </div>
+
           <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
             <Switch :label=${'Clearable'} bind-checked=${playClearable} />
             <Switch :label=${'Required'} bind-checked=${playRequired} />
@@ -78,6 +151,8 @@ export <view>
               :required=${playRequired}
               :disabled=${playDisabled}
               :clearable=${playClearable}
+              :size=${playSize}
+              :type=${playType}
               bind-value=${playValue}
             />
           </div>
@@ -91,6 +166,53 @@ export <view>
         <Input :label=${'Name'} :placeholder=${'Jane Doe'} bind-value=${basicValue} />
       </div>
     </Demo>
+
+    <Demo :id=${'sizes'} :title=${'Sizes'} :lead=${'size is sm, md, or lg.'} :code=${sizes} :filename=${'input-sizes.jcr'} :layout=${'stack'}>
+      <div style="width:min(24rem,100%)">
+        <Stack :gap=${'md'}>
+          <Input :label=${'Small'} :size=${'sm'} :placeholder=${'sm'} bind-value=${sizeSm} />
+          <Input :label=${'Medium'} :size=${'md'} :placeholder=${'md'} bind-value=${sizeMd} />
+          <Input :label=${'Large'} :size=${'lg'} :placeholder=${'lg'} bind-value=${sizeLg} />
+        </Stack>
+      </div>
+    </Demo>
+
+    <Demo :id=${'types'} :title=${'Types'} :lead=${'type maps to the native input type.'} :code=${types} :filename=${'input-types.jcr'} :layout=${'stack'}>
+      <div style="width:min(24rem,100%)">
+        <Stack :gap=${'md'}>
+          <Input :label=${'Email'} :type=${'email'} :placeholder=${'you@example.com'} bind-value=${typeEmail} />
+          <Input :label=${'Password'} :type=${'password'} :placeholder=${'••••••••'} bind-value=${typePassword} />
+          <Input :label=${'Website'} :type=${'url'} :placeholder=${'https://'} bind-value=${typeUrl} />
+        </Stack>
+      </div>
+    </Demo>
+
+    <Demo :id=${'clearable'} :title=${'Clearable'} :code=${clearable} :filename=${'input-clearable.jcr'} :layout=${'stack'}>
+      <div style="width:min(24rem,100%)">
+        <Input :label=${'Search'} :clearable=${true} :placeholder=${'Type then clear'} bind-value=${clearValue} />
+      </div>
+    </Demo>
+
+    <Demo :id=${'states'} :title=${'States'} :code=${states} :filename=${'input-states.jcr'} :layout=${'stack'}>
+      <div style="width:min(24rem,100%)">
+        <Stack :gap=${'md'}>
+          <Input :label=${'Required'} :required=${true} :placeholder=${'Must fill'} bind-value=${statesRequired} />
+          <Input :label=${'With error'} :error=${'Enter a valid value'} bind-value=${statesError} />
+          <Input :label=${'With hint'} :hint=${'Visible help text'} bind-value=${statesHint} />
+          <Input :label=${'Disabled'} :disabled=${true} bind-value=${statesDisabled} />
+        </Stack>
+      </div>
+    </Demo>
+
+    <Demo :id=${'max-length'} :title=${'Max length'} :code=${maxLength} :filename=${'input-max-length.jcr'} :layout=${'stack'}>
+      <div style="width:min(24rem,100%)">
+        <Input :label=${'Handle'} :maxLength=${12} :placeholder=${'Up to 12 chars'} :hint=${'maxLength=12'} bind-value=${maxLengthValue} />
+      </div>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

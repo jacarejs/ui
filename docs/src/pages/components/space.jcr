@@ -1,0 +1,96 @@
+import Space from '@jacare/ui/components/Space.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, vertical, wrap, sizes } from '../../examples/space.js'
+
+const contract = getContract('Space')
+const navLinks = previousNext('/components/space')
+
+const a11y = [
+  'Space is layout-only and preserves child semantics and reading order',
+  'Wrapping should follow the same logical order as keyboard focus',
+  'Use visible labels on icon-only actions placed in dense groups',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Space</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Layout'}
+      :title=${'Space'}
+      :description=${'Small flex layout primitive for consistent horizontal or vertical gaps, wrapping, custom sizes, and cross-axis alignment.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Horizontal actions'}
+      :lead=${'The default horizontal direction uses the medium spacing token.'}
+      :code=${basic}
+      :filename=${'space-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <Space><Button>Save</Button><Button :variant=${'secondary'}>Cancel</Button><Button :variant=${'ghost'}>Help</Button></Space>
+    </Demo>
+    <Demo
+      :id=${'vertical'}
+      :title=${'Vertical spacing'}
+      :lead=${'Vertical direction stacks children and aligns them from the start.'}
+      :code=${vertical}
+      :filename=${'space-vertical.jcr'}
+      :layout=${'stack'}
+    >
+      <Space :direction=${'vertical'} :size=${'lg'} :align=${'stretch'}>
+        <Button>Primary action</Button><Button :variant=${'secondary'}>Secondary action</Button><Button :variant=${'ghost'}>Tertiary action</Button>
+      </Space>
+    </Demo>
+    <Demo
+      :id=${'wrap'}
+      :title=${'Wrapping and alignment'}
+      :lead=${'wrap prevents long action rows from overflowing; size also accepts CSS lengths.'}
+      :code=${wrap}
+      :filename=${'space-wrap.jcr'}
+      :layout=${'stack'}
+    >
+      <Space :wrap=${true} :size=${'12px'} :align=${'baseline'}>
+        <Button :size=${'sm'}>Small</Button><Button>Medium</Button><Button :size=${'lg'}>Large</Button><Button :variant=${'secondary'}>Another action</Button>
+      </Space>
+    </Demo>
+    <Demo
+      :id=${'sizes'}
+      :title=${'Spacing tokens'}
+      :lead=${'Choose sm, md, or lg to keep gaps aligned with the design scale.'}
+      :code=${sizes}
+      :filename=${'space-sizes.jcr'}
+      :layout=${'stack'}
+    >
+      <Space :direction=${'vertical'} :align=${'start'}>
+        <Space :size=${'sm'}><Button :size=${'sm'}>Small gap</Button><Button :size=${'sm'}>Action</Button></Space>
+        <Space :size=${'md'}><Button :size=${'sm'}>Medium gap</Button><Button :size=${'sm'}>Action</Button></Space>
+        <Space :size=${'lg'}><Button :size=${'sm'}>Large gap</Button><Button :size=${'sm'}>Action</Button></Space>
+      </Space>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

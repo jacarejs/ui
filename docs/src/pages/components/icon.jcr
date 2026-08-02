@@ -27,6 +27,7 @@ const iconNames = [
   'check',
   'close',
   'chevron-down',
+  'chevron-left',
   'chevron-right',
   'search',
   'calendar',
@@ -82,7 +83,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Foundations'}
+      :kicker=${'Primitives'}
       :title=${'Icon'}
       :description=${'Canopy stroke glyphs — geometric like Syne, square caps, currentColor, three sizes, optional labels. Unknown names fall back to info.'}
       :status=${'stable'}

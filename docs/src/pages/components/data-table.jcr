@@ -1,0 +1,146 @@
+import { pulse } from '@jacare/core'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import DataTable from '@jacare/ui/components/DataTable.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, empty, selectable, sortable, styled, playgroundCode as buildPlaygroundCode } from '../../examples/data-table.js'
+
+const contract = getContract('DataTable')
+const navLinks = previousNext('/components/data-table')
+
+const columns = [
+  { prop: 'name', label: 'Name', sortable: true, width: 160 },
+  { prop: 'status', label: 'Status', sortable: true, width: 120 },
+]
+const ownerColumns = [
+  { prop: 'name', label: 'Name', width: 160 },
+  { prop: 'owner', label: 'Owner', width: 140 },
+]
+const data = [
+  { id: 1, name: 'API', status: 'Ready' },
+  { id: 2, name: 'Docs', status: 'Draft' },
+  { id: 3, name: 'Site', status: 'Queued' },
+  { id: 4, name: 'Theme', status: 'Ready' },
+]
+const ownerData = [
+  { id: 1, name: 'Roadmap', owner: 'Product' },
+  { id: 2, name: 'Changelog', owner: 'Docs' },
+  { id: 3, name: 'Tokens', owner: 'Design' },
+]
+
+const playSelection = pulse(['2'])
+const playStriped = pulse(true)
+const playBorder = pulse(true)
+const playSelectable = pulse(true)
+const sortField = pulse('name')
+const sortOrder = pulse(1)
+const selection = pulse(['2'])
+
+const a11yItems = [
+  'Use semantic table markup with column headers',
+  'Sortable headers are buttons with explicit labels',
+  'Row selection uses native checkboxes with a select-all control',
+  'Pair status values with text, not color alone',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    selectable: playSelectable(),
+    selection: playSelection(),
+    striped: playStriped(),
+    border: playBorder(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>DataTable</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Data display'}
+      :title=${'DataTable'}
+      :description=${'Practical data table with sorting, selection, stripes, borders, and sizes.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Stack :direction=${'row'} :gap=${'lg'} :wrap=${true}>
+            <Switch :label=${'Selectable'} bind-checked=${playSelectable} />
+            <Switch :label=${'Striped'} bind-checked=${playStriped} />
+            <Switch :label=${'Border'} bind-checked=${playBorder} />
+          </Stack>
+        </div>
+
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <DataTable
+              :columns=${columns}
+              :data=${data}
+              :selectable=${playSelectable}
+              bind-selection=${playSelection}
+              :striped=${playStriped}
+              :border=${playBorder}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'data-table-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'data-table-basic.jcr'} :layout=${'stack'}>
+      <DataTable :columns=${columns} :data=${data.slice(0, 3)} />
+    </Demo>
+
+    <Demo :id=${'sortable'} :title=${'Sortable columns'} :lead=${'Click a sortable header to toggle ascending and descending order.'} :code=${sortable} :filename=${'data-table-sortable.jcr'} :layout=${'stack'}>
+      <DataTable
+        :columns=${columns}
+        :data=${data}
+        bind-sortField=${sortField}
+        bind-sortOrder=${sortOrder}
+        :border=${true}
+      />
+    </Demo>
+
+    <Demo :id=${'selectable'} :title=${'Row selection'} :code=${selectable} :filename=${'data-table-selectable.jcr'} :layout=${'stack'}>
+      <DataTable
+        :columns=${ownerColumns}
+        :data=${ownerData}
+        :selectable=${true}
+        bind-selection=${selection}
+        :striped=${true}
+      />
+    </Demo>
+
+    <Demo :id=${'styled'} :title=${'Striped, bordered, small'} :code=${styled} :filename=${'data-table-styled.jcr'} :layout=${'stack'}>
+      <DataTable :columns=${columns} :data=${data.slice(0, 2)} :striped=${true} :border=${true} :size=${'sm'} />
+    </Demo>
+
+    <Demo :id=${'empty'} :title=${'Empty state'} :code=${empty} :filename=${'data-table-empty.jcr'} :layout=${'stack'}>
+      <DataTable :columns=${columns} :data=${[]} :emptyText=${'No rows found'} :border=${true} />
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11yItems} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

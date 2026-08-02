@@ -1,0 +1,64 @@
+import Dropdown from '@jacare/ui/components/Dropdown.jcr'
+import DropdownMenu from '@jacare/ui/components/DropdownMenu.jcr'
+import DropdownItem from '@jacare/ui/components/DropdownItem.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { commands, labels, states } from '../../examples/dropdown-item.js'
+
+const contract = getContract('DropdownItem')
+const navLinks = previousNext('/components/dropdown-item')
+const a11y = [
+  'Use DropdownItem only inside DropdownMenu and Dropdown',
+  'Write action-oriented labels that describe the command result',
+  'Disabled items use a native disabled button and cannot issue commands',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>DropdownItem</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Navigation'}
+      :title=${'DropdownItem'}
+      :description=${'DropdownItem is an action row used inside DropdownMenu and Dropdown. It emits its command when selected and supports labels, disabled state, and dividers.'}
+      :status=${'stable'}
+    />
+
+    <Demo :id=${'commands'} :title=${'Commands'} :lead=${'command identifies the action emitted by both the item and its Dropdown parent.'} :code=${commands} :filename=${'dropdown-item-commands.jcr'}>
+       <Dropdown>
+        <Button>Actions</Button>
+        <DropdownMenu slot="dropdown">
+          <DropdownItem :command=${'edit'}>Edit</DropdownItem>
+          <DropdownItem :command=${'archive'}>Archive</DropdownItem>
+        </DropdownMenu>
+       </Dropdown>
+    </Demo>
+    <Demo :id=${'labels'} :title=${'Label prop'} :lead=${'Use label for plain text or the default slot for custom item content.'} :code=${labels} :filename=${'dropdown-item-labels.jcr'}>
+      <Dropdown><Button>Export</Button><DropdownMenu slot="dropdown"><DropdownItem :label=${'Export CSV'} :command=${'csv'} /><DropdownItem :label=${'Export JSON'} :command=${'json'} /></DropdownMenu></Dropdown>
+    </Demo>
+    <Demo :id=${'states'} :title=${'Disabled and divided'} :lead=${'disabled blocks selection; divided starts a visually separated action group.'} :code=${states} :filename=${'dropdown-item-states.jcr'}>
+      <Dropdown><Button>Project</Button><DropdownMenu slot="dropdown"><DropdownItem :command=${'rename'}>Rename</DropdownItem><DropdownItem :command=${'duplicate'} :disabled=${true}>Duplicate</DropdownItem><DropdownItem :command=${'delete'} :divided=${true}>Delete</DropdownItem></DropdownMenu></Dropdown>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

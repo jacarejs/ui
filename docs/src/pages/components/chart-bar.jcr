@@ -1,0 +1,225 @@
+import { pulse } from '@jacare/core'
+import Card from '@jacare/ui/components/Card.jcr'
+import ChartBar from '@jacare/ui/components/ChartBar.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  categoriesSeries,
+  colors as colorsExample,
+  inCard,
+  noLegend,
+  playgroundCode as buildPlaygroundCode,
+  sized,
+} from '../../examples/chart-bar.js'
+
+const contract = getContract('ChartBar')
+const navLinks = previousNext('/components/chart-bar')
+
+const playShowLegend = pulse(true)
+const playCustomColors = pulse(false)
+
+const data = [
+  { label: 'Product', value: 86 },
+  { label: 'Sales', value: 72 },
+  { label: 'Support', value: 64 },
+  { label: 'Marketing', value: 51 },
+]
+
+const seriesData = {
+  categories: ['Product', 'Sales', 'Support', 'Marketing'],
+  series: [{ name: 'Score', data: [86, 72, 64, 51] }],
+}
+
+const colorsData = [
+  { label: 'North', value: 92 },
+  { label: 'South', value: 78 },
+  { label: 'East', value: 85 },
+  { label: 'West', value: 68 },
+]
+
+const trafficData = [
+  { label: 'Direct', value: 44 },
+  { label: 'Organic', value: 28 },
+  { label: 'Referral', value: 18 },
+  { label: 'Social', value: 10 },
+]
+
+const compactData = [
+  { label: 'A', value: 8 },
+  { label: 'B', value: 12 },
+  { label: 'C', value: 10 },
+  { label: 'D', value: 16 },
+  { label: 'E', value: 14 },
+]
+
+const customColors = ['#0f766e']
+
+const a11y = [
+  'SVG root uses role="img" with an aria-label from title',
+  'Each bar exposes a native title with label and value',
+  'Category labels stay visible beside the plot',
+  'Use short category labels that remain readable on narrow viewports',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    showLegend: playShowLegend(),
+    customColors: playCustomColors(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ChartBar</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Charts'}
+      :title=${'ChartBar'}
+      :description=${'Horizontal category bars for ranked comparisons with custom colors and optional legend.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Switch :label=${'Show legend'} bind-checked=${playShowLegend} />
+          <Switch :label=${'Custom colors'} bind-checked=${playCustomColors} />
+          <Text :tone=${'muted'}>Toggle options to preview bar chart chrome.</Text>
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <ChartBar
+              :data=${data}
+              :title=${'Bar'}
+              :caption=${'Playground preview'}
+              :showLegend=${playShowLegend}
+              :colors=${() => (playCustomColors() ? customColors : null)}
+              :width=${480}
+              :height=${280}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'chart-bar-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Pass an array of { label, value }. Optional title, caption, width, and height frame the plot.'}
+      :code=${basic}
+      :filename=${'chart-bar-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <ChartBar
+        :data=${data}
+        :title=${'Bar'}
+        :caption=${'Department scores'}
+        :width=${480}
+        :height=${280}
+      />
+    </Demo>
+
+    <DocsSection :id=${'data'} :title=${'Data shapes'}>
+      <Demo
+        :id=${'categories-series'}
+        :title=${'Categories + series'}
+        :lead=${'Pass categories and a single series for the same ranked layout.'}
+        :code=${categoriesSeries}
+        :filename=${'chart-bar-categories-series.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartBar :data=${seriesData} :title=${'Ranked categories'} />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'options'} :title=${'Options'}>
+      <Demo
+        :id=${'colors'}
+        :title=${'Custom colors'}
+        :lead=${'colors overrides the default bar fill.'}
+        :code=${colorsExample}
+        :filename=${'chart-bar-colors.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartBar
+          :data=${colorsData}
+          :title=${'Custom color'}
+          :colors=${['#0f766e']}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'no-legend'}
+        :title=${'Hide legend'}
+        :lead=${'showLegend=false for compact dashboard tiles.'}
+        :code=${noLegend}
+        :filename=${'chart-bar-no-legend.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartBar
+          :data=${trafficData}
+          :title=${'Traffic sources'}
+          :caption=${'Legend hidden for compact tiles'}
+          :showLegend=${false}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'sized'}
+        :title=${'Custom size'}
+        :lead=${'width and height control the SVG viewBox and frame.'}
+        :code=${sized}
+        :filename=${'chart-bar-sized.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartBar
+          :data=${compactData}
+          :title=${'Compact size'}
+          :width=${320}
+          :height=${220}
+          :showLegend=${false}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'in-card'}
+        :title=${'Inside Card'}
+        :lead=${'Compose ChartBar in a Card for dashboard KPI panels.'}
+        :code=${inCard}
+        :filename=${'chart-bar-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Departments'} :subtitle=${'Q4 scores'}>
+          <ChartBar :data=${data} :showLegend=${true} :height=${260} />
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -1,0 +1,190 @@
+import { pulse } from '@jacare/core'
+import Card from '@jacare/ui/components/Card.jcr'
+import ChartTreemap from '@jacare/ui/components/ChartTreemap.jcr'
+import Switch from '@jacare/ui/components/Switch.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  colors as colorsExample,
+  inCard,
+  playgroundCode as buildPlaygroundCode,
+  sized,
+  traffic,
+} from '../../examples/chart-treemap.js'
+
+const contract = getContract('ChartTreemap')
+const navLinks = previousNext('/components/chart-treemap')
+
+const playCustomColors = pulse(false)
+
+const data = [
+  { label: 'Checkout', value: 42 },
+  { label: 'Catalog', value: 28 },
+  { label: 'Support', value: 18 },
+  { label: 'Billing', value: 12 },
+]
+
+const trafficData = [
+  { label: 'Organic', value: 520 },
+  { label: 'Paid', value: 310 },
+  { label: 'Referral', value: 180 },
+  { label: 'Email', value: 95 },
+  { label: 'Social', value: 72 },
+]
+
+const compactData = [
+  { label: 'A', value: 24 },
+  { label: 'B', value: 18 },
+  { label: 'C', value: 12 },
+]
+
+const customPalette = ['#be185d', '#1f6feb', '#0f766e', '#a16207']
+
+const a11y = [
+  'SVG root uses role="img" with an aria-label from title',
+  'Each rectangle exposes label and value in a title tooltip',
+  'Small tiles may hide labels — keep a caption listing the ranking',
+  'Use colors to differentiate adjacent tiles when labels are truncated',
+]
+
+function playgroundCode() {
+  return buildPlaygroundCode({
+    customColors: playCustomColors(),
+  })
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ChartTreemap</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Charts'}
+      :title=${'ChartTreemap'}
+      :description=${'Nested rectangles sized by value for hierarchical share views with custom colors.'}
+      :status=${'stable'}
+    />
+
+    <DocsSection :id=${'playground'} :title=${'Playground'}>
+      <div class="docs-alert-play">
+        <div class="docs-alert-play__controls docs-panel">
+          <Switch :label=${'Custom colors'} bind-checked=${playCustomColors} />
+          <Text :tone=${'muted'}>Toggle options to preview treemap chrome.</Text>
+        </div>
+        <div class="docs-alert-play__preview">
+          <div class="docs-panel">
+            <ChartTreemap
+              :data=${data}
+              :title=${'Treemap'}
+              :caption=${'Playground preview'}
+              :colors=${() => (playCustomColors() ? customPalette : null)}
+              :width=${480}
+              :height=${280}
+            />
+          </div>
+          <CodeBlock :code=${() => playgroundCode()} :filename=${'chart-treemap-playground.jcr'} :language=${'jacare'} />
+        </div>
+      </div>
+    </DocsSection>
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Pass an array of { label, value }. Optional title, caption, width, and height frame the plot.'}
+      :code=${basic}
+      :filename=${'chart-treemap-basic.jcr'}
+      :layout=${'stack'}
+    >
+      <ChartTreemap
+        :data=${data}
+        :title=${'Treemap'}
+        :caption=${'Share by funnel step'}
+        :width=${480}
+        :height=${280}
+      />
+    </Demo>
+
+    <DocsSection :id=${'data'} :title=${'Data shapes'}>
+      <Demo
+        :id=${'traffic'}
+        :title=${'Traffic sources'}
+        :lead=${'More nodes split the layout proportionally by value.'}
+        :code=${traffic}
+        :filename=${'chart-treemap-traffic.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartTreemap :data=${trafficData} :title=${'Traffic sources'} :caption=${'Sessions this month'} />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'options'} :title=${'Options'}>
+      <Demo
+        :id=${'colors'}
+        :title=${'Custom colors'}
+        :lead=${'colors overrides the default palette in node order.'}
+        :code=${colorsExample}
+        :filename=${'chart-treemap-colors.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartTreemap
+          :data=${data}
+          :title=${'Custom palette'}
+          :colors=${customPalette}
+        />
+      </Demo>
+
+      <Demo
+        :id=${'sized'}
+        :title=${'Custom size'}
+        :lead=${'width and height control the SVG viewBox and frame.'}
+        :code=${sized}
+        :filename=${'chart-treemap-sized.jcr'}
+        :layout=${'stack'}
+      >
+        <ChartTreemap
+          :data=${compactData}
+          :title=${'Compact size'}
+          :width=${320}
+          :height=${200}
+        />
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'patterns'} :title=${'Patterns'}>
+      <Demo
+        :id=${'in-card'}
+        :title=${'Inside Card'}
+        :lead=${'Compose ChartTreemap in a Card for funnel share panels.'}
+        :code=${inCard}
+        :filename=${'chart-treemap-card.jcr'}
+        :layout=${'stack'}
+      >
+        <Card :title=${'Funnel drop-off'} :subtitle=${'Sessions by step'}>
+          <ChartTreemap :data=${data} :height=${240} />
+        </Card>
+      </Demo>
+    </DocsSection>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

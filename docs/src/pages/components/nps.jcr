@@ -1,0 +1,165 @@
+import { pulse } from '@jacare/core'
+import Nps from '@jacare/ui/components/Nps.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  customLabels,
+  customRange,
+  disabledExample,
+  hintAndError,
+  reactive,
+} from '../../examples/nps.js'
+
+const contract = getContract('Nps')
+const navLinks = previousNext('/components/nps')
+
+const score = pulse(9)
+const labeled = pulse(8)
+const shortRange = pulse(4)
+const hinted = pulse(null)
+const invalid = pulse(null)
+const locked = pulse(10)
+const live = pulse(9)
+
+const a11y = [
+  'Scores are radios inside a radiogroup with an accessible name from label',
+  'Low and high labels frame the scale for sighted and assistive users',
+  'error uses role="alert"; hint appears under the scale when there is no error',
+  'disabled dims every score button and blocks selection',
+]
+
+function bucket(value) {
+  if (value == null || value === '') return 'No score yet'
+  const next = Number(value)
+  if (next >= 9) return 'Promoter'
+  if (next >= 7) return 'Passive'
+  return 'Detractor'
+}
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Nps</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Selection'}
+      :title=${'Nps'}
+      :description=${'0–10 likelihood scale for NPS and similar surveys — customize labels, range, and validation states.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Bind a numeric pulse on the classic 0–10 recommend scale.'}
+      :code=${basic}
+      :filename=${'nps-basic.jcr'}
+    >
+      <Nps :label=${'How likely are you to recommend us?'} bind-value=${score} />
+    </Demo>
+
+    <Demo
+      :id=${'custom-labels'}
+      :title=${'Custom labels'}
+      :lead=${'Override the low/high legend copy with lowLabel and highLabel.'}
+      :code=${customLabels}
+      :filename=${'nps-labels.jcr'}
+    >
+      <Nps
+        :label=${'Would you recommend Jacaré UI to a teammate?'}
+        :lowLabel=${'Not at all'}
+        :highLabel=${'Absolutely'}
+        bind-value=${labeled}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'custom-range'}
+      :title=${'Custom range'}
+      :lead=${'min and max reshape the scale — useful for shorter pulse surveys.'}
+      :code=${customRange}
+      :filename=${'nps-range.jcr'}
+    >
+      <Nps
+        :label=${'Satisfaction this week'}
+        :min=${1}
+        :max=${5}
+        :lowLabel=${'Poor'}
+        :highLabel=${'Excellent'}
+        :hint=${'Shorter 1–5 scale for quick pulse checks'}
+        bind-value=${shortRange}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'hint-error'}
+      :title=${'Hint and error'}
+      :lead=${'hint guides an unanswered scale; error replaces it and marks the group invalid.'}
+      :code=${hintAndError}
+      :filename=${'nps-states.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'lg'}>
+        <Nps
+          :label=${'How likely are you to renew?'}
+          :hint=${'0 = not likely · 10 = extremely likely'}
+          bind-value=${hinted}
+        />
+        <Nps
+          :label=${'Required NPS'}
+          :error=${'Select a score before submitting'}
+          bind-value=${invalid}
+        />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'disabled'}
+      :title=${'Disabled'}
+      :lead=${'Freeze a prior answer — every score stays non-interactive.'}
+      :code=${disabledExample}
+      :filename=${'nps-disabled.jcr'}
+    >
+      <Nps
+        :label=${'Previous survey score'}
+        :disabled=${true}
+        :hint=${'Locked after submission'}
+        bind-value=${locked}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'reactive'}
+      :title=${'Promoter bucket'}
+      :lead=${'Derive promoter / passive / detractor from the bound score.'}
+      :code=${reactive}
+      :filename=${'nps-reactive.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'md'}>
+        <Nps
+          :label=${'How likely are you to recommend us?'}
+          bind-value=${live}
+        />
+        <Text :tone=${'muted'}>
+          ${() => `Score ${live() ?? '—'} · ${bucket(live())}`}
+        </Text>
+      </Stack>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

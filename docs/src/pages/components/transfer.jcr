@@ -8,9 +8,10 @@ import DocsSection from '../../ui/DocsSection.jcr'
 import PropsTable from '../../ui/PropsTable.jcr'
 import PreviousNext from '../../ui/PreviousNext.jcr'
 import CodeBlock from '../../ui/CodeBlock.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
 import { getContract } from '../../generated/contracts.js'
 import { previousNext } from '../../nav-data.js'
-import { basic, playgroundCode as buildPlaygroundCode } from '../../examples/transfer.js'
+import { basic, customLabels, disabled, filterable, playgroundCode as buildPlaygroundCode } from '../../examples/transfer.js'
 
 const contract = getContract('Transfer')
 const navLinks = previousNext('/components/transfer')
@@ -28,6 +29,16 @@ const playValue = pulse(['2', '4'])
 const playFilterable = pulse(false)
 const playDisabled = pulse(false)
 const basicValue = pulse(['2', '4'])
+const filterValue = pulse(['2'])
+const labelsValue = pulse(['4'])
+const disabledValue = pulse(['2'])
+
+const a11yItems = [
+  'Each list has an accessible title and listbox semantics',
+  'Native checkboxes preserve keyboard toggling and checked state',
+  'Move controls expose explicit target and source labels',
+  'Disabled items and the disabled component prevent selection and movement',
+]
 
 function playgroundCode() {
   return buildPlaygroundCode({
@@ -46,7 +57,7 @@ export <view>
     </nav>
 
     <DocsHero
-      :kicker=${'Forms'}
+      :kicker=${'Selection'}
       :title=${'Transfer'}
       :description=${'Move items between source and target lists. Pass data as {key, label} and bind value to an array of selected keys.'}
       :status=${'stable'}
@@ -78,6 +89,22 @@ export <view>
     <Demo :id=${'basic'} :title=${'Basic'} :code=${basic} :filename=${'transfer-basic.jcr'}>
       <Transfer :data=${data} bind-value=${basicValue} />
     </Demo>
+
+    <Demo :id=${'filterable'} :title=${'Filterable lists'} :lead=${'Filtering narrows each side independently without changing the selected keys.'} :code=${filterable} :filename=${'transfer-filterable.jcr'}>
+      <Transfer :data=${data} :filterable=${true} bind-value=${filterValue} />
+    </Demo>
+
+    <Demo :id=${'labels'} :title=${'Custom labels'} :code=${customLabels} :filename=${'transfer-labels.jcr'}>
+      <Transfer :data=${data} :titles=${['Available options', 'Chosen options']} :buttonTexts=${['Add', 'Remove']} bind-value=${labelsValue} />
+    </Demo>
+
+    <Demo :id=${'disabled'} :title=${'Disabled'} :code=${disabled} :filename=${'transfer-disabled.jcr'}>
+      <Transfer :data=${data} :disabled=${true} bind-value=${disabledValue} />
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11yItems} />
+    </DocsSection>
 
     <DocsSection :id=${'api'} :title=${'API'}>
       <PropsTable :contract=${contract} />

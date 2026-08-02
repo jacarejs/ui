@@ -1,0 +1,101 @@
+import ConfigProvider from '@jacare/ui/components/ConfigProvider.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import Space from '@jacare/ui/components/Space.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { density, theme, locale, combined } from '../../examples/config-provider.js'
+
+const contract = getContract('ConfigProvider')
+const navLinks = previousNext('/components/config-provider')
+
+const a11y = [
+  'Scoped themes must retain text and focus contrast',
+  'Density changes must preserve minimum usable target sizes',
+  'Set locale to a valid language tag and localize visible content consistently',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>ConfigProvider</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Layout'}
+      :title=${'ConfigProvider'}
+      :description=${'Scoped provider for density size, light or dark theme, and locale. When createI18n is booted, :locale syncs the global UI language for component chrome.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'density'}
+      :title=${'Density sizes'}
+      :lead=${'small maps to compact, default to comfortable, and large to spacious density.'}
+      :code=${density}
+      :filename=${'config-provider-density.jcr'}
+      :layout=${'stack'}
+    >
+      <Space :direction=${'vertical'} :align=${'stretch'}>
+        <ConfigProvider :size=${'small'}><Button>Compact action</Button></ConfigProvider>
+        <ConfigProvider :size=${'default'}><Button>Comfortable action</Button></ConfigProvider>
+        <ConfigProvider :size=${'large'}><Button>Spacious action</Button></ConfigProvider>
+      </Space>
+    </Demo>
+    <Demo
+      :id=${'theme'}
+      :title=${'Scoped theme'}
+      :lead=${'theme creates a local light or dark island for descendant tokens.'}
+      :code=${theme}
+      :filename=${'config-provider-theme.jcr'}
+      :layout=${'stack'}
+    >
+      <Space :wrap=${true} :align=${'stretch'}>
+        <ConfigProvider :theme=${'light'}><div class="docs-panel"><Button>Light scope</Button></div></ConfigProvider>
+        <ConfigProvider :theme=${'dark'}><div class="docs-panel"><Button>Dark scope</Button></div></ConfigProvider>
+      </Space>
+    </Demo>
+    <Demo
+      :id=${'locale'}
+      :title=${'Locale metadata'}
+      :lead=${'locale writes data-locale and, with createI18n active, calls setLocale so Cascader, Pagination, Empty, and other chrome follow the language.'}
+      :code=${locale}
+      :filename=${'config-provider-locale.jcr'}
+      :layout=${'stack'}
+    >
+      <Space :wrap=${true}>
+        <ConfigProvider :locale=${'en-US'}><Button :variant=${'secondary'}>English scope</Button></ConfigProvider>
+        <ConfigProvider :locale=${'pt-BR'}><Button :variant=${'secondary'}>Escopo português</Button></ConfigProvider>
+      </Space>
+    </Demo>
+    <Demo
+      :id=${'combined'}
+      :title=${'Combined scope'}
+      :lead=${'Density, theme, and locale can be applied together to one subtree.'}
+      :code=${combined}
+      :filename=${'config-provider-combined.jcr'}
+      :layout=${'stack'}
+    >
+      <ConfigProvider :size=${'small'} :theme=${'dark'} :locale=${'pt-BR'}>
+        <div class="docs-panel"><Space><Button>Salvar</Button><Button :variant=${'secondary'}>Cancelar</Button></Space></div>
+      </ConfigProvider>
+    </Demo>
+
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}>
+      <AccessibilityChecklist :items=${a11y} />
+    </DocsSection>
+
+    <DocsSection :id=${'api'} :title=${'API'}>
+      <PropsTable :contract=${contract} />
+    </DocsSection>
+
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

@@ -32,6 +32,19 @@ export <view>
   </Stack>
 </view>`
 
+export const sections = `import Divider from '@jacare/ui/Divider'
+import Stack from '@jacare/ui/Stack'
+import Text from '@jacare/ui/Text'
+
+export <view>
+  <Stack :gap=\${'sm'}>
+    <Text :weight=\${'bold'}>Profile</Text>
+    <Text>Personal and contact information</Text>
+    <Divider :label=\${'Preferences'} />
+    <Text>Language, timezone, and notifications</Text>
+  </Stack>
+</view>`
+
 function quote(value) {
   return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 }

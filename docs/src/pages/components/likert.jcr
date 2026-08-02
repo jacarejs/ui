@@ -1,0 +1,162 @@
+import { pulse } from '@jacare/core'
+import Likert from '@jacare/ui/components/Likert.jcr'
+import Stack from '@jacare/ui/components/Stack.jcr'
+import Text from '@jacare/ui/components/Text.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import {
+  basic,
+  customOptions,
+  disabledExample,
+  hintAndError,
+  stringOptions,
+  survey,
+} from '../../examples/likert.js'
+
+const contract = getContract('Likert')
+const navLinks = previousNext('/components/likert')
+
+const answer = pulse(4)
+const frequency = pulse(3)
+const satisfaction = pulse(2)
+const hinted = pulse(null)
+const invalid = pulse(null)
+const locked = pulse(5)
+const clarity = pulse(4)
+const usefulness = pulse(5)
+const pace = pulse(3)
+
+const frequencyOptions = [
+  { value: 1, label: 'Never' },
+  { value: 2, label: 'Rarely' },
+  { value: 3, label: 'Sometimes' },
+  { value: 4, label: 'Often' },
+  { value: 5, label: 'Always' },
+]
+
+const satisfactionOptions = ['Poor', 'Fair', 'Good', 'Very good', 'Excellent']
+
+const a11y = [
+  'Fieldset legend names the question for the whole scale',
+  'Options use radiogroup / radio semantics with aria-checked',
+  'error uses role="alert"; hint appears under the scale when there is no error',
+  'disabled dims the fieldset and blocks every option button',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+      <a jacare-go="/components" href="/components">Components</a>
+      <span aria-hidden="true">/</span>
+      <span>Likert</span>
+    </nav>
+
+    <DocsHero
+      :kicker=${'Selection'}
+      :title=${'Likert'}
+      :description=${'Agreement scale for surveys and feedback — Strongly disagree through Strongly agree by default, or pass custom options.'}
+      :status=${'stable'}
+    />
+
+    <Demo
+      :id=${'basic'}
+      :title=${'Basic'}
+      :lead=${'Bind a numeric pulse. Default options are the classic 1–5 agreement labels.'}
+      :code=${basic}
+      :filename=${'likert-basic.jcr'}
+    >
+      <Likert :label=${'The docs were clear'} bind-value=${answer} />
+    </Demo>
+
+    <Demo
+      :id=${'custom-options'}
+      :title=${'Custom options'}
+      :lead=${'Pass { value, label } objects for frequency, intensity, or any other 5-point wording.'}
+      :code=${customOptions}
+      :filename=${'likert-custom.jcr'}
+    >
+      <Likert
+        :label=${'How often do you use this feature?'}
+        :options=${frequencyOptions}
+        bind-value=${frequency}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'string-options'}
+      :title=${'String options'}
+      :lead=${'A plain string array becomes values 1…n in order — handy for quick satisfaction scales.'}
+      :code=${stringOptions}
+      :filename=${'likert-strings.jcr'}
+    >
+      <Likert
+        :label=${'Overall satisfaction'}
+        :options=${satisfactionOptions}
+        :hint=${'String options map to values 1–5 in order'}
+        bind-value=${satisfaction}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'hint-error'}
+      :title=${'Hint and error'}
+      :lead=${'hint guides an unanswered question; error replaces it and marks the scale invalid.'}
+      :code=${hintAndError}
+      :filename=${'likert-states.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'lg'}>
+        <Likert
+          :label=${'Onboarding felt smooth'}
+          :hint=${'Pick the option that best matches your experience'}
+          bind-value=${hinted}
+        />
+        <Likert
+          :label=${'I would recommend Jacaré UI'}
+          :error=${'An answer is required before continuing'}
+          bind-value=${invalid}
+        />
+      </Stack>
+    </Demo>
+
+    <Demo
+      :id=${'disabled'}
+      :title=${'Disabled'}
+      :lead=${'Freeze a prior answer — every option button is non-interactive.'}
+      :code=${disabledExample}
+      :filename=${'likert-disabled.jcr'}
+    >
+      <Likert
+        :label=${'Previous survey response'}
+        :disabled=${true}
+        :hint=${'Locked after submission'}
+        bind-value=${locked}
+      />
+    </Demo>
+
+    <Demo
+      :id=${'survey'}
+      :title=${'Survey block'}
+      :lead=${'Stack several Likert questions for a short feedback form.'}
+      :code=${survey}
+      :filename=${'likert-survey.jcr'}
+      :layout=${'stack'}
+    >
+      <Stack :gap=${'lg'}>
+        <Text :as=${'p'} :tone=${'muted'}>Workshop feedback</Text>
+        <Likert :label=${'The material was clear'} bind-value=${clarity} />
+        <Likert :label=${'The examples were useful'} bind-value=${usefulness} />
+        <Likert :label=${'The pace felt right'} bind-value=${pace} />
+      </Stack>
+    </Demo>
+
+    <AccessibilityChecklist :items=${a11y} />
+    <PropsTable :contract=${contract} />
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>

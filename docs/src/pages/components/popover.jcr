@@ -1,0 +1,41 @@
+import Popover from '@jacare/ui/components/Popover.jcr'
+import Button from '@jacare/ui/components/Button.jcr'
+import DocsHero from '../../ui/DocsHero.jcr'
+import Demo from '../../ui/Demo.jcr'
+import DocsSection from '../../ui/DocsSection.jcr'
+import PropsTable from '../../ui/PropsTable.jcr'
+import PreviousNext from '../../ui/PreviousNext.jcr'
+import AccessibilityChecklist from '../../ui/AccessibilityChecklist.jcr'
+import { getContract } from '../../generated/contracts.js'
+import { previousNext } from '../../nav-data.js'
+import { basic, hover, placements, disabled, placement_grid, widths } from '../../examples/popover.js'
+
+const contract = getContract('Popover')
+const navLinks = previousNext('/components/popover')
+const a11y = [
+  'Use click for content that users must inspect or interact with deliberately',
+  'Keep hover content supplementary because touch users cannot hover',
+  'Place important information in the page when the trigger is disabled',
+]
+
+export <view>
+  <article class="docs-page">
+    <nav class="docs-breadcrumb" aria-label="Breadcrumb"><a jacare-go="/components" href="/components">Components</a><span aria-hidden="true">/</span><span>Popover</span></nav>
+    <DocsHero :kicker=${'Feedback'} :title=${'Popover'} :description=${'Anchored title and content surface with click or hover triggers, twelve placements, width control, and disabled state. Falls back to tap when hover is unavailable.'} :status=${'stable'} />
+    <Demo :id=${'basic'} :title=${'Click trigger'} :code=${basic} :filename=${'popover-basic.jcr'} :layout=${'stack'}><Popover :title=${'Project owner'} :content=${'Ana manages this workspace.'}><Button>View owner</Button></Popover></Demo>
+    <Demo :id=${'hover'} :title=${'Hover trigger'} :code=${hover} :filename=${'popover-hover.jcr'} :layout=${'stack'}><Popover :trigger=${'hover'} :title=${'Quick preview'} :content=${'Hover keeps the trigger in context.'}><Button>Hover me</Button></Popover></Demo>
+    <Demo :id=${'placement'} :title=${'Placement and width'} :code=${placements} :filename=${'popover-placement.jcr'} :layout=${'stack'}><Popover :placement=${'right-start'} :width=${220} :title=${'Details'} :content=${'Aligned to the start edge.'}><Button>Right start</Button></Popover></Demo>
+    <Demo :id=${'disabled'} :title=${'Disabled'} :code=${disabled} :filename=${'popover-disabled.jcr'} :layout=${'stack'}><Popover :disabled=${true} :content=${'Unavailable'}><Button :disabled=${true}>Disabled popover</Button></Popover></Demo>
+    <Demo :id=${'placement-grid'} :title=${'Placement grid'} :code=${placement_grid} :filename=${'popover-placement-grid.jcr'} :layout=${'stack'}>
+      <div style="display:grid;grid-template-columns:repeat(3,auto);gap:3rem;justify-content:center;padding:4rem">
+        #for ['top-start', 'top', 'top-end', 'left', 'right', 'bottom-start', 'bottom', 'bottom-end'] as option
+          <Popover :placement=${option} :title=${option} :content=${'Placement preview'}><Button>${option}</Button></Popover>
+        #end
+      </div>
+    </Demo>
+    <Demo :id=${'widths'} :title=${'Popover widths'} :code=${widths} :filename=${'popover-widths.jcr'} :layout=${'stack'}><Popover :title=${'Compact'} :content=${'Short note'} :width=${140}><Button>140 px</Button></Popover><Popover :title=${'Detailed'} :content=${'A wider surface supports a longer contextual explanation.'} :width=${320}><Button>320 px</Button></Popover></Demo>
+    <DocsSection :id=${'accessibility'} :title=${'Accessibility'}><AccessibilityChecklist :items=${a11y} /></DocsSection>
+    <DocsSection :id=${'api'} :title=${'API'}><PropsTable :contract=${contract} /></DocsSection>
+    <PreviousNext :previous=${navLinks.previous} :next=${navLinks.next} />
+  </article>
+</view>
