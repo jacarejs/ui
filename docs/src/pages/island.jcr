@@ -16,6 +16,7 @@ import {
   alertWidget,
   angularHost,
   angularUsage,
+  anyHost,
   boot,
   hostHtml,
   install,
@@ -23,7 +24,14 @@ import {
   multiBoot,
   reactHost,
   shadowBoot,
+  svelteHost,
+  themeBoot,
+  uiImport,
+  viteAngular,
   viteConfig,
+  viteReact,
+  viteSvelte,
+  viteVue,
   vueHost,
   widget,
 } from '../examples/island.js'
@@ -51,7 +59,7 @@ export <view>
     <DocsHero
       :kicker=${'Foundations'}
       :title=${'Island'}
-      :description=${'Embed @jacare/ui widgets into an existing page — static HTML, WordPress, Rails, React, Vue, or Angular — with mountIsland from @jacare/core/island. Jacaré does not need to own the app shell.'}
+      :description=${'Embed packaged @jacare/ui widgets into an existing host — plain HTML, React, Vue, Angular, Svelte, Rails, WordPress — with mountIsland from @jacare/core/island. The host keeps its shell; Jacaré only owns the island subtree.'}
       :status=${'stable'}
     />
 
@@ -61,10 +69,15 @@ export <view>
       ${' '}· Import from the thin subpath <code>@jacare/core/island</code>${' '}so nav, forms, and DevTools stay out of the island bundle.
     </p>
 
-    <DocsSection :id=${'when'} :title=${'When to use an island'}>
+    <DocsSection :id=${'pattern'} :title=${'Packaged UI + host shell'}>
+      <p class="docs-lead">
+        Components come from the published package — not from the host framework:
+      </p>
+      <CodeBlock :code=${uiImport} :filename=${'CheckoutIsland.jcr'} :language=${'javascript'} />
       <ul class="docs-checklist">
-        <li>Drop a Jacaré UI checkout, tip, or progress widget into a host page you do not control as a full SPA</li>
-        <li>Keep the host framework (React, Vue, Angular, Rails templates) and mount only the island root</li>
+        <li>Build the island as a <code>.jcr</code>${' '}view that imports from <code>@jacare/ui</code>${' '}(barrel) or <code>@jacare/ui/Button</code>${' '}(deep)</li>
+        <li>The host (React / Vue / Angular / …) never imports <code>Button</code>${' '}itself — it only mounts a DOM slot and calls <code>mountIsland</code></li>
+        <li>Load <code>@jacare/ui/theme.css</code>${' '}once in the host entry, then <code>applyTheme</code> / <code>applyDensity</code> / <code>applyMotion</code></li>
         <li>Prefer full <code>mount</code>${' '}+ <code>createNav</code>${' '}when Jacaré owns the whole app — see
           <a jacare-go="/quick-start" href=${docsHref('/quick-start')}>Quick start</a>
         </li>
@@ -73,29 +86,23 @@ export <view>
 
     <DocsSection :id=${'install'} :title=${'1. Install packages'}>
       <p class="docs-lead">
-        Same stack as a normal UI app: <code>@jacare/ui</code>, peer <code>@jacare/core</code>, and the Vite plugin so your island <code>.jcr</code>${' '}compiles.
+        Same stack as a normal UI app: published <code>@jacare/ui</code>, peer <code>@jacare/core</code>, and the Vite plugin so your island <code>.jcr</code>${' '}compiles.
       </p>
       <CodeBlock :code=${install} :filename=${'terminal'} :language=${'bash'} />
       <CodeBlock :code=${viteConfig} :filename=${'vite.config.js'} :language=${'javascript'} />
+      <CodeBlock :code=${themeBoot} :filename=${'theme.js'} :language=${'javascript'} />
     </DocsSection>
 
-    <DocsSection :id=${'theme'} :title=${'2. Load the theme once'}>
+    <DocsSection :id=${'widget'} :title=${'2. Island widget (packaged @jacare/ui)'}>
       <p class="docs-lead">
-        Import <code>@jacare/ui/theme.css</code>${' '}and call <code>applyTheme</code>${' '}/ <code>applyDensity</code>${' '}/ <code>applyMotion</code>${' '}in the island boot module before <code>mountIsland</code>.
-        Token variables inherit into the island (including shadow roots) from the host document.
-        Deeper token guidance:
-        <a jacare-go="/theme" href=${docsHref('/theme')}>Theme</a>.
-      </p>
-    </DocsSection>
-
-    <DocsSection :id=${'widget'} :title=${'3. Build UI widgets'}>
-      <p class="docs-lead">
-        An island is a normal <code>.jcr</code>${' '}view. Deep-import components from <code>@jacare/ui</code>, declare a contract for host props, and keep the root self-contained.
+        Import components from the published package with
+        <code>${'import { Button, Card, ProgressCircle, Stack, Text } from \'@jacare/ui\''}</code>.
+        Host props become live pulses by default — drive <code>progress</code>${' '}/ <code>label</code>${' '}with <code>update()</code>, and pass function props (like <code>onContinue</code>) for callbacks.
       </p>
       <Demo
         :id=${'widget-demo'}
         :title=${'Checkout island'}
-        :lead=${'Continue advances the ring (resets at 100%). In a real host, the button would call into checkout or emit to the page.'}
+        :lead=${'Continue advances the ring (resets at 100%). In a real host, onContinue would call into checkout or emit to the page.'}
         :code=${widget}
         :filename=${'CheckoutIsland.jcr'}
         :align=${'center'}
@@ -134,7 +141,7 @@ export <view>
       </Demo>
     </DocsSection>
 
-    <DocsSection :id=${'mount'} :title=${'4. Mount into the host'}>
+    <DocsSection :id=${'mount'} :title=${'3. Mount into a plain host'}>
       <p class="docs-lead">
         Leave a slot in the host HTML, then call <code>mountIsland</code>${' '}from a module entry. Plain props become live pulses by default; use <code>dispose.update(next)</code>${' '}to push changes without remounting.
       </p>
@@ -166,29 +173,57 @@ export <view>
 
     <DocsSection :id=${'react'} :title=${'React host'}>
       <p class="docs-lead">
-        Mount once on attach, push props with <code>update</code>, dispose on unmount.
+        The island imports components from <code>@jacare/ui</code>. React only mounts the slot — it never imports <code>Button</code>${' '}itself.
       </p>
+      <CodeBlock :code=${widget} :filename=${'CheckoutIsland.jcr'} :language=${'jacare'} />
+      <CodeBlock :code=${viteReact} :filename=${'vite.config.js'} :language=${'javascript'} />
       <CodeBlock :code=${reactHost} :filename=${'CheckoutSlot.jsx'} :language=${'javascript'} />
     </DocsSection>
 
     <DocsSection :id=${'vue'} :title=${'Vue 3 host'}>
       <p class="docs-lead">
-        Same lifecycle with <code>onMounted</code>, <code>watch</code>, and <code>onBeforeUnmount</code>.
+        Same split: <code>CheckoutIsland.jcr</code>${' '}imports from <code>@jacare/ui</code>; the Vue SFC only calls <code>mountIsland</code>.
       </p>
-      <CodeBlock :code=${vueHost} :filename=${'CheckoutSlot.vue'} :language=${'javascript'} />
+      <CodeBlock :code=${widget} :filename=${'CheckoutIsland.jcr'} :language=${'jacare'} />
+      <CodeBlock :code=${viteVue} :filename=${'vite.config.js'} :language=${'javascript'} />
+      <CodeBlock :code=${vueHost} :filename=${'CheckoutSlot.vue'} :language=${'vue'} />
     </DocsSection>
 
     <DocsSection :id=${'angular'} :title=${'Angular host'}>
       <p class="docs-lead">
-        Standalone component: mount in <code>ngAfterViewInit</code>, push inputs in <code>ngOnChanges</code>, dispose in <code>ngOnDestroy</code>.
+        Standalone wrapper on a Vite Angular setup (Analog shown). UI components stay in the <code>.jcr</code>${' '}island imported from <code>@jacare/ui</code>.
       </p>
+      <CodeBlock :code=${widget} :filename=${'CheckoutIsland.jcr'} :language=${'jacare'} />
+      <CodeBlock :code=${viteAngular} :filename=${'vite.config.ts'} :language=${'typescript'} />
       <CodeBlock :code=${angularHost} :filename=${'checkout-island.component.ts'} :language=${'typescript'} />
       <CodeBlock :code=${angularUsage} :filename=${'parent.component.html'} :language=${'html'} />
     </DocsSection>
 
+    <DocsSection :id=${'svelte'} :title=${'Svelte host'}>
+      <p class="docs-lead">
+        Same lifecycle with <code>onMount</code> / <code>onDestroy</code>. Components still come from
+        <code>${'import { Button, Card } from \'@jacare/ui\''}</code>${' '}inside the island.
+      </p>
+      <CodeBlock :code=${widget} :filename=${'CheckoutIsland.jcr'} :language=${'jacare'} />
+      <CodeBlock :code=${viteSvelte} :filename=${'vite.config.js'} :language=${'javascript'} />
+      <CodeBlock :code=${svelteHost} :filename=${'CheckoutSlot.svelte'} :language=${'javascript'} />
+    </DocsSection>
+
+    <DocsSection :id=${'any'} :title=${'Any other host'}>
+      <p class="docs-lead">
+        If the page can hold a DOM node, it can host an island — Rails, Laravel, WordPress, static HTML, Lit, Solid, etc. The host framework does not need Jacaré bindings.
+      </p>
+      <CodeBlock :code=${widget} :filename=${'CheckoutIsland.jcr'} :language=${'jacare'} />
+      <CodeBlock :code=${anyHost} :filename=${'boot.js'} :language=${'javascript'} />
+    </DocsSection>
+
     <DocsSection :id=${'notes'} :title=${'Notes'}>
       <ul class="docs-checklist">
+        <li>Import UI from the package:
+          <code>${'import { Button, Card } from \'@jacare/ui\''}</code>
+          ${' '}— not repo-relative <code>components/*.jcr</code>${' '}paths (those are for this docs monorepo only)</li>
         <li>Import <code>mountIsland</code>${' '}from <code>@jacare/core/island</code>, not the full <code>@jacare/core</code>${' '}barrel</li>
+        <li>Function props (callbacks) are passed through; only plain values become live pulses for <code>update()</code></li>
         <li>Do not <code>eval</code>${' '}host HTML into the island</li>
         <li>Overlays that portal to <code>document.body</code>${' '}(Modal, Message, Notification) still work from an island, but paint above the host page — plan stacking contexts accordingly</li>
         <li>For scoped light/dark surfaces inside one page (not host embeds), use

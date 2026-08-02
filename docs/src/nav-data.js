@@ -440,7 +440,7 @@ export const docsNav = [
       { href: '/tokens', label: 'Token reference', blurb: 'Brand, semantic, space, density, motion' },
       { href: '/layouts', label: 'Layouts', blurb: 'Shell, sidebar, split, and gallery models' },
       { href: '/accessibility', label: 'Accessibility', blurb: 'Focus, keyboard, motion, ARIA baseline' },
-      { href: '/island', label: 'Island', blurb: 'Embed @jacare/ui with mountIsland from @jacare/core/island' },
+      { href: '/island', label: 'Island', blurb: 'Packaged @jacare/ui islands in React, Vue, Angular, Svelte, HTML' },
     ],
   },
   {

@@ -1,5 +1,5 @@
-export const install = `npm install @jacare/ui @jacare/core
-npm install -D @jacare/vite-plugin @jacare/compiler vite`
+export const install = `yarn add @jacare/ui @jacare/core
+yarn add -D @jacare/vite-plugin @jacare/compiler vite`
 
 export const viteConfig = `import { defineConfig } from 'vite'
 import { jacare } from '@jacare/vite-plugin'
@@ -7,6 +7,48 @@ import { jacare } from '@jacare/vite-plugin'
 export default defineConfig({
   plugins: [jacare()],
 })`
+
+export const viteReact = `import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { jacare } from '@jacare/vite-plugin'
+
+export default defineConfig({
+  plugins: [react(), jacare()],
+})`
+
+export const viteVue = `import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import { jacare } from '@jacare/vite-plugin'
+
+export default defineConfig({
+  plugins: [vue(), jacare()],
+})`
+
+export const viteAngular = `import { defineConfig } from 'vite'
+import analog from '@analogjs/platform'
+import { jacare } from '@jacare/vite-plugin'
+
+// Analog (or any Vite Angular setup) + Jacaré compiler for .jcr islands
+export default defineConfig({
+  plugins: [analog(), jacare()],
+})`
+
+export const viteSvelte = `import { defineConfig } from 'vite'
+import { svelte } from '@sveltejs/vite-plugin-svelte'
+import { jacare } from '@jacare/vite-plugin'
+
+export default defineConfig({
+  plugins: [svelte(), jacare()],
+})`
+
+export const themeBoot = `import '@jacare/ui/theme.css'
+import { applyTheme, applyDensity, applyMotion } from '@jacare/ui/theme'
+
+applyTheme('system')
+applyDensity('comfortable')
+applyMotion('system')`
+
+export const uiImport = `import { Button, Card, ProgressCircle, Stack, Text } from '@jacare/ui'`
 
 export const hostHtml = `<div id="checkout-island">
   <p>Loading checkout…</p>
@@ -32,71 +74,64 @@ island.update({ progress: 90 })
 // Later: island() tears the mount down when the host removes the slot
 `
 
-export const widget = `import { pulse } from '@jacare/core'
-import Button from '@jacare/ui/Button'
-import Card from '@jacare/ui/Card'
-import ProgressCircle from '@jacare/ui/ProgressCircle'
-import Stack from '@jacare/ui/Stack'
-import Text from '@jacare/ui/Text'
+export const widget = `import { Button, Card, ProgressCircle, Stack, Text } from '@jacare/ui'
 
 export <contract>
   props: {
     progress: { type: 'number', default: 0 }
     label: { type: 'string', default: 'Progress' }
+    onContinue: { type: 'any', default: null }
   }
 </contract>
 
-const value = pulse(72)
+function readProp(value) {
+  return typeof value === 'function' && typeof value.set === 'function' ? value() : value
+}
 
 function continueCheckout() {
-  const next = Math.min(100, value() + 14)
-  value.set(next >= 100 ? 0 : next)
+  const fn = readProp(onContinue)
+  if (typeof fn === 'function') fn()
 }
 
 export <view>
   <Card>
     <Stack :gap=\${'md'} :align=\${'center'}>
       <Text :weight=\${'bold'}>\${label}</Text>
-      <ProgressCircle :value=\${value} />
+      <ProgressCircle :value=\${progress} />
       <Button :variant=\${'primary'} on-press=\${continueCheckout}>Continue</Button>
     </Stack>
   </Card>
 </view>`
 
-export const alertWidget = `import { pulse } from '@jacare/core'
-import Alert from '@jacare/ui/Alert'
-import Button from '@jacare/ui/Button'
-import Stack from '@jacare/ui/Stack'
+export const alertWidget = `import { Alert, Button, Stack } from '@jacare/ui'
 
 export <contract>
   props: {
     title: { type: 'string', default: 'Saved' }
     message: { type: 'string', default: 'Your changes are live.' }
+    onDismiss: { type: 'any', default: null }
   }
 </contract>
 
-const open = pulse(true)
+function readProp(value) {
+  return typeof value === 'function' && typeof value.set === 'function' ? value() : value
+}
 
 export <view>
   <Stack :gap=\${'md'}>
-    #if open()
-      <Alert
-        :tone=\${'success'}
-        :title=\${title}
-        :dismissible=\${true}
-        bind-open=\${open}
-        on-dismiss=\${() => open.set(false)}
-      >
-        \${message}
-      </Alert>
-      <Button :variant=\${'secondary'} :size=\${'sm'} on-press=\${() => open.set(false)}>
-        Dismiss
-      </Button>
-    #else
-      <Button :variant=\${'secondary'} :size=\${'sm'} on-press=\${() => open.set(true)}>
-        Show again
-      </Button>
-    #end
+    <Alert :tone=\${'success'} :title=\${title} :dismissible=\${true}>
+      \${message}
+    </Alert>
+    <Button
+      :variant=\${'secondary'}
+      :size=\${'sm'}
+      on-press=\${() => {
+        const fn = readProp(onDismiss)
+        if (typeof fn === 'function') fn()
+      }}
+    >
+      Dismiss
+    </Button>
   </Stack>
 </view>`
 
@@ -156,17 +191,23 @@ mountIsland('#checkout-island', CheckoutIsland, {
 })`
 
 export const reactHost = `import { useEffect, useRef } from 'react'
+import '@jacare/ui/theme.css'
+import { applyTheme, applyDensity, applyMotion } from '@jacare/ui/theme'
 import { mountIsland } from '@jacare/core/island'
 import CheckoutIsland from './CheckoutIsland.jcr'
 
-export function CheckoutSlot({ progress, label }) {
+applyTheme('system')
+applyDensity('comfortable')
+applyMotion('system')
+
+export function CheckoutSlot({ progress, label, onContinue }) {
   const hostRef = useRef(null)
   const islandRef = useRef(null)
 
   useEffect(() => {
     if (!hostRef.current) return
     const island = mountIsland(hostRef.current, CheckoutIsland, {
-      props: { progress, label },
+      props: { progress, label, onContinue },
     })
     islandRef.current = island
     return () => island()
@@ -177,48 +218,72 @@ export function CheckoutSlot({ progress, label }) {
   }, [progress, label])
 
   return <div ref={hostRef} />
-}`
+}
 
-export const vueHost = `import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+// Usage: <CheckoutSlot progress={72} label="Checkout" onContinue={...} />`
+
+export const vueHost = `<script setup>
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import '@jacare/ui/theme.css'
+import { applyTheme, applyDensity, applyMotion } from '@jacare/ui/theme'
 import { mountIsland } from '@jacare/core/island'
 import CheckoutIsland from './CheckoutIsland.jcr'
 
-export default {
-  props: { progress: Number, label: String },
-  setup(props) {
-    const host = ref(null)
-    let island
+applyTheme('system')
+applyDensity('comfortable')
+applyMotion('system')
 
-    onMounted(() => {
-      island = mountIsland(host.value, CheckoutIsland, {
-        props: { progress: props.progress, label: props.label },
-      })
-    })
+const props = defineProps({
+  progress: { type: Number, default: 0 },
+  label: { type: String, default: 'Checkout' },
+  onContinue: { type: Function, default: null },
+})
 
-    watch(
-      () => [props.progress, props.label],
-      ([progress, label]) => island?.update({ progress, label }),
-    )
+const host = ref(null)
+let island
 
-    onBeforeUnmount(() => island?.())
+onMounted(() => {
+  island = mountIsland(host.value, CheckoutIsland, {
+    props: {
+      progress: props.progress,
+      label: props.label,
+      onContinue: props.onContinue,
+    },
+  })
+})
 
-    return { host }
-  },
-  template: '<div ref="host" />',
-}`
+watch(
+  () => [props.progress, props.label],
+  ([progress, label]) => island?.update({ progress, label }),
+)
+
+onBeforeUnmount(() => island?.())
+</script>
+
+<template>
+  <div ref="host" />
+</template>`
 
 export const angularHost = `import {
   AfterViewInit,
   Component,
   ElementRef,
+  EventEmitter,
   Input,
   OnChanges,
   OnDestroy,
+  Output,
   SimpleChanges,
   ViewChild,
 } from '@angular/core'
+import '@jacare/ui/theme.css'
+import { applyTheme, applyDensity, applyMotion } from '@jacare/ui/theme'
 import { mountIsland, type IslandDispose } from '@jacare/core/island'
 import CheckoutIsland from './CheckoutIsland.jcr'
+
+applyTheme('system')
+applyDensity('comfortable')
+applyMotion('system')
 
 @Component({
   selector: 'app-checkout-island',
@@ -228,6 +293,7 @@ import CheckoutIsland from './CheckoutIsland.jcr'
 export class CheckoutIslandComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() progress = 0
   @Input() label = 'Checkout'
+  @Output() continue = new EventEmitter<void>()
 
   @ViewChild('host', { static: true })
   host!: ElementRef<HTMLDivElement>
@@ -236,7 +302,11 @@ export class CheckoutIslandComponent implements AfterViewInit, OnChanges, OnDest
 
   ngAfterViewInit(): void {
     this.island = mountIsland(this.host.nativeElement, CheckoutIsland, {
-      props: { progress: this.progress, label: this.label },
+      props: {
+        progress: this.progress,
+        label: this.label,
+        onContinue: () => this.continue.emit(),
+      },
     })
   }
 
@@ -257,4 +327,60 @@ export const angularUsage = `<!-- parent template -->
 <app-checkout-island
   [progress]="uploadProgress"
   [label]="uploadLabel"
+  (continue)="advanceCheckout()"
 />`
+
+export const svelteHost = `<script>
+  import { createEventDispatcher, onMount, onDestroy } from 'svelte'
+  import '@jacare/ui/theme.css'
+  import { applyTheme, applyDensity, applyMotion } from '@jacare/ui/theme'
+  import { mountIsland } from '@jacare/core/island'
+  import CheckoutIsland from './CheckoutIsland.jcr'
+
+  applyTheme('system')
+  applyDensity('comfortable')
+  applyMotion('system')
+
+  export let progress = 0
+  export let label = 'Checkout'
+
+  const dispatch = createEventDispatcher()
+  let host
+  let island
+
+  onMount(() => {
+    island = mountIsland(host, CheckoutIsland, {
+      props: {
+        progress,
+        label,
+        onContinue: () => dispatch('continue'),
+      },
+    })
+  })
+
+  $: island?.update({ progress, label })
+
+  onDestroy(() => island?.())
+</script>
+
+<div bind:this={host}></div>`
+
+export const anyHost = `// Rails / Laravel / WordPress / plain HTML — leave a slot, mount once.
+// The host owns layout; the island is built with packaged @jacare/ui/*.
+
+import '@jacare/ui/theme.css'
+import { applyTheme } from '@jacare/ui/theme'
+import { mountIsland } from '@jacare/core/island'
+import CheckoutIsland from './CheckoutIsland.jcr'
+
+applyTheme('system')
+
+const island = mountIsland('#checkout-island', CheckoutIsland, {
+  props: {
+    progress: 72,
+    label: 'Checkout',
+    onContinue: () => console.log('continue'),
+  },
+})
+
+window.__checkout = island`
