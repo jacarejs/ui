@@ -302,25 +302,25 @@
   resolved "https://registry.yarnpkg.com/@istanbuljs/schema/-/schema-0.1.6.tgz#8dc9afa2ac1506cb1a58f89940f1c124446c8df3"
   integrity sha512-+Sg6GCR/wy1oSmQDFq4LQDAhm3ETKnorxN+y5nbLULOR3P0c14f2Wurzj3/xqPXtasLFfHd5iRFQ7AJt4KH2cw==
 
-"@jacare/compiler@0.1.15":
-  version "0.1.15"
-  resolved "https://registry.yarnpkg.com/@jacare/compiler/-/compiler-0.1.15.tgz#cbdc573f50f771aed14e6629f4c9a0586959294a"
-  integrity sha512-NYk5x1f2HDsfXccNwPDpkrpZHuYOWYVT7AK3PcQXcH6c/Qb4ThN9P/rP4l+kMDKcTh1DCmNTzgFnnFcQwYvqoQ==
+"@jacare/compiler@0.1.16":
+  version "0.1.16"
+  resolved "https://registry.yarnpkg.com/@jacare/compiler/-/compiler-0.1.16.tgz#df11101c6ce3cec79a8318313f5a07d0eeb1e450"
+  integrity sha512-hqeJ0lZmfeignXbtCoVhUseKOibCkJoGs+8v96NzzkQEgBKfujbgMzO+ZxEDbrv9C+50Kew7nSYopJEKO59vGw==
   dependencies:
     esbuild "^0.25.0"
     source-map-js "^1.2.1"
 
-"@jacare/core@0.1.15":
-  version "0.1.15"
-  resolved "https://registry.yarnpkg.com/@jacare/core/-/core-0.1.15.tgz#05a2716baf52553a671051d1dec105eace4ecb7c"
-  integrity sha512-jNQBdsUvS9Glvc0JX9Ma0iMX6MgSBrfz2E14wpVCLvkdcMapKNBzmOZOaffUFzIBKiwSOtPClGv9w68oPk3Tww==
+"@jacare/core@0.1.16":
+  version "0.1.16"
+  resolved "https://registry.yarnpkg.com/@jacare/core/-/core-0.1.16.tgz#0de3e10a16cac208359699afee4874ed1c30f836"
+  integrity sha512-RcQ9/LzQxP0pMn2FXi1HqWdUPWsKHxr57fcQNf2vbXK7UjaT6bNYm8pf37yPOCbRm6keRhkuvm/8oqPFyVh6mA==
 
-"@jacare/vite-plugin@0.1.15":
-  version "0.1.15"
-  resolved "https://registry.yarnpkg.com/@jacare/vite-plugin/-/vite-plugin-0.1.15.tgz#234a4986d929b128e3d07edad0e0d67dc6e58f13"
-  integrity sha512-9fFubqGjWNXKCrgTcOBP4+wJlvLsrZcF0vniJZEBj27L+UEskzMlHw7M5tDY2ai8qLucwSSGDTF+j7Yc4dDIKw==
+"@jacare/vite-plugin@0.1.16":
+  version "0.1.16"
+  resolved "https://registry.yarnpkg.com/@jacare/vite-plugin/-/vite-plugin-0.1.16.tgz#575590dae2ca99076b1fe7e58b8c551c3e81ae06"
+  integrity sha512-owgp+yfhnI/A5DBarfHcjD/HtHptHK44HS9A/gvRgHzX5gRWXyEo6mqLq3If8QcIep0AIaM8Wsh+ILtMl9HzOQ==
   dependencies:
-    "@jacare/compiler" "0.1.15"
+    "@jacare/compiler" "0.1.16"
 
 "@jridgewell/gen-mapping@^0.3.5":
   version "0.3.13"
@@ -970,6 +970,11 @@ postcss@^8.4.43, postcss@^8.5.3:
     nanoid "^3.3.16"
     picocolors "^1.1.1"
     source-map-js "^1.2.1"
+
+qrcode-generator@^2.0.4:
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/qrcode-generator/-/qrcode-generator-2.0.4.tgz#e8b3f30922577eba52078aa9c0d5a2a74fe1fd94"
+  integrity sha512-mZSiP6RnbHl4xL2Ap5HfkjLnmxfKcPWpWe/c+5XxCuetEenqmNFf1FH/ftXPCtFG5/TDobjsjz6sSNL0Sr8Z9g==
 
 rollup@^4.20.0, rollup@^4.34.9:
   version "4.62.2"

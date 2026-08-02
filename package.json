@@ -43,6 +43,18 @@
       "types": "./dist/i18n/index.d.ts",
       "import": "./dist/i18n/index.js"
     },
+    "./locale": {
+      "types": "./dist/i18n/index.d.ts",
+      "import": "./dist/i18n/index.js"
+    },
+    "./validation": {
+      "types": "./dist/validation/index.d.ts",
+      "import": "./dist/validation/index.js"
+    },
+    "./feedback": {
+      "types": "./dist/feedback/index.d.ts",
+      "import": "./dist/feedback/index.js"
+    },
     "./package.json": "./package.json",
     "./*": {
       "types": "./dist/*.d.ts",
@@ -68,17 +80,17 @@
     "test:coverage": "vitest run --coverage",
     "pretest": "yarn build",
     "pretest:coverage": "yarn build",
-    "docs:dev": "yarn generate:contracts && vite --config docs/vite.config.js --configLoader runner",
-    "docs:build": "yarn generate:contracts && vite build --config docs/vite.config.js --configLoader runner",
+    "docs:dev": "yarn build && yarn generate:contracts && vite --config docs/vite.config.js --configLoader runner",
+    "docs:build": "yarn build && yarn generate:contracts && vite build --config docs/vite.config.js --configLoader runner",
     "prepublishOnly": "yarn build"
   },
   "peerDependencies": {
-    "@jacare/core": "^0.1.15"
+    "@jacare/core": "^0.1.16"
   },
   "devDependencies": {
-    "@jacare/compiler": "0.1.15",
-    "@jacare/core": "0.1.15",
-    "@jacare/vite-plugin": "0.1.15",
+    "@jacare/compiler": "0.1.16",
+    "@jacare/core": "0.1.16",
+    "@jacare/vite-plugin": "0.1.16",
     "@vitest/coverage-v8": "^2.1.8",
     "happy-dom": "^15.11.7",
     "vite": "^6.0.3",
@@ -87,5 +99,8 @@
   "engines": {
     "node": ">=20"
   },
-  "packageManager": "yarn@1.22.22"
+  "packageManager": "yarn@1.22.22",
+  "dependencies": {
+    "qrcode-generator": "^2.0.4"
+  }
 }
