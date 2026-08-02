@@ -1,4 +1,25 @@
 {
+  "Affix": {
+    "props": {
+      "offset": {
+        "type": "number",
+        "default": 0
+      },
+      "position": {
+        "type": "string",
+        "default": "top"
+      },
+      "zIndex": {
+        "type": "number",
+        "default": 100
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
   "Alert": {
     "props": {
       "tone": {
@@ -39,6 +60,116 @@
       "dismiss"
     ]
   },
+  "Anchor": {
+    "props": {
+      "offset": {
+        "type": "number",
+        "default": 0
+      },
+      "bounds": {
+        "type": "number",
+        "default": 8
+      },
+      "direction": {
+        "type": "string",
+        "default": "vertical"
+      },
+      "type": {
+        "type": "string",
+        "default": "default"
+      },
+      "affix": {
+        "type": "boolean",
+        "default": false
+      },
+      "marker": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "change"
+    ]
+  },
+  "AnchorLink": {
+    "props": {
+      "href": {
+        "type": "string",
+        "default": ""
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "level": {
+        "type": "number",
+        "default": 1
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "AnimateOnScroll": {
+    "props": {
+      "enterClass": {
+        "type": "string",
+        "default": ""
+      },
+      "leaveClass": {
+        "type": "string",
+        "default": ""
+      },
+      "variant": {
+        "type": "string",
+        "default": "fade-up"
+      },
+      "threshold": {
+        "type": "number",
+        "default": 0.15
+      },
+      "rootMargin": {
+        "type": "string",
+        "default": "0px 0px -8% 0px"
+      },
+      "root": {
+        "type": "string",
+        "default": "auto"
+      },
+      "once": {
+        "type": "boolean",
+        "default": true
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "Aside": {
+    "props": {
+      "width": {
+        "type": "string",
+        "default": "200px"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
   "Autocomplete": {
     "props": {
       "label": {
@@ -70,6 +201,14 @@
         "type": "number",
         "default": 150
       },
+      "loading": {
+        "type": "boolean",
+        "default": false
+      },
+      "remote": {
+        "type": "boolean",
+        "default": false
+      },
       "hint": {
         "type": "string",
         "default": ""
@@ -83,7 +222,8 @@
     "slots": [],
     "emits": [
       "change",
-      "select"
+      "select",
+      "search"
     ]
   },
   "Avatar": {
@@ -128,6 +268,74 @@
     "pulses": {},
     "slots": [],
     "emits": []
+  },
+  "AvatarUpload": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "size": {
+        "type": "number",
+        "default": 96
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      },
+      "accept": {
+        "type": "string",
+        "default": "image/*"
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change",
+      "clear"
+    ]
+  },
+  "Backtop": {
+    "props": {
+      "visibilityHeight": {
+        "type": "number",
+        "default": 200
+      },
+      "right": {
+        "type": "number",
+        "default": 40
+      },
+      "bottom": {
+        "type": "number",
+        "default": 40
+      },
+      "scrollTarget": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "click"
+    ]
   },
   "Badge": {
     "props": {
@@ -179,6 +387,36 @@
       "dismiss"
     ]
   },
+  "Breadcrumb": {
+    "props": {
+      "separator": {
+        "type": "string",
+        "default": "/"
+      },
+      "separatorIcon": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "BreadcrumbItem": {
+    "props": {
+      "href": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
   "Button": {
     "props": {
       "variant": {
@@ -222,6 +460,47 @@
       "press"
     ]
   },
+  "Calendar": {
+    "props": {
+      "value": {
+        "type": "any",
+        "model": true
+      },
+      "multiple": {
+        "type": "boolean",
+        "default": false
+      },
+      "range": {
+        "type": "boolean",
+        "default": false
+      },
+      "markers": {
+        "type": "object",
+        "default": []
+      },
+      "tooltips": {
+        "type": "boolean",
+        "default": true
+      },
+      "min": {
+        "type": "string",
+        "default": ""
+      },
+      "max": {
+        "type": "string",
+        "default": ""
+      },
+      "clearable": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
   "Card": {
     "props": {
       "title": {
@@ -235,13 +514,148 @@
       "padding": {
         "type": "string",
         "default": "md"
+      },
+      "shadow": {
+        "type": "string",
+        "default": "always"
+      },
+      "tone": {
+        "type": "string",
+        "default": "default"
+      },
+      "cover": {
+        "type": "string",
+        "default": ""
+      },
+      "coverAlt": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default",
+      "header",
+      "footer"
+    ],
+    "emits": []
+  },
+  "Carousel": {
+    "props": {
+      "height": {
+        "type": "string",
+        "default": "200px"
+      },
+      "autoplay": {
+        "type": "boolean",
+        "default": true
+      },
+      "interval": {
+        "type": "number",
+        "default": 3000
+      },
+      "initialIndex": {
+        "type": "number",
+        "default": 0
+      },
+      "arrow": {
+        "type": "string",
+        "default": "hover"
+      },
+      "indicatorPosition": {
+        "type": "string",
+        "default": "inside"
       }
     },
     "pulses": {},
     "slots": [
       "default"
     ],
+    "emits": [
+      "change"
+    ]
+  },
+  "CarouselItem": {
+    "props": {},
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
     "emits": []
+  },
+  "CascadeSelect": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "any",
+        "model": true,
+        "default": null
+      },
+      "options": {
+        "type": "any",
+        "required": true
+      },
+      "optionLabel": {
+        "type": "string",
+        "default": "label"
+      },
+      "optionValue": {
+        "type": "string",
+        "default": "value"
+      },
+      "optionGroupLabel": {
+        "type": "string",
+        "default": "label"
+      },
+      "optionGroupChildren": {
+        "type": "any",
+        "default": "children"
+      },
+      "placeholder": {
+        "type": "string",
+        "default": "Select"
+      },
+      "clearable": {
+        "type": "boolean",
+        "default": true
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "loading": {
+        "type": "boolean",
+        "default": false
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "fluid": {
+        "type": "boolean",
+        "default": false
+      },
+      "separator": {
+        "type": "string",
+        "default": " — "
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
   },
   "Cascader": {
     "props": {
@@ -270,6 +684,18 @@
         "type": "boolean",
         "default": false
       },
+      "loading": {
+        "type": "boolean",
+        "default": false
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "fluid": {
+        "type": "boolean",
+        "default": false
+      },
       "separator": {
         "type": "string",
         "default": "/"
@@ -281,12 +707,631 @@
       "error": {
         "type": "string",
         "default": ""
+      },
+      "filterable": {
+        "type": "boolean",
+        "default": false
+      },
+      "changeOnSelect": {
+        "type": "boolean",
+        "default": false
+      },
+      "multiple": {
+        "type": "boolean",
+        "default": false
+      },
+      "expandTrigger": {
+        "type": "string",
+        "default": "hover"
+      },
+      "showAllLevels": {
+        "type": "boolean",
+        "default": true
+      },
+      "emitPath": {
+        "type": "boolean",
+        "default": true
       }
     },
     "pulses": {},
     "slots": [],
     "emits": [
       "change"
+    ]
+  },
+  "ChartArea": {
+    "props": {
+      "data": {
+        "type": "any",
+        "required": true
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "caption": {
+        "type": "string",
+        "default": ""
+      },
+      "width": {
+        "type": "number",
+        "default": 480
+      },
+      "height": {
+        "type": "number",
+        "default": 280
+      },
+      "colors": {
+        "type": "any",
+        "default": null
+      },
+      "stacked": {
+        "type": "boolean",
+        "default": false
+      },
+      "showLegend": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "layout"
+    ]
+  },
+  "ChartBar": {
+    "props": {
+      "data": {
+        "type": "any",
+        "required": true
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "caption": {
+        "type": "string",
+        "default": ""
+      },
+      "width": {
+        "type": "number",
+        "default": 480
+      },
+      "height": {
+        "type": "number",
+        "default": 300
+      },
+      "colors": {
+        "type": "any",
+        "default": null
+      },
+      "showLegend": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "layout"
+    ]
+  },
+  "ChartBubble": {
+    "props": {
+      "data": {
+        "type": "any",
+        "required": true
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "caption": {
+        "type": "string",
+        "default": ""
+      },
+      "width": {
+        "type": "number",
+        "default": 480
+      },
+      "height": {
+        "type": "number",
+        "default": 280
+      },
+      "colors": {
+        "type": "any",
+        "default": null
+      },
+      "showLegend": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "layout"
+    ]
+  },
+  "ChartCandlestick": {
+    "props": {
+      "data": {
+        "type": "any",
+        "required": true
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "caption": {
+        "type": "string",
+        "default": ""
+      },
+      "width": {
+        "type": "number",
+        "default": 520
+      },
+      "height": {
+        "type": "number",
+        "default": 280
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "layout"
+    ]
+  },
+  "ChartColumn": {
+    "props": {
+      "data": {
+        "type": "any",
+        "required": true
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "caption": {
+        "type": "string",
+        "default": ""
+      },
+      "width": {
+        "type": "number",
+        "default": 480
+      },
+      "height": {
+        "type": "number",
+        "default": 280
+      },
+      "colors": {
+        "type": "any",
+        "default": null
+      },
+      "stacked": {
+        "type": "boolean",
+        "default": false
+      },
+      "showLegend": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "layout"
+    ]
+  },
+  "ChartDonut": {
+    "props": {
+      "data": {
+        "type": "any",
+        "required": true
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "caption": {
+        "type": "string",
+        "default": ""
+      },
+      "width": {
+        "type": "number",
+        "default": 360
+      },
+      "height": {
+        "type": "number",
+        "default": 280
+      },
+      "colors": {
+        "type": "any",
+        "default": null
+      },
+      "innerRatio": {
+        "type": "number",
+        "default": 0.58
+      },
+      "centerLabel": {
+        "type": "string",
+        "default": ""
+      },
+      "showLegend": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "layout"
+    ]
+  },
+  "ChartFrame": {
+    "props": {
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "caption": {
+        "type": "string",
+        "default": ""
+      },
+      "legend": {
+        "type": "any",
+        "default": []
+      },
+      "width": {
+        "type": "number",
+        "default": 420
+      },
+      "height": {
+        "type": "number",
+        "default": 260
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "ChartGauge": {
+    "props": {
+      "value": {
+        "type": "number",
+        "default": 0
+      },
+      "min": {
+        "type": "number",
+        "default": 0
+      },
+      "max": {
+        "type": "number",
+        "default": 100
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "caption": {
+        "type": "string",
+        "default": ""
+      },
+      "width": {
+        "type": "number",
+        "default": 320
+      },
+      "height": {
+        "type": "number",
+        "default": 200
+      },
+      "color": {
+        "type": "string",
+        "default": ""
+      },
+      "label": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "layout"
+    ]
+  },
+  "ChartHeatmap": {
+    "props": {
+      "data": {
+        "type": "any",
+        "required": true
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "caption": {
+        "type": "string",
+        "default": ""
+      },
+      "width": {
+        "type": "number",
+        "default": 480
+      },
+      "height": {
+        "type": "number",
+        "default": 300
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "layout"
+    ]
+  },
+  "ChartLine": {
+    "props": {
+      "data": {
+        "type": "any",
+        "required": true
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "caption": {
+        "type": "string",
+        "default": ""
+      },
+      "width": {
+        "type": "number",
+        "default": 480
+      },
+      "height": {
+        "type": "number",
+        "default": 280
+      },
+      "colors": {
+        "type": "any",
+        "default": null
+      },
+      "showLegend": {
+        "type": "boolean",
+        "default": true
+      },
+      "showDots": {
+        "type": "boolean",
+        "default": true
+      },
+      "showTooltip": {
+        "type": "boolean",
+        "default": true
+      },
+      "curved": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "layout"
+    ]
+  },
+  "ChartPie": {
+    "props": {
+      "data": {
+        "type": "any",
+        "required": true
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "caption": {
+        "type": "string",
+        "default": ""
+      },
+      "width": {
+        "type": "number",
+        "default": 360
+      },
+      "height": {
+        "type": "number",
+        "default": 280
+      },
+      "colors": {
+        "type": "any",
+        "default": null
+      },
+      "showLabels": {
+        "type": "boolean",
+        "default": true
+      },
+      "showLegend": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "layout"
+    ]
+  },
+  "ChartPlot": {
+    "props": {
+      "width": {
+        "type": "number",
+        "default": 480
+      },
+      "height": {
+        "type": "number",
+        "default": 280
+      },
+      "label": {
+        "type": "string",
+        "default": "Chart"
+      },
+      "content": {
+        "type": "any",
+        "default": ""
+      },
+      "layoutWidth": {
+        "type": "number",
+        "model": true,
+        "default": 0
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": []
+  },
+  "ChartRadar": {
+    "props": {
+      "data": {
+        "type": "any",
+        "required": true
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "caption": {
+        "type": "string",
+        "default": ""
+      },
+      "width": {
+        "type": "number",
+        "default": 380
+      },
+      "height": {
+        "type": "number",
+        "default": 320
+      },
+      "colors": {
+        "type": "any",
+        "default": null
+      },
+      "showLegend": {
+        "type": "boolean",
+        "default": true
+      },
+      "filled": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "layout"
+    ]
+  },
+  "ChartScatter": {
+    "props": {
+      "data": {
+        "type": "any",
+        "required": true
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "caption": {
+        "type": "string",
+        "default": ""
+      },
+      "width": {
+        "type": "number",
+        "default": 480
+      },
+      "height": {
+        "type": "number",
+        "default": 280
+      },
+      "colors": {
+        "type": "any",
+        "default": null
+      },
+      "showLegend": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "layout"
+    ]
+  },
+  "ChartTreemap": {
+    "props": {
+      "data": {
+        "type": "any",
+        "required": true
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "caption": {
+        "type": "string",
+        "default": ""
+      },
+      "width": {
+        "type": "number",
+        "default": 480
+      },
+      "height": {
+        "type": "number",
+        "default": 280
+      },
+      "colors": {
+        "type": "any",
+        "default": null
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "layout"
+    ]
+  },
+  "ChartWaterfall": {
+    "props": {
+      "data": {
+        "type": "any",
+        "required": true
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "caption": {
+        "type": "string",
+        "default": ""
+      },
+      "width": {
+        "type": "number",
+        "default": 480
+      },
+      "height": {
+        "type": "number",
+        "default": 280
+      },
+      "colors": {
+        "type": "any",
+        "default": null
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "layout"
     ]
   },
   "Checkbox": {
@@ -313,6 +1358,198 @@
       "default"
     ],
     "emits": []
+  },
+  "CheckboxGroup": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "object",
+        "model": true,
+        "default": []
+      },
+      "options": {
+        "type": "object",
+        "default": []
+      },
+      "layout": {
+        "type": "string",
+        "default": "list"
+      },
+      "selectAll": {
+        "type": "boolean",
+        "default": false
+      },
+      "selectAllLabel": {
+        "type": "string",
+        "default": "Select all"
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "required": {
+        "type": "boolean",
+        "default": false
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "CodeInput": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "language": {
+        "type": "string",
+        "default": "text"
+      },
+      "rows": {
+        "type": "number",
+        "default": 8
+      },
+      "placeholder": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "required": {
+        "type": "boolean",
+        "default": false
+      },
+      "validateJson": {
+        "type": "boolean",
+        "default": false
+      },
+      "highlight": {
+        "type": "boolean",
+        "default": true
+      },
+      "theme": {
+        "type": "string",
+        "default": "dark"
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change",
+      "validate"
+    ]
+  },
+  "Col": {
+    "props": {
+      "span": {
+        "type": "number",
+        "default": 24
+      },
+      "offset": {
+        "type": "number",
+        "default": 0
+      },
+      "xs": {
+        "type": "string",
+        "default": ""
+      },
+      "sm": {
+        "type": "string",
+        "default": ""
+      },
+      "md": {
+        "type": "string",
+        "default": ""
+      },
+      "lg": {
+        "type": "string",
+        "default": ""
+      },
+      "xl": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "Collapse": {
+    "props": {
+      "value": {
+        "type": "any",
+        "model": true
+      },
+      "accordion": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "change"
+    ]
+  },
+  "CollapseItem": {
+    "props": {
+      "name": {
+        "type": "string",
+        "required": true
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "toggle"
+    ]
   },
   "ColorPicker": {
     "props": {
@@ -388,6 +1625,73 @@
       "change"
     ]
   },
+  "Compare": {
+    "props": {
+      "value": {
+        "type": "number",
+        "model": true,
+        "default": 50
+      },
+      "orientation": {
+        "type": "string",
+        "default": "horizontal"
+      },
+      "slideOnHover": {
+        "type": "boolean",
+        "default": false
+      },
+      "beforeSrc": {
+        "type": "string",
+        "default": ""
+      },
+      "afterSrc": {
+        "type": "string",
+        "default": ""
+      },
+      "beforeAlt": {
+        "type": "string",
+        "default": "Before"
+      },
+      "afterAlt": {
+        "type": "string",
+        "default": "After"
+      },
+      "beforeLabel": {
+        "type": "string",
+        "default": "Before"
+      },
+      "afterLabel": {
+        "type": "string",
+        "default": "After"
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "ConfigProvider": {
+    "props": {
+      "size": {
+        "type": "string",
+        "default": "default"
+      },
+      "locale": {
+        "type": "string",
+        "default": ""
+      },
+      "theme": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
   "Confirm": {
     "props": {
       "open": {
@@ -427,6 +1731,102 @@
       "cancel"
     ]
   },
+  "Container": {
+    "props": {
+      "direction": {
+        "type": "string",
+        "default": "vertical"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "DataTable": {
+    "props": {
+      "data": {
+        "type": "any",
+        "default": []
+      },
+      "columns": {
+        "type": "any",
+        "default": []
+      },
+      "striped": {
+        "type": "boolean",
+        "default": false
+      },
+      "border": {
+        "type": "boolean",
+        "default": false
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "emptyText": {
+        "type": "string",
+        "default": "No data"
+      },
+      "selectable": {
+        "type": "boolean",
+        "default": false
+      },
+      "selection": {
+        "type": "object",
+        "model": true,
+        "default": []
+      },
+      "sortField": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "sortOrder": {
+        "type": "number",
+        "model": true,
+        "default": 1
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "DataView": {
+    "props": {
+      "data": {
+        "type": "object",
+        "default": []
+      },
+      "layout": {
+        "type": "string",
+        "model": true,
+        "default": "list"
+      },
+      "rows": {
+        "type": "number",
+        "default": 0
+      },
+      "page": {
+        "type": "number",
+        "model": true,
+        "default": 1
+      },
+      "emptyText": {
+        "type": "string",
+        "default": "No data"
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
   "DatePicker": {
     "props": {
       "label": {
@@ -462,6 +1862,10 @@
         "type": "boolean",
         "default": true
       },
+      "navigable": {
+        "type": "boolean",
+        "default": true
+      },
       "required": {
         "type": "boolean",
         "default": false
@@ -484,7 +1888,7 @@
   "DatePickerPanel": {
     "props": {
       "value": {
-        "type": "string",
+        "type": "any",
         "model": true,
         "default": ""
       },
@@ -503,6 +1907,14 @@
       "border": {
         "type": "boolean",
         "default": true
+      },
+      "range": {
+        "type": "boolean",
+        "default": false
+      },
+      "multiple": {
+        "type": "boolean",
+        "default": false
       }
     },
     "pulses": {},
@@ -557,6 +1969,52 @@
       "change"
     ]
   },
+  "Descriptions": {
+    "props": {
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "column": {
+        "type": "number",
+        "default": 3
+      },
+      "direction": {
+        "type": "string",
+        "default": "horizontal"
+      },
+      "border": {
+        "type": "boolean",
+        "default": false
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "DescriptionsItem": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "span": {
+        "type": "number",
+        "default": 1
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
   "Dialog": {
     "props": {
       "open": {
@@ -595,6 +2053,264 @@
     "pulses": {},
     "slots": [],
     "emits": []
+  },
+  "Drawer": {
+    "props": {
+      "open": {
+        "type": "boolean",
+        "model": true,
+        "default": false
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "direction": {
+        "type": "string",
+        "default": "rtl"
+      },
+      "size": {
+        "type": "string",
+        "default": "30%"
+      },
+      "closeOnClickModal": {
+        "type": "boolean",
+        "default": true
+      },
+      "showClose": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "close"
+    ]
+  },
+  "Dropdown": {
+    "props": {
+      "trigger": {
+        "type": "string",
+        "default": "click"
+      },
+      "placement": {
+        "type": "string",
+        "default": "bottom-start"
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "hideOnClick": {
+        "type": "boolean",
+        "default": true
+      },
+      "maxHeight": {
+        "type": "number",
+        "default": 280
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default",
+      "dropdown"
+    ],
+    "emits": [
+      "command",
+      "visible-change"
+    ]
+  },
+  "DropdownItem": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "divided": {
+        "type": "boolean",
+        "default": false
+      },
+      "danger": {
+        "type": "boolean",
+        "default": false
+      },
+      "command": {
+        "type": "any",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "command"
+    ]
+  },
+  "DropdownMenu": {
+    "props": {},
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "DurationPicker": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "number",
+        "model": true,
+        "default": 0
+      },
+      "unit": {
+        "type": "string",
+        "default": "minutes"
+      },
+      "showDays": {
+        "type": "boolean",
+        "default": false
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "Editable": {
+    "props": {
+      "value": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "placeholder": {
+        "type": "string",
+        "default": "Click to edit"
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "required": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change",
+      "start",
+      "cancel"
+    ]
+  },
+  "Empty": {
+    "props": {
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "No data"
+      },
+      "image": {
+        "type": "string",
+        "default": ""
+      },
+      "imageSize": {
+        "type": "number",
+        "default": 120
+      },
+      "type": {
+        "type": "string",
+        "default": "default"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default",
+      "image",
+      "description"
+    ],
+    "emits": []
+  },
+  "EmptyImage": {
+    "props": {
+      "type": {
+        "type": "string",
+        "default": "default"
+      },
+      "size": {
+        "type": "number",
+        "default": 160
+      },
+      "color": {
+        "type": "string",
+        "default": ""
+      },
+      "background": {
+        "type": "string",
+        "default": ""
+      },
+      "halo": {
+        "type": "boolean",
+        "default": true
+      },
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "alt": {
+        "type": "string",
+        "default": ""
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "downloadable": {
+        "type": "boolean",
+        "default": false
+      },
+      "downloadLabel": {
+        "type": "string",
+        "default": "Download SVG"
+      },
+      "downloadFormat": {
+        "type": "string",
+        "default": "svg"
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "ready"
+    ]
   },
   "Field": {
     "props": {
@@ -643,6 +2359,54 @@
     "slots": [],
     "emits": []
   },
+  "FilterBar": {
+    "props": {
+      "query": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "sort": {
+        "type": "any",
+        "model": true
+      },
+      "chips": {
+        "type": "object",
+        "model": true,
+        "default": []
+      },
+      "sortOptions": {
+        "type": "object",
+        "default": []
+      },
+      "placeholder": {
+        "type": "string",
+        "default": "Search…"
+      },
+      "sortPlaceholder": {
+        "type": "string",
+        "default": "Sort"
+      },
+      "debounce": {
+        "type": "number",
+        "default": 250
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "actions"
+    ],
+    "emits": [
+      "search",
+      "change",
+      "remove-chip",
+      "clear-chips"
+    ]
+  },
   "Flex": {
     "props": {
       "direction": {
@@ -676,8 +2440,62 @@
     ],
     "emits": []
   },
+  "FloatLabel": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "variant": {
+        "type": "string",
+        "default": "over"
+      },
+      "invalid": {
+        "type": "boolean",
+        "default": false
+      },
+      "inputId": {
+        "type": "string",
+        "default": ""
+      },
+      "fluid": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "Footer": {
+    "props": {
+      "height": {
+        "type": "string",
+        "default": "60px"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
   "Form": {
     "props": {
+      "form": {
+        "type": "any",
+        "default": null
+      },
+      "model": {
+        "type": "any",
+        "default": null
+      },
+      "rules": {
+        "type": "any",
+        "default": null
+      },
       "labelPosition": {
         "type": "string",
         "default": "top"
@@ -689,17 +2507,86 @@
       "gap": {
         "type": "string",
         "default": "md"
+      },
+      "scrollToError": {
+        "type": "boolean",
+        "default": true
+      },
+      "validateOnRuleChange": {
+        "type": "boolean",
+        "default": true
       }
     },
     "pulses": {},
     "slots": [
       "default"
     ],
-    "emits": []
+    "emits": [
+      "validate",
+      "ready"
+    ]
+  },
+  "FormActions": {
+    "props": {
+      "cancelLabel": {
+        "type": "string",
+        "default": "Cancel"
+      },
+      "saveLabel": {
+        "type": "string",
+        "default": "Save"
+      },
+      "submitLabel": {
+        "type": "string",
+        "default": "Submit"
+      },
+      "showCancel": {
+        "type": "boolean",
+        "default": true
+      },
+      "showSave": {
+        "type": "boolean",
+        "default": true
+      },
+      "showSubmit": {
+        "type": "boolean",
+        "default": true
+      },
+      "loading": {
+        "type": "boolean",
+        "default": false
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "sticky": {
+        "type": "boolean",
+        "default": true
+      },
+      "align": {
+        "type": "string",
+        "default": "end"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default",
+      "start"
+    ],
+    "emits": [
+      "cancel",
+      "save",
+      "submit"
+    ]
   },
   "FormItem": {
     "props": {
       "label": {
+        "type": "string",
+        "default": ""
+      },
+      "prop": {
         "type": "string",
         "default": ""
       },
@@ -714,13 +2601,136 @@
       "hint": {
         "type": "string",
         "default": ""
+      },
+      "rules": {
+        "type": "any",
+        "default": null
+      },
+      "trigger": {
+        "type": "any",
+        "default": ""
       }
     },
     "pulses": {},
     "slots": [
       "default"
     ],
-    "emits": []
+    "emits": [
+      "validate"
+    ]
+  },
+  "FormList": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "object",
+        "model": true,
+        "default": []
+      },
+      "fields": {
+        "type": "object",
+        "default": []
+      },
+      "min": {
+        "type": "number",
+        "default": 0
+      },
+      "max": {
+        "type": "number",
+        "default": 0
+      },
+      "addLabel": {
+        "type": "string",
+        "default": "Add item"
+      },
+      "itemLabel": {
+        "type": "string",
+        "default": "Item"
+      },
+      "reorderable": {
+        "type": "boolean",
+        "default": true
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change",
+      "add",
+      "remove",
+      "reorder"
+    ]
+  },
+  "FormSection": {
+    "props": {
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": ""
+      },
+      "collapsible": {
+        "type": "boolean",
+        "default": false
+      },
+      "open": {
+        "type": "boolean",
+        "model": true,
+        "default": true
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default",
+      "extra"
+    ],
+    "emits": [
+      "toggle"
+    ]
+  },
+  "Gallery": {
+    "props": {
+      "images": {
+        "type": "object",
+        "default": []
+      },
+      "activeIndex": {
+        "type": "number",
+        "model": true,
+        "default": 0
+      },
+      "showThumbnails": {
+        "type": "boolean",
+        "default": true
+      },
+      "open": {
+        "type": "boolean",
+        "model": true,
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
   },
   "Grid": {
     "props": {
@@ -751,6 +2761,39 @@
     ],
     "emits": []
   },
+  "Header": {
+    "props": {
+      "height": {
+        "type": "string",
+        "default": "60px"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "Hover": {
+    "props": {
+      "value": {
+        "type": "boolean",
+        "model": true,
+        "default": false
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "change"
+    ]
+  },
   "Icon": {
     "props": {
       "name": {
@@ -773,6 +2816,60 @@
     "pulses": {},
     "slots": [],
     "emits": []
+  },
+  "Image": {
+    "props": {
+      "src": {
+        "type": "string",
+        "default": ""
+      },
+      "alt": {
+        "type": "string",
+        "default": ""
+      },
+      "fit": {
+        "type": "string",
+        "default": "cover"
+      },
+      "lazy": {
+        "type": "boolean",
+        "default": false
+      },
+      "preview": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "error"
+    ]
+  },
+  "InfiniteScroll": {
+    "props": {
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "distance": {
+        "type": "number",
+        "default": 0
+      },
+      "height": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "load"
+    ]
   },
   "Input": {
     "props": {
@@ -828,6 +2925,146 @@
       "maxLength": {
         "type": "number",
         "default": 0
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "prefix",
+      "suffix"
+    ],
+    "emits": [
+      "change",
+      "clear"
+    ]
+  },
+  "InputMask": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "mask": {
+        "type": "string",
+        "default": ""
+      },
+      "preset": {
+        "type": "string",
+        "default": ""
+      },
+      "placeholder": {
+        "type": "string",
+        "default": ""
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "required": {
+        "type": "boolean",
+        "default": false
+      },
+      "clearable": {
+        "type": "boolean",
+        "default": false
+      },
+      "unmask": {
+        "type": "boolean",
+        "default": false
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "autocomplete": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "prefix",
+      "suffix"
+    ],
+    "emits": [
+      "change",
+      "clear"
+    ]
+  },
+  "InputMoney": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "number",
+        "model": true,
+        "default": 0
+      },
+      "currency": {
+        "type": "string",
+        "default": "BRL"
+      },
+      "locale": {
+        "type": "string",
+        "default": "pt-BR"
+      },
+      "precision": {
+        "type": "number",
+        "default": 2
+      },
+      "allowNegative": {
+        "type": "boolean",
+        "default": false
+      },
+      "placeholder": {
+        "type": "string",
+        "default": ""
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "required": {
+        "type": "boolean",
+        "default": false
+      },
+      "clearable": {
+        "type": "boolean",
+        "default": false
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "name": {
+        "type": "string",
+        "default": ""
       }
     },
     "pulses": {},
@@ -945,6 +3182,138 @@
       "finish"
     ]
   },
+  "InputPassword": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "placeholder": {
+        "type": "string",
+        "default": ""
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "required": {
+        "type": "boolean",
+        "default": false
+      },
+      "clearable": {
+        "type": "boolean",
+        "default": false
+      },
+      "meter": {
+        "type": "boolean",
+        "default": true
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "autocomplete": {
+        "type": "string",
+        "default": "current-password"
+      },
+      "maxLength": {
+        "type": "number",
+        "default": 0
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change",
+      "clear",
+      "strength"
+    ]
+  },
+  "InputSearch": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "placeholder": {
+        "type": "string",
+        "default": "Search…"
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "required": {
+        "type": "boolean",
+        "default": false
+      },
+      "clearable": {
+        "type": "boolean",
+        "default": true
+      },
+      "debounce": {
+        "type": "number",
+        "default": 300
+      },
+      "showButton": {
+        "type": "boolean",
+        "default": false
+      },
+      "buttonLabel": {
+        "type": "string",
+        "default": "Search"
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "autocomplete": {
+        "type": "string",
+        "default": "off"
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change",
+      "search",
+      "clear"
+    ]
+  },
   "InputTag": {
     "props": {
       "label": {
@@ -997,6 +3366,186 @@
       "remove-tag"
     ]
   },
+  "Knob": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "number",
+        "model": true,
+        "default": 0
+      },
+      "min": {
+        "type": "number",
+        "default": 0
+      },
+      "max": {
+        "type": "number",
+        "default": 100
+      },
+      "step": {
+        "type": "number",
+        "default": 1
+      },
+      "size": {
+        "type": "number",
+        "default": 100
+      },
+      "strokeWidth": {
+        "type": "number",
+        "default": 14
+      },
+      "showValue": {
+        "type": "boolean",
+        "default": true
+      },
+      "valueTemplate": {
+        "type": "string",
+        "default": "{value}"
+      },
+      "valueColor": {
+        "type": "string",
+        "default": ""
+      },
+      "rangeColor": {
+        "type": "string",
+        "default": ""
+      },
+      "textColor": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "readonly": {
+        "type": "boolean",
+        "default": false
+      },
+      "invalid": {
+        "type": "boolean",
+        "default": false
+      },
+      "tabindex": {
+        "type": "number",
+        "default": 0
+      },
+      "ariaLabel": {
+        "type": "string",
+        "default": ""
+      },
+      "ariaLabelledby": {
+        "type": "string",
+        "default": ""
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "Likert": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "number",
+        "model": true,
+        "default": null
+      },
+      "options": {
+        "type": "object",
+        "default": null
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "Link": {
+    "props": {
+      "href": {
+        "type": "string",
+        "default": ""
+      },
+      "type": {
+        "type": "string",
+        "default": "default"
+      },
+      "underline": {
+        "type": "string",
+        "default": "hover"
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "linkTarget": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "press"
+    ]
+  },
+  "Loading": {
+    "props": {
+      "loading": {
+        "type": "boolean",
+        "default": false
+      },
+      "text": {
+        "type": "string",
+        "default": ""
+      },
+      "background": {
+        "type": "string",
+        "default": ""
+      },
+      "fullscreen": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
   "LocaleToggle": {
     "props": {
       "locales": {
@@ -1013,6 +3562,55 @@
     "emits": [
       "change"
     ]
+  },
+  "LocationPicker": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "object",
+        "model": true,
+        "default": null
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      },
+      "locateLabel": {
+        "type": "string",
+        "default": "Use my location"
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change",
+      "locate",
+      "locate-error"
+    ]
+  },
+  "Main": {
+    "props": {
+      "padding": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
   },
   "Mention": {
     "props": {
@@ -1057,6 +3655,624 @@
       "select"
     ]
   },
+  "Menu": {
+    "props": {
+      "mode": {
+        "type": "string",
+        "default": "vertical"
+      },
+      "defaultActive": {
+        "type": "string",
+        "default": ""
+      },
+      "collapse": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "select"
+    ]
+  },
+  "MenuItem": {
+    "props": {
+      "index": {
+        "type": "string",
+        "required": true
+      },
+      "href": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "select"
+    ]
+  },
+  "Message": {
+    "props": {
+      "message": {
+        "type": "string",
+        "default": "This is a message."
+      },
+      "type": {
+        "type": "string",
+        "default": "info"
+      },
+      "plain": {
+        "type": "boolean",
+        "default": false
+      },
+      "showClose": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "close"
+    ]
+  },
+  "MessageBox": {
+    "props": {
+      "open": {
+        "type": "boolean",
+        "model": true,
+        "default": false
+      },
+      "title": {
+        "type": "string",
+        "default": "Message"
+      },
+      "message": {
+        "type": "string",
+        "default": ""
+      },
+      "type": {
+        "type": "string",
+        "default": ""
+      },
+      "confirmButtonText": {
+        "type": "string",
+        "default": "OK"
+      },
+      "cancelButtonText": {
+        "type": "string",
+        "default": "Cancel"
+      },
+      "showCancelButton": {
+        "type": "boolean",
+        "default": true
+      },
+      "showInput": {
+        "type": "boolean",
+        "default": false
+      },
+      "inputPlaceholder": {
+        "type": "string",
+        "default": ""
+      },
+      "inputValue": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "confirm",
+      "cancel"
+    ]
+  },
+  "MeterGroup": {
+    "props": {
+      "value": {
+        "type": "object",
+        "default": []
+      },
+      "min": {
+        "type": "number",
+        "default": 0
+      },
+      "max": {
+        "type": "number",
+        "default": 100
+      },
+      "orientation": {
+        "type": "string",
+        "default": "horizontal"
+      },
+      "labelOrientation": {
+        "type": "string",
+        "default": "horizontal"
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": []
+  },
+  "Modal": {
+    "props": {
+      "open": {
+        "type": "boolean",
+        "model": true,
+        "default": false
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": ""
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "placement": {
+        "type": "string",
+        "default": "auto"
+      },
+      "closeOnClickModal": {
+        "type": "boolean",
+        "default": true
+      },
+      "closeOnEsc": {
+        "type": "boolean",
+        "default": true
+      },
+      "showClose": {
+        "type": "boolean",
+        "default": true
+      },
+      "lockScroll": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "close",
+      "opened"
+    ]
+  },
+  "ModalFooter": {
+    "props": {},
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "ModalHeader": {
+    "props": {},
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "MonthPicker": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "min": {
+        "type": "string",
+        "default": ""
+      },
+      "max": {
+        "type": "string",
+        "default": ""
+      },
+      "placeholder": {
+        "type": "string",
+        "default": "Select month"
+      },
+      "inline": {
+        "type": "boolean",
+        "default": false
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "clearable": {
+        "type": "boolean",
+        "default": true
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "Notification": {
+    "props": {
+      "title": {
+        "type": "string",
+        "default": "Title"
+      },
+      "message": {
+        "type": "string",
+        "default": "This is a notification."
+      },
+      "type": {
+        "type": "string",
+        "default": ""
+      },
+      "showClose": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "close"
+    ]
+  },
+  "Nps": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "number",
+        "model": true,
+        "default": null
+      },
+      "min": {
+        "type": "number",
+        "default": 0
+      },
+      "max": {
+        "type": "number",
+        "default": 10
+      },
+      "lowLabel": {
+        "type": "string",
+        "default": "Not likely"
+      },
+      "highLabel": {
+        "type": "string",
+        "default": "Very likely"
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "NumberRange": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "object",
+        "model": true,
+        "default": {
+          "min": 0,
+          "max": 0
+        }
+      },
+      "min": {
+        "type": "number",
+        "default": null
+      },
+      "max": {
+        "type": "number",
+        "default": null
+      },
+      "step": {
+        "type": "number",
+        "default": 1
+      },
+      "precision": {
+        "type": "number",
+        "default": null
+      },
+      "minLabel": {
+        "type": "string",
+        "default": "Min"
+      },
+      "maxLabel": {
+        "type": "string",
+        "default": "Max"
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "OrderList": {
+    "props": {
+      "value": {
+        "type": "object",
+        "model": true,
+        "default": []
+      },
+      "header": {
+        "type": "string",
+        "default": ""
+      },
+      "filterable": {
+        "type": "boolean",
+        "default": false
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "OrganizationChart": {
+    "props": {
+      "value": {
+        "type": "object",
+        "default": null
+      },
+      "collapsible": {
+        "type": "boolean",
+        "default": true
+      },
+      "selectionMode": {
+        "type": "string",
+        "default": ""
+      },
+      "selection": {
+        "type": "object",
+        "model": true,
+        "default": []
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "PageHeader": {
+    "props": {
+      "title": {
+        "type": "string",
+        "default": "Back"
+      },
+      "content": {
+        "type": "string",
+        "default": ""
+      },
+      "showIcon": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "back"
+    ]
+  },
+  "Pagination": {
+    "props": {
+      "total": {
+        "type": "number",
+        "default": 0
+      },
+      "pageSize": {
+        "type": "number",
+        "model": true,
+        "default": 10
+      },
+      "currentPage": {
+        "type": "number",
+        "model": true,
+        "default": 1
+      },
+      "pagerCount": {
+        "type": "number",
+        "default": 7
+      },
+      "background": {
+        "type": "boolean",
+        "default": false
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "hideOnSinglePage": {
+        "type": "boolean",
+        "default": false
+      },
+      "showTotal": {
+        "type": "boolean",
+        "default": true
+      },
+      "pageSizes": {
+        "type": "any",
+        "default": null
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "Parallax": {
+    "props": {
+      "src": {
+        "type": "string",
+        "default": ""
+      },
+      "alt": {
+        "type": "string",
+        "default": "parallax"
+      },
+      "height": {
+        "type": "number",
+        "default": 400
+      },
+      "speed": {
+        "type": "number",
+        "default": 0.5
+      },
+      "reversed": {
+        "type": "boolean",
+        "default": false
+      },
+      "scrim": {
+        "type": "string",
+        "default": "dark"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "offset"
+    ]
+  },
+  "Popconfirm": {
+    "props": {
+      "title": {
+        "type": "string",
+        "default": "Are you sure?"
+      },
+      "confirmButtonText": {
+        "type": "string",
+        "default": "OK"
+      },
+      "cancelButtonText": {
+        "type": "string",
+        "default": "Cancel"
+      },
+      "placement": {
+        "type": "string",
+        "default": "bottom"
+      },
+      "width": {
+        "type": "number",
+        "default": 200
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "confirm",
+      "cancel"
+    ]
+  },
+  "Popover": {
+    "props": {
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "content": {
+        "type": "string",
+        "default": ""
+      },
+      "placement": {
+        "type": "string",
+        "default": "bottom"
+      },
+      "trigger": {
+        "type": "string",
+        "default": "click"
+      },
+      "width": {
+        "type": "number",
+        "default": 150
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "show",
+      "hide"
+    ]
+  },
   "Progress": {
     "props": {
       "value": {
@@ -1083,6 +4299,104 @@
     "pulses": {},
     "slots": [],
     "emits": []
+  },
+  "ProgressCircle": {
+    "props": {
+      "value": {
+        "type": "number",
+        "default": 0
+      },
+      "max": {
+        "type": "number",
+        "default": 100
+      },
+      "indeterminate": {
+        "type": "boolean",
+        "default": false
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "thickness": {
+        "type": "number",
+        "default": 0.12
+      },
+      "tone": {
+        "type": "string",
+        "default": "primary"
+      },
+      "showValue": {
+        "type": "boolean",
+        "default": true
+      },
+      "label": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "QrCode": {
+    "props": {
+      "value": {
+        "type": "string",
+        "default": ""
+      },
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "size": {
+        "type": "number",
+        "default": 180
+      },
+      "level": {
+        "type": "string",
+        "default": "M"
+      },
+      "margin": {
+        "type": "number",
+        "default": 2
+      },
+      "darkColor": {
+        "type": "string",
+        "default": ""
+      },
+      "lightColor": {
+        "type": "string",
+        "default": ""
+      },
+      "alt": {
+        "type": "string",
+        "default": ""
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      },
+      "downloadable": {
+        "type": "boolean",
+        "default": false
+      },
+      "downloadLabel": {
+        "type": "string",
+        "default": "Download PNG"
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "ready"
+    ]
   },
   "Radio": {
     "props": {
@@ -1191,6 +4505,136 @@
       "texts": {
         "type": "object",
         "default": null
+      },
+      "character": {
+        "type": "string",
+        "default": "★"
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
+  },
+  "Result": {
+    "props": {
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "subTitle": {
+        "type": "string",
+        "default": ""
+      },
+      "icon": {
+        "type": "string",
+        "default": "info"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default",
+      "icon",
+      "title",
+      "subtitle"
+    ],
+    "emits": []
+  },
+  "Ripple": {
+    "props": {
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "color": {
+        "type": "string",
+        "default": ""
+      },
+      "centered": {
+        "type": "boolean",
+        "default": false
+      },
+      "block": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "Row": {
+    "props": {
+      "gutter": {
+        "type": "any",
+        "default": 0
+      },
+      "justify": {
+        "type": "string",
+        "default": "start"
+      },
+      "align": {
+        "type": "string",
+        "default": "top"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "Scrollbar": {
+    "props": {
+      "height": {
+        "type": "string",
+        "default": ""
+      },
+      "maxHeight": {
+        "type": "string",
+        "default": ""
+      },
+      "native": {
+        "type": "boolean",
+        "default": false
+      },
+      "always": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "scroll"
+    ]
+  },
+  "Segmented": {
+    "props": {
+      "value": {
+        "type": "any",
+        "model": true
+      },
+      "options": {
+        "type": "object",
+        "default": []
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "block": {
+        "type": "boolean",
+        "default": false
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
       }
     },
     "pulses": {},
@@ -1299,13 +4743,121 @@
       "itemSize": {
         "type": "number",
         "default": 44
+      },
+      "loading": {
+        "type": "boolean",
+        "default": false
+      },
+      "remote": {
+        "type": "boolean",
+        "default": false
+      },
+      "debounce": {
+        "type": "number",
+        "default": 150
       }
     },
     "pulses": {},
     "slots": [],
     "emits": [
-      "change"
+      "change",
+      "search"
     ]
+  },
+  "SignaturePad": {
+    "props": {
+      "value": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "height": {
+        "type": "number",
+        "default": 180
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      },
+      "clearLabel": {
+        "type": "string",
+        "default": "Clear"
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change",
+      "clear"
+    ]
+  },
+  "Skeleton": {
+    "props": {
+      "animated": {
+        "type": "boolean",
+        "default": false
+      },
+      "loading": {
+        "type": "boolean",
+        "default": true
+      },
+      "rows": {
+        "type": "number",
+        "default": 3
+      },
+      "count": {
+        "type": "number",
+        "default": 1
+      },
+      "avatar": {
+        "type": "boolean",
+        "default": false
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "SkeletonItem": {
+    "props": {
+      "variant": {
+        "type": "string",
+        "default": "text"
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "animated": {
+        "type": "boolean",
+        "default": false
+      },
+      "width": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": []
   },
   "Slider": {
     "props": {
@@ -1350,6 +4902,96 @@
       "input"
     ]
   },
+  "Space": {
+    "props": {
+      "direction": {
+        "type": "string",
+        "default": "horizontal"
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "wrap": {
+        "type": "boolean",
+        "default": false
+      },
+      "align": {
+        "type": "string",
+        "default": "center"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "SpeedDial": {
+    "props": {
+      "items": {
+        "type": "any",
+        "default": []
+      },
+      "visible": {
+        "type": "boolean",
+        "model": true,
+        "default": false
+      },
+      "type": {
+        "type": "string",
+        "default": "linear"
+      },
+      "direction": {
+        "type": "string",
+        "default": "up"
+      },
+      "radius": {
+        "type": "number",
+        "default": 0
+      },
+      "transitionDelay": {
+        "type": "number",
+        "default": 30
+      },
+      "mask": {
+        "type": "boolean",
+        "default": false
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "hideOnClickOutside": {
+        "type": "boolean",
+        "default": true
+      },
+      "rotateAnimation": {
+        "type": "boolean",
+        "default": true
+      },
+      "tooltip": {
+        "type": "boolean",
+        "default": false
+      },
+      "ariaLabel": {
+        "type": "string",
+        "default": "Speed dial"
+      },
+      "ariaLabelledby": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "show",
+      "hide",
+      "click",
+      "select"
+    ]
+  },
   "Spinner": {
     "props": {
       "size": {
@@ -1364,6 +5006,119 @@
     "pulses": {},
     "slots": [],
     "emits": []
+  },
+  "SplitButton": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "icon": {
+        "type": "string",
+        "default": ""
+      },
+      "items": {
+        "type": "any",
+        "default": []
+      },
+      "model": {
+        "type": "any",
+        "default": null
+      },
+      "variant": {
+        "type": "string",
+        "default": ""
+      },
+      "severity": {
+        "type": "string",
+        "default": "primary"
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "fluid": {
+        "type": "boolean",
+        "default": false
+      },
+      "raised": {
+        "type": "boolean",
+        "default": false
+      },
+      "rounded": {
+        "type": "boolean",
+        "default": false
+      },
+      "outlined": {
+        "type": "boolean",
+        "default": false
+      },
+      "text": {
+        "type": "boolean",
+        "default": false
+      },
+      "menuButtonAriaLabel": {
+        "type": "string",
+        "default": "More options"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "click",
+      "press",
+      "select",
+      "show",
+      "hide"
+    ]
+  },
+  "Splitter": {
+    "props": {
+      "layout": {
+        "type": "string",
+        "default": "horizontal"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "resize"
+    ]
+  },
+  "SplitterPanel": {
+    "props": {
+      "size": {
+        "type": "string",
+        "default": ""
+      },
+      "min": {
+        "type": "string",
+        "default": "0"
+      },
+      "max": {
+        "type": "string",
+        "default": ""
+      },
+      "resizable": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "resize"
+    ]
   },
   "Stack": {
     "props": {
@@ -1394,6 +5149,121 @@
     ],
     "emits": []
   },
+  "Statistic": {
+    "props": {
+      "value": {
+        "type": "any",
+        "default": 0
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "prefix": {
+        "type": "string",
+        "default": ""
+      },
+      "suffix": {
+        "type": "string",
+        "default": ""
+      },
+      "precision": {
+        "type": "number",
+        "default": 0
+      },
+      "duration": {
+        "type": "number",
+        "default": 1200
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "finish"
+    ]
+  },
+  "Step": {
+    "props": {
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": ""
+      },
+      "icon": {
+        "type": "string",
+        "default": ""
+      },
+      "status": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "select"
+    ]
+  },
+  "Steps": {
+    "props": {
+      "active": {
+        "type": "number",
+        "model": true,
+        "default": 0
+      },
+      "direction": {
+        "type": "string",
+        "default": "horizontal"
+      },
+      "finishStatus": {
+        "type": "string",
+        "default": "finish"
+      },
+      "processStatus": {
+        "type": "string",
+        "default": "process"
+      },
+      "alignCenter": {
+        "type": "boolean",
+        "default": false
+      },
+      "simple": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "change"
+    ]
+  },
+  "SubMenu": {
+    "props": {
+      "index": {
+        "type": "string",
+        "required": true
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "toggle"
+    ]
+  },
   "Switch": {
     "props": {
       "label": {
@@ -1418,6 +5288,218 @@
       "default"
     ],
     "emits": []
+  },
+  "TabPane": {
+    "props": {
+      "name": {
+        "type": "string",
+        "required": true
+      },
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "activate"
+    ]
+  },
+  "Table": {
+    "props": {
+      "data": {
+        "type": "any",
+        "default": []
+      },
+      "columns": {
+        "type": "any",
+        "default": []
+      },
+      "stripe": {
+        "type": "boolean",
+        "default": false
+      },
+      "border": {
+        "type": "boolean",
+        "default": false
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "emptyText": {
+        "type": "string",
+        "default": "No data"
+      },
+      "sortField": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "sortOrder": {
+        "type": "number",
+        "model": true,
+        "default": 1
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "change"
+    ]
+  },
+  "TableColumn": {
+    "props": {
+      "prop": {
+        "type": "string",
+        "default": ""
+      },
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "width": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": []
+  },
+  "TableV2": {
+    "props": {
+      "data": {
+        "type": "any",
+        "default": []
+      },
+      "columns": {
+        "type": "any",
+        "default": []
+      },
+      "stripe": {
+        "type": "boolean",
+        "default": false
+      },
+      "border": {
+        "type": "boolean",
+        "default": false
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "emptyText": {
+        "type": "string",
+        "default": "No data"
+      },
+      "rowHeight": {
+        "type": "number",
+        "default": 44
+      },
+      "maxHeight": {
+        "type": "number",
+        "default": 360
+      },
+      "sortField": {
+        "type": "string",
+        "model": true,
+        "default": ""
+      },
+      "sortOrder": {
+        "type": "number",
+        "model": true,
+        "default": 1
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "scroll",
+      "change"
+    ]
+  },
+  "Tabs": {
+    "props": {
+      "value": {
+        "type": "any",
+        "model": true
+      },
+      "type": {
+        "type": "string",
+        "default": ""
+      },
+      "tabPosition": {
+        "type": "string",
+        "default": "top"
+      },
+      "stretch": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "change",
+      "tab-click"
+    ]
+  },
+  "Tag": {
+    "props": {
+      "text": {
+        "type": "string",
+        "default": ""
+      },
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "type": {
+        "type": "string",
+        "default": "default"
+      },
+      "tone": {
+        "type": "string",
+        "default": ""
+      },
+      "closable": {
+        "type": "boolean",
+        "default": false
+      },
+      "size": {
+        "type": "string",
+        "default": "md"
+      },
+      "appearance": {
+        "type": "string",
+        "default": "light"
+      },
+      "round": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "close"
+    ]
   },
   "Text": {
     "props": {
@@ -1478,11 +5560,19 @@
         "type": "number",
         "default": 4
       },
+      "maxRows": {
+        "type": "number",
+        "default": 0
+      },
       "maxLength": {
         "type": "number",
         "default": 0
       },
       "showCount": {
+        "type": "boolean",
+        "default": false
+      },
+      "autosize": {
         "type": "boolean",
         "default": false
       },
@@ -1621,6 +5711,141 @@
       "change"
     ]
   },
+  "Timeline": {
+    "props": {
+      "reverse": {
+        "type": "boolean",
+        "default": false
+      },
+      "line": {
+        "type": "string",
+        "default": "solid"
+      },
+      "gap": {
+        "type": "string",
+        "default": "md"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "TimelineItem": {
+    "props": {
+      "timestamp": {
+        "type": "string",
+        "default": ""
+      },
+      "type": {
+        "type": "string",
+        "default": "default"
+      },
+      "tone": {
+        "type": "string",
+        "default": ""
+      },
+      "hollow": {
+        "type": "boolean",
+        "default": false
+      },
+      "placement": {
+        "type": "string",
+        "default": "bottom"
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "Tooltip": {
+    "props": {
+      "content": {
+        "type": "string",
+        "default": ""
+      },
+      "placement": {
+        "type": "string",
+        "default": "top"
+      },
+      "appearance": {
+        "type": "string",
+        "default": "dark"
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "showAfter": {
+        "type": "number",
+        "default": 0
+      },
+      "hideAfter": {
+        "type": "number",
+        "default": 200
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "show",
+      "hide"
+    ]
+  },
+  "Tour": {
+    "props": {
+      "open": {
+        "type": "boolean",
+        "model": true,
+        "default": false
+      },
+      "mask": {
+        "type": "boolean",
+        "default": true
+      },
+      "closeOnMask": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "close",
+      "finish",
+      "change"
+    ]
+  },
+  "TourStep": {
+    "props": {
+      "selector": {
+        "type": "string",
+        "default": ""
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": [
+      "ready"
+    ]
+  },
   "Transfer": {
     "props": {
       "value": {
@@ -1659,6 +5884,37 @@
     "slots": [],
     "emits": [
       "change"
+    ]
+  },
+  "Tree": {
+    "props": {
+      "data": {
+        "type": "any",
+        "default": []
+      },
+      "value": {
+        "type": "any",
+        "model": true,
+        "default": ""
+      },
+      "showCheckbox": {
+        "type": "boolean",
+        "default": false
+      },
+      "defaultExpandAll": {
+        "type": "boolean",
+        "default": false
+      },
+      "accordion": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change",
+      "expand"
     ]
   },
   "TreeSelect": {
@@ -1705,6 +5961,37 @@
     "slots": [],
     "emits": [
       "change"
+    ]
+  },
+  "TreeV2": {
+    "props": {
+      "data": {
+        "type": "any",
+        "default": []
+      },
+      "value": {
+        "type": "any",
+        "model": true,
+        "default": ""
+      },
+      "showCheckbox": {
+        "type": "boolean",
+        "default": false
+      },
+      "defaultExpandAll": {
+        "type": "boolean",
+        "default": false
+      },
+      "accordion": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change",
+      "expand"
     ]
   },
   "Upload": {
@@ -1760,5 +6047,104 @@
       "default"
     ],
     "emits": []
+  },
+  "Watermark": {
+    "props": {
+      "content": {
+        "type": "any",
+        "default": "Jacaré UI"
+      },
+      "image": {
+        "type": "string",
+        "default": ""
+      },
+      "rotate": {
+        "type": "number",
+        "default": -22
+      },
+      "gap": {
+        "type": "any",
+        "default": null
+      },
+      "offset": {
+        "type": "any",
+        "default": null
+      },
+      "zIndex": {
+        "type": "number",
+        "default": 9
+      },
+      "fontColor": {
+        "type": "string",
+        "default": "rgba(0,0,24,0.12)"
+      },
+      "fontSize": {
+        "type": "number",
+        "default": 16
+      },
+      "width": {
+        "type": "number",
+        "default": 120
+      },
+      "height": {
+        "type": "number",
+        "default": 64
+      }
+    },
+    "pulses": {},
+    "slots": [
+      "default"
+    ],
+    "emits": []
+  },
+  "YearPicker": {
+    "props": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "number",
+        "model": true,
+        "default": null
+      },
+      "min": {
+        "type": "number",
+        "default": 1970
+      },
+      "max": {
+        "type": "number",
+        "default": 2100
+      },
+      "placeholder": {
+        "type": "string",
+        "default": "Select year"
+      },
+      "inline": {
+        "type": "boolean",
+        "default": false
+      },
+      "disabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "clearable": {
+        "type": "boolean",
+        "default": true
+      },
+      "hint": {
+        "type": "string",
+        "default": ""
+      },
+      "error": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "pulses": {},
+    "slots": [],
+    "emits": [
+      "change"
+    ]
   }
 }
