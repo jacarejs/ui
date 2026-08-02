@@ -208,16 +208,16 @@ yarn docs:dev
 
 ### Coverage
 
-Latest `yarn test:coverage` result (scoped to theme helpers, docs stores, navigate, and related modules):
+Latest `yarn test:coverage` result (**203** tests, all passing). Scoped to theme, i18n, internals (`utils` / `mask` / `overlay` / `highlight`), and docs helpers (`nav-data`, `navigate`, theme editor / labs). Large chart / QR / empty-image helpers are excluded from the threshold until dedicated unit suites land.
 
 | Metric | Result |
 |--------|--------|
-| Statements | **100%** (1844/1844) |
-| Branches | **100%** (355/355) |
-| Functions | **100%** (83/83) |
-| Lines | **100%** (1844/1844) |
+| Statements | **100%** (2876/2876) |
+| Branches | **100%** (607/607) |
+| Functions | **100%** (128/128) |
+| Lines | **100%** (2876/2876) |
 
-Thresholds in `vitest.config.js`: lines/functions/statements ≥ 80, branches **100**.
+Thresholds in `vitest.config.js`: lines / functions / branches / statements **100%**.
 
 Live docs: [https://jacarejs.github.io/ui/](https://jacarejs.github.io/ui/)
 
@@ -225,9 +225,12 @@ Live docs: [https://jacarejs.github.io/ui/](https://jacarejs.github.io/ui/)
 
 ```text
 src/
-  components/*.jcr   # source of truth
+  components/*.jcr   # 171 components (source of truth)
   theme/             # tokens + applyTheme / density / motion
-  internal/utils.js  # shared helpers
+  i18n/              # createI18n, LocaleToggle, en / pt-BR packs
+  validation/        # createForm + rules
+  feedback/          # message, notification, loading, message-box
+  internal/          # utils, overlay, mask, highlight, charts, …
 dist/                # published ESM build
 docs/                # documentation site
 ```

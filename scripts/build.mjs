@@ -31,6 +31,7 @@ copyFileSync(join(srcDir, 'internal', 'overlay.js'), join(distDir, 'internal', '
 copyFileSync(join(srcDir, 'internal', 'mask.js'), join(distDir, 'internal', 'mask.js'))
 copyFileSync(join(srcDir, 'internal', 'qrcode.js'), join(distDir, 'internal', 'qrcode.js'))
 copyFileSync(join(srcDir, 'internal', 'empty-image.js'), join(distDir, 'internal', 'empty-image.js'))
+copyFileSync(join(srcDir, 'internal', 'highlight.js'), join(distDir, 'internal', 'highlight.js'))
 if (readdirSync(join(srcDir, 'internal')).includes('charts.js')) {
   copyFileSync(join(srcDir, 'internal', 'charts.js'), join(distDir, 'internal', 'charts.js'))
 }
@@ -39,6 +40,7 @@ writeFileSync(join(distDir, 'internal', 'overlay.d.ts'), overlayDts())
 writeFileSync(join(distDir, 'internal', 'mask.d.ts'), maskDts())
 writeFileSync(join(distDir, 'internal', 'qrcode.d.ts'), qrcodeDts())
 writeFileSync(join(distDir, 'internal', 'empty-image.d.ts'), emptyImageDts())
+writeFileSync(join(distDir, 'internal', 'highlight.d.ts'), highlightDts())
 writeFileSync(join(distDir, 'theme', 'index.d.ts'), themeDts())
 writeFileSync(join(distDir, 'i18n', 'index.d.ts'), i18nDts())
 writeFileSync(join(distDir, 'validation', 'index.d.ts'), validationDts())
@@ -77,6 +79,7 @@ for (const name of COMPONENT_NAMES) {
   code = code.replaceAll("from '../internal/mask.js'", "from './internal/mask.js'")
   code = code.replaceAll("from '../internal/qrcode.js'", "from './internal/qrcode.js'")
   code = code.replaceAll("from '../internal/empty-image.js'", "from './internal/empty-image.js'")
+  code = code.replaceAll("from '../internal/highlight.js'", "from './internal/highlight.js'")
   code = code.replaceAll("from '../internal/charts.js'", "from './internal/charts.js'")
   code = code.replace(/from ['"]\.\/([A-Za-z0-9]+)\.jcr['"]/g, "from './$1.js'")
   writeFileSync(join(distDir, `${name}.js`), code)
@@ -287,6 +290,12 @@ export function svgDataUrlToPng(
   size: number,
   callback: (pngUrl: string) => void,
 ): void
+`
+}
+
+function highlightDts() {
+  return `export function escapeHtml(value?: unknown): string
+export function highlightCode(source?: unknown, language?: unknown): string
 `
 }
 

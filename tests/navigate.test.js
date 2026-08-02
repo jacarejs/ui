@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { assetUrl, docsHref, goDocs, scrollDocsToTop } from '../docs/src/navigate.js'
+import { assetUrl, docsHref, goDocs, scrollDocsNavToActive, scrollDocsToTop } from '../docs/src/navigate.js'
 
 describe('navigate', () => {
   beforeEach(() => {
@@ -75,5 +75,30 @@ describe('navigate', () => {
     vi.stubGlobal('window', undefined)
     expect(() => scrollDocsToTop()).not.toThrow()
     vi.stubGlobal('window', original)
+  })
+
+  it('scrolls the active docs nav link into view', () => {
+    const link = document.createElement('a')
+    link.className = 'jacare-here'
+    link.scrollIntoView = vi.fn()
+    const nav = document.createElement('nav')
+    nav.className = 'docs-sidebar'
+    nav.appendChild(link)
+    document.body.appendChild(nav)
+
+    scrollDocsNavToActive()
+    expect(link.scrollIntoView).toHaveBeenCalledWith({ block: 'nearest', inline: 'nearest' })
+    nav.remove()
+  })
+
+  it('no-ops nav scroll when no active link exists', () => {
+    expect(() => scrollDocsNavToActive()).not.toThrow()
+  })
+
+  it('no-ops nav scroll when document is unavailable', () => {
+    const original = globalThis.document
+    vi.stubGlobal('document', undefined)
+    expect(() => scrollDocsNavToActive()).not.toThrow()
+    vi.stubGlobal('document', original)
   })
 })

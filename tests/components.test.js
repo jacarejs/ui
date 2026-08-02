@@ -39,6 +39,8 @@ async function loadComponent(name) {
     code = code.replaceAll("from '../internal/mask.js'", "from '../../src/internal/mask.js'")
     code = code.replaceAll("from '../internal/qrcode.js'", "from '../../src/internal/qrcode.js'")
     code = code.replaceAll("from '../internal/charts.js'", "from '../../src/internal/charts.js'")
+    code = code.replaceAll("from '../internal/highlight.js'", "from '../../src/internal/highlight.js'")
+    code = code.replaceAll("from '../internal/empty-image.js'", "from '../../src/internal/empty-image.js'")
     code = code.replaceAll("from '../validation/index.js'", "from '../../src/validation/index.js'")
     code = code.replaceAll("from '../theme/index.js'", "from '../../src/theme/index.js'")
     code = code.replaceAll("from '../i18n/index.js'", "from '../../src/i18n/index.js'")
@@ -1198,20 +1200,22 @@ describe('@jacare/ui components', () => {
       },
     })
 
-    expect(host.querySelector('.jui-modal')).toBeNull()
+    expect(document.querySelector('.jui-modal')).toBeNull()
     open.set(true)
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    await new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    )
 
-    const modal = host.querySelector('.jui-modal')
+    const modal = document.querySelector('.jui-modal')
     expect(modal).toBeTruthy()
     expect(modal.classList.contains('jui-modal--bottom')).toBe(true)
-    expect(host.querySelector('.jui-modal__grabber')).toBeTruthy()
-    expect(host.querySelector('.jui-modal__title').textContent).toBe('Invite')
-    expect(host.querySelector('.jui-modal__description').textContent).toBe('Send a link')
-    expect(host.querySelector('[data-modal-footer] [data-jui-modal-slot="footer"]')?.textContent).toBe('Save')
+    expect(document.querySelector('.jui-modal__grabber')).toBeTruthy()
+    expect(document.querySelector('.jui-modal__title').textContent).toBe('Invite')
+    expect(document.querySelector('.jui-modal__description').textContent).toBe('Send a link')
+    expect(document.querySelector('[data-modal-footer] [data-jui-modal-slot="footer"]')?.textContent).toBe('Save')
     expect(opened).toBe(1)
 
-    host.querySelector('.jui-modal__close').click()
+    document.querySelector('.jui-modal__close').click()
     expect(closed).toBe(1)
     expect(open()).toBe(false)
   })
@@ -1234,10 +1238,12 @@ describe('@jacare/ui components', () => {
       },
     })
 
-    await new Promise((resolve) => requestAnimationFrame(resolve))
-    host.querySelector('.jui-modal-backdrop')?.click()
+    await new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    )
+    document.querySelector('.jui-modal-backdrop')?.click()
     expect(open()).toBe(true)
-    expect(host.querySelector('.jui-modal__close')).toBeNull()
+    expect(document.querySelector('.jui-modal__close')).toBeNull()
   })
 
   it('Switch mirrors a pulse and exposes switch role', async () => {

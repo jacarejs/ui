@@ -9,6 +9,7 @@ import {
   flatNavLinks,
   previousNext,
   shippedComponents,
+  sortGroupItems,
   uiRepoUrl,
 } from '../docs/src/nav-data.js'
 
@@ -54,12 +55,25 @@ describe('nav-data', () => {
     expect(componentLinks).toContain('Button')
   })
 
-  it('includes Validation in Foundations', () => {
+  it('includes Validation and Island in Foundations', () => {
     const foundations = docsNav.find((section) => section.title === 'Foundations')
     expect(foundations?.items.some((item) => item.href === '/validation')).toBe(true)
+    expect(foundations?.items.some((item) => item.href === '/island')).toBe(true)
+    expect(foundations?.items.at(-1)?.href).toBe('/island')
     expect(previousNext('/i18n').next?.href).toBe('/validation')
     expect(previousNext('/validation').previous?.href).toBe('/i18n')
     expect(previousNext('/validation').next?.href).toBe('/tokens')
+    expect(previousNext('/accessibility').next?.href).toBe('/island')
+  })
+
+  it('sorts grouped items by configured order or alphabetically', () => {
+    const items = [
+      { name: 'Zebra', group: 'Actions', blurb: 'z' },
+      { name: 'Button', group: 'Actions', blurb: 'b' },
+      { name: 'Alpha', group: 'Actions', blurb: 'a' },
+    ]
+    expect(sortGroupItems('Actions', items).map((item) => item.name)).toEqual(['Button', 'Alpha', 'Zebra'])
+    expect(sortGroupItems('MissingGroup', items).map((item) => item.name)).toEqual(['Alpha', 'Button', 'Zebra'])
   })
 
   it('returns previous and next links for a route', () => {

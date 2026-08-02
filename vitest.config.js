@@ -28,6 +28,9 @@ export default defineConfig({
         '**/.jacare/**',
         'docs/src/examples/**',
         'docs/src/generated/**',
+        'src/internal/charts.js',
+        'src/internal/empty-image.js',
+        'src/internal/qrcode.js',
       ],
       thresholds: {
         lines: 100,

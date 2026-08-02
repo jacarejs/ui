@@ -4,6 +4,8 @@ import { escapeHtml, highlightCode } from '../src/internal/highlight.js'
 describe('highlightCode', () => {
   it('escapes html in plain text', () => {
     expect(escapeHtml('<script>"&')).toBe('&lt;script&gt;&quot;&amp;')
+    expect(escapeHtml()).toBe('')
+    expect(escapeHtml(null)).toBe('')
   })
 
   it('highlights json keys strings numbers and literals', () => {
@@ -64,5 +66,18 @@ describe('highlightCode', () => {
     expect(html).toContain('jui-code-token--keyword')
     expect(html).toContain('jui-code-token--decorator')
     expect(html).toContain('jui-code-token--string')
+  })
+
+  it('normalizes language aliases and falls back to plain text', () => {
+    expect(highlightCode('const x = 1', 'js')).toContain('jui-code-token--keyword')
+    expect(highlightCode('const x = 1', 'typescript')).toContain('jui-code-token--keyword')
+    expect(highlightCode('<Box />', 'tsx')).toContain('jui-code-token--tag')
+    expect(highlightCode('.x { color: red }', 'scss')).toContain('jui-code-token--property')
+    expect(highlightCode("name = 'Ada'", 'text')).toContain('jui-code-token--string')
+    expect(highlightCode('plain 42 words', 'unknown-lang')).toContain('jui-code-token--number')
+    expect(highlightCode('', 'javascript')).toBe('\n')
+    expect(highlightCode(null, null)).toBe('\n')
+    expect(highlightCode('done\n', 'text')).toBe(highlightCode('done\n', 'text'))
+    expect(highlightCode('done\n', 'text').endsWith('\n')).toBe(true)
   })
 })

@@ -7,6 +7,7 @@ import {
   getI18n,
   locale,
   localeBootScript,
+  localeT,
   localeText,
   propText,
   readStoredLocale,
@@ -19,6 +20,7 @@ import {
   useI18n,
   writeStoredLocale,
 } from '../src/i18n/index.js'
+import { deepMergeMessages, mergeUiMessages } from '../src/i18n/locales/index.js'
 
 afterEach(() => {
   localStorage.clear()
@@ -233,11 +235,36 @@ describe('i18n', () => {
     expect(localeText('j.common.select', 'Select')).toBe('Select')
     expect(propText('Select', 'j.common.select', 'Select')).toBe('Select')
     expect(propText('Custom', 'j.common.select', 'Select')).toBe('Custom')
+    expect(propText(null, 'j.common.select', 'Select')).toBe('Select')
+    expect(propText(undefined, 'missing.key', '')).toBe('')
+    expect(propText('', 'missing.key', '')).toBe('')
+    expect(localeT('j.common.select', 'Select')()).toBe('Select')
     setLocale('pt-BR')
     expect(localeText('j.common.select', 'Select')).toBe('Selecionar')
     expect(propText('Select', 'j.common.select', 'Select')).toBe('Selecionar')
     expect(propText('Custom', 'j.common.select', 'Select')).toBe('Custom')
+    expect(localeT('j.common.select', 'Select')()).toBe('Selecionar')
     expect(t('app.title')()).toBe('App')
+  })
+
+  it('deep merges UI locale packs with app messages', () => {
+    const nested = deepMergeMessages(
+      { common: { save: 'Save', cancel: 'Cancel' }, list: ['a'] },
+      { common: { save: 'Salvar' }, list: ['b'], extra: true },
+    )
+    expect(nested.common).toEqual({ save: 'Salvar', cancel: 'Cancel' })
+    expect(nested.list).toEqual(['b'])
+    expect(nested.extra).toBe(true)
+
+    const merged = mergeUiMessages({
+      en: { app: { title: 'Docs' } },
+      es: { hello: 'Hola' },
+    })
+    expect(merged.en.app.title).toBe('Docs')
+    expect(merged.en.j.common.cancel).toBe('Cancel')
+    expect(merged.es.hello).toBe('Hola')
+    expect(mergeUiMessages()).toHaveProperty('en')
+    expect(mergeUiMessages(null).en.j.common.cancel).toBe('Cancel')
   })
 
   it('can disable UI message packs', () => {

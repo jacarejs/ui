@@ -379,7 +379,7 @@ export const shippedComponents = componentMeta.map(([name, group, blurb]) => ({
   blurb,
 }))
 
-function sortGroupItems(group, items) {
+export function sortGroupItems(group, items) {
   const order = componentSortOrder[group]
   if (!order?.length) {
     return items.slice().sort((a, b) => a.name.localeCompare(b.name))
@@ -406,7 +406,7 @@ export function componentsByGroup(hiddenNames = catalogHiddenComponents) {
     .filter((group) => (buckets.get(group) || []).length > 0)
     .map((group) => ({
       title: group,
-      items: sortGroupItems(group, buckets.get(group) || []),
+      items: sortGroupItems(group, buckets.get(group)),
     }))
 }
 
