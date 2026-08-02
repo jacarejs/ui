@@ -1,3 +1,5 @@
+import { pulse } from '@jacare/core'
+import Alert from '@jacare/ui/components/Alert.jcr'
 import Button from '@jacare/ui/components/Button.jcr'
 import Card from '@jacare/ui/components/Card.jcr'
 import ProgressCircle from '@jacare/ui/components/ProgressCircle.jcr'
@@ -11,9 +13,14 @@ import PreviousNext from '../ui/PreviousNext.jcr'
 import { previousNext, coreRepoUrl } from '../nav-data.js'
 import { docsHref } from '../navigate.js'
 import {
+  alertWidget,
+  angularHost,
+  angularUsage,
   boot,
   hostHtml,
   install,
+  liveUpdate,
+  multiBoot,
   reactHost,
   shadowBoot,
   viteConfig,
@@ -23,6 +30,21 @@ import {
 
 const navLinks = previousNext('/island')
 const coreIslandDocs = `${coreRepoUrl}/blob/main/docs/island.md`
+const checkoutProgress = pulse(72)
+const statusOpen = pulse(true)
+
+function advanceCheckout() {
+  const next = Math.min(100, checkoutProgress() + 14)
+  checkoutProgress.set(next >= 100 ? 0 : next)
+}
+
+function dismissStatus() {
+  statusOpen.set(false)
+}
+
+function showStatus() {
+  statusOpen.set(true)
+}
 
 export <view>
   <article class="docs-page">
@@ -66,14 +88,14 @@ export <view>
       </p>
     </DocsSection>
 
-    <DocsSection :id=${'widget'} :title=${'3. Build a UI widget'}>
+    <DocsSection :id=${'widget'} :title=${'3. Build UI widgets'}>
       <p class="docs-lead">
         An island is a normal <code>.jcr</code>${' '}view. Deep-import components from <code>@jacare/ui</code>, declare a contract for host props, and keep the root self-contained.
       </p>
       <Demo
         :id=${'widget-demo'}
-        :title=${'Checkout island preview'}
-        :lead=${'This is the widget surface the host will mount — Card, ProgressCircle, and Button on Jacaré tokens.'}
+        :title=${'Checkout island'}
+        :lead=${'Continue advances the ring (resets at 100%). In a real host, the button would call into checkout or emit to the page.'}
         :code=${widget}
         :filename=${'CheckoutIsland.jcr'}
         :align=${'center'}
@@ -81,10 +103,34 @@ export <view>
         <Card>
           <Stack :gap=${'md'} :align=${'center'}>
             <Text :weight=${'bold'}>Checkout</Text>
-            <ProgressCircle :value=${72} />
-            <Button :variant=${'primary'}>Continue</Button>
+            <ProgressCircle :value=${checkoutProgress} />
+            <Button :variant=${'primary'} on-press=${advanceCheckout}>Continue</Button>
           </Stack>
         </Card>
+      </Demo>
+      <Demo
+        :id=${'status-demo'}
+        :title=${'Status island'}
+        :lead=${'Dismiss (or the Alert ×) hides the status. Show again remounts the confirmation for the demo.'}
+        :code=${alertWidget}
+        :filename=${'StatusIsland.jcr'}
+      >
+        <Stack :gap=${'md'}>
+          #if statusOpen()
+            <Alert
+              :tone=${'success'}
+              :title=${'Payment cleared'}
+              :dismissible=${true}
+              bind-open=${statusOpen}
+              on-dismiss=${dismissStatus}
+            >
+              Receipt emailed to the customer.
+            </Alert>
+            <Button :variant=${'secondary'} :size=${'sm'} on-press=${dismissStatus}>Dismiss</Button>
+          #else
+            <Button :variant=${'secondary'} :size=${'sm'} on-press=${showStatus}>Show again</Button>
+          #end
+        </Stack>
       </Demo>
     </DocsSection>
 
@@ -96,6 +142,20 @@ export <view>
       <CodeBlock :code=${boot} :filename=${'boot.js'} :language=${'javascript'} />
     </DocsSection>
 
+    <DocsSection :id=${'multi'} :title=${'Multiple islands'}>
+      <p class="docs-lead">
+        One host page can mount several widgets. Keep a disposer list and tear them down together on HMR or route leave.
+      </p>
+      <CodeBlock :code=${multiBoot} :filename=${'boot.js'} :language=${'javascript'} />
+    </DocsSection>
+
+    <DocsSection :id=${'update'} :title=${'Live prop updates'}>
+      <p class="docs-lead">
+        Drive progress, labels, or status from the host without remounting. <code>update</code>${' '}writes into the live prop pulses so internal island state and focus stay intact.
+      </p>
+      <CodeBlock :code=${liveUpdate} :filename=${'boot.js'} :language=${'javascript'} />
+    </DocsSection>
+
     <DocsSection :id=${'shadow'} :title=${'Shadow isolation'}>
       <p class="docs-lead">
         When the host page has aggressive global CSS, set <code>shadow: true</code>. Component styles inject into the shadow root; Jacaré theme tokens still inherit as CSS variables from the host.
@@ -104,16 +164,26 @@ export <view>
       <CodeBlock :code=${shadowBoot} :filename=${'boot.js'} :language=${'javascript'} />
     </DocsSection>
 
-    <DocsSection :id=${'hosts'} :title=${'Host frameworks'}>
+    <DocsSection :id=${'react'} :title=${'React host'}>
       <p class="docs-lead">
-        Mount once on attach, push props with <code>update</code>, dispose on unmount. That keeps focus and internal island state across host re-renders.
+        Mount once on attach, push props with <code>update</code>, dispose on unmount.
       </p>
       <CodeBlock :code=${reactHost} :filename=${'CheckoutSlot.jsx'} :language=${'javascript'} />
-      <CodeBlock :code=${vueHost} :filename=${'CheckoutSlot.vue'} :language=${'javascript'} />
+    </DocsSection>
+
+    <DocsSection :id=${'vue'} :title=${'Vue 3 host'}>
       <p class="docs-lead">
-        Angular follows the same lifecycle: <code>ngAfterViewInit</code>${' '}→ mount, <code>ngOnChanges</code>${' '}→ <code>update</code>, <code>ngOnDestroy</code>${' '}→ dispose.
-        Working demos ship in the Core repo under <code>examples/jacare-island</code>, <code>jacare-island-react</code>, <code>jacare-island-vue</code>, and <code>jacare-island-angular</code>.
+        Same lifecycle with <code>onMounted</code>, <code>watch</code>, and <code>onBeforeUnmount</code>.
       </p>
+      <CodeBlock :code=${vueHost} :filename=${'CheckoutSlot.vue'} :language=${'javascript'} />
+    </DocsSection>
+
+    <DocsSection :id=${'angular'} :title=${'Angular host'}>
+      <p class="docs-lead">
+        Standalone component: mount in <code>ngAfterViewInit</code>, push inputs in <code>ngOnChanges</code>, dispose in <code>ngOnDestroy</code>.
+      </p>
+      <CodeBlock :code=${angularHost} :filename=${'checkout-island.component.ts'} :language=${'typescript'} />
+      <CodeBlock :code=${angularUsage} :filename=${'parent.component.html'} :language=${'html'} />
     </DocsSection>
 
     <DocsSection :id=${'notes'} :title=${'Notes'}>
@@ -124,6 +194,7 @@ export <view>
         <li>For scoped light/dark surfaces inside one page (not host embeds), use
           <a jacare-go="/dark-mode" href=${docsHref('/dark-mode')}>ThemeScope</a>
         </li>
+        <li>Working demos in Core: <code>examples/jacare-island</code>, <code>jacare-island-react</code>, <code>jacare-island-vue</code>, <code>jacare-island-angular</code></li>
       </ul>
     </DocsSection>
 

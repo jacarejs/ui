@@ -433,7 +433,6 @@ export const docsNav = [
   {
     title: 'Foundations',
     items: [
-      { href: '/island', label: 'Island', blurb: 'Embed @jacare/ui with mountIsland from @jacare/core/island' },
       { href: '/theme', label: 'Theme', blurb: 'Tokens, fonts, density, motion, Tailwind' },
       { href: '/dark-mode', label: 'Dark mode', blurb: 'ThemeToggle, ThemeScope, data-j-theme' },
       { href: '/i18n', label: 'i18n', blurb: 'createI18n, t(), LocaleToggle — simple translations' },
@@ -441,6 +440,7 @@ export const docsNav = [
       { href: '/tokens', label: 'Token reference', blurb: 'Brand, semantic, space, density, motion' },
       { href: '/layouts', label: 'Layouts', blurb: 'Shell, sidebar, split, and gallery models' },
       { href: '/accessibility', label: 'Accessibility', blurb: 'Focus, keyboard, motion, ARIA baseline' },
+      { href: '/island', label: 'Island', blurb: 'Embed @jacare/ui with mountIsland from @jacare/core/island' },
     ],
   },
   {
